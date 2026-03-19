@@ -2,17 +2,18 @@
 
 ## 当前状态
 
-这是一个基于 Flutter 的 Synology DSM 7+ 手机管理工具项目，已经从手工源码骨架推进到**标准 Flutter 工程**，并完成了 Android / iOS 平台骨架补全、依赖安装、国际化生成与静态检查。
+这是一个基于 Flutter 的 Synology DSM 7+ 手机管理工具项目，已经从手工源码骨架推进到标准 Flutter 工程，并进入真实 DSM 联调阶段。
 
 当前项目状态：
 - 已执行 `flutter create .` 补全标准工程
 - 已删除不需要的平台目录：`linux/`、`macos/`、`windows/`、`web/`
-- 已在本地 Flutter SDK 环境完成：
+- 已在 Flutter SDK 环境完成：
   - `flutter pub get`
   - `flutter gen-l10n`
   - `flutter analyze`
-- 当前 `flutter analyze` 结果：**No issues found**
-- Android Gradle / Maven 仓库已调整为：**阿里云镜像优先，官方源兜底**
+- App 已在设备上成功运行
+- Android Gradle / Maven 仓库已调整为：阿里云镜像优先，官方源兜底
+- 认证层已切换到 DSM v7 登录主线，不再保留 v6 兼容方向
 
 ## 已完成模块
 
@@ -27,7 +28,7 @@
 
 ### 启动恢复
 - 恢复当前设备
-- 恢复 SID
+- 恢复 SID / SynoToken / Cookie / 认证扩展状态
 
 ### 首页
 - 连接信息
@@ -35,6 +36,7 @@
 - 基础资源卡片
 - 设备信息卡
 - 运行时间卡
+- 首页已改为 HTTP 概览 + WS 实时指标合并显示
 
 ### 文件模块
 - 文件列表
@@ -68,6 +70,7 @@
 - 模块诊断页
 - 当前连接 / 本地保存状态展示
 - 基础联通测试（auth / file / download）
+- SynoToken / CookieHeader 存在性展示
 
 ### 主题与多语言
 - Material 3 主题模式切换（系统 / 浅色 / 深色）
@@ -79,6 +82,8 @@
 ### 错误处理
 - 基础网络错误映射
 - 部分 DSM 错误码中文化
+- 首页实时监控失败时不再整页报错，而是降级显示
+- 已增加 websocket / HTTP 控制台调试日志
 
 ## 已完成的工程动作
 
@@ -87,6 +92,7 @@
 - 已修复 `test/widget_test.dart` 中默认 `MyApp` 引用问题，改为当前应用入口 `QunhuiManagerApp`
 - 已修复若干导入路径问题与无效空断言
 - 当前静态分析通过
+- App 已在设备上成功运行
 
 ### Android 工程
 - 已补全 `android/` 工程
@@ -100,38 +106,54 @@
 
 ### DSM Realtime Socket
 - 已确认 DSM 首页资源数据来自 socket 推送，而不是简单 HTTP 概览接口
-- 已按 `SYNO.Core.System.Utilization:1:get` 接入首版实时资源流
+- 已完成 engine.io polling + websocket upgrade + Cookie/Origin + socket.io 帧级联调
+- 已完成 DSM `request_webapi` 帧格式联调
+- 当前已成功通过 websocket 获取首页实时资源快照：
+  - `SYNO.Core.System.Utilization` `get`
 - 当前首页资源映射：
   - CPU → `user_load + system_load + other_load`
   - 内存 → `memory.real_usage`
   - 存储 → `space.total.utilization`
-- 登录态已开始保存 `SynoToken` 与登录响应 Cookie，供 realtime socket 握手使用
-- websocket 握手已补充 `Origin` / `Cookie` 请求头，并增加基础 socket.io 帧处理与控制台日志
+- `subscribe` 当前返回错误码 `103`，已暂时移除，只保留 `get` 路径确保首页稳定展示
+
+### 认证层
+- 已确认 DSM Web UI 的 realtime 业务层依赖 DSM v7 登录链路
+- 已切换到 DSM v7 登录主线（`entry.cgi` + `version=7`）
+- 已开始扩展会话状态以承载：
+  - `SynoToken`
+  - Cookie Header
+  - Request Hash Seed
+  - Auth Token
+  - Request Nonce
+- 当前 DSM v7 登录已成功返回：
+  - `sid`
+  - `synotoken`
+  - `device_id`
+- 但完整 Noise 握手 / `SynoHash` 生成链路仍未实现完毕
 
 ## 当前限制
 
-- 首页 realtime socket 已连通到 transport 层，但业务层认证仍失败，原因已定位为缺少 DSM v7 Noise 登录与 `SynoHash` 生成链路
-- 当前认证层仍是传统 `SYNO.API.Auth version=6` 简化登录，无法满足 DSM Web UI realtime 业务调用要求
-- 登录页退出后表单回填（地址/端口/HTTPS/用户名）仍需单独检查与修复
+- 首页实时资源 `get` 已成功，但真正的持续订阅流仍未完成
+- 设备信息 / 运行时间 / 服务器名目前仍主要依赖 HTTP 概览接口；若该接口字段不完整，首页对应区域仍可能为空或占位
+- DSM Web UI 使用的完整 Noise / `SynoHash` 请求链路尚未完全实现
+- 登录页退出后表单回填已开始修正，但仍需真机继续验证
 - 国际化文案目前只完成部分页面迁移，尚未覆盖全部页面文案
 - 上传、分享等功能已完成骨架，但仍需真实 DSM 联调验证
 - iOS 尚未在真实 Apple 开发环境验证
 
 ## 建议下一步
 
-1. 在 Windows 本地 SSD 环境 clone 项目并运行
-2. 执行：
-   - `flutter pub get`
-   - `flutter gen-l10n`
-   - `dart format .`
-   - `flutter analyze`
-   - `flutter run`
-3. 连接 Android 真机，开始第一轮 UI / 路由 / 插件运行验证
-4. 开始 DSM 7 真实联调：
-   - 登录
+1. 继续完善 DSM v7 Noise 登录实现：
+   - `ik_message` / `kk_message`
+   - handshake hash / request hash
+2. 若要实现真正实时刷新，继续研究 `subscribe` 返回 `103` 的原因
+3. 继续首页收尾：
+   - 校正设备信息 / uptime 的 HTTP 数据来源
+   - 如有必要，补单独系统信息接口
+4. 继续 DSM 7 真实联调：
    - 文件列表
    - 下载任务
-5. 根据真实联调结果校正 DSM API 参数与返回结构
+5. 完成登录页退出后表单回填验证与修复
 6. 继续清理剩余国际化硬编码文案
 
 ## 关键目录
@@ -139,13 +161,6 @@
 - `android/` Android 工程
 - `ios/` iOS 工程
 - `lib/app/` 应用入口与路由
-- `lib/core/` 通用工具、错误、存储、网络
-- `lib/data/` API / models / repositories
-- `lib/domain/` 实体和仓库接口
-- `lib/features/` 功能模块页面与 provider
-- `lib/l10n/` 国际化资源
-- `RUN.md` 运行说明
-` 应用入口与路由
 - `lib/core/` 通用工具、错误、存储、网络
 - `lib/data/` API / models / repositories
 - `lib/domain/` 实体和仓库接口

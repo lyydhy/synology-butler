@@ -14,7 +14,7 @@ class DashboardPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final overview = ref.watch(dashboardOverviewSafeProvider);
-    final realtimeState = ref.watch(dashboardOverviewProvider);
+    final realtimeState = ref.watch(dashboardRealtimeOverviewProvider);
     final currentServer = ref.watch(currentServerProvider);
     final currentSession = ref.watch(currentSessionProvider);
 
@@ -57,7 +57,7 @@ class DashboardPage extends ConsumerWidget {
         padding: const EdgeInsets.all(16),
         children: [
           SummaryCard(
-            title: currentServer.name,
+            title: data?.serverName ?? currentServer.name,
             subtitle: data == null ? 'DSM --' : 'DSM ${data.dsmVersion}',
             trailing: const Icon(Icons.dns_outlined),
           ),

@@ -55,6 +55,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       return;
     }
 
+    initialized = true;
     serverNameController.text = server.name;
     hostController.text = server.host;
     portController.text = server.port.toString();
@@ -202,6 +203,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               child: Text(isTesting ? l10n.testingConnection : l10n.testConnection),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+    ],
         ),
       ),
     );

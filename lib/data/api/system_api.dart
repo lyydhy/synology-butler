@@ -111,7 +111,7 @@ class DsmSystemApi implements SystemApi {
       debugPrint('[WS][Connected]');
 
       int requestIndex = 20;
-      bool subscribed = false;
+      bool requested = false;
       Timer? bootstrapTimer;
 
       void sendFrame(String frame) {
@@ -134,12 +134,7 @@ class DsmSystemApi implements SystemApi {
           '_sid': sid,
           'SynoToken': synoToken,
         });
-        sendRequestWebApi('SYNO.Core.System.Utilization', 1, 'subscribe', {
-          'type': 'current',
-          '_sid': sid,
-          'SynoToken': synoToken,
-        });
-        subscribed = true;
+        requested = true;
       }
 
       sendBootstrapSequence();
@@ -148,11 +143,6 @@ class DsmSystemApi implements SystemApi {
         debugPrint('[WS][Bootstrap Timeout] no business payload yet, retry request_webapi');
         sendFrame('40');
         sendRequestWebApi('SYNO.Core.System.Utilization', 1, 'get', {
-          'type': 'current',
-          '_sid': sid,
-          'SynoToken': synoToken,
-        });
-        sendRequestWebApi('SYNO.Core.System.Utilization', 1, 'subscribe', {
           'type': 'current',
           '_sid': sid,
           'SynoToken': synoToken,
@@ -186,18 +176,13 @@ class DsmSystemApi implements SystemApi {
           }
 
           if (text == '40') {
-            if (!subscribed) {
+            if (!requested) {
               sendRequestWebApi('SYNO.Core.System.Utilization', 1, 'get', {
                 'type': 'current',
                 '_sid': sid,
                 'SynoToken': synoToken,
               });
-              sendRequestWebApi('SYNO.Core.System.Utilization', 1, 'subscribe', {
-                'type': 'current',
-                '_sid': sid,
-                'SynoToken': synoToken,
-              });
-              subscribed = true;
+              requested = true;
             }
             return;
           }

@@ -12,7 +12,21 @@ final systemRepositoryProvider = Provider<SystemRepository>((ref) {
   return SystemRepositoryImpl(ref.read(systemApiProvider));
 });
 
-final dashboardOverviewProvider = StreamProvider<SystemStatus>((ref) {
+final dashboardBaseOverviewProvider = FutureProvider<SystemStatus>((ref) async {
+  final server = ref.watch(currentServerProvider);
+  final session = ref.watch(currentSessionProvider);
+
+  if (server == null || session == null) {
+    throw Exception('No active NAS session');
+  }
+
+  return ref.read(systemRepositoryProvider).fetchOverview(
+        server: server,
+        session: session,
+      );
+});
+
+final dashboardRealtimeOverviewProvider = StreamProvider<SystemStatus>((ref) {
   final server = ref.watch(currentServerProvider);
   final session = ref.watch(currentSessionProvider);
 
@@ -27,11 +41,34 @@ final dashboardOverviewProvider = StreamProvider<SystemStatus>((ref) {
 });
 
 final dashboardOverviewSafeProvider = Provider<AsyncValue<SystemStatus?>>((ref) {
-  final overview = ref.watch(dashboardOverviewProvider);
+  final baseOverview = ref.watch(dashboardBaseOverviewProvider);
+  final realtimeOverview = ref.watch(dashboardRealtimeOverviewProvider);
 
-  return overview.when(
-    data: (value) => AsyncValue.data(value),
-    loading: () => const AsyncValue.loading(),
-    error: (error, stackTrace) => const AsyncValue.data(null),
-  );
+  if (realtimeOverview.hasValue) {
+    final realtime = realtimeOverview.value!;
+    final base = baseOverview.valueOrNull;
+
+    return AsyncValue.data(
+      SystemStatus(
+        serverName: base?.serverName ?? realtime.serverName,
+        dsmVersion: base?.dsmVersion ?? realtime.dsmVersion,
+        cpuUsage: realtime.cpuUsage,
+        memoryUsage: realtime.memoryUsage,
+        storageUsage: realtime.storageUsage,
+        modelName: base?.modelName ?? realtime.modelName,
+        serialNumber: base?.serialNumber ?? realtime.serialNumber,
+        uptimeText: base?.uptimeText ?? realtime.uptimeText,
+      ),
+    );
+  }
+
+  if (baseOverview.hasValue) {
+    return AsyncValue.data(baseOverview.value);
+  }
+
+  if (baseOverview.isLoading) {
+    return const AsyncValue.loading();
+  }
+
+  return const AsyncValue.data(null);
 });
