@@ -77,7 +77,24 @@ class DsmSystemApi implements SystemApi {
 
     final subscription = channel.stream.listen(
       (rawMessage) {
-        final payload = _extractSocketPayload(rawMessage);
+        final text = rawMessage?.toString() ?? '';
+
+        if (text.startsWith('0')) {
+          channel.sink.add('40');
+          return;
+        }
+
+        if (text == '40') {
+          channel.sink.add('42["SYNO.Core.System.Utilization:1:get",{}]');
+          return;
+        }
+
+        if (text == '2') {
+          channel.sink.add('3');
+          return;
+        }
+
+        final payload = _extractSocketPayload(text);
         if (payload == null || payload['success'] != true) {
           return;
         }
@@ -120,12 +137,13 @@ class DsmSystemApi implements SystemApi {
   }) {
     final baseUri = Uri.parse(baseUrl);
     final scheme = baseUri.scheme == 'https' ? 'wss' : 'ws';
+    final basePath = baseUri.path == '/' ? '' : baseUri.path;
 
     return Uri(
       scheme: scheme,
       host: baseUri.host,
       port: baseUri.hasPort ? baseUri.port : null,
-      path: '/synoscgi.sock/socket.io/',
+      path: '$basePath/synoscgi.sock/socket.io/',
       queryParameters: {
         'Version': '86009',
         'SynoToken': synoToken,
