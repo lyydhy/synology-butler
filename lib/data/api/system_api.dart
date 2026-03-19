@@ -110,7 +110,8 @@ class DsmSystemApi implements SystemApi {
 
       debugPrint('[WS][Connected]');
 
-      bool subscriptionSent = false;
+      int requestIndex = 20;
+      bool subscribed = false;
       Timer? bootstrapTimer;
 
       void sendFrame(String frame) {
@@ -118,22 +119,44 @@ class DsmSystemApi implements SystemApi {
         debugPrint('[WS][Send] $frame');
       }
 
+      void sendRequestWebApi(String api, int version, String method, Map<String, dynamic> payload) {
+        final index = requestIndex++;
+        final frame = '42$index${jsonEncode(["request_webapi", api, version, method, payload])}';
+        sendFrame(frame);
+      }
+
       void sendBootstrapSequence() {
         sendFrame('2probe');
         sendFrame('5');
         sendFrame('40');
-        sendFrame('42["SYNO.Core.System.Utilization:1:get",{}]');
-        sendFrame('42["SYNO.Core.System.Utilization:1:subscribe",{}]');
-        subscriptionSent = true;
+        sendRequestWebApi('SYNO.Core.System.Utilization', 1, 'get', {
+          'type': 'current',
+          '_sid': sid,
+          'SynoToken': synoToken,
+        });
+        sendRequestWebApi('SYNO.Core.System.Utilization', 1, 'subscribe', {
+          'type': 'current',
+          '_sid': sid,
+          'SynoToken': synoToken,
+        });
+        subscribed = true;
       }
 
       sendBootstrapSequence();
 
       bootstrapTimer = Timer(const Duration(seconds: 2), () {
-        debugPrint('[WS][Bootstrap Timeout] no business payload yet, retry subscribe');
+        debugPrint('[WS][Bootstrap Timeout] no business payload yet, retry request_webapi');
         sendFrame('40');
-        sendFrame('42["SYNO.Core.System.Utilization:1:get",{}]');
-        sendFrame('42["SYNO.Core.System.Utilization:1:subscribe",{}]');
+        sendRequestWebApi('SYNO.Core.System.Utilization', 1, 'get', {
+          'type': 'current',
+          '_sid': sid,
+          'SynoToken': synoToken,
+        });
+        sendRequestWebApi('SYNO.Core.System.Utilization', 1, 'subscribe', {
+          'type': 'current',
+          '_sid': sid,
+          'SynoToken': synoToken,
+        });
       });
 
       controller.onCancel = () async {
@@ -163,15 +186,23 @@ class DsmSystemApi implements SystemApi {
           }
 
           if (text == '40') {
-            if (!subscriptionSent) {
-              sendFrame('42["SYNO.Core.System.Utilization:1:get",{}]');
-              sendFrame('42["SYNO.Core.System.Utilization:1:subscribe",{}]');
-              subscriptionSent = true;
+            if (!subscribed) {
+              sendRequestWebApi('SYNO.Core.System.Utilization', 1, 'get', {
+                'type': 'current',
+                '_sid': sid,
+                'SynoToken': synoToken,
+              });
+              sendRequestWebApi('SYNO.Core.System.Utilization', 1, 'subscribe', {
+                'type': 'current',
+                '_sid': sid,
+                'SynoToken': synoToken,
+              });
+              subscribed = true;
             }
             return;
           }
 
-          final payload = _extractSocketPayload(text);
+          final payload = _extractRequestWebApiPayload(text);
           if (payload == null || payload['success'] != true) {
             return;
           }
@@ -350,25 +381,20 @@ class DsmSystemApi implements SystemApi {
     return cookieMap.entries.map((e) => '${e.key}=${e.value}').join('; ');
   }
 
-  Map<String, dynamic>? _extractSocketPayload(dynamic rawMessage) {
+  Map<String, dynamic>? _extractRequestWebApiPayload(dynamic rawMessage) {
     final text = rawMessage?.toString() ?? '';
-    if (!text.startsWith('42[')) {
+    final match = RegExp(r'^43\d+(\[.*\])$').firstMatch(text);
+    if (match == null) {
       return null;
     }
 
-    final jsonText = text.substring(2);
+    final jsonText = match.group(1)!;
     final decoded = jsonDecode(jsonText);
-    if (decoded is! List || decoded.length < 2) {
+    if (decoded is! List || decoded.isEmpty) {
       return null;
     }
 
-    final eventName = decoded[0]?.toString() ?? '';
-    if (eventName != 'SYNO.Core.System.Utilization:1:get' &&
-        eventName != 'SYNO.Core.System.Utilization:1:subscribe') {
-      return null;
-    }
-
-    final payload = decoded[1];
+    final payload = decoded.first;
     if (payload is Map<String, dynamic>) {
       return payload;
     }
