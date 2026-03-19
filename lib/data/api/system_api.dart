@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:dio/dio.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
 
 import '../../core/network/dio_client.dart';
 import '../models/system_status_model.dart';
@@ -69,73 +69,79 @@ class DsmSystemApi implements SystemApi {
     String? cookieHeader,
   }) {
     final controller = StreamController<SystemStatusModel>();
-    final uri = _buildSocketUri(
-      baseUrl: baseUrl,
-      sid: sid,
-      synoToken: synoToken,
-    );
-    final origin = _buildOrigin(baseUrl);
 
-    final headers = <String, dynamic>{
-      'Origin': origin,
-    };
-    if (cookieHeader != null && cookieHeader.isNotEmpty) {
-      headers['Cookie'] = cookieHeader;
-    }
+    Future<void>(() async {
+      final uri = _buildSocketUri(
+        baseUrl: baseUrl,
+        sid: sid,
+        synoToken: synoToken,
+      );
+      final origin = _buildOrigin(baseUrl);
 
-    final channel = WebSocketChannel.connect(uri, headers: headers);
+      final headers = <String, dynamic>{
+        'Origin': origin,
+      };
+      if (cookieHeader != null && cookieHeader.isNotEmpty) {
+        headers['Cookie'] = cookieHeader;
+      }
 
-    final subscription = channel.stream.listen(
-      (rawMessage) {
-        final text = rawMessage?.toString() ?? '';
+      final socket = await WebSocket.connect(
+        uri.toString(),
+        headers: headers,
+      );
 
-        if (text.startsWith('0')) {
-          channel.sink.add('40');
-          return;
-        }
+      controller.onCancel = () async {
+        await socket.close();
+      };
 
-        if (text == '40') {
-          channel.sink.add('42["SYNO.Core.System.Utilization:1:get",{}]');
-          return;
-        }
+      socket.listen(
+        (rawMessage) {
+          final text = rawMessage?.toString() ?? '';
 
-        if (text == '2') {
-          channel.sink.add('3');
-          return;
-        }
+          if (text.startsWith('0')) {
+            socket.add('40');
+            return;
+          }
 
-        final payload = _extractSocketPayload(text);
-        if (payload == null || payload['success'] != true) {
-          return;
-        }
+          if (text == '40') {
+            socket.add('42["SYNO.Core.System.Utilization:1:get",{}]');
+            return;
+          }
 
-        final data = payload['data'] as Map? ?? const {};
-        final cpu = data['cpu'] as Map? ?? const {};
-        final memory = data['memory'] as Map? ?? const {};
-        final space = data['space'] as Map? ?? const {};
-        final totalSpace = space['total'] as Map? ?? const {};
+          if (text == '2') {
+            socket.add('3');
+            return;
+          }
 
-        controller.add(
-          SystemStatusModel(
-            serverName: '我的 NAS',
-            dsmVersion: 'DSM 7',
-            cpuUsage: ((cpu['user_load'] as num?) ?? 0).toDouble() +
-                ((cpu['system_load'] as num?) ?? 0).toDouble() +
-                ((cpu['other_load'] as num?) ?? 0).toDouble(),
-            memoryUsage: ((memory['real_usage'] as num?) ?? 0).toDouble(),
-            storageUsage: ((totalSpace['utilization'] as num?) ?? 0).toDouble(),
-            uptimeText: null,
-          ),
-        );
-      },
-      onError: controller.addError,
-      onDone: controller.close,
-    );
+          final payload = _extractSocketPayload(text);
+          if (payload == null || payload['success'] != true) {
+            return;
+          }
 
-    controller.onCancel = () async {
-      await subscription.cancel();
-      await channel.sink.close();
-    };
+          final data = payload['data'] as Map? ?? const {};
+          final cpu = data['cpu'] as Map? ?? const {};
+          final memory = data['memory'] as Map? ?? const {};
+          final space = data['space'] as Map? ?? const {};
+          final totalSpace = space['total'] as Map? ?? const {};
+
+          controller.add(
+            SystemStatusModel(
+              serverName: '我的 NAS',
+              dsmVersion: 'DSM 7',
+              cpuUsage: ((cpu['user_load'] as num?) ?? 0).toDouble() +
+                  ((cpu['system_load'] as num?) ?? 0).toDouble() +
+                  ((cpu['other_load'] as num?) ?? 0).toDouble(),
+              memoryUsage: ((memory['real_usage'] as num?) ?? 0).toDouble(),
+              storageUsage: ((totalSpace['utilization'] as num?) ?? 0).toDouble(),
+              uptimeText: null,
+            ),
+          );
+        },
+        onError: controller.addError,
+        onDone: controller.close,
+        cancelOnError: false,
+      );
+    }).catchError(controller.addError);
 
     return controller.stream;
   }
