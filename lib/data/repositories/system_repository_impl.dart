@@ -26,6 +26,9 @@ class SystemRepositoryImpl implements SystemRepository {
       cpuUsage: model.cpuUsage,
       memoryUsage: model.memoryUsage,
       storageUsage: model.storageUsage,
+      volumes: model.volumes
+          .map((item) => StorageVolumeStatus(name: item.name, usage: item.usage))
+          .toList(),
       modelName: model.modelName,
       serialNumber: model.serialNumber,
       uptimeText: model.uptimeText,
@@ -54,6 +57,9 @@ class SystemRepositoryImpl implements SystemRepository {
         cpuUsage: model.cpuUsage,
         memoryUsage: model.memoryUsage,
         storageUsage: model.storageUsage,
+        volumes: model.volumes
+            .map((item) => StorageVolumeStatus(name: item.name, usage: item.usage))
+            .toList(),
         modelName: model.modelName,
         serialNumber: model.serialNumber,
         uptimeText: model.uptimeText,

@@ -113,8 +113,10 @@
 - 当前首页资源映射：
   - CPU → `user_load + system_load + other_load`
   - 内存 → `memory.real_usage`
-  - 存储 → `space.total.utilization`
+  - 存储总览 → `space.total.utilization`
+  - 各存储空间 → `space.volume[].display_name + utilization`
 - `subscribe` 当前返回错误码 `103`，已暂时移除，只保留 `get` 路径确保首页稳定展示
+- 首页当前已改为：HTTP 概览（设备名/版本/设备信息/uptime）+ WS 实时指标（CPU/内存/存储）合并展示
 
 ### 认证层
 - 已确认 DSM Web UI 的 realtime 业务层依赖 DSM v7 登录链路

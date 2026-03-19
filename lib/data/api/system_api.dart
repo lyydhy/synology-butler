@@ -41,26 +41,49 @@ class DsmSystemApi implements SystemApi {
         },
       );
 
-      if (infoResponse.data is Map && infoResponse.data['success'] == true) {
-        final data = infoResponse.data['data'] as Map? ?? const {};
+      final utilizationResponse = await client.get(
+        '/webapi/entry.cgi',
+        queryParameters: {
+          'api': 'SYNO.Core.System.Utilization',
+          'method': 'get',
+          'version': '1',
+          'type': 'current',
+          '_sid': sid,
+        },
+      );
 
-        return SystemStatusModel(
-          serverName: (data['hostname'] ?? '我的 NAS').toString(),
-          dsmVersion: (data['productversion'] ?? 'DSM 7').toString(),
-          cpuUsage: ((data['cpu_usage'] as num?) ?? 0).toDouble(),
-          memoryUsage: ((data['memory_usage'] as num?) ?? 0).toDouble(),
-          storageUsage: ((data['storage_usage'] as num?) ?? 0).toDouble(),
-          modelName: data['model']?.toString(),
-          serialNumber: data['serial']?.toString(),
-          uptimeText: data['uptime']?.toString(),
-        );
-      }
+      final infoData = infoResponse.data is Map && infoResponse.data['success'] == true
+          ? (infoResponse.data['data'] as Map? ?? const {})
+          : const {};
+      final utilizationData = utilizationResponse.data is Map && utilizationResponse.data['success'] == true
+          ? (utilizationResponse.data['data'] as Map? ?? const {})
+          : const {};
 
-      debugPrint('[HTTP][System] unexpected response: ${infoResponse.data}');
-      throw DioException(
-        requestOptions: infoResponse.requestOptions,
-        error: 'Failed to fetch system overview',
-        response: infoResponse,
+      final memory = utilizationData['memory'] as Map? ?? const {};
+      final space = utilizationData['space'] as Map? ?? const {};
+      final totalSpace = space['total'] as Map? ?? const {};
+      final volumeList = (space['volume'] as List?) ?? const [];
+
+      return SystemStatusModel(
+        serverName: (infoData['hostname'] ?? infoData['server_name'] ?? '我的 NAS').toString(),
+        dsmVersion: (infoData['productversion'] ?? infoData['version_string'] ?? 'DSM 7').toString(),
+        cpuUsage: ((utilizationData['cpu']?['user_load'] as num?) ?? 0).toDouble() +
+            ((utilizationData['cpu']?['system_load'] as num?) ?? 0).toDouble() +
+            ((utilizationData['cpu']?['other_load'] as num?) ?? 0).toDouble(),
+        memoryUsage: ((memory['real_usage'] as num?) ?? 0).toDouble(),
+        storageUsage: ((totalSpace['utilization'] as num?) ?? 0).toDouble(),
+        volumes: volumeList
+            .whereType<Map>()
+            .map(
+              (item) => StorageVolumeStatusModel(
+                name: (item['display_name'] ?? item['device'] ?? 'volume').toString(),
+                usage: ((item['utilization'] as num?) ?? 0).toDouble(),
+              ),
+            )
+            .toList(),
+        modelName: (infoData['model'] ?? infoData['modelname'])?.toString(),
+        serialNumber: (infoData['serial'] ?? infoData['serial_number'])?.toString(),
+        uptimeText: _formatUptime(infoData['uptime'] ?? infoData['uptime_seconds']),
       );
     } catch (e) {
       debugPrint('[HTTP][System][Error] $e');
@@ -125,10 +148,7 @@ class DsmSystemApi implements SystemApi {
         sendFrame(frame);
       }
 
-      void sendBootstrapSequence() {
-        sendFrame('2probe');
-        sendFrame('5');
-        sendFrame('40');
+      void requestCurrent() {
         sendRequestWebApi('SYNO.Core.System.Utilization', 1, 'get', {
           'type': 'current',
           '_sid': sid,
@@ -137,16 +157,15 @@ class DsmSystemApi implements SystemApi {
         requested = true;
       }
 
-      sendBootstrapSequence();
+      sendFrame('2probe');
+      sendFrame('5');
+      sendFrame('40');
+      requestCurrent();
 
       bootstrapTimer = Timer(const Duration(seconds: 2), () {
         debugPrint('[WS][Bootstrap Timeout] no business payload yet, retry request_webapi');
         sendFrame('40');
-        sendRequestWebApi('SYNO.Core.System.Utilization', 1, 'get', {
-          'type': 'current',
-          '_sid': sid,
-          'SynoToken': synoToken,
-        });
+        requestCurrent();
       });
 
       controller.onCancel = () async {
@@ -177,12 +196,7 @@ class DsmSystemApi implements SystemApi {
 
           if (text == '40') {
             if (!requested) {
-              sendRequestWebApi('SYNO.Core.System.Utilization', 1, 'get', {
-                'type': 'current',
-                '_sid': sid,
-                'SynoToken': synoToken,
-              });
-              requested = true;
+              requestCurrent();
             }
             return;
           }
@@ -199,6 +213,7 @@ class DsmSystemApi implements SystemApi {
           final memory = data['memory'] as Map? ?? const {};
           final space = data['space'] as Map? ?? const {};
           final totalSpace = space['total'] as Map? ?? const {};
+          final volumeList = (space['volume'] as List?) ?? const [];
 
           controller.add(
             SystemStatusModel(
@@ -209,6 +224,15 @@ class DsmSystemApi implements SystemApi {
                   ((cpu['other_load'] as num?) ?? 0).toDouble(),
               memoryUsage: ((memory['real_usage'] as num?) ?? 0).toDouble(),
               storageUsage: ((totalSpace['utilization'] as num?) ?? 0).toDouble(),
+              volumes: volumeList
+                  .whereType<Map>()
+                  .map(
+                    (item) => StorageVolumeStatusModel(
+                      name: (item['display_name'] ?? item['device'] ?? 'volume').toString(),
+                      usage: ((item['utilization'] as num?) ?? 0).toDouble(),
+                    ),
+                  )
+                  .toList(),
               uptimeText: null,
             ),
           );
@@ -387,6 +411,25 @@ class DsmSystemApi implements SystemApi {
       return Map<String, dynamic>.from(payload);
     }
     return null;
+  }
+
+  String? _formatUptime(dynamic value) {
+    if (value == null) return null;
+    final seconds = int.tryParse(value.toString());
+    if (seconds == null) {
+      return value.toString();
+    }
+
+    final days = seconds ~/ 86400;
+    final hours = (seconds % 86400) ~/ 3600;
+    final minutes = (seconds % 3600) ~/ 60;
+
+    final parts = <String>[];
+    if (days > 0) parts.add('${days}天');
+    if (hours > 0) parts.add('${hours}小时');
+    if (minutes > 0) parts.add('${minutes}分钟');
+    if (parts.isEmpty) parts.add('${seconds}秒');
+    return parts.join(' ');
   }
 }
 
