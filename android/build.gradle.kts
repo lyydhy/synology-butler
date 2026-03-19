@@ -1,10 +1,13 @@
 allprojects {
     repositories {
+        google()
+        mavenCentral()
+        maven(url = "https://storage.googleapis.com/download.flutter.io")
+
         maven(url = "https://maven.aliyun.com/repository/google")
         maven(url = "https://maven.aliyun.com/repository/public")
         maven(url = "https://maven.aliyun.com/repository/central")
-        google()
-        mavenCentral()
+
     }
 }
 
