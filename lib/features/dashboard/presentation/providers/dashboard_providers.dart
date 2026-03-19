@@ -25,3 +25,13 @@ final dashboardOverviewProvider = StreamProvider<SystemStatus>((ref) {
         session: session,
       );
 });
+
+final dashboardOverviewSafeProvider = Provider<AsyncValue<SystemStatus?>>((ref) {
+  final overview = ref.watch(dashboardOverviewProvider);
+
+  return overview.when(
+    data: (value) => AsyncValue.data(value),
+    loading: () => const AsyncValue.loading(),
+    error: (error, stackTrace) => const AsyncValue.data(null),
+  );
+});

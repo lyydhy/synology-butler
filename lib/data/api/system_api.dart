@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../core/network/dio_client.dart';
 import '../models/system_status_model.dart';
@@ -29,36 +30,42 @@ class DsmSystemApi implements SystemApi {
   }) async {
     final client = DioClient(baseUrl: baseUrl).dio;
 
-    final infoResponse = await client.get(
-      '/webapi/entry.cgi',
-      queryParameters: {
-        'api': 'SYNO.Core.System',
-        'method': 'info',
-        'version': '1',
-        '_sid': sid,
-      },
-    );
-
-    if (infoResponse.data is Map && infoResponse.data['success'] == true) {
-      final data = infoResponse.data['data'] as Map? ?? const {};
-
-      return SystemStatusModel(
-        serverName: (data['hostname'] ?? '我的 NAS').toString(),
-        dsmVersion: (data['productversion'] ?? 'DSM 7').toString(),
-        cpuUsage: ((data['cpu_usage'] as num?) ?? 0).toDouble(),
-        memoryUsage: ((data['memory_usage'] as num?) ?? 0).toDouble(),
-        storageUsage: ((data['storage_usage'] as num?) ?? 0).toDouble(),
-        modelName: data['model']?.toString(),
-        serialNumber: data['serial']?.toString(),
-        uptimeText: data['uptime']?.toString(),
+    try {
+      final infoResponse = await client.get(
+        '/webapi/entry.cgi',
+        queryParameters: {
+          'api': 'SYNO.Core.System',
+          'method': 'info',
+          'version': '1',
+          '_sid': sid,
+        },
       );
-    }
 
-    throw DioException(
-      requestOptions: infoResponse.requestOptions,
-      error: 'Failed to fetch system overview',
-      response: infoResponse,
-    );
+      if (infoResponse.data is Map && infoResponse.data['success'] == true) {
+        final data = infoResponse.data['data'] as Map? ?? const {};
+
+        return SystemStatusModel(
+          serverName: (data['hostname'] ?? '我的 NAS').toString(),
+          dsmVersion: (data['productversion'] ?? 'DSM 7').toString(),
+          cpuUsage: ((data['cpu_usage'] as num?) ?? 0).toDouble(),
+          memoryUsage: ((data['memory_usage'] as num?) ?? 0).toDouble(),
+          storageUsage: ((data['storage_usage'] as num?) ?? 0).toDouble(),
+          modelName: data['model']?.toString(),
+          serialNumber: data['serial']?.toString(),
+          uptimeText: data['uptime']?.toString(),
+        );
+      }
+
+      debugPrint('[HTTP][System] unexpected response: ${infoResponse.data}');
+      throw DioException(
+        requestOptions: infoResponse.requestOptions,
+        error: 'Failed to fetch system overview',
+        response: infoResponse,
+      );
+    } catch (e) {
+      debugPrint('[HTTP][System][Error] $e');
+      rethrow;
+    }
   }
 
   @override
@@ -71,45 +78,63 @@ class DsmSystemApi implements SystemApi {
     final controller = StreamController<SystemStatusModel>();
 
     Future<void>(() async {
-      final uri = _buildSocketUri(
+      final origin = _buildOrigin(baseUrl);
+      final pollingState = await _openPollingSession(
         baseUrl: baseUrl,
-        sid: sid,
+        synoToken: synoToken,
+        cookieHeader: cookieHeader,
+        origin: origin,
+      );
+
+      final wsUri = _buildWebSocketUri(
+        baseUrl: baseUrl,
+        engineSid: pollingState.engineSid,
         synoToken: synoToken,
       );
-      final origin = _buildOrigin(baseUrl);
 
       final headers = <String, dynamic>{
         'Origin': origin,
       };
-      if (cookieHeader != null && cookieHeader.isNotEmpty) {
-        headers['Cookie'] = cookieHeader;
+      final combinedCookie = _mergeCookieHeaders(cookieHeader, pollingState.cookieHeader);
+      if (combinedCookie != null && combinedCookie.isNotEmpty) {
+        headers['Cookie'] = combinedCookie;
       }
 
+      debugPrint('[WS][Connect] url=$wsUri');
+      debugPrint('[WS][Connect] origin=$origin cookie=${combinedCookie == null || combinedCookie.isEmpty ? 'missing' : 'present'} engineSid=${pollingState.engineSid}');
+
       final socket = await WebSocket.connect(
-        uri.toString(),
+        wsUri.toString(),
         headers: headers,
       );
 
+      debugPrint('[WS][Connected]');
+
       controller.onCancel = () async {
+        debugPrint('[WS][Closed by client]');
         await socket.close();
       };
 
       socket.listen(
         (rawMessage) {
           final text = rawMessage?.toString() ?? '';
+          debugPrint('[WS][Frame] $text');
 
           if (text.startsWith('0')) {
             socket.add('40');
+            debugPrint('[WS][Send] 40');
             return;
           }
 
           if (text == '40') {
             socket.add('42["SYNO.Core.System.Utilization:1:get",{}]');
+            debugPrint('[WS][Send] 42["SYNO.Core.System.Utilization:1:get",{}]');
             return;
           }
 
           if (text == '2') {
             socket.add('3');
+            debugPrint('[WS][Send] 3');
             return;
           }
 
@@ -137,18 +162,89 @@ class DsmSystemApi implements SystemApi {
             ),
           );
         },
-        onError: controller.addError,
-        onDone: controller.close,
+        onError: (error) {
+          debugPrint('[WS][Error] $error');
+          controller.addError(error);
+        },
+        onDone: () {
+          debugPrint('[WS][Done]');
+          controller.close();
+        },
         cancelOnError: false,
       );
-    }).catchError(controller.addError);
+    }).catchError((error) {
+      debugPrint('[WS][Connect Error] $error');
+      controller.addError(error);
+    });
 
     return controller.stream;
   }
 
-  Uri _buildSocketUri({
+  Future<_PollingState> _openPollingSession({
     required String baseUrl,
-    required String sid,
+    required String synoToken,
+    required String origin,
+    String? cookieHeader,
+  }) async {
+    final client = DioClient(baseUrl: baseUrl).dio;
+    final headers = <String, dynamic>{
+      'Origin': origin,
+    };
+    if (cookieHeader != null && cookieHeader.isNotEmpty) {
+      headers['Cookie'] = cookieHeader;
+    }
+
+    final uri = _buildPollingUri(baseUrl: baseUrl, synoToken: synoToken);
+    debugPrint('[EIO][Polling Open] url=$uri');
+
+    final response = await client.getUri(
+      uri,
+      options: Options(headers: headers, responseType: ResponseType.plain),
+    );
+
+    final raw = response.data?.toString() ?? '';
+    debugPrint('[EIO][Polling Open][Response] $raw');
+
+    final engineSid = _extractEngineSid(raw);
+    if (engineSid == null || engineSid.isEmpty) {
+      throw Exception('Failed to extract engine sid from polling response: $raw');
+    }
+
+    final setCookies = response.headers.map['set-cookie'] ?? const <String>[];
+    final newCookieHeader = _buildCookieHeader(setCookies);
+
+    return _PollingState(
+      engineSid: engineSid,
+      cookieHeader: newCookieHeader,
+    );
+  }
+
+  Uri _buildPollingUri({
+    required String baseUrl,
+    required String synoToken,
+  }) {
+    final baseUri = Uri.parse(baseUrl);
+    final basePath = baseUri.path == '/' ? '' : baseUri.path;
+
+    return Uri(
+      scheme: baseUri.scheme,
+      host: baseUri.host,
+      port: baseUri.hasPort ? baseUri.port : null,
+      path: '$basePath/synoscgi.sock/socket.io/',
+      queryParameters: {
+        'Version': '86009',
+        'SynoToken': synoToken,
+        'UserType': 'user',
+        'EIO': '3',
+        'transport': 'polling',
+        't': DateTime.now().millisecondsSinceEpoch.toString(),
+      },
+    );
+  }
+
+  Uri _buildWebSocketUri({
+    required String baseUrl,
+    required String engineSid,
     required String synoToken,
   }) {
     final baseUri = Uri.parse(baseUrl);
@@ -166,7 +262,7 @@ class DsmSystemApi implements SystemApi {
         'UserType': 'user',
         'EIO': '3',
         'transport': 'websocket',
-        'sid': sid,
+        'sid': engineSid,
       },
     );
   }
@@ -177,6 +273,44 @@ class DsmSystemApi implements SystemApi {
     final host = uri.host;
     final portPart = uri.hasPort ? ':${uri.port}' : '';
     return '$scheme://$host$portPart';
+  }
+
+  String? _extractEngineSid(String raw) {
+    final match = RegExp(r'\{"sid":"([^"]+)"').firstMatch(raw);
+    return match?.group(1);
+  }
+
+  String? _buildCookieHeader(List<String> setCookies) {
+    if (setCookies.isEmpty) return null;
+
+    final pairs = <String>[];
+    for (final cookie in setCookies) {
+      final firstPart = cookie.split(';').first.trim();
+      if (firstPart.isNotEmpty && firstPart.contains('=')) {
+        pairs.add(firstPart);
+      }
+    }
+
+    if (pairs.isEmpty) return null;
+    return pairs.join('; ');
+  }
+
+  String? _mergeCookieHeaders(String? a, String? b) {
+    final parts = <String>[];
+    if (a != null && a.isNotEmpty) parts.addAll(a.split(';').map((e) => e.trim()).where((e) => e.isNotEmpty));
+    if (b != null && b.isNotEmpty) parts.addAll(b.split(';').map((e) => e.trim()).where((e) => e.isNotEmpty));
+    if (parts.isEmpty) return null;
+
+    final cookieMap = <String, String>{};
+    for (final part in parts) {
+      final idx = part.indexOf('=');
+      if (idx <= 0) continue;
+      final key = part.substring(0, idx).trim();
+      final value = part.substring(idx + 1).trim();
+      cookieMap[key] = value;
+    }
+
+    return cookieMap.entries.map((e) => '${e.key}=${e.value}').join('; ');
   }
 
   Map<String, dynamic>? _extractSocketPayload(dynamic rawMessage) {
@@ -205,4 +339,14 @@ class DsmSystemApi implements SystemApi {
     }
     return null;
   }
+}
+
+class _PollingState {
+  final String engineSid;
+  final String? cookieHeader;
+
+  const _PollingState({
+    required this.engineSid,
+    this.cookieHeader,
+  });
 }

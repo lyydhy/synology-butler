@@ -105,7 +105,8 @@
   - CPU → `user_load + system_load + other_load`
   - 内存 → `memory.real_usage`
   - 存储 → `space.total.utilization`
-- 登录态已开始保存 `SynoToken`，供 realtime socket 握手使用
+- 登录态已开始保存 `SynoToken` 与登录响应 Cookie，供 realtime socket 握手使用
+- websocket 握手已补充 `Origin` / `Cookie` 请求头，并增加基础 socket.io 帧处理与控制台日志
 
 ## 当前限制
 

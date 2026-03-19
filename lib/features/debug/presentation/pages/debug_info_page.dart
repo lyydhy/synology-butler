@@ -35,6 +35,18 @@ class DebugInfoPage extends ConsumerWidget {
             title: Text(l10n.sessionStatus),
             subtitle: Text(currentSession == null ? l10n.notAvailableYet : 'SID established (serverId=${currentSession.serverId})'),
           ),
+          ListTile(
+            title: const Text('SynoToken'),
+            subtitle: Text(currentSession == null
+                ? l10n.notAvailableYet
+                : (currentSession.synoToken == null || currentSession.synoToken!.isEmpty ? 'missing' : 'present')),
+          ),
+          ListTile(
+            title: const Text('Cookie Header'),
+            subtitle: Text(currentSession == null
+                ? l10n.notAvailableYet
+                : (currentSession.cookieHeader == null || currentSession.cookieHeader!.isEmpty ? 'missing' : 'present')),
+          ),
           const SizedBox(height: 16),
           Text(l10n.debugLocalStorage, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
