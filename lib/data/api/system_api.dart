@@ -17,6 +17,7 @@ abstract class SystemApi {
     required String baseUrl,
     required String sid,
     required String synoToken,
+    String? cookieHeader,
   });
 }
 
@@ -65,15 +66,24 @@ class DsmSystemApi implements SystemApi {
     required String baseUrl,
     required String sid,
     required String synoToken,
+    String? cookieHeader,
   }) {
     final controller = StreamController<SystemStatusModel>();
-    final channel = WebSocketChannel.connect(
-      _buildSocketUri(
-        baseUrl: baseUrl,
-        sid: sid,
-        synoToken: synoToken,
-      ),
+    final uri = _buildSocketUri(
+      baseUrl: baseUrl,
+      sid: sid,
+      synoToken: synoToken,
     );
+    final origin = _buildOrigin(baseUrl);
+
+    final headers = <String, dynamic>{
+      'Origin': origin,
+    };
+    if (cookieHeader != null && cookieHeader.isNotEmpty) {
+      headers['Cookie'] = cookieHeader;
+    }
+
+    final channel = WebSocketChannel.connect(uri, headers: headers);
 
     final subscription = channel.stream.listen(
       (rawMessage) {
@@ -153,6 +163,14 @@ class DsmSystemApi implements SystemApi {
         'sid': sid,
       },
     );
+  }
+
+  String _buildOrigin(String baseUrl) {
+    final uri = Uri.parse(baseUrl);
+    final scheme = uri.scheme.isEmpty ? 'http' : uri.scheme;
+    final host = uri.host;
+    final portPart = uri.hasPort ? ':${uri.port}' : '';
+    return '$scheme://$host$portPart';
   }
 
   Map<String, dynamic>? _extractSocketPayload(dynamic rawMessage) {

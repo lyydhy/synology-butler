@@ -39,6 +39,7 @@ final restoreSessionProvider = FutureProvider<bool>((ref) async {
   final currentServerId = await localStorage.readString(AppConstants.savedCurrentServerIdKey);
   final savedSid = await secureStorage.read(AppConstants.savedSidKey);
   final savedSynoToken = await secureStorage.read(AppConstants.savedSynoTokenKey);
+  final savedCookieHeader = await secureStorage.read(AppConstants.savedCookieHeaderKey);
   final savedUsername = await localStorage.readString(AppConstants.savedUsernameKey);
 
   ref.read(savedUsernameProvider.notifier).state = savedUsername;
@@ -62,6 +63,7 @@ final restoreSessionProvider = FutureProvider<bool>((ref) async {
         serverId: currentServer.id,
         sid: savedSid,
         synoToken: savedSynoToken,
+        cookieHeader: savedCookieHeader,
       );
 
   return true;
@@ -89,6 +91,9 @@ final persistLoginProvider = Provider<Future<void> Function(NasServer, NasSessio
     if (session.synoToken != null && session.synoToken!.isNotEmpty) {
       await secureStorage.write(AppConstants.savedSynoTokenKey, session.synoToken!);
     }
+    if (session.cookieHeader != null && session.cookieHeader!.isNotEmpty) {
+      await secureStorage.write(AppConstants.savedCookieHeaderKey, session.cookieHeader!);
+    }
   };
 });
 
@@ -101,6 +106,7 @@ final switchCurrentServerProvider = Provider<Future<void> Function(NasServer)>((
     await localStorage.writeString(AppConstants.savedCurrentServerIdKey, server.id);
     await secureStorage.delete(AppConstants.savedSidKey);
     await secureStorage.delete(AppConstants.savedSynoTokenKey);
+    await secureStorage.delete(AppConstants.savedCookieHeaderKey);
   };
 });
 
@@ -140,6 +146,7 @@ final deleteServerProvider = Provider<Future<void> Function(NasServer)>((ref) {
       await localStorage.remove(AppConstants.savedCurrentServerIdKey);
       await secureStorage.delete(AppConstants.savedSidKey);
       await secureStorage.delete(AppConstants.savedSynoTokenKey);
+      await secureStorage.delete(AppConstants.savedCookieHeaderKey);
     }
   };
 });
@@ -163,5 +170,6 @@ final logoutProvider = Provider<Future<void> Function()>((ref) {
     await localStorage.remove(AppConstants.savedCurrentServerIdKey);
     await secureStorage.delete(AppConstants.savedSidKey);
     await secureStorage.delete(AppConstants.savedSynoTokenKey);
+    await secureStorage.delete(AppConstants.savedCookieHeaderKey);
   };
 });

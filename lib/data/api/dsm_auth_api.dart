@@ -32,9 +32,13 @@ class DsmAuthApi implements AuthApi {
       final responseData = data['data'] as Map? ?? const {};
       final sid = responseData['sid'];
       if (sid is String && sid.isNotEmpty) {
+        final setCookies = response.headers.map['set-cookie'] ?? const <String>[];
+        final cookieHeader = _buildCookieHeader(setCookies);
+
         return AuthLoginResult(
           sid: sid,
           synoToken: responseData['synotoken']?.toString(),
+          cookieHeader: cookieHeader,
         );
       }
     }
@@ -62,5 +66,20 @@ class DsmAuthApi implements AuthApi {
         '_sid': sid,
       },
     );
+  }
+
+  String? _buildCookieHeader(List<String> setCookies) {
+    if (setCookies.isEmpty) return null;
+
+    final pairs = <String>[];
+    for (final cookie in setCookies) {
+      final firstPart = cookie.split(';').first.trim();
+      if (firstPart.isNotEmpty && firstPart.contains('=')) {
+        pairs.add(firstPart);
+      }
+    }
+
+    if (pairs.isEmpty) return null;
+    return pairs.join('; ');
   }
 }

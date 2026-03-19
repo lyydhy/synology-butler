@@ -46,6 +46,7 @@ class SystemRepositoryImpl implements SystemRepository {
       baseUrl: ServerUrlHelper.buildBaseUrl(server),
       sid: session.sid,
       synoToken: synoToken,
+      cookieHeader: session.cookieHeader,
     ).map(
       (model) => SystemStatus(
         serverName: server.name,
