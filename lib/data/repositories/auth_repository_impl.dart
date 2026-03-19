@@ -28,6 +28,8 @@ class AuthRepositoryImpl implements AuthRepository {
       sid: result.sid,
       synoToken: result.synoToken,
       cookieHeader: result.cookieHeader,
+      requestHashSeed: result.requestHashSeed,
+      authToken: result.authToken,
     );
   }
 

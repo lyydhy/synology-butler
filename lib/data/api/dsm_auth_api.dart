@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../core/network/dio_client.dart';
 import '../models/nas_server_model.dart';
@@ -13,21 +14,24 @@ class DsmAuthApi implements AuthApi {
   }) async {
     final client = DioClient(baseUrl: server.baseUrl).dio;
 
+    debugPrint('[Auth][v7] starting DSM v7 login flow for ${server.baseUrl}');
+
     final response = await client.get(
-      '/webapi/auth.cgi',
+      '/webapi/entry.cgi',
       queryParameters: {
         'api': 'SYNO.API.Auth',
-        'version': '6',
+        'version': '7',
         'method': 'login',
         'account': username,
         'passwd': password,
-        'session': 'FileStation',
-        'format': 'sid',
+        'session': 'webui',
         'enable_syno_token': 'yes',
       },
     );
 
     final data = response.data;
+    debugPrint('[Auth][v7][Response] $data');
+
     if (data is Map && data['success'] == true) {
       final responseData = data['data'] as Map? ?? const {};
       final sid = responseData['sid'];
@@ -39,13 +43,16 @@ class DsmAuthApi implements AuthApi {
           sid: sid,
           synoToken: responseData['synotoken']?.toString(),
           cookieHeader: cookieHeader,
+          requestHashSeed: responseData['synohash']?.toString(),
+          authToken: responseData['did']?.toString(),
+          noiseIkMessage: responseData['ik_message']?.toString(),
         );
       }
     }
 
     throw DioException(
       requestOptions: response.requestOptions,
-      error: 'DSM login failed',
+      error: 'DSM v7 login failed',
       response: response,
     );
   }
@@ -57,12 +64,12 @@ class DsmAuthApi implements AuthApi {
   }) async {
     final client = DioClient(baseUrl: server.baseUrl).dio;
     await client.get(
-      '/webapi/auth.cgi',
+      '/webapi/entry.cgi',
       queryParameters: {
         'api': 'SYNO.API.Auth',
-        'version': '6',
+        'version': '7',
         'method': 'logout',
-        'session': 'FileStation',
+        'session': 'webui',
         '_sid': sid,
       },
     );

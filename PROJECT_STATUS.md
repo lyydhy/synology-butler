@@ -110,11 +110,10 @@
 
 ## 当前限制
 
-- 尚未执行 `flutter run` 的真实设备运行验证
-- 尚未完成 Android 真机 / 模拟器联调
+- 首页 realtime socket 已连通到 transport 层，但业务层认证仍失败，原因已定位为缺少 DSM v7 Noise 登录与 `SynoHash` 生成链路
+- 当前认证层仍是传统 `SYNO.API.Auth version=6` 简化登录，无法满足 DSM Web UI realtime 业务调用要求
+- 登录页退出后表单回填（地址/端口/HTTPS/用户名）仍需单独检查与修复
 - 国际化文案目前只完成部分页面迁移，尚未覆盖全部页面文案
-- DSM 系统资源接口仍为浅层骨架，部分字段可能需要真实 NAS 联调修正
-- 部分 DSM API 参数和版本可能需要根据真实设备行为微调
 - 上传、分享等功能已完成骨架，但仍需真实 DSM 联调验证
 - iOS 尚未在真实 Apple 开发环境验证
 
@@ -140,6 +139,13 @@
 - `android/` Android 工程
 - `ios/` iOS 工程
 - `lib/app/` 应用入口与路由
+- `lib/core/` 通用工具、错误、存储、网络
+- `lib/data/` API / models / repositories
+- `lib/domain/` 实体和仓库接口
+- `lib/features/` 功能模块页面与 provider
+- `lib/l10n/` 国际化资源
+- `RUN.md` 运行说明
+` 应用入口与路由
 - `lib/core/` 通用工具、错误、存储、网络
 - `lib/data/` API / models / repositories
 - `lib/domain/` 实体和仓库接口

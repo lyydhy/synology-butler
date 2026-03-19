@@ -4,11 +4,17 @@ class AuthLoginResult {
   final String sid;
   final String? synoToken;
   final String? cookieHeader;
+  final String? requestHashSeed;
+  final String? authToken;
+  final String? noiseIkMessage;
 
   const AuthLoginResult({
     required this.sid,
     this.synoToken,
     this.cookieHeader,
+    this.requestHashSeed,
+    this.authToken,
+    this.noiseIkMessage,
   });
 }
 
