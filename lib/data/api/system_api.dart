@@ -110,8 +110,35 @@ class DsmSystemApi implements SystemApi {
 
       debugPrint('[WS][Connected]');
 
+      bool subscriptionSent = false;
+      Timer? bootstrapTimer;
+
+      void sendFrame(String frame) {
+        socket.add(frame);
+        debugPrint('[WS][Send] $frame');
+      }
+
+      void sendBootstrapSequence() {
+        sendFrame('2probe');
+        sendFrame('5');
+        sendFrame('40');
+        sendFrame('42["SYNO.Core.System.Utilization:1:get",{}]');
+        sendFrame('42["SYNO.Core.System.Utilization:1:subscribe",{}]');
+        subscriptionSent = true;
+      }
+
+      sendBootstrapSequence();
+
+      bootstrapTimer = Timer(const Duration(seconds: 2), () {
+        debugPrint('[WS][Bootstrap Timeout] no business payload yet, retry subscribe');
+        sendFrame('40');
+        sendFrame('42["SYNO.Core.System.Utilization:1:get",{}]');
+        sendFrame('42["SYNO.Core.System.Utilization:1:subscribe",{}]');
+      });
+
       controller.onCancel = () async {
         debugPrint('[WS][Closed by client]');
+        bootstrapTimer?.cancel();
         await socket.close();
       };
 
@@ -120,21 +147,27 @@ class DsmSystemApi implements SystemApi {
           final text = rawMessage?.toString() ?? '';
           debugPrint('[WS][Frame] $text');
 
+          if (text == '2') {
+            sendFrame('3');
+            return;
+          }
+
+          if (text == '3probe') {
+            sendFrame('5');
+            return;
+          }
+
           if (text.startsWith('0')) {
-            socket.add('40');
-            debugPrint('[WS][Send] 40');
+            sendFrame('40');
             return;
           }
 
           if (text == '40') {
-            socket.add('42["SYNO.Core.System.Utilization:1:get",{}]');
-            debugPrint('[WS][Send] 42["SYNO.Core.System.Utilization:1:get",{}]');
-            return;
-          }
-
-          if (text == '2') {
-            socket.add('3');
-            debugPrint('[WS][Send] 3');
+            if (!subscriptionSent) {
+              sendFrame('42["SYNO.Core.System.Utilization:1:get",{}]');
+              sendFrame('42["SYNO.Core.System.Utilization:1:subscribe",{}]');
+              subscriptionSent = true;
+            }
             return;
           }
 
@@ -142,6 +175,8 @@ class DsmSystemApi implements SystemApi {
           if (payload == null || payload['success'] != true) {
             return;
           }
+
+          bootstrapTimer?.cancel();
 
           final data = payload['data'] as Map? ?? const {};
           final cpu = data['cpu'] as Map? ?? const {};
@@ -164,10 +199,12 @@ class DsmSystemApi implements SystemApi {
         },
         onError: (error) {
           debugPrint('[WS][Error] $error');
+          bootstrapTimer?.cancel();
           controller.addError(error);
         },
         onDone: () {
           debugPrint('[WS][Done]');
+          bootstrapTimer?.cancel();
           controller.close();
         },
         cancelOnError: false,
@@ -326,7 +363,8 @@ class DsmSystemApi implements SystemApi {
     }
 
     final eventName = decoded[0]?.toString() ?? '';
-    if (eventName != 'SYNO.Core.System.Utilization:1:get') {
+    if (eventName != 'SYNO.Core.System.Utilization:1:get' &&
+        eventName != 'SYNO.Core.System.Utilization:1:subscribe') {
       return null;
     }
 
