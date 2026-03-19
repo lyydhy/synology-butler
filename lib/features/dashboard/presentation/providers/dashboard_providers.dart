@@ -12,7 +12,7 @@ final systemRepositoryProvider = Provider<SystemRepository>((ref) {
   return SystemRepositoryImpl(ref.read(systemApiProvider));
 });
 
-final dashboardOverviewProvider = FutureProvider<SystemStatus>((ref) async {
+final dashboardOverviewProvider = StreamProvider<SystemStatus>((ref) {
   final server = ref.watch(currentServerProvider);
   final session = ref.watch(currentSessionProvider);
 
@@ -20,7 +20,7 @@ final dashboardOverviewProvider = FutureProvider<SystemStatus>((ref) async {
     throw Exception('No active NAS session');
   }
 
-  return ref.read(systemRepositoryProvider).fetchOverview(
+  return ref.read(systemRepositoryProvider).watchOverview(
         server: server,
         session: session,
       );

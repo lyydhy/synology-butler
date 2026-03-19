@@ -7,4 +7,9 @@ abstract class SystemRepository {
     required NasServer server,
     required NasSession session,
   });
+
+  Stream<SystemStatus> watchOverview({
+    required NasServer server,
+    required NasSession session,
+  });
 }

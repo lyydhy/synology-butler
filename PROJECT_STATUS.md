@@ -98,6 +98,15 @@
   - 阿里云 `gradle-plugin`
   - 官方源兜底（`google()` / `mavenCentral()` / `gradlePluginPortal()`）
 
+### DSM Realtime Socket
+- 已确认 DSM 首页资源数据来自 socket 推送，而不是简单 HTTP 概览接口
+- 已按 `SYNO.Core.System.Utilization:1:get` 接入首版实时资源流
+- 当前首页资源映射：
+  - CPU → `user_load + system_load + other_load`
+  - 内存 → `memory.real_usage`
+  - 存储 → `space.total.utilization`
+- 登录态已开始保存 `SynoToken`，供 realtime socket 握手使用
+
 ## 当前限制
 
 - 尚未执行 `flutter run` 的真实设备运行验证

@@ -31,4 +31,32 @@ class SystemRepositoryImpl implements SystemRepository {
       uptimeText: model.uptimeText,
     );
   }
+
+  @override
+  Stream<SystemStatus> watchOverview({
+    required NasServer server,
+    required NasSession session,
+  }) {
+    final synoToken = session.synoToken;
+    if (synoToken == null || synoToken.isEmpty) {
+      throw Exception('Missing SynoToken for realtime utilization');
+    }
+
+    return _systemApi.watchUtilization(
+      baseUrl: ServerUrlHelper.buildBaseUrl(server),
+      sid: session.sid,
+      synoToken: synoToken,
+    ).map(
+      (model) => SystemStatus(
+        serverName: server.name,
+        dsmVersion: model.dsmVersion,
+        cpuUsage: model.cpuUsage,
+        memoryUsage: model.memoryUsage,
+        storageUsage: model.storageUsage,
+        modelName: model.modelName,
+        serialNumber: model.serialNumber,
+        uptimeText: model.uptimeText,
+      ),
+    );
+  }
 }

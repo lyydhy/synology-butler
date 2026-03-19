@@ -17,13 +17,17 @@ class AuthRepositoryImpl implements AuthRepository {
   }) async {
     final model = ServerMapper.toModel(server);
 
-    final sid = await _authApi.login(
+    final result = await _authApi.login(
       server: model,
       username: username,
       password: password,
     );
 
-    return NasSession(serverId: server.id, sid: sid);
+    return NasSession(
+      serverId: server.id,
+      sid: result.sid,
+      synoToken: result.synoToken,
+    );
   }
 
   @override

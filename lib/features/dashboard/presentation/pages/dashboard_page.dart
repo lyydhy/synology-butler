@@ -57,7 +57,9 @@ class DashboardPage extends ConsumerWidget {
             const SizedBox(height: 12),
             SummaryCard(
               title: l10n.sessionStatus,
-              subtitle: l10n.sidEstablished,
+              subtitle: currentSession.synoToken == null || currentSession.synoToken!.isEmpty
+                  ? '${l10n.sidEstablished} · SynoToken missing'
+                  : '${l10n.sidEstablished} · Realtime connected',
               trailing: const Icon(Icons.verified_user_outlined),
             ),
             const SizedBox(height: 12),

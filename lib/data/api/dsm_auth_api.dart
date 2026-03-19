@@ -6,7 +6,7 @@ import 'auth_api.dart';
 
 class DsmAuthApi implements AuthApi {
   @override
-  Future<String> login({
+  Future<AuthLoginResult> login({
     required NasServerModel server,
     required String username,
     required String password,
@@ -23,14 +23,19 @@ class DsmAuthApi implements AuthApi {
         'passwd': password,
         'session': 'FileStation',
         'format': 'sid',
+        'enable_syno_token': 'yes',
       },
     );
 
     final data = response.data;
     if (data is Map && data['success'] == true) {
-      final sid = data['data']?['sid'];
+      final responseData = data['data'] as Map? ?? const {};
+      final sid = responseData['sid'];
       if (sid is String && sid.isNotEmpty) {
-        return sid;
+        return AuthLoginResult(
+          sid: sid,
+          synoToken: responseData['synotoken']?.toString(),
+        );
       }
     }
 
