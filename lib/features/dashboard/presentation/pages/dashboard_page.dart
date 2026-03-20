@@ -226,7 +226,7 @@ class _MetricCard extends StatelessWidget {
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
             ),
           ],
-        ],
+        ),
       ),
     );
   }
