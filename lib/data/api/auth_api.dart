@@ -18,7 +18,45 @@ class AuthLoginResult {
   });
 }
 
+class DsmVersionInfo {
+  final String? major;
+  final String? minor;
+  final String? build;
+  final String? productVersion;
+  final String? fullVersionString;
+  final bool isDsm7OrAbove;
+
+  const DsmVersionInfo({
+    required this.major,
+    required this.minor,
+    required this.build,
+    required this.productVersion,
+    required this.fullVersionString,
+    required this.isDsm7OrAbove,
+  });
+
+  String get displayText {
+    if (fullVersionString != null && fullVersionString!.trim().isNotEmpty) {
+      return fullVersionString!.trim();
+    }
+    if (productVersion != null && productVersion!.trim().isNotEmpty) {
+      return 'DSM ${productVersion!.trim()}';
+    }
+    if (major != null && minor != null) {
+      return 'DSM $major.$minor';
+    }
+    if (major != null) {
+      return 'DSM $major';
+    }
+    return 'DSM 未知版本';
+  }
+}
+
 abstract class AuthApi {
+  Future<DsmVersionInfo> probeVersion({
+    required NasServerModel server,
+  });
+
   Future<AuthLoginResult> login({
     required NasServerModel server,
     required String username,

@@ -64,9 +64,11 @@ class DsmSystemApi implements SystemApi {
       final totalSpace = space['total'] as Map? ?? const {};
       final volumeList = (space['volume'] as List?) ?? const [];
 
+      final versionText = _buildVersionText(infoData);
+
       return SystemStatusModel(
         serverName: (infoData['hostname'] ?? infoData['server_name'] ?? '我的 NAS').toString(),
-        dsmVersion: (infoData['productversion'] ?? infoData['version_string'] ?? 'DSM 7').toString(),
+        dsmVersion: versionText,
         cpuUsage: ((utilizationData['cpu']?['user_load'] as num?) ?? 0).toDouble() +
             ((utilizationData['cpu']?['system_load'] as num?) ?? 0).toDouble() +
             ((utilizationData['cpu']?['other_load'] as num?) ?? 0).toDouble(),
@@ -78,6 +80,8 @@ class DsmSystemApi implements SystemApi {
               (item) => StorageVolumeStatusModel(
                 name: (item['display_name'] ?? item['device'] ?? 'volume').toString(),
                 usage: ((item['utilization'] as num?) ?? 0).toDouble(),
+                usedBytes: _toDouble(item['used_size'] ?? item['used']),
+                totalBytes: _toDouble(item['total_size'] ?? item['total']),
               ),
             )
             .toList(),
@@ -230,6 +234,8 @@ class DsmSystemApi implements SystemApi {
                     (item) => StorageVolumeStatusModel(
                       name: (item['display_name'] ?? item['device'] ?? 'volume').toString(),
                       usage: ((item['utilization'] as num?) ?? 0).toDouble(),
+                      usedBytes: _toDouble(item['used_size'] ?? item['used']),
+                      totalBytes: _toDouble(item['total_size'] ?? item['total']),
                     ),
                   )
                   .toList(),
@@ -411,6 +417,36 @@ class DsmSystemApi implements SystemApi {
       return Map<String, dynamic>.from(payload);
     }
     return null;
+  }
+
+  String _buildVersionText(Map infoData) {
+    final versionString = infoData['version_string']?.toString();
+    if (versionString != null && versionString.trim().isNotEmpty) {
+      return versionString.trim();
+    }
+
+    final productVersion = infoData['productversion']?.toString();
+    if (productVersion != null && productVersion.trim().isNotEmpty) {
+      final build = infoData['buildnumber']?.toString();
+      if (build != null && build.trim().isNotEmpty) {
+        return 'DSM ${productVersion.trim()}-$build';
+      }
+      return 'DSM ${productVersion.trim()}';
+    }
+
+    final major = infoData['productmajor']?.toString();
+    final minor = infoData['productminor']?.toString();
+    if (major != null && major.isNotEmpty) {
+      return minor != null && minor.isNotEmpty ? 'DSM $major.$minor' : 'DSM $major';
+    }
+
+    return 'DSM 版本未知';
+  }
+
+  double? _toDouble(dynamic value) {
+    if (value == null) return null;
+    if (value is num) return value.toDouble();
+    return double.tryParse(value.toString());
   }
 
   String? _formatUptime(dynamic value) {

@@ -27,7 +27,14 @@ class SystemRepositoryImpl implements SystemRepository {
       memoryUsage: model.memoryUsage,
       storageUsage: model.storageUsage,
       volumes: model.volumes
-          .map((item) => StorageVolumeStatus(name: item.name, usage: item.usage))
+          .map(
+            (item) => StorageVolumeStatus(
+              name: item.name,
+              usage: item.usage,
+              usedBytes: item.usedBytes,
+              totalBytes: item.totalBytes,
+            ),
+          )
           .toList(),
       modelName: model.modelName,
       serialNumber: model.serialNumber,
@@ -58,7 +65,14 @@ class SystemRepositoryImpl implements SystemRepository {
         memoryUsage: model.memoryUsage,
         storageUsage: model.storageUsage,
         volumes: model.volumes
-            .map((item) => StorageVolumeStatus(name: item.name, usage: item.usage))
+            .map(
+              (item) => StorageVolumeStatus(
+                name: item.name,
+                usage: item.usage,
+                usedBytes: item.usedBytes,
+                totalBytes: item.totalBytes,
+              ),
+            )
             .toList(),
         modelName: model.modelName,
         serialNumber: model.serialNumber,

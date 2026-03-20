@@ -10,6 +10,22 @@ class AuthRepositoryImpl implements AuthRepository {
   final AuthApi _authApi;
 
   @override
+  Future<NasVersionInfo> probeVersion({
+    required NasServer server,
+  }) async {
+    final model = ServerMapper.toModel(server);
+    final info = await _authApi.probeVersion(server: model);
+    return NasVersionInfo(
+      major: info.major,
+      minor: info.minor,
+      build: info.build,
+      productVersion: info.productVersion,
+      fullVersionString: info.fullVersionString,
+      isDsm7OrAbove: info.isDsm7OrAbove,
+    );
+  }
+
+  @override
   Future<NasSession> login({
     required NasServer server,
     required String username,

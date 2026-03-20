@@ -1,10 +1,14 @@
 class StorageVolumeStatus {
   final String name;
   final double usage;
+  final double? usedBytes;
+  final double? totalBytes;
 
   const StorageVolumeStatus({
     required this.name,
     required this.usage,
+    this.usedBytes,
+    this.totalBytes,
   });
 }
 

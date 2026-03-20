@@ -7,6 +7,43 @@ import 'auth_api.dart';
 
 class DsmAuthApi implements AuthApi {
   @override
+  Future<DsmVersionInfo> probeVersion({
+    required NasServerModel server,
+  }) async {
+    final client = DioClient(baseUrl: server.baseUrl).dio;
+
+    final response = await client.get(
+      '/webapi/query.cgi',
+      queryParameters: {
+        'api': 'SYNO.API.Info',
+        'version': '1',
+        'method': 'query',
+        'query': 'SYNO.API.Auth',
+      },
+    );
+
+    final data = response.data;
+    final info = data is Map && data['success'] == true ? (data['data'] as Map? ?? const {}) : const {};
+    final authInfo = info['SYNO.API.Auth'] as Map? ?? const {};
+    final maxVersion = int.tryParse(authInfo['maxVersion']?.toString() ?? '');
+
+    final major = authInfo['productmajor']?.toString() ?? authInfo['major']?.toString();
+    final minor = authInfo['productminor']?.toString() ?? authInfo['minor']?.toString();
+    final build = authInfo['buildnumber']?.toString() ?? authInfo['build']?.toString();
+    final productVersion = authInfo['productversion']?.toString();
+    final versionString = authInfo['version_string']?.toString() ?? authInfo['fullversion']?.toString();
+
+    return DsmVersionInfo(
+      major: major,
+      minor: minor,
+      build: build,
+      productVersion: productVersion,
+      fullVersionString: versionString,
+      isDsm7OrAbove: maxVersion != null ? maxVersion >= 7 : ((int.tryParse(major ?? '') ?? 0) >= 7),
+    );
+  }
+
+  @override
   Future<AuthLoginResult> login({
     required NasServerModel server,
     required String username,

@@ -12,6 +12,11 @@ import '../../../../domain/entities/nas_server.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../providers/auth_providers.dart';
 
+enum _LoginMode {
+  quick,
+  manual,
+}
+
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
 
@@ -41,6 +46,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   String? passwordValidationText;
   String? errorText;
   String? infoText;
+  _LoginMode loginMode = _LoginMode.manual;
 
   @override
   void dispose() {
@@ -54,9 +60,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     super.dispose();
   }
 
-  void fillInitialValues(NasServer? server, String? savedUsername) {
+  void fillInitialValues(NasServer? server, String? savedUsername, bool hasSavedServers) {
     if (initialized) return;
     initialized = true;
+    loginMode = hasSavedServers ? _LoginMode.quick : _LoginMode.manual;
 
     if (server == null) {
       serverNameController.text = '我的 NAS';
@@ -85,6 +92,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       portController.text = server.port.toString();
       basePathController.text = server.basePath ?? '';
       https = server.https;
+      loginMode = _LoginMode.quick;
       if (username != null && username.isNotEmpty) {
         usernameController.text = username;
       }
@@ -105,6 +113,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     await ref.read(deleteServerProvider)(server);
     if (!mounted) return;
 
+    final stillHasSavedServers = ref.read(savedServersProvider).isNotEmpty;
+
     if (selectedServerId == server.id) {
       setState(() {
         selectedServerId = null;
@@ -116,6 +126,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         }
         usernameController.clear();
         passwordController.clear();
+        loginMode = stillHasSavedServers ? _LoginMode.quick : _LoginMode.manual;
         _validateFields();
       });
     }
@@ -148,6 +159,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     _validateFields();
     return hostValidationText == null &&
         portValidationText == null &&
+        usernameValidationText == null &&
+        passwordValidationText == null &&
+        !isLoading;
+  }
+
+  bool get _canQuickLogin {
+    _validateFields();
+    return selectedServerId != null &&
         usernameValidationText == null &&
         passwordValidationText == null &&
         !isLoading;
@@ -207,7 +226,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   Future<void> login() async {
     _validateFields();
-    if (!_canSubmit) {
+    final canSubmit = loginMode == _LoginMode.quick ? _canQuickLogin : _canSubmit;
+    if (!canSubmit) {
       setState(() {});
       return;
     }
@@ -224,6 +244,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     ref.read(currentServerProvider.notifier).state = server;
 
     try {
+      final version = await ref.read(authRepositoryProvider).probeVersion(server: server);
+      if (!version.isDsm7OrAbove) {
+        setState(() {
+          errorText = '检测到当前设备为 ${version.displayText}。本应用当前仅支持 DSM 7，暂不支持 DSM 6 登录。';
+        });
+        return;
+      }
+
       final session = await ref.read(authRepositoryProvider).login(
             server: server,
             username: username,
@@ -354,6 +382,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   setState(() {
                     selectedServerId = null;
                     infoText = '已取消选择历史设备';
+                    if (savedServers.isNotEmpty) {
+                      loginMode = _LoginMode.manual;
+                    }
                   });
                 },
                 child: const Text('取消选择'),
@@ -551,7 +582,133 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     );
   }
 
-  Widget _buildInputCard(AppLocalizations l10n) {
+  Widget _buildQuickLoginCard(AppLocalizations l10n) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 28,
+            offset: const Offset(0, 12),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEEF4FF),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: const Icon(Icons.flash_on_rounded, color: Color(0xFF2563EB)),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        '快速登录',
+                        style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        selectedServerId == null ? '先选择一个历史设备，然后输入密码即可登录' : '已选中历史设备，输入密码即可登录',
+                        style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 18),
+            TextField(
+              controller: usernameController,
+              onChanged: (_) => setState(() => _validateFields()),
+              decoration: _inputDecoration(
+                label: l10n.username,
+                icon: Icons.person_outline,
+                errorText: usernameValidationText,
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: passwordController,
+              focusNode: passwordFocusNode,
+              obscureText: obscurePassword,
+              onChanged: (_) => setState(() => _validateFields()),
+              decoration: _inputDecoration(
+                label: l10n.password,
+                icon: Icons.lock_outline,
+                errorText: passwordValidationText,
+                suffixIcon: IconButton(
+                  onPressed: () => setState(() => obscurePassword = !obscurePassword),
+                  icon: Icon(obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined),
+                ),
+              ),
+              onSubmitted: (_) => isLoading ? null : login(),
+            ),
+            const SizedBox(height: 18),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: _canQuickLogin ? login : null,
+                icon: isLoading
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      )
+                    : const Icon(Icons.login_rounded),
+                label: Text(isLoading ? l10n.loggingIn : '登录 DSM'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFF2563EB),
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(vertical: 17),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                  textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  setState(() {
+                    loginMode = _LoginMode.manual;
+                    errorText = null;
+                    infoText = '已切换到新账号 / 新设备登录';
+                  });
+                },
+                icon: const Icon(Icons.edit_outlined),
+                label: const Text('使用新账号 / 新设备登录'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFF2563EB),
+                  side: BorderSide(color: const Color(0xFF2563EB).withOpacity(0.18)),
+                  padding: const EdgeInsets.symmetric(vertical: 15),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                  textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInputCard(AppLocalizations l10n, {required bool showBackToQuick}) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -597,6 +754,17 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     ],
                   ),
                 ),
+                if (showBackToQuick)
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        loginMode = _LoginMode.quick;
+                        errorText = null;
+                        infoText = '已切换回快速登录';
+                      });
+                    },
+                    child: const Text('快速登录'),
+                  ),
               ],
             ),
             const SizedBox(height: 18),
@@ -751,7 +919,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     final savedServerUsernames = ref.watch(savedServerUsernamesProvider);
     final savedServerLastUsed = ref.watch(savedServerLastUsedProvider);
     final sessionExpiredAsync = ref.watch(localStorageProvider).readString(AppConstants.sessionExpiredFlagKey);
-    fillInitialValues(currentServer, savedUsername);
+    fillInitialValues(currentServer, savedUsername, savedServers.isNotEmpty);
 
     if (selectedServerId == null && currentServer == null && savedServers.isNotEmpty) {
       final sortedServers = [...savedServers]
@@ -775,6 +943,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         await ref.read(localStorageProvider).remove(AppConstants.sessionExpiredFlagKey);
       });
     });
+
+    final showQuickLogin = savedServers.isNotEmpty && loginMode == _LoginMode.quick;
 
     return Scaffold(
       body: Container(
@@ -853,7 +1023,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      '连接你的群晖 DSM，查看系统状态、文件与下载任务。',
+                      showQuickLogin
+                          ? '优先展示历史设备快速登录；如需切换服务器，可进入新账号登录。'
+                          : '连接你的群晖 DSM，查看系统状态、文件与下载任务。',
                       style: TextStyle(
                         color: Colors.white.withOpacity(0.92),
                         height: 1.45,
@@ -866,8 +1038,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       runSpacing: 10,
                       children: [
                         _buildQuickActionChip(
-                          icon: Icons.bolt_outlined,
-                          label: '快速登录',
+                          icon: showQuickLogin ? Icons.lock_open_outlined : Icons.bolt_outlined,
+                          label: showQuickLogin ? '输入密码登录' : '快速登录',
                           onTap: () {
                             passwordFocusNode.requestFocus();
                           },
@@ -885,24 +1057,45 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               const SizedBox(height: 18),
               _buildStatusBanner(),
               _buildSavedServerSection(savedServers, savedServerUsernames, savedServerLastUsed),
-              Padding(
-                padding: const EdgeInsets.only(left: 2, bottom: 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '登录到 NAS',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      '支持局域网 IP、域名、端口和自定义基础路径。',
-                      style: TextStyle(color: Colors.grey.shade600),
-                    ),
-                  ],
+              if (showQuickLogin) ...[
+                Padding(
+                  padding: const EdgeInsets.only(left: 2, bottom: 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '快速重新登录',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        '有历史记录时优先显示这个界面，减少输入内容。',
+                        style: TextStyle(color: Colors.grey.shade600),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              _buildInputCard(l10n),
+                _buildQuickLoginCard(l10n),
+              ] else ...[
+                Padding(
+                  padding: const EdgeInsets.only(left: 2, bottom: 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '登录到 NAS',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        '支持局域网 IP、域名、端口和自定义基础路径。',
+                        style: TextStyle(color: Colors.grey.shade600),
+                      ),
+                    ],
+                  ),
+                ),
+                _buildInputCard(l10n, showBackToQuick: savedServers.isNotEmpty),
+              ],
             ],
           ),
         ),

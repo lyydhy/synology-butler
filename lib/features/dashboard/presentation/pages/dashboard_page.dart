@@ -59,7 +59,7 @@ class DashboardPage extends ConsumerWidget {
         children: [
           _HeroCard(
             title: data?.serverName ?? currentServer.name,
-            subtitle: data == null ? 'DSM --' : 'DSM ${data.dsmVersion}',
+            subtitle: data == null ? 'DSM --' : data.dsmVersion,
             connection: ServerUrlHelper.buildBaseUrl(currentServer),
             realtimeText: currentSession.synoToken == null || currentSession.synoToken!.isEmpty
                 ? 'SynoToken missing'
@@ -92,20 +92,9 @@ class DashboardPage extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 12),
-          _MetricCard(
-            title: l10n.storage,
-            value: data == null ? '--' : '${data.storageUsage.toStringAsFixed(0)}%',
-            icon: Icons.storage_rounded,
-            color: Colors.orange,
-          ),
-          if (data != null && data.volumes.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            SummaryCard(
-              title: '存储空间',
-              subtitle: data.volumes.map((v) => '${v.name} · ${v.usage.toStringAsFixed(0)}%').join('\n'),
-              trailing: const Icon(Icons.dns_outlined),
-            ),
-          ],
+          _VersionInfoCard(data: data),
+          const SizedBox(height: 12),
+          _VolumeSection(volumes: data?.volumes ?? const []),
           const SizedBox(height: 12),
           SummaryCard(
             title: l10n.deviceInfo,
@@ -238,6 +227,131 @@ class _MetricCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _VersionInfoCard extends StatelessWidget {
+  final SystemStatus? data;
+
+  const _VersionInfoCard({required this.data});
+
+  @override
+  Widget build(BuildContext context) {
+    return SummaryCard(
+      title: '系统版本',
+      subtitle: data?.dsmVersion ?? '暂未获取到版本信息',
+      trailing: const Icon(Icons.info_outline_rounded),
+    );
+  }
+}
+
+class _VolumeSection extends StatelessWidget {
+  final List<StorageVolumeStatus> volumes;
+
+  const _VolumeSection({required this.volumes});
+
+  @override
+  Widget build(BuildContext context) {
+    if (volumes.isEmpty) {
+      return const SummaryCard(
+        title: '存储空间',
+        subtitle: '暂未获取到存储空间信息',
+        trailing: Icon(Icons.storage_rounded),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.14)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.storage_rounded),
+              const SizedBox(width: 10),
+              Text(
+                '存储空间',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          ...volumes.map(
+            (volume) => Padding(
+              padding: const EdgeInsets.only(bottom: 14),
+              child: _VolumeUsageTile(volume: volume),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _VolumeUsageTile extends StatelessWidget {
+  final StorageVolumeStatus volume;
+
+  const _VolumeUsageTile({required this.volume});
+
+  String _formatBytes(double? value) {
+    if (value == null || value <= 0) return '--';
+
+    const units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
+    var size = value;
+    var unitIndex = 0;
+    while (size >= 1024 && unitIndex < units.length - 1) {
+      size /= 1024;
+      unitIndex++;
+    }
+
+    final digits = size >= 100 ? 0 : (size >= 10 ? 1 : 2);
+    return '${size.toStringAsFixed(digits)} ${units[unitIndex]}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ratio = (volume.usage / 100).clamp(0.0, 1.0);
+    final usedText = _formatBytes(volume.usedBytes);
+    final totalText = _formatBytes(volume.totalBytes);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                volume.name,
+                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              '${volume.usage.toStringAsFixed(0)}%',
+              style: const TextStyle(fontWeight: FontWeight.w800),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(999),
+          child: LinearProgressIndicator(
+            value: ratio,
+            minHeight: 10,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          (usedText == '--' || totalText == '--') ? '使用情况：${volume.usage.toStringAsFixed(0)}%' : '已用 $usedText / 总计 $totalText',
+          style: TextStyle(color: Colors.grey.shade700, fontSize: 13),
+        ),
+      ],
     );
   }
 }
