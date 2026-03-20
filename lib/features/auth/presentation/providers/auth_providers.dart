@@ -73,6 +73,27 @@ final restoreSessionProvider = FutureProvider<bool>((ref) async {
   return true;
 });
 
+final clearSessionProvider = Provider<Future<void> Function({bool markExpired})>((ref) {
+  return ({bool markExpired = false}) async {
+    ref.read(currentSessionProvider.notifier).state = null;
+
+    final localStorage = ref.read(localStorageProvider);
+    final secureStorage = ref.read(secureStorageProvider);
+
+    if (markExpired) {
+      await localStorage.writeString(AppConstants.sessionExpiredFlagKey, '1');
+    } else {
+      await localStorage.remove(AppConstants.sessionExpiredFlagKey);
+    }
+
+    await secureStorage.delete(AppConstants.savedSidKey);
+    await secureStorage.delete(AppConstants.savedSynoTokenKey);
+    await secureStorage.delete(AppConstants.savedCookieHeaderKey);
+    await secureStorage.delete(AppConstants.savedRequestHashSeedKey);
+    await secureStorage.delete(AppConstants.savedAuthTokenKey);
+  };
+});
+
 final persistLoginProvider = Provider<Future<void> Function(NasServer, NasSession, String)>((ref) {
   return (server, session, username) async {
     final localStorage = ref.read(localStorageProvider);
@@ -91,6 +112,7 @@ final persistLoginProvider = Provider<Future<void> Function(NasServer, NasSessio
     await _persistServers(ref, existing);
     await localStorage.writeString(AppConstants.savedCurrentServerIdKey, server.id);
     await localStorage.writeString(AppConstants.savedUsernameKey, username);
+    await localStorage.remove(AppConstants.sessionExpiredFlagKey);
     await secureStorage.write(AppConstants.savedSidKey, session.sid);
     if (session.synoToken != null && session.synoToken!.isNotEmpty) {
       await secureStorage.write(AppConstants.savedSynoTokenKey, session.synoToken!);
@@ -177,15 +199,11 @@ final logoutProvider = Provider<Future<void> Function()>((ref) {
     }
 
     ref.read(currentServerProvider.notifier).state = null;
-    ref.read(currentSessionProvider.notifier).state = null;
 
     final localStorage = ref.read(localStorageProvider);
-    final secureStorage = ref.read(secureStorageProvider);
     await localStorage.remove(AppConstants.savedCurrentServerIdKey);
-    await secureStorage.delete(AppConstants.savedSidKey);
-    await secureStorage.delete(AppConstants.savedSynoTokenKey);
-    await secureStorage.delete(AppConstants.savedCookieHeaderKey);
-    await secureStorage.delete(AppConstants.savedRequestHashSeedKey);
-    await secureStorage.delete(AppConstants.savedAuthTokenKey);
+    await localStorage.remove(AppConstants.sessionExpiredFlagKey);
+
+    await ref.read(clearSessionProvider)(markExpired: false);
   };
 });

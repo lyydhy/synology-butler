@@ -7,6 +7,7 @@ class AppConstants {
   static const savedRequestHashSeedKey = 'saved_request_hash_seed';
   static const savedAuthTokenKey = 'saved_auth_token';
   static const savedUsernameKey = 'saved_username';
+  static const sessionExpiredFlagKey = 'session_expired_flag';
   static const themeModeKey = 'theme_mode';
   static const themeColorKey = 'theme_color';
   static const localeKey = 'locale';

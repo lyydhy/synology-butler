@@ -30,6 +30,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   String? errorText;
   String? infoText;
   bool initialized = false;
+  bool handledExpiredMessage = false;
 
   @override
   void dispose() {
@@ -152,7 +153,21 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     final l10n = AppLocalizations.of(context);
     final currentServer = ref.watch(currentServerProvider);
     final savedUsername = ref.watch(savedUsernameProvider);
+    final sessionExpiredAsync = ref.watch(localStorageProvider).readString(AppConstants.sessionExpiredFlagKey);
     fillInitialValues(currentServer, savedUsername);
+
+    sessionExpiredAsync.then((flag) {
+      if (!mounted || handledExpiredMessage || flag != '1') return;
+      handledExpiredMessage = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (!mounted) return;
+        setState(() {
+          infoText = null;
+          errorText = '登录状态已过期，请重新登录以恢复实时连接。';
+        });
+        await ref.read(localStorageProvider).remove(AppConstants.sessionExpiredFlagKey);
+      });
+    });
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.appTitle)),
