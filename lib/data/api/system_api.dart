@@ -12,6 +12,7 @@ abstract class SystemApi {
   Future<SystemStatusModel> fetchOverview({
     required String baseUrl,
     required String sid,
+    String? synoToken,
   });
 
   Stream<SystemStatusModel> watchUtilization({
@@ -27,6 +28,7 @@ class DsmSystemApi implements SystemApi {
   Future<SystemStatusModel> fetchOverview({
     required String baseUrl,
     required String sid,
+    String? synoToken,
   }) async {
     final client = DioClient(baseUrl: baseUrl).dio;
 
@@ -64,7 +66,17 @@ class DsmSystemApi implements SystemApi {
       final totalSpace = space['total'] as Map? ?? const {};
       final volumeList = (space['volume'] as List?) ?? const [];
 
-      final versionText = _buildVersionText(infoData);
+      final upgradeVersionText = await _fetchUpgradeVersion(
+        client: client,
+        sid: sid,
+        synoToken: synoToken,
+      );
+      final systemHealthUptime = await _fetchSystemHealthUptime(
+        client: client,
+        sid: sid,
+        synoToken: synoToken,
+      );
+      final versionText = upgradeVersionText ?? _buildVersionText(infoData);
 
       return SystemStatusModel(
         serverName: (infoData['hostname'] ?? infoData['server_name'] ?? '我的 NAS').toString(),
@@ -87,7 +99,7 @@ class DsmSystemApi implements SystemApi {
             .toList(),
         modelName: (infoData['model'] ?? infoData['modelname'])?.toString(),
         serialNumber: (infoData['serial'] ?? infoData['serial_number'])?.toString(),
-        uptimeText: _formatUptime(infoData['uptime'] ?? infoData['uptime_seconds']),
+        uptimeText: systemHealthUptime ?? _formatUptime(infoData['uptime'] ?? infoData['uptime_seconds']),
       );
     } catch (e) {
       debugPrint('[HTTP][System][Error] $e');
@@ -416,6 +428,127 @@ class DsmSystemApi implements SystemApi {
     if (payload is Map) {
       return Map<String, dynamic>.from(payload);
     }
+    return null;
+  }
+
+  Future<String?> _fetchUpgradeVersion({
+    required Dio client,
+    required String sid,
+    String? synoToken,
+  }) async {
+    try {
+      final headers = <String, dynamic>{};
+      if (synoToken != null && synoToken.isNotEmpty) {
+        headers['X-SYNO-TOKEN'] = synoToken;
+      }
+
+      final response = await client.post(
+        '/webapi/entry.cgi',
+        data: {
+          'api': 'SYNO.Entry.Request',
+          'method': 'request',
+          'version': '1',
+          'stop_when_error': 'false',
+          'mode': 'sequential',
+          'compound': jsonEncode([
+            {
+              'api': 'SYNO.Core.Upgrade.Server',
+              'method': 'check',
+              'version': 1,
+              'need_auto_smallupdate': true,
+            },
+          ]),
+          '_sid': sid,
+        },
+        options: Options(headers: headers),
+      );
+
+      final data = response.data;
+      if (data is! Map || data['success'] != true) return null;
+
+      final result = data['data']?['result'];
+      if (result is! List) return null;
+
+      for (final item in result.whereType<Map>()) {
+        if (item['api']?.toString() != 'SYNO.Core.Upgrade.Server') continue;
+        if (item['success'] != true) continue;
+
+        final payload = item['data'] as Map? ?? const {};
+        final version = payload['version']?.toString();
+        if (version != null && version.trim().isNotEmpty) {
+          return version.trim();
+        }
+
+        final details = payload['version_details'] as Map? ?? const {};
+        final osName = details['os_name']?.toString() ?? 'DSM';
+        final major = details['major']?.toString();
+        final minor = details['minor']?.toString();
+        final micro = details['micro']?.toString();
+        final nano = details['nano']?.toString();
+        final build = details['buildnumber']?.toString();
+
+        final parts = <String>[];
+        if (major != null && major.isNotEmpty) {
+          var versionNumber = major;
+          if (minor != null && minor.isNotEmpty) versionNumber += '.$minor';
+          if (micro != null && micro.isNotEmpty) versionNumber += '.$micro';
+          if (nano != null && nano.isNotEmpty && nano != '0') versionNumber += ' Update $nano';
+          parts.add('$osName $versionNumber');
+        }
+        if (build != null && build.isNotEmpty) {
+          if (parts.isEmpty) {
+            parts.add('$osName $build');
+          } else {
+            parts[0] = parts[0].replaceFirst(' Update', '-$build Update');
+            if (!parts[0].contains('-$build')) {
+              parts[0] = '${parts[0]}-$build';
+            }
+          }
+        }
+
+        if (parts.isNotEmpty) {
+          return parts.first.trim();
+        }
+      }
+    } catch (e) {
+      debugPrint('[HTTP][Upgrade Version][Error] $e');
+    }
+
+    return null;
+  }
+
+  Future<String?> _fetchSystemHealthUptime({
+    required Dio client,
+    required String sid,
+    String? synoToken,
+  }) async {
+    try {
+      final headers = <String, dynamic>{};
+      if (synoToken != null && synoToken.isNotEmpty) {
+        headers['X-SYNO-TOKEN'] = synoToken;
+      }
+
+      final response = await client.post(
+        '/webapi/entry.cgi',
+        data: {
+          'api': 'SYNO.Core.System.SystemHealth',
+          'method': 'get',
+          'version': '1',
+          '_sid': sid,
+        },
+        options: Options(headers: headers),
+      );
+
+      final data = response.data;
+      if (data is! Map || data['success'] != true) return null;
+      final payload = data['data'] as Map? ?? const {};
+      final uptime = payload['uptime']?.toString();
+      if (uptime == null || uptime.trim().isEmpty) return null;
+      return uptime.trim();
+    } catch (e) {
+      debugPrint('[HTTP][System Health][Error] $e');
+    }
+
     return null;
   }
 

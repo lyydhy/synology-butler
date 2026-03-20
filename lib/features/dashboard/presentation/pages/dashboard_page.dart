@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -59,7 +61,7 @@ class DashboardPage extends ConsumerWidget {
         children: [
           _HeroCard(
             title: data?.serverName ?? currentServer.name,
-            subtitle: data == null ? 'DSM --' : data.dsmVersion,
+            subtitle: _buildSystemVersionText(data),
             connection: ServerUrlHelper.buildBaseUrl(currentServer),
             realtimeText: currentSession.synoToken == null || currentSession.synoToken!.isEmpty
                 ? 'SynoToken missing'
@@ -92,21 +94,9 @@ class DashboardPage extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 12),
-          _VersionInfoCard(data: data),
-          const SizedBox(height: 12),
           _VolumeSection(volumes: data?.volumes ?? const []),
           const SizedBox(height: 12),
-          SummaryCard(
-            title: l10n.deviceInfo,
-            subtitle: 'Model: ${data?.modelName ?? l10n.unknown}\nSN: ${data?.serialNumber ?? l10n.unknown}',
-            trailing: const Icon(Icons.devices_other_outlined),
-          ),
-          const SizedBox(height: 12),
-          SummaryCard(
-            title: l10n.uptime,
-            subtitle: data?.uptimeText ?? l10n.notAvailableYet,
-            trailing: const Icon(Icons.schedule_outlined),
-          ),
+          _UptimeCard(uptimeText: data?.uptimeText),
           if (realtimeFailed) ...[
             const SizedBox(height: 12),
             const Text(
@@ -117,6 +107,17 @@ class DashboardPage extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  String _buildSystemVersionText(SystemStatus? data) {
+    if (data == null) return '暂未获取到系统版本';
+
+    final version = data.dsmVersion.trim();
+    if (version.isEmpty || version == 'DSM --' || version == 'DSM 版本未知') {
+      return '暂未获取到系统版本';
+    }
+
+    return version;
   }
 }
 
@@ -225,23 +226,8 @@ class _MetricCard extends StatelessWidget {
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
             ),
           ],
-        ),
+        ],
       ),
-    );
-  }
-}
-
-class _VersionInfoCard extends StatelessWidget {
-  final SystemStatus? data;
-
-  const _VersionInfoCard({required this.data});
-
-  @override
-  Widget build(BuildContext context) {
-    return SummaryCard(
-      title: '系统版本',
-      subtitle: data?.dsmVersion ?? '暂未获取到版本信息',
-      trailing: const Icon(Icons.info_outline_rounded),
     );
   }
 }
@@ -282,10 +268,13 @@ class _VolumeSection extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 14),
-          ...volumes.map(
-            (volume) => Padding(
-              padding: const EdgeInsets.only(bottom: 14),
-              child: _VolumeUsageTile(volume: volume),
+          ...volumes.asMap().entries.map(
+            (entry) => Padding(
+              padding: EdgeInsets.only(bottom: entry.key == volumes.length - 1 ? 0 : 14),
+              child: _VolumeUsageTile(
+                volume: entry.value,
+                index: entry.key,
+              ),
             ),
           ),
         ],
@@ -296,8 +285,12 @@ class _VolumeSection extends StatelessWidget {
 
 class _VolumeUsageTile extends StatelessWidget {
   final StorageVolumeStatus volume;
+  final int index;
 
-  const _VolumeUsageTile({required this.volume});
+  const _VolumeUsageTile({
+    required this.volume,
+    required this.index,
+  });
 
   String _formatBytes(double? value) {
     if (value == null || value <= 0) return '--';
@@ -314,26 +307,63 @@ class _VolumeUsageTile extends StatelessWidget {
     return '${size.toStringAsFixed(digits)} ${units[unitIndex]}';
   }
 
+  String _buildDisplayName() {
+    final raw = volume.name.trim();
+    if (raw.isEmpty) return '存储空间${index + 1}';
+
+    final match = RegExp(r'^volume\s*(\d+)$', caseSensitive: false).firstMatch(raw);
+    if (match != null) {
+      return '存储空间${match.group(1)}';
+    }
+
+    if (raw.toLowerCase().startsWith('volume')) {
+      return '存储空间${index + 1}';
+    }
+
+    return raw;
+  }
+
+  String _buildUsageDetail() {
+    final used = volume.usedBytes;
+    final total = volume.totalBytes;
+
+    if (used != null && used > 0 && total != null && total > 0) {
+      return '已用 ${_formatBytes(used)} / 总计 ${_formatBytes(total)}';
+    }
+
+    if (used != null && used > 0) {
+      return '已用 ${_formatBytes(used)} / 总计 --';
+    }
+
+    if (total != null && total > 0) {
+      return '已用 -- / 总计 ${_formatBytes(total)}';
+    }
+
+    return '已用 -- / 总计 --';
+  }
+
   @override
   Widget build(BuildContext context) {
-    final ratio = (volume.usage / 100).clamp(0.0, 1.0);
-    final usedText = _formatBytes(volume.usedBytes);
-    final totalText = _formatBytes(volume.totalBytes);
+    final usage = volume.usage.isNaN ? 0.0 : volume.usage;
+    final ratio = (usage / 100).clamp(0.0, 1.0);
+    final displayName = _buildDisplayName();
+    final usageDetail = _buildUsageDetail();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
               child: Text(
-                volume.name,
+                displayName,
                 style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
               ),
             ),
             const SizedBox(width: 12),
             Text(
-              '${volume.usage.toStringAsFixed(0)}%',
+              '${usage.toStringAsFixed(0)}%',
               style: const TextStyle(fontWeight: FontWeight.w800),
             ),
           ],
@@ -348,10 +378,102 @@ class _VolumeUsageTile extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          (usedText == '--' || totalText == '--') ? '使用情况：${volume.usage.toStringAsFixed(0)}%' : '已用 $usedText / 总计 $totalText',
+          usageDetail,
           style: TextStyle(color: Colors.grey.shade700, fontSize: 13),
         ),
       ],
+    );
+  }
+}
+
+class _UptimeCard extends StatefulWidget {
+  final String? uptimeText;
+
+  const _UptimeCard({required this.uptimeText});
+
+  @override
+  State<_UptimeCard> createState() => _UptimeCardState();
+}
+
+class _UptimeCardState extends State<_UptimeCard> {
+  Timer? _timer;
+  Duration? _baseDuration;
+  DateTime? _baseTime;
+
+  @override
+  void initState() {
+    super.initState();
+    _syncFromWidget();
+  }
+
+  @override
+  void didUpdateWidget(covariant _UptimeCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.uptimeText != widget.uptimeText) {
+      _syncFromWidget();
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  void _syncFromWidget() {
+    _timer?.cancel();
+    _baseDuration = _parseUptime(widget.uptimeText);
+    _baseTime = _baseDuration == null ? null : DateTime.now();
+
+    if (_baseDuration != null) {
+      _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+        if (mounted) setState(() {});
+      });
+    }
+  }
+
+  Duration? _parseUptime(String? text) {
+    if (text == null) return null;
+    final value = text.trim();
+    if (value.isEmpty) return null;
+
+    final match = RegExp(r'^(?:(\d+):)?(\d{1,2}):(\d{1,2})$').firstMatch(value);
+    if (match != null) {
+      final hours = int.tryParse(match.group(1) ?? '0') ?? 0;
+      final minutes = int.tryParse(match.group(2) ?? '0') ?? 0;
+      final seconds = int.tryParse(match.group(3) ?? '0') ?? 0;
+      return Duration(hours: hours, minutes: minutes, seconds: seconds);
+    }
+
+    return null;
+  }
+
+  String _formatDuration(Duration duration) {
+    final totalHours = duration.inHours;
+    final minutes = duration.inMinutes % 60;
+    final seconds = duration.inSeconds % 60;
+
+    final hh = totalHours.toString().padLeft(2, '0');
+    final mm = minutes.toString().padLeft(2, '0');
+    final ss = seconds.toString().padLeft(2, '0');
+    return '$hh:$mm:$ss';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    String subtitle = '暂未获取到运行时间';
+
+    if (_baseDuration != null && _baseTime != null) {
+      final current = _baseDuration! + DateTime.now().difference(_baseTime!);
+      subtitle = _formatDuration(current);
+    } else if (widget.uptimeText != null && widget.uptimeText!.trim().isNotEmpty) {
+      subtitle = widget.uptimeText!.trim();
+    }
+
+    return SummaryCard(
+      title: '运行时间',
+      subtitle: subtitle,
+      trailing: const Icon(Icons.schedule_outlined),
     );
   }
 }

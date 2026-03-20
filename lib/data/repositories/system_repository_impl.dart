@@ -18,6 +18,7 @@ class SystemRepositoryImpl implements SystemRepository {
     final model = await _systemApi.fetchOverview(
       baseUrl: ServerUrlHelper.buildBaseUrl(server),
       sid: session.sid,
+      synoToken: session.synoToken,
     );
 
     return SystemStatus(

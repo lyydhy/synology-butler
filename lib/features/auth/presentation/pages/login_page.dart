@@ -1045,25 +1045,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         fontSize: 13,
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        _buildQuickActionChip(
-                          icon: showQuickLogin ? Icons.lock_open_outlined : Icons.bolt_outlined,
-                          label: showQuickLogin ? '输入密码' : '快速登录',
-                          onTap: () {
-                            passwordFocusNode.requestFocus();
-                          },
-                        ),
-                        _buildQuickActionChip(
-                          icon: Icons.wifi_tethering_outlined,
-                          label: '测试连接',
-                          onTap: isTesting ? () {} : () => testConnection(),
-                        ),
-                      ],
-                    ),
+                    const SizedBox(height: 4),
                   ],
                 ),
               ),
