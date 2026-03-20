@@ -642,19 +642,20 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               Padding(
                 padding: const EdgeInsets.only(top: 2),
                 child: TextField(
-                controller: usernameController,
-                onChanged: (_) => setState(() {}),
-                decoration: _inputDecoration(
-                  label: l10n.username,
-                  icon: Icons.person_outline,
-                  errorText: null,
-                  suffixIcon: TextButton(
-                    onPressed: () {
-                      setState(() {
-                        quickLoginEditUsername = false;
-                      });
-                    },
-                    child: const Text('完成'),
+                  controller: usernameController,
+                  onChanged: (_) => setState(() {}),
+                  decoration: _inputDecoration(
+                    label: l10n.username,
+                    icon: Icons.person_outline,
+                    errorText: null,
+                    suffixIcon: TextButton(
+                      onPressed: () {
+                        setState(() {
+                          quickLoginEditUsername = false;
+                        });
+                      },
+                      child: const Text('完成'),
+                    ),
                   ),
                 ),
               ),
