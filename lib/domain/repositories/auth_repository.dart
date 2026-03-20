@@ -40,6 +40,11 @@ abstract class AuthRepository {
     required NasServer server,
   });
 
+  Future<NasSession> refreshRealtimeSession({
+    required NasServer server,
+    required NasSession session,
+  });
+
   Future<NasSession> login({
     required NasServer server,
     required String username,

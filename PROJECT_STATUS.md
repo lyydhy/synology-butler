@@ -52,6 +52,7 @@
 - 首页版本号已开始切换到更可靠的数据源：`SYNO.Entry.Request` -> `SYNO.Core.Upgrade.Server.check`
 - 首页运行时间已开始切换到更可靠的数据源：`SYNO.Core.System.SystemHealth.get`
 - 首页运行时间卡已增加本地定时器递增显示
+- 已开始接入 B 路线恢复策略：realtime 鉴权失败时优先尝试刷新实时凭证，再重建 WS
 - 已修复一次 dashboard 页 `_MetricCard` 中 `Column` 结束括号误写导致的编译错误
 - 首页已移除设备信息卡（model / SN）
 - 首页存储空间按 volume 展示占用情况
@@ -69,6 +70,7 @@
 - 生成分享链接
 - 上传对话框与上传接口骨架
 - 文件详情弹层
+- 已开始按 DSM 7 会话要求补强 FileStation 请求头（SynoToken / Cookie）与根路径兜底
 
 ### 下载模块
 - 任务列表

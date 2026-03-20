@@ -25,6 +25,16 @@ bool _isSessionExpiredError(Object error) {
       text.contains('119');
 }
 
+bool _looksLikeRealtimeAuthFailure(Object error) {
+  final text = error.toString().toLowerCase();
+  return text.contains('synotoken') ||
+      text.contains('token') ||
+      text.contains('request_webapi') ||
+      text.contains('websocket') ||
+      text.contains('socket') ||
+      text.contains('auth');
+}
+
 Future<void> _handleSessionExpired(Ref ref) async {
   await ref.read(clearSessionProvider)(markExpired: true);
 
@@ -78,7 +88,40 @@ final dashboardRealtimeOverviewProvider = StreamProvider<SystemStatus>((ref) {
         onError: (error, stackTrace) async {
           if (_isSessionExpiredError(error)) {
             await _handleSessionExpired(ref);
+            controller.addError(error, stackTrace);
+            return;
           }
+
+          if (_looksLikeRealtimeAuthFailure(error)) {
+            try {
+              await ref.read(refreshRealtimeSessionProvider)();
+              final retried = ref.read(systemRepositoryProvider).watchOverview(
+                    server: ref.read(currentServerProvider)!,
+                    session: ref.read(currentSessionProvider)!,
+                  );
+
+              await subscription?.cancel();
+              subscription = retried.listen(
+                controller.add,
+                onError: (retryError, retryStackTrace) async {
+                  if (_isSessionExpiredError(retryError)) {
+                    await _handleSessionExpired(ref);
+                  }
+                  controller.addError(retryError, retryStackTrace);
+                },
+                onDone: controller.close,
+                cancelOnError: false,
+              );
+              return;
+            } catch (refreshError, refreshStackTrace) {
+              if (_isSessionExpiredError(refreshError)) {
+                await _handleSessionExpired(ref);
+              }
+              controller.addError(refreshError, refreshStackTrace);
+              return;
+            }
+          }
+
           controller.addError(error, stackTrace);
         },
         onDone: controller.close,

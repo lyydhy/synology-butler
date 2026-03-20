@@ -57,6 +57,11 @@ abstract class AuthApi {
     required NasServerModel server,
   });
 
+  Future<AuthLoginResult> refreshRealtimeSession({
+    required NasServerModel server,
+    required String sid,
+  });
+
   Future<AuthLoginResult> login({
     required NasServerModel server,
     required String username,

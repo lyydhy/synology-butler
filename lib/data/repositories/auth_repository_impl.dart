@@ -26,6 +26,28 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<NasSession> refreshRealtimeSession({
+    required NasServer server,
+    required NasSession session,
+  }) async {
+    final model = ServerMapper.toModel(server);
+    final result = await _authApi.refreshRealtimeSession(
+      server: model,
+      sid: session.sid,
+    );
+
+    return NasSession(
+      serverId: server.id,
+      sid: result.sid,
+      synoToken: result.synoToken ?? session.synoToken,
+      cookieHeader: result.cookieHeader ?? session.cookieHeader,
+      requestHashSeed: result.requestHashSeed ?? session.requestHashSeed,
+      authToken: result.authToken ?? session.authToken,
+      requestNonce: session.requestNonce,
+    );
+  }
+
+  @override
   Future<NasSession> login({
     required NasServer server,
     required String username,

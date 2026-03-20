@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../core/network/dio_client.dart';
 import '../models/file_item_model.dart';
@@ -10,6 +11,8 @@ abstract class FileStationApi {
     required String baseUrl,
     required String sid,
     required String path,
+    String? synoToken,
+    String? cookieHeader,
   });
 
   Future<void> createFolder({
@@ -17,6 +20,8 @@ abstract class FileStationApi {
     required String sid,
     required String parentPath,
     required String name,
+    String? synoToken,
+    String? cookieHeader,
   });
 
   Future<void> rename({
@@ -24,18 +29,24 @@ abstract class FileStationApi {
     required String sid,
     required String path,
     required String newName,
+    String? synoToken,
+    String? cookieHeader,
   });
 
   Future<void> delete({
     required String baseUrl,
     required String sid,
     required String path,
+    String? synoToken,
+    String? cookieHeader,
   });
 
   Future<String> createShareLink({
     required String baseUrl,
     required String sid,
     required String path,
+    String? synoToken,
+    String? cookieHeader,
   });
 
   Future<void> uploadFile({
@@ -44,17 +55,50 @@ abstract class FileStationApi {
     required String parentPath,
     required String fileName,
     required Uint8List bytes,
+    String? synoToken,
+    String? cookieHeader,
   });
 }
 
 class DsmFileStationApi implements FileStationApi {
+  Options _buildOptions({
+    String? synoToken,
+    String? cookieHeader,
+  }) {
+    final headers = <String, dynamic>{};
+    if (synoToken != null && synoToken.isNotEmpty) {
+      headers['X-SYNO-TOKEN'] = synoToken;
+    }
+    if (cookieHeader != null && cookieHeader.isNotEmpty) {
+      headers['Cookie'] = cookieHeader;
+    }
+    return Options(headers: headers);
+  }
+
+  String _normalizeFolderPath(String path) {
+    final trimmed = path.trim();
+    if (trimmed.isEmpty) return '/';
+    return trimmed.startsWith('/') ? trimmed : '/$trimmed';
+  }
+
+  String _extractError(dynamic data) {
+    if (data is Map && data['success'] == false) {
+      final code = data['error']?['code'];
+      return 'DSM FileStation failed, code=$code, data=$data';
+    }
+    return 'DSM FileStation failed, data=$data';
+  }
+
   @override
   Future<List<FileItemModel>> listFiles({
     required String baseUrl,
     required String sid,
     required String path,
+    String? synoToken,
+    String? cookieHeader,
   }) async {
     final client = DioClient(baseUrl: baseUrl).dio;
+    final folderPath = _normalizeFolderPath(path);
 
     final response = await client.get(
       '/webapi/entry.cgi',
@@ -62,29 +106,36 @@ class DsmFileStationApi implements FileStationApi {
         'api': 'SYNO.FileStation.List',
         'version': '2',
         'method': 'list',
-        'folder_path': path,
-        'additional': '["size","time","perm","type"]',
+        'folder_path': folderPath,
+        'offset': '0',
+        'limit': '1000',
+        'sort_by': 'name',
+        'sort_direction': 'asc',
+        'additional': '["real_path","size","time","perm","type"]',
         '_sid': sid,
       },
+      options: _buildOptions(synoToken: synoToken, cookieHeader: cookieHeader),
     );
+
+    debugPrint('[FileStation][list] path=$folderPath response=${response.data}');
 
     if (response.data is Map && response.data['success'] == true) {
       final data = response.data['data'] as Map? ?? const {};
       final files = (data['files'] as List?) ?? const [];
-      return files.map((item) {
-        final map = item as Map;
+      return files.whereType<Map>().map((map) {
+        final additional = map['additional'] as Map? ?? const {};
         return FileItemModel(
           name: (map['name'] ?? '').toString(),
-          path: (map['path'] ?? '').toString(),
+          path: (map['path'] ?? additional['real_path'] ?? '').toString(),
           isDirectory: ((map['isdir'] ?? false) == true),
-          size: (map['additional']?['size'] as num?)?.toInt() ?? 0,
+          size: (additional['size'] as num?)?.toInt() ?? 0,
         );
       }).toList();
     }
 
     throw DioException(
       requestOptions: response.requestOptions,
-      error: 'Failed to list files',
+      error: _extractError(response.data),
       response: response,
     );
   }
@@ -95,6 +146,8 @@ class DsmFileStationApi implements FileStationApi {
     required String sid,
     required String parentPath,
     required String name,
+    String? synoToken,
+    String? cookieHeader,
   }) async {
     final client = DioClient(baseUrl: baseUrl).dio;
 
@@ -104,10 +157,11 @@ class DsmFileStationApi implements FileStationApi {
         'api': 'SYNO.FileStation.CreateFolder',
         'version': '2',
         'method': 'create',
-        'folder_path': parentPath,
+        'folder_path': _normalizeFolderPath(parentPath),
         'name': name,
         '_sid': sid,
       },
+      options: _buildOptions(synoToken: synoToken, cookieHeader: cookieHeader),
     );
 
     if (response.data is Map && response.data['success'] == true) {
@@ -116,7 +170,7 @@ class DsmFileStationApi implements FileStationApi {
 
     throw DioException(
       requestOptions: response.requestOptions,
-      error: 'Failed to create folder',
+      error: _extractError(response.data),
       response: response,
     );
   }
@@ -127,6 +181,8 @@ class DsmFileStationApi implements FileStationApi {
     required String sid,
     required String path,
     required String newName,
+    String? synoToken,
+    String? cookieHeader,
   }) async {
     final client = DioClient(baseUrl: baseUrl).dio;
     final response = await client.get(
@@ -139,13 +195,14 @@ class DsmFileStationApi implements FileStationApi {
         'name': newName,
         '_sid': sid,
       },
+      options: _buildOptions(synoToken: synoToken, cookieHeader: cookieHeader),
     );
 
     if (response.data is Map && response.data['success'] == true) return;
 
     throw DioException(
       requestOptions: response.requestOptions,
-      error: 'Failed to rename file',
+      error: _extractError(response.data),
       response: response,
     );
   }
@@ -155,6 +212,8 @@ class DsmFileStationApi implements FileStationApi {
     required String baseUrl,
     required String sid,
     required String path,
+    String? synoToken,
+    String? cookieHeader,
   }) async {
     final client = DioClient(baseUrl: baseUrl).dio;
     final response = await client.get(
@@ -166,13 +225,14 @@ class DsmFileStationApi implements FileStationApi {
         'path': path,
         '_sid': sid,
       },
+      options: _buildOptions(synoToken: synoToken, cookieHeader: cookieHeader),
     );
 
     if (response.data is Map && response.data['success'] == true) return;
 
     throw DioException(
       requestOptions: response.requestOptions,
-      error: 'Failed to delete file',
+      error: _extractError(response.data),
       response: response,
     );
   }
@@ -182,6 +242,8 @@ class DsmFileStationApi implements FileStationApi {
     required String baseUrl,
     required String sid,
     required String path,
+    String? synoToken,
+    String? cookieHeader,
   }) async {
     final client = DioClient(baseUrl: baseUrl).dio;
     final response = await client.get(
@@ -193,6 +255,7 @@ class DsmFileStationApi implements FileStationApi {
         'path': path,
         '_sid': sid,
       },
+      options: _buildOptions(synoToken: synoToken, cookieHeader: cookieHeader),
     );
 
     if (response.data is Map && response.data['success'] == true) {
@@ -202,7 +265,7 @@ class DsmFileStationApi implements FileStationApi {
 
     throw DioException(
       requestOptions: response.requestOptions,
-      error: 'Failed to create share link',
+      error: _extractError(response.data),
       response: response,
     );
   }
@@ -214,25 +277,31 @@ class DsmFileStationApi implements FileStationApi {
     required String parentPath,
     required String fileName,
     required Uint8List bytes,
+    String? synoToken,
+    String? cookieHeader,
   }) async {
     final client = DioClient(baseUrl: baseUrl).dio;
     final formData = FormData.fromMap({
       'api': 'SYNO.FileStation.Upload',
       'version': '2',
       'method': 'upload',
-      'path': parentPath,
+      'path': _normalizeFolderPath(parentPath),
       'create_parents': 'true',
       'overwrite': 'true',
       '_sid': sid,
       'file': MultipartFile.fromBytes(bytes, filename: fileName),
     });
 
-    final response = await client.post('/webapi/entry.cgi', data: formData);
+    final response = await client.post(
+      '/webapi/entry.cgi',
+      data: formData,
+      options: _buildOptions(synoToken: synoToken, cookieHeader: cookieHeader),
+    );
     if (response.data is Map && response.data['success'] == true) return;
 
     throw DioException(
       requestOptions: response.requestOptions,
-      error: 'Failed to upload file',
+      error: _extractError(response.data),
       response: response,
     );
   }

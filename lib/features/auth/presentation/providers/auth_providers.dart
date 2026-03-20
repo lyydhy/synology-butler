@@ -114,6 +114,24 @@ final clearSessionProvider = Provider<Future<void> Function({bool markExpired})>
   };
 });
 
+Future<void> _persistSessionSecrets(Ref ref, NasSession session) async {
+  final secureStorage = ref.read(secureStorageProvider);
+  await secureStorage.write(AppConstants.savedSidKey, session.sid);
+
+  if (session.synoToken != null && session.synoToken!.isNotEmpty) {
+    await secureStorage.write(AppConstants.savedSynoTokenKey, session.synoToken!);
+  }
+  if (session.cookieHeader != null && session.cookieHeader!.isNotEmpty) {
+    await secureStorage.write(AppConstants.savedCookieHeaderKey, session.cookieHeader!);
+  }
+  if (session.requestHashSeed != null && session.requestHashSeed!.isNotEmpty) {
+    await secureStorage.write(AppConstants.savedRequestHashSeedKey, session.requestHashSeed!);
+  }
+  if (session.authToken != null && session.authToken!.isNotEmpty) {
+    await secureStorage.write(AppConstants.savedAuthTokenKey, session.authToken!);
+  }
+}
+
 final persistLoginProvider = Provider<Future<void> Function(NasServer, NasSession, String)>((ref) {
   return (server, session, username) async {
     final localStorage = ref.read(localStorageProvider);
@@ -143,19 +161,27 @@ final persistLoginProvider = Provider<Future<void> Function(NasServer, NasSessio
     await localStorage.writeString(AppConstants.savedCurrentServerIdKey, server.id);
     await localStorage.writeString(AppConstants.savedUsernameKey, username);
     await localStorage.remove(AppConstants.sessionExpiredFlagKey);
-    await secureStorage.write(AppConstants.savedSidKey, session.sid);
-    if (session.synoToken != null && session.synoToken!.isNotEmpty) {
-      await secureStorage.write(AppConstants.savedSynoTokenKey, session.synoToken!);
+    await _persistSessionSecrets(ref, session);
+  };
+});
+
+final refreshRealtimeSessionProvider = Provider<Future<NasSession> Function()>((ref) {
+  return () async {
+    final server = ref.read(currentServerProvider);
+    final session = ref.read(currentSessionProvider);
+
+    if (server == null || session == null) {
+      throw Exception('No active NAS session to refresh');
     }
-    if (session.cookieHeader != null && session.cookieHeader!.isNotEmpty) {
-      await secureStorage.write(AppConstants.savedCookieHeaderKey, session.cookieHeader!);
-    }
-    if (session.requestHashSeed != null && session.requestHashSeed!.isNotEmpty) {
-      await secureStorage.write(AppConstants.savedRequestHashSeedKey, session.requestHashSeed!);
-    }
-    if (session.authToken != null && session.authToken!.isNotEmpty) {
-      await secureStorage.write(AppConstants.savedAuthTokenKey, session.authToken!);
-    }
+
+    final refreshed = await ref.read(authRepositoryProvider).refreshRealtimeSession(
+          server: server,
+          session: session,
+        );
+
+    ref.read(currentSessionProvider.notifier).state = refreshed;
+    await _persistSessionSecrets(ref, refreshed);
+    return refreshed;
   };
 });
 

@@ -44,6 +44,53 @@ class DsmAuthApi implements AuthApi {
   }
 
   @override
+  Future<AuthLoginResult> refreshRealtimeSession({
+    required NasServerModel server,
+    required String sid,
+  }) async {
+    final client = DioClient(baseUrl: server.baseUrl).dio;
+
+    debugPrint('[Auth][refresh] refreshing realtime session for ${server.baseUrl}');
+
+    final response = await client.get(
+      '/webapi/entry.cgi',
+      queryParameters: {
+        'api': 'SYNO.API.Auth',
+        'version': '7',
+        'method': 'login',
+        'session': 'webui',
+        'enable_syno_token': 'yes',
+        '_sid': sid,
+      },
+    );
+
+    final data = response.data;
+    debugPrint('[Auth][refresh][Response] $data');
+
+    if (data is Map && data['success'] == true) {
+      final responseData = data['data'] as Map? ?? const {};
+      final refreshedSid = responseData['sid']?.toString() ?? sid;
+      final setCookies = response.headers.map['set-cookie'] ?? const <String>[];
+      final cookieHeader = _buildCookieHeader(setCookies);
+
+      return AuthLoginResult(
+        sid: refreshedSid,
+        synoToken: responseData['synotoken']?.toString(),
+        cookieHeader: cookieHeader,
+        requestHashSeed: responseData['synohash']?.toString(),
+        authToken: responseData['did']?.toString(),
+        noiseIkMessage: responseData['ik_message']?.toString(),
+      );
+    }
+
+    throw DioException(
+      requestOptions: response.requestOptions,
+      error: 'DSM realtime refresh failed',
+      response: response,
+    );
+  }
+
+  @override
   Future<AuthLoginResult> login({
     required NasServerModel server,
     required String username,

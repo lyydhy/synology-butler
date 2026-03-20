@@ -22,6 +22,8 @@ class FileRepositoryImpl implements FileRepository {
       baseUrl: ServerUrlHelper.buildBaseUrl(server),
       sid: session.sid,
       path: path,
+      synoToken: session.synoToken,
+      cookieHeader: session.cookieHeader,
     );
 
     return items
@@ -48,6 +50,8 @@ class FileRepositoryImpl implements FileRepository {
       sid: session.sid,
       parentPath: parentPath,
       name: name,
+      synoToken: session.synoToken,
+      cookieHeader: session.cookieHeader,
     );
   }
 
@@ -63,6 +67,8 @@ class FileRepositoryImpl implements FileRepository {
       sid: session.sid,
       path: path,
       newName: newName,
+      synoToken: session.synoToken,
+      cookieHeader: session.cookieHeader,
     );
   }
 
@@ -76,6 +82,8 @@ class FileRepositoryImpl implements FileRepository {
       baseUrl: ServerUrlHelper.buildBaseUrl(server),
       sid: session.sid,
       path: path,
+      synoToken: session.synoToken,
+      cookieHeader: session.cookieHeader,
     );
   }
 
@@ -89,6 +97,8 @@ class FileRepositoryImpl implements FileRepository {
       baseUrl: ServerUrlHelper.buildBaseUrl(server),
       sid: session.sid,
       path: path,
+      synoToken: session.synoToken,
+      cookieHeader: session.cookieHeader,
     );
   }
 
@@ -106,6 +116,8 @@ class FileRepositoryImpl implements FileRepository {
       parentPath: parentPath,
       fileName: fileName,
       bytes: bytes,
+      synoToken: session.synoToken,
+      cookieHeader: session.cookieHeader,
     );
   }
 }
