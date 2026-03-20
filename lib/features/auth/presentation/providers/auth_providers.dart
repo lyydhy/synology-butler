@@ -22,6 +22,8 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
 
 final savedServersProvider = StateProvider<List<NasServer>>((ref) => []);
 final savedUsernameProvider = StateProvider<String?>((ref) => null);
+final savedServerUsernamesProvider = StateProvider<Map<String, String>>((ref) => {});
+final savedServerLastUsedProvider = StateProvider<Map<String, int>>((ref) => {});
 final currentServerProvider = StateProvider<NasServer?>((ref) => null);
 final currentSessionProvider = StateProvider<NasSession?>((ref) => null);
 
@@ -29,6 +31,14 @@ Future<void> _persistServers(Ref ref, List<NasServer> servers) async {
   final localStorage = ref.read(localStorageProvider);
   final encoded = servers.map((s) => ServerMapper.toModel(s).encode()).toList();
   await localStorage.writeStringList(AppConstants.savedServersKey, encoded);
+}
+
+Future<void> _persistServerUsernames(Ref ref, Map<String, String> usernames) async {
+  await ref.read(localStorageProvider).writeJsonMap(AppConstants.savedServerUsernamesKey, usernames);
+}
+
+Future<void> _persistServerLastUsed(Ref ref, Map<String, int> values) async {
+  await ref.read(localStorageProvider).writeJsonMap(AppConstants.savedServerLastUsedKey, values);
 }
 
 final restoreSessionProvider = FutureProvider<bool>((ref) async {
@@ -43,11 +53,21 @@ final restoreSessionProvider = FutureProvider<bool>((ref) async {
   final savedRequestHashSeed = await secureStorage.read(AppConstants.savedRequestHashSeedKey);
   final savedAuthToken = await secureStorage.read(AppConstants.savedAuthTokenKey);
   final savedUsername = await localStorage.readString(AppConstants.savedUsernameKey);
+  final savedServerUsernamesRaw = await localStorage.readJsonMap(AppConstants.savedServerUsernamesKey);
+  final savedServerLastUsedRaw = await localStorage.readJsonMap(AppConstants.savedServerLastUsedKey);
+
+  final savedServerUsernames = savedServerUsernamesRaw.map(
+    (key, value) => MapEntry(key, value.toString()),
+  );
+  final savedServerLastUsed = savedServerLastUsedRaw.map(
+    (key, value) => MapEntry(key, int.tryParse(value.toString()) ?? 0),
+  );
 
   ref.read(savedUsernameProvider.notifier).state = savedUsername;
+  ref.read(savedServerUsernamesProvider.notifier).state = savedServerUsernames;
+  ref.read(savedServerLastUsedProvider.notifier).state = savedServerLastUsed;
 
   final servers = savedServers.map(NasServerModel.decode).map(ServerMapper.toEntity).toList();
-
   ref.read(savedServersProvider.notifier).state = servers;
 
   if (currentServerId == null || savedSid == null || savedSid.isEmpty) {
@@ -109,7 +129,17 @@ final persistLoginProvider = Provider<Future<void> Function(NasServer, NasSessio
     ref.read(savedServersProvider.notifier).state = existing;
     ref.read(savedUsernameProvider.notifier).state = username;
 
+    final usernameMap = {...ref.read(savedServerUsernamesProvider)};
+    usernameMap[server.id] = username;
+    ref.read(savedServerUsernamesProvider.notifier).state = usernameMap;
+
+    final lastUsedMap = {...ref.read(savedServerLastUsedProvider)};
+    lastUsedMap[server.id] = DateTime.now().millisecondsSinceEpoch;
+    ref.read(savedServerLastUsedProvider.notifier).state = lastUsedMap;
+
     await _persistServers(ref, existing);
+    await _persistServerUsernames(ref, usernameMap);
+    await _persistServerLastUsed(ref, lastUsedMap);
     await localStorage.writeString(AppConstants.savedCurrentServerIdKey, server.id);
     await localStorage.writeString(AppConstants.savedUsernameKey, username);
     await localStorage.remove(AppConstants.sessionExpiredFlagKey);
@@ -149,12 +179,30 @@ final updateServerProvider = Provider<Future<void> Function(NasServer)>((ref) {
     final existing = [...ref.read(savedServersProvider)];
     final index = existing.indexWhere((s) => s.id == server.id || s.name == server.name);
     if (index >= 0) {
+      final oldServerId = existing[index].id;
       existing[index] = server;
       ref.read(savedServersProvider.notifier).state = existing;
       await _persistServers(ref, existing);
 
+      if (oldServerId != server.id) {
+        final usernames = {...ref.read(savedServerUsernamesProvider)};
+        final lastUsed = {...ref.read(savedServerLastUsedProvider)};
+
+        if (usernames.containsKey(oldServerId)) {
+          usernames[server.id] = usernames.remove(oldServerId)!;
+        }
+        if (lastUsed.containsKey(oldServerId)) {
+          lastUsed[server.id] = lastUsed.remove(oldServerId)!;
+        }
+
+        ref.read(savedServerUsernamesProvider.notifier).state = usernames;
+        ref.read(savedServerLastUsedProvider.notifier).state = lastUsed;
+        await _persistServerUsernames(ref, usernames);
+        await _persistServerLastUsed(ref, lastUsed);
+      }
+
       final current = ref.read(currentServerProvider);
-      if (current != null && (current.id == existing[index].id || current.name == server.name)) {
+      if (current != null && (current.id == oldServerId || current.name == server.name)) {
         ref.read(currentServerProvider.notifier).state = server;
         final localStorage = ref.read(localStorageProvider);
         await localStorage.writeString(AppConstants.savedCurrentServerIdKey, server.id);
@@ -170,8 +218,14 @@ final deleteServerProvider = Provider<Future<void> Function(NasServer)>((ref) {
 
     final existing = [...ref.read(savedServersProvider)]..removeWhere((s) => s.id == server.id);
     ref.read(savedServersProvider.notifier).state = existing;
-
     await _persistServers(ref, existing);
+
+    final usernames = {...ref.read(savedServerUsernamesProvider)}..remove(server.id);
+    final lastUsed = {...ref.read(savedServerLastUsedProvider)}..remove(server.id);
+    ref.read(savedServerUsernamesProvider.notifier).state = usernames;
+    ref.read(savedServerLastUsedProvider.notifier).state = lastUsed;
+    await _persistServerUsernames(ref, usernames);
+    await _persistServerLastUsed(ref, lastUsed);
 
     final current = ref.read(currentServerProvider);
     if (current?.id == server.id) {
