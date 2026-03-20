@@ -46,6 +46,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   String? passwordValidationText;
   String? errorText;
   String? infoText;
+  bool quickLoginEditUsername = false;
   _LoginMode loginMode = _LoginMode.manual;
 
   @override
@@ -96,6 +97,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       if (username != null && username.isNotEmpty) {
         usernameController.text = username;
       }
+      quickLoginEditUsername = false;
       passwordController.clear();
       errorText = null;
       infoText = '已选择 ${server.name}，输入密码即可重新登录';
@@ -126,6 +128,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         }
         usernameController.clear();
         passwordController.clear();
+        quickLoginEditUsername = false;
         loginMode = stillHasSavedServers ? _LoginMode.quick : _LoginMode.manual;
         _validateFields();
       });
@@ -165,11 +168,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   }
 
   bool get _canQuickLogin {
-    _validateFields();
-    return selectedServerId != null &&
-        usernameValidationText == null &&
-        passwordValidationText == null &&
-        !isLoading;
+    final username = usernameController.text.trim();
+    final password = passwordController.text;
+    return selectedServerId != null && username.isNotEmpty && password.isNotEmpty && !isLoading;
   }
 
   NasServer buildServer() {
@@ -288,6 +289,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     return value.characters.first.toUpperCase();
   }
 
+  NasServer? _findSelectedServer(List<NasServer> savedServers) {
+    if (selectedServerId == null) return null;
+    for (final server in savedServers) {
+      if (server.id == selectedServerId) return server;
+    }
+    return null;
+  }
+
   Widget _buildStatusBanner() {
     if (errorText == null && infoText == null) {
       return const SizedBox.shrink();
@@ -353,7 +362,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     );
   }
 
-  Widget _buildSavedServerSection(
+  Widget _buildServerSelector(
     List<NasServer> savedServers,
     Map<String, String> savedUsernames,
     Map<String, int> lastUsedMap,
@@ -365,183 +374,47 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     final sortedServers = [...savedServers]
       ..sort((a, b) => (lastUsedMap[b.id] ?? 0).compareTo(lastUsedMap[a.id] ?? 0));
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            const Expanded(
-              child: Text(
-                '快速重新登录',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-              ),
-            ),
-            if (selectedServerId != null)
-              TextButton(
-                onPressed: () {
-                  setState(() {
-                    selectedServerId = null;
-                    infoText = '已取消选择历史设备';
-                    if (savedServers.isNotEmpty) {
-                      loginMode = _LoginMode.manual;
-                    }
-                  });
-                },
-                child: const Text('取消选择'),
-              ),
-          ],
-        ),
-        const SizedBox(height: 6),
-        Text(
-          '点击条目自动回填；长按或点右侧按钮可删除该历史记录',
-          style: TextStyle(color: Colors.grey.shade600, height: 1.35),
-        ),
-        const SizedBox(height: 12),
-        ...sortedServers.map((server) {
-          final username = savedUsernames[server.id];
-          final lastUsed = lastUsedMap[server.id];
-          final isSelected = server.id == selectedServerId;
+    return DropdownButtonFormField<String>(
+      value: selectedServerId != null && sortedServers.any((server) => server.id == selectedServerId) ? selectedServerId : null,
+      decoration: _inputDecoration(
+        label: '历史设备',
+        icon: Icons.history_rounded,
+      ),
+      items: sortedServers.map((server) {
+        final username = savedUsernames[server.id];
+        final lastUsed = _formatLastUsed(lastUsedMap[server.id]);
+        final subtitle = [
+          if (username != null && username.isNotEmpty) username,
+          lastUsed,
+        ].join(' · ');
 
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 220),
-              curve: Curves.easeOut,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(22),
-                gradient: isSelected
-                    ? const LinearGradient(
-                        colors: [Color(0xFFEEF4FF), Color(0xFFF8FBFF)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      )
-                    : null,
-                color: isSelected ? null : Colors.white,
-                border: Border.all(
-                  color: isSelected ? const Color(0xFF2563EB).withOpacity(0.45) : Colors.black.withOpacity(0.06),
-                  width: isSelected ? 1.4 : 1,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: isSelected ? const Color(0xFF2563EB).withOpacity(0.10) : Colors.black.withOpacity(0.04),
-                    blurRadius: isSelected ? 18 : 12,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
+        return DropdownMenuItem<String>(
+          value: server.id,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                server.name,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontWeight: FontWeight.w700),
               ),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(22),
-                  onTap: () => applyServerPreset(server, username: username),
-                  onLongPress: () => removeSavedServer(server),
-                  child: Padding(
-                    padding: const EdgeInsets.all(14),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 50,
-                          height: 50,
-                          decoration: BoxDecoration(
-                            gradient: isSelected
-                                ? const LinearGradient(
-                                    colors: [Color(0xFF2563EB), Color(0xFF3B82F6)],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                  )
-                                : null,
-                            color: isSelected ? null : const Color(0xFFEFF6FF),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          alignment: Alignment.center,
-                          child: Text(
-                            _buildServerInitials(server),
-                            style: TextStyle(
-                              color: isSelected ? Colors.white : const Color(0xFF2563EB),
-                              fontWeight: FontWeight.w800,
-                              fontSize: 18,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      server.name,
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w800,
-                                        color: isSelected ? const Color(0xFF0F172A) : null,
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      color: isSelected ? const Color(0xFFDBEAFE) : const Color(0xFFF3F4F6),
-                                      borderRadius: BorderRadius.circular(999),
-                                    ),
-                                    child: Text(
-                                      _formatLastUsed(lastUsed),
-                                      style: TextStyle(
-                                        color: isSelected ? const Color(0xFF1D4ED8) : Colors.grey.shade600,
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                ServerUrlHelper.buildBaseUrl(server),
-                                style: TextStyle(color: Colors.grey.shade700, fontSize: 13),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 6),
-                              Row(
-                                children: [
-                                  Icon(Icons.person_outline_rounded, size: 14, color: Colors.grey.shade500),
-                                  const SizedBox(width: 4),
-                                  Expanded(
-                                    child: Text(
-                                      (username != null && username.isNotEmpty) ? username : '未记录用户名',
-                                      style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  if (isSelected) ...[
-                                    const SizedBox(width: 8),
-                                    const Icon(Icons.check_circle_rounded, color: Color(0xFF2563EB), size: 18),
-                                  ],
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        IconButton(
-                          tooltip: '删除历史记录',
-                          onPressed: () => removeSavedServer(server),
-                          icon: const Icon(Icons.close_rounded, size: 20),
-                          color: Colors.grey.shade500,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+              Text(
+                subtitle,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
               ),
-            ),
-          );
-        }),
-        const SizedBox(height: 18),
-      ],
+            ],
+          ),
+        );
+      }).toList(),
+      onChanged: (value) {
+        if (value == null) return;
+        final matched = sortedServers.where((server) => server.id == value);
+        if (matched.isEmpty) return;
+        final server = matched.first;
+        applyServerPreset(server, username: savedUsernames[server.id]);
+      },
     );
   }
 
@@ -582,7 +455,94 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     );
   }
 
-  Widget _buildQuickLoginCard(AppLocalizations l10n) {
+  Widget _buildSelectedServerSummary(NasServer? server) {
+    if (server == null) {
+      return Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF8FAFC),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: Colors.black.withOpacity(0.06)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: const Color(0xFFEFF6FF),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: const Icon(Icons.history_toggle_off_rounded, color: Color(0xFF2563EB)),
+            ),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Text(
+                '请选择一个历史设备后再快速登录',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFFEEF4FF), Color(0xFFF8FBFF)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFF2563EB).withOpacity(0.16)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: const Color(0xFF2563EB),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              _buildServerInitials(server),
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  server.name,
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  ServerUrlHelper.buildBaseUrl(server),
+                  style: TextStyle(color: Colors.grey.shade700, fontSize: 12),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickLoginCard(
+    AppLocalizations l10n,
+    List<NasServer> savedServers,
+  ) {
+    final selectedServer = _findSelectedServer(savedServers);
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -603,44 +563,102 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             Row(
               children: [
                 Container(
-                  width: 42,
-                  height: 42,
+                  width: 38,
+                  height: 38,
                   decoration: BoxDecoration(
                     color: const Color(0xFFEEF4FF),
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.flash_on_rounded, color: Color(0xFF2563EB)),
+                  child: const Icon(Icons.flash_on_rounded, color: Color(0xFF2563EB), size: 20),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
                         '快速登录',
-                        style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+                        style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        selectedServerId == null ? '先选择一个历史设备，然后输入密码即可登录' : '已选中历史设备，输入密码即可登录',
-                        style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                        selectedServerId == null ? '选择设备后输入密码即可登录' : '设备已就绪，输入密码即可登录',
+                        style: TextStyle(color: Colors.grey.shade600, fontSize: 12.5),
                       ),
                     ],
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 18),
-            TextField(
-              controller: usernameController,
-              onChanged: (_) => setState(() => _validateFields()),
-              decoration: _inputDecoration(
-                label: l10n.username,
-                icon: Icons.person_outline,
-                errorText: usernameValidationText,
-              ),
-            ),
+            const SizedBox(height: 14),
+            _buildSelectedServerSummary(selectedServer),
             const SizedBox(height: 12),
+            _buildServerSelector(
+              ref.watch(savedServersProvider),
+              ref.watch(savedServerUsernamesProvider),
+              ref.watch(savedServerLastUsedProvider),
+            ),
+            const SizedBox(height: 10),
+            if (!quickLoginEditUsername)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: Colors.black.withOpacity(0.06)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.person_outline, color: Color(0xFF2563EB)),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '用户名',
+                            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            usernameController.text.trim().isEmpty ? '未记录用户名，请点击更换账号' : usernameController.text.trim(),
+                            style: const TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                        ],
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          quickLoginEditUsername = true;
+                        });
+                      },
+                      child: Text(usernameController.text.trim().isEmpty ? '填写' : '更换账号'),
+                    ),
+                  ],
+                ),
+              )
+            else
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: TextField(
+                controller: usernameController,
+                onChanged: (_) => setState(() {}),
+                decoration: _inputDecoration(
+                  label: l10n.username,
+                  icon: Icons.person_outline,
+                  errorText: null,
+                  suffixIcon: TextButton(
+                    onPressed: () {
+                      setState(() {
+                        quickLoginEditUsername = false;
+                      });
+                    },
+                    child: const Text('完成'),
+                  ),
+                ),
+              ),
+            const SizedBox(height: 10),
             TextField(
               controller: passwordController,
               focusNode: passwordFocusNode,
@@ -657,7 +675,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               ),
               onSubmitted: (_) => isLoading ? null : login(),
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 14),
             SizedBox(
               width: double.infinity,
               child: FilledButton.icon(
@@ -687,18 +705,19 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 onPressed: () {
                   setState(() {
                     loginMode = _LoginMode.manual;
+                    quickLoginEditUsername = false;
                     errorText = null;
                     infoText = '已切换到新账号 / 新设备登录';
                   });
                 },
-                icon: const Icon(Icons.edit_outlined),
-                label: const Text('使用新账号 / 新设备登录'),
+                icon: const Icon(Icons.edit_outlined, size: 18),
+                label: const Text('新账号 / 新设备登录'),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: const Color(0xFF2563EB),
-                  side: BorderSide(color: const Color(0xFF2563EB).withOpacity(0.18)),
-                  padding: const EdgeInsets.symmetric(vertical: 15),
+                  foregroundColor: Colors.grey.shade700,
+                  side: BorderSide(color: Colors.black.withOpacity(0.08)),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                  textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                  textStyle: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600),
                 ),
               ),
             ),
@@ -759,6 +778,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     onPressed: () {
                       setState(() {
                         loginMode = _LoginMode.quick;
+                        quickLoginEditUsername = false;
                         errorText = null;
                         infoText = '已切换回快速登录';
                       });
@@ -960,19 +980,19 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             padding: const EdgeInsets.fromLTRB(18, 18, 18, 28),
             children: [
               Container(
-                padding: const EdgeInsets.all(22),
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0xFF1D4ED8), Color(0xFF2563EB), Color(0xFF3B82F6)],
+                    colors: [Color(0xFF1D4ED8), Color(0xFF2563EB)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
-                  borderRadius: BorderRadius.circular(30),
+                  borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF2563EB).withOpacity(0.28),
-                      blurRadius: 34,
-                      offset: const Offset(0, 16),
+                      color: const Color(0xFF2563EB).withOpacity(0.16),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
                     ),
                   ],
                 ),
@@ -982,64 +1002,56 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     Row(
                       children: [
                         Container(
-                          width: 58,
-                          height: 58,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.16),
-                            borderRadius: BorderRadius.circular(18),
-                          ),
-                          child: const Icon(Icons.dns_rounded, color: Colors.white, size: 30),
-                        ),
-                        const Spacer(),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          width: 44,
+                          height: 44,
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.14),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: const Icon(Icons.dns_rounded, color: Colors.white, size: 24),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            l10n.appTitle,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 22,
+                              fontWeight: FontWeight.w800,
+                              height: 1.1,
+                            ),
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.12),
                             borderRadius: BorderRadius.circular(999),
                           ),
-                          child: const Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.shield_outlined, color: Colors.white, size: 16),
-                              SizedBox(width: 6),
-                              Text(
-                                'DSM 7+',
-                                style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
-                              ),
-                            ],
+                          child: const Text(
+                            'DSM 7+',
+                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 12),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 18),
-                    Text(
-                      l10n.appTitle,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 30,
-                        fontWeight: FontWeight.w800,
-                        height: 1.1,
-                      ),
-                    ),
                     const SizedBox(height: 10),
                     Text(
-                      showQuickLogin
-                          ? '优先展示历史设备快速登录；如需切换服务器，可进入新账号登录。'
-                          : '连接你的群晖 DSM，查看系统状态、文件与下载任务。',
+                      showQuickLogin ? '已为你准备好快速登录。' : '连接你的群晖 DSM。',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.92),
-                        height: 1.45,
-                        fontSize: 14,
+                        color: Colors.white.withOpacity(0.90),
+                        height: 1.35,
+                        fontSize: 13,
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
                     Wrap(
-                      spacing: 10,
-                      runSpacing: 10,
+                      spacing: 8,
+                      runSpacing: 8,
                       children: [
                         _buildQuickActionChip(
                           icon: showQuickLogin ? Icons.lock_open_outlined : Icons.bolt_outlined,
-                          label: showQuickLogin ? '输入密码登录' : '快速登录',
+                          label: showQuickLogin ? '输入密码' : '快速登录',
                           onTap: () {
                             passwordFocusNode.requestFocus();
                           },
@@ -1056,7 +1068,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               ),
               const SizedBox(height: 18),
               _buildStatusBanner(),
-              _buildSavedServerSection(savedServers, savedServerUsernames, savedServerLastUsed),
               if (showQuickLogin) ...[
                 Padding(
                   padding: const EdgeInsets.only(left: 2, bottom: 12),
@@ -1075,7 +1086,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     ],
                   ),
                 ),
-                _buildQuickLoginCard(l10n),
+                _buildQuickLoginCard(l10n, savedServers),
               ] else ...[
                 Padding(
                   padding: const EdgeInsets.only(left: 2, bottom: 12),
