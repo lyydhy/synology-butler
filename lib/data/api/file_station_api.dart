@@ -558,30 +558,44 @@ class DsmFileStationApi implements FileStationApi {
     );
 
     final formData = FormData.fromMap({
+      'overwrite': 'false',
+      'path': normalizedParentPath,
+      'mtime': DateTime.now().millisecondsSinceEpoch.toString(),
+      'size': bytes.length.toString(),
       'api': 'SYNO.FileStation.Upload',
       'version': '2',
       'method': 'upload',
-      'path': normalizedParentPath,
-      'create_parents': 'true',
-      'overwrite': 'true',
       '_sid': sid,
       'file': MultipartFile.fromBytes(bytes, filename: fileName),
     });
 
     final response = await client.post(
       '/webapi/entry.cgi',
+      queryParameters: {
+        'api': 'SYNO.FileStation.Upload',
+        'method': 'upload',
+        'version': '2',
+        if (synoToken != null && synoToken.isNotEmpty) 'SynoToken': synoToken,
+      },
       data: formData,
       options: _buildOptions(synoToken: synoToken, cookieHeader: cookieHeader),
     );
+
+    dynamic payload = response.data;
+    if (payload is String) {
+      try {
+        payload = jsonDecode(payload);
+      } catch (_) {}
+    }
 
     DsmLogger.success(
       module: 'FileStation',
       action: 'uploadFileRaw',
       path: normalizedParentPath,
-      response: response.data,
+      response: payload,
     );
 
-    if (response.data is Map && response.data['success'] == true) {
+    if (payload is Map && payload['success'] == true) {
       DsmLogger.success(
         module: 'FileStation',
         action: 'uploadFile',
@@ -590,6 +604,7 @@ class DsmFileStationApi implements FileStationApi {
           'fileName': fileName,
           'bytes': bytes.length,
         },
+        response: payload,
       );
       return;
     }
@@ -598,7 +613,7 @@ class DsmFileStationApi implements FileStationApi {
       module: 'FileStation',
       action: 'uploadFile',
       path: normalizedParentPath,
-      response: response.data,
+      response: payload,
       sid: sid,
       synoToken: synoToken,
       cookieHeader: cookieHeader,
@@ -610,7 +625,7 @@ class DsmFileStationApi implements FileStationApi {
 
     throw DioException(
       requestOptions: response.requestOptions,
-      error: _extractError(action: 'uploadFile', data: response.data),
+      error: _extractError(action: 'uploadFile', data: payload),
       response: response,
     );
   }
