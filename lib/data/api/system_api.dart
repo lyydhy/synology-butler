@@ -84,6 +84,22 @@ class DsmSystemApi implements SystemApi {
       final totalSpace = space['total'] as Map? ?? const {};
       final volumeList = _extractVolumeList(space);
 
+      final mappedVolumes = volumeList
+          .whereType<Map>()
+          .map(
+            (item) => StorageVolumeStatusModel(
+              name: (item['display_name'] ?? item['device'] ?? item['name'] ?? 'volume').toString(),
+              usage: ((item['utilization'] as num?) ?? 0).toDouble(),
+              usedBytes: _toDouble(
+                item['used_size'] ?? item['used'] ?? item['volume_status']?['used_size'] ?? item['volume_status']?['used'],
+              ),
+              totalBytes: _toDouble(
+                item['total_size'] ?? item['total'] ?? item['volume_status']?['totalspace'] ?? item['volume_status']?['total'],
+              ),
+            ),
+          )
+          .toList();
+
       final upgradeVersionText = await _fetchUpgradeVersion(
         client: client,
         sid: sid,
@@ -104,17 +120,7 @@ class DsmSystemApi implements SystemApi {
             ((utilizationData['cpu']?['other_load'] as num?) ?? 0).toDouble(),
         memoryUsage: ((memory['real_usage'] as num?) ?? 0).toDouble(),
         storageUsage: ((totalSpace['utilization'] as num?) ?? 0).toDouble(),
-        volumes: volumeList
-            .whereType<Map>()
-            .map(
-              (item) => StorageVolumeStatusModel(
-                name: (item['display_name'] ?? item['device'] ?? 'volume').toString(),
-                usage: ((item['utilization'] as num?) ?? 0).toDouble(),
-                usedBytes: _toDouble(item['used_size'] ?? item['used']),
-                totalBytes: _toDouble(item['total_size'] ?? item['total']),
-              ),
-            )
-            .toList(),
+        volumes: mappedVolumes,
         modelName: (infoData['model'] ?? infoData['modelname'])?.toString(),
         serialNumber: (infoData['serial'] ?? infoData['serial_number'])?.toString(),
         uptimeText: systemHealthUptime ?? _formatUptime(infoData['uptime'] ?? infoData['uptime_seconds']),
@@ -325,21 +331,48 @@ class DsmSystemApi implements SystemApi {
           terminalStateReached = true;
           bootstrapTimer?.cancel();
 
+          final data = payload['data'] as Map? ?? const {};
+          final spacePreview = data['space'];
           DsmLogger.success(
             module: 'System',
             action: 'watchUtilization',
             path: baseUrl,
             response: {
               'received': true,
+              'spaceKeys': spacePreview is Map ? spacePreview.keys.map((e) => e.toString()).toList() : [],
             },
           );
 
-          final data = payload['data'] as Map? ?? const {};
           final cpu = data['cpu'] as Map? ?? const {};
           final memory = data['memory'] as Map? ?? const {};
           final space = data['space'] as Map? ?? const {};
           final totalSpace = space['total'] as Map? ?? const {};
           final volumeList = _extractVolumeList(space);
+          final mappedVolumes = volumeList
+              .whereType<Map>()
+              .map(
+                (item) => StorageVolumeStatusModel(
+                  name: (item['display_name'] ?? item['device'] ?? item['name'] ?? 'volume').toString(),
+                  usage: ((item['utilization'] as num?) ?? 0).toDouble(),
+                  usedBytes: _toDouble(
+                    item['used_size'] ?? item['used'] ?? item['volume_status']?['used_size'] ?? item['volume_status']?['used'],
+                  ),
+                  totalBytes: _toDouble(
+                    item['total_size'] ?? item['total'] ?? item['volume_status']?['totalspace'] ?? item['volume_status']?['total'],
+                  ),
+                ),
+              )
+              .toList();
+
+          DsmLogger.success(
+            module: 'System',
+            action: 'watchUtilizationVolumes',
+            path: baseUrl,
+            response: {
+              'count': mappedVolumes.length,
+              'names': mappedVolumes.map((e) => e.name).toList(),
+            },
+          );
 
           controller.add(
             SystemStatusModel(
@@ -350,17 +383,7 @@ class DsmSystemApi implements SystemApi {
                   ((cpu['other_load'] as num?) ?? 0).toDouble(),
               memoryUsage: ((memory['real_usage'] as num?) ?? 0).toDouble(),
               storageUsage: ((totalSpace['utilization'] as num?) ?? 0).toDouble(),
-              volumes: volumeList
-                  .whereType<Map>()
-                  .map(
-                    (item) => StorageVolumeStatusModel(
-                      name: (item['display_name'] ?? item['device'] ?? 'volume').toString(),
-                      usage: ((item['utilization'] as num?) ?? 0).toDouble(),
-                      usedBytes: _toDouble(item['used_size'] ?? item['used']),
-                      totalBytes: _toDouble(item['total_size'] ?? item['total']),
-                    ),
-                  )
-                  .toList(),
+              volumes: mappedVolumes,
               uptimeText: null,
             ),
           );

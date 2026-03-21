@@ -79,6 +79,7 @@
   - 子目录继续使用 `SYNO.FileStation.List method=list`
   - FileStation 列表接口已从原先 GET query 切到更贴近 WebUI 的 POST form
   - 第一层解析 `data.shares`，下级目录解析 `data.files`
+  - 在继续对齐时，已把列表请求从 `FormData` 改为真正的 `application/x-www-form-urlencoded` body，并先移除 `_sid` query，优先贴近浏览器抓包的 `Cookie + X-SYNO-TOKEN` 方式
 
 ### 下载模块
 - 任务列表

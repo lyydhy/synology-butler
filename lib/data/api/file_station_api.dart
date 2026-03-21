@@ -170,10 +170,7 @@ class DsmFileStationApi implements FileStationApi {
 
     final response = await client.post(
       '/webapi/entry.cgi',
-      data: FormData.fromMap(payload),
-      queryParameters: {
-        '_sid': sid,
-      },
+      data: payload,
       options: _buildOptions(
         synoToken: synoToken,
         cookieHeader: cookieHeader,

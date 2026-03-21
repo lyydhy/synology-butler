@@ -21,7 +21,7 @@ class DsmLogger {
       if (path != null) 'path=$path',
       'sid=${_presence(sid)}',
       'synoToken=${_presence(synoToken)}',
-      'cookie=${_presence(cookieHeader)}',
+      'cookie=${_presence(cookieHeader)}${_cookieKeysSuffix(cookieHeader)}',
       if (extra != null && extra.isNotEmpty) 'extra=${_pretty(extra)}',
     ];
 
@@ -67,7 +67,7 @@ class DsmLogger {
       if (resolvedReason != null && resolvedReason.isNotEmpty) 'reason=$resolvedReason',
       'sid=${_presence(sid)}',
       'synoToken=${_presence(synoToken)}',
-      'cookie=${_presence(cookieHeader)}',
+      'cookie=${_presence(cookieHeader)}${_cookieKeysSuffix(cookieHeader)}',
       if (extra != null && extra.isNotEmpty) 'extra=${_pretty(extra)}',
       if (response != null) 'response=${_pretty(response)}',
     ];
@@ -87,7 +87,25 @@ class DsmLogger {
   }
 
   static String _presence(String? value) {
-    return value != null && value.isNotEmpty ? 'present' : 'missing';
+    if (value == null || value.isEmpty) return 'missing';
+    return 'present(len=${value.length})';
+  }
+
+  static String _cookieKeysSuffix(String? cookieHeader) {
+    if (cookieHeader == null || cookieHeader.isEmpty) return '';
+
+    final keys = cookieHeader
+        .split(';')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty && e.contains('='))
+        .map((e) => e.split('=').first.trim())
+        .where((e) => e.isNotEmpty)
+        .toSet()
+        .toList()
+      ..sort();
+
+    if (keys.isEmpty) return '';
+    return '(keys=${keys.join(',')})';
   }
 
   static String _pretty(dynamic value) {
