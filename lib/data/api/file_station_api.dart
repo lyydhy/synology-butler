@@ -573,6 +573,14 @@ class DsmFileStationApi implements FileStationApi {
       data: formData,
       options: _buildOptions(synoToken: synoToken, cookieHeader: cookieHeader),
     );
+
+    DsmLogger.success(
+      module: 'FileStation',
+      action: 'uploadFileRaw',
+      path: normalizedParentPath,
+      response: response.data,
+    );
+
     if (response.data is Map && response.data['success'] == true) {
       DsmLogger.success(
         module: 'FileStation',
