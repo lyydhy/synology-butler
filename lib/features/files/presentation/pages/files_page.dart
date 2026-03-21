@@ -380,6 +380,13 @@ class _FilesPageState extends ConsumerState<FilesPage> {
                           });
                           return;
                         }
+                        if (FileTypeHelper.isVideo(item)) {
+                          GoRouter.of(context).push('/video-preview', extra: {
+                            'path': item.path,
+                            'name': item.name,
+                          });
+                          return;
+                        }
                         _showFileDetail(context, item);
                       },
                       onMore: () => _showItemMenu(context, ref, item),
