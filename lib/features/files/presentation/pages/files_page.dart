@@ -181,6 +181,18 @@ class _FilesPageState extends ConsumerState<FilesPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (FileTypeHelper.isImage(item))
+              ListTile(
+                leading: const Icon(Icons.image_outlined),
+                title: const Text('预览图片'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  GoRouter.of(context).push('/image-preview', extra: {
+                    'path': item.path,
+                    'name': item.name,
+                  });
+                },
+              ),
             ListTile(
               leading: const Icon(Icons.info_outline_rounded),
               title: Text(l10n.detail),
@@ -356,6 +368,13 @@ class _FilesPageState extends ConsumerState<FilesPage> {
                         }
                         if (FileTypeHelper.isTextEditable(item)) {
                           GoRouter.of(context).push('/text-editor', extra: {
+                            'path': item.path,
+                            'name': item.name,
+                          });
+                          return;
+                        }
+                        if (FileTypeHelper.isImage(item)) {
+                          GoRouter.of(context).push('/image-preview', extra: {
                             'path': item.path,
                             'name': item.name,
                           });

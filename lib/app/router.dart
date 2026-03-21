@@ -5,6 +5,7 @@ import '../features/auth/presentation/pages/login_page.dart';
 import '../features/auth/presentation/pages/splash_page.dart';
 import '../features/debug/presentation/pages/debug_info_page.dart';
 import '../features/diagnostics/presentation/pages/diagnostics_page.dart';
+import '../features/files/presentation/pages/image_preview_page.dart';
 import '../features/files/presentation/pages/text_editor_page.dart';
 import '../features/server-management/presentation/pages/server_management_page.dart';
 import '../features/shell/main_shell_page.dart';
@@ -30,6 +31,16 @@ final GoRouter appRouter = GoRouter(
         return TextEditorPage(
           path: extra['path']?.toString() ?? '',
           name: extra['name']?.toString() ?? '文本编辑器',
+        );
+      },
+    ),
+    GoRoute(
+      path: '/image-preview',
+      builder: (context, state) {
+        final extra = state.extra as Map<String, dynamic>? ?? const {};
+        return ImagePreviewPage(
+          path: extra['path']?.toString() ?? '',
+          name: extra['name']?.toString() ?? '图片预览',
         );
       },
     ),

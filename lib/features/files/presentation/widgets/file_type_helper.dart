@@ -90,6 +90,18 @@ class FileTypeHelper {
     return editable.contains(extensionOf(item.name));
   }
 
+  static bool isImage(FileItem item) {
+    if (item.isDirectory) return false;
+    const imageExts = {'jpg', 'jpeg', 'png', 'gif', 'webp'};
+    return imageExts.contains(extensionOf(item.name));
+  }
+
+  static bool isVideo(FileItem item) {
+    if (item.isDirectory) return false;
+    const videoExts = {'mp4', 'mkv', 'avi', 'mov'};
+    return videoExts.contains(extensionOf(item.name));
+  }
+
   static String extensionOf(String name) {
     final dot = name.lastIndexOf('.');
     if (dot < 0 || dot == name.length - 1) return '';
