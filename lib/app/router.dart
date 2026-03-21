@@ -7,6 +7,7 @@ import '../features/debug/presentation/pages/debug_info_page.dart';
 import '../features/diagnostics/presentation/pages/diagnostics_page.dart';
 import '../features/server-management/presentation/pages/server_management_page.dart';
 import '../features/shell/main_shell_page.dart';
+import '../features/transfers/presentation/pages/transfers_page.dart';
 
 final GlobalKey<NavigatorState> appNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -20,5 +21,6 @@ final GoRouter appRouter = GoRouter(
     GoRoute(path: '/servers', builder: (context, state) => const ServerManagementPage()),
     GoRoute(path: '/debug', builder: (context, state) => const DebugInfoPage()),
     GoRoute(path: '/diagnostics', builder: (context, state) => const DiagnosticsPage()),
+    GoRoute(path: '/transfers', builder: (context, state) => const TransfersPage()),
   ],
 );

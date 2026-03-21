@@ -17,6 +17,7 @@ dependencies:
   go_router: ^14.2.0
   flutter_secure_storage: ^9.2.2
   shared_preferences: ^2.2.3
+  path_provider: ^2.1.5
   file_picker: ^8.0.7
   intl: ^0.20.2
   cryptography: ^2.7.0

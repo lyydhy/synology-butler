@@ -3,11 +3,13 @@ import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/error/error_mapper.dart';
 import '../../../../domain/entities/file_item.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
+import '../../../transfers/presentation/providers/transfer_providers.dart';
 import '../providers/file_page_actions.dart';
 import '../providers/file_providers.dart';
 import '../providers/file_selection_providers.dart';
@@ -167,6 +169,20 @@ class FilesPage extends ConsumerWidget {
               },
             ),
             ListTile(
+              leading: const Icon(Icons.download_rounded),
+              title: const Text('下载'),
+              onTap: () async {
+                Navigator.of(context).pop();
+                await ref.read(transferControllerProvider.notifier).enqueueDownload(
+                      remotePath: item.path,
+                      displayName: item.name,
+                    );
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('已加入下载任务')));
+                }
+              },
+            ),
+            ListTile(
               leading: const Icon(Icons.link_rounded),
               title: Text(l10n.generateShareLink),
               onTap: () {
@@ -208,12 +224,17 @@ class FilesPage extends ConsumerWidget {
     final canGoUp = path != '/';
     final selectedPaths = ref.watch(selectedFilePathsProvider);
     final selectionMode = ref.watch(fileSelectionModeProvider);
+    final activeTransferCount = ref.watch(activeTransferCountProvider);
 
     return Scaffold(
       appBar: selectionMode
           ? FilesSelectionBar(
               selectedCount: selectedPaths.length,
               onCancel: () => actions.clearSelection(ref),
+              onDownload: () {
+                final currentFiles = filesAsync.valueOrNull ?? const <FileItem>[];
+                actions.downloadSelected(context, ref, currentFiles);
+              },
               onDelete: () => actions.deleteSelected(context, ref),
             )
           : AppBar(title: Text(l10n.filesTitle)),
@@ -237,6 +258,8 @@ class FilesPage extends ConsumerWidget {
             },
             onUpload: () => actions.showUploadDialog(context, ref, path, _pickSingleFile),
             onCreateFolder: () => actions.showCreateFolderDialog(context, ref, path),
+            onTransfers: () => GoRouter.of(context).push('/transfers'),
+            activeTransferCount: activeTransferCount,
           ),
           Expanded(
             child: filesAsync.when(

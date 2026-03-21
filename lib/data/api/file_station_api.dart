@@ -15,6 +15,14 @@ abstract class FileStationApi {
     String? cookieHeader,
   });
 
+  Future<Uint8List> downloadFile({
+    required String baseUrl,
+    required String sid,
+    required String path,
+    String? synoToken,
+    String? cookieHeader,
+  });
+
   Future<void> createFolder({
     required String baseUrl,
     required String sid,
@@ -61,6 +69,65 @@ abstract class FileStationApi {
 }
 
 class DsmFileStationApi implements FileStationApi {
+  @override
+  Future<Uint8List> downloadFile({
+    required String baseUrl,
+    required String sid,
+    required String path,
+    String? synoToken,
+    String? cookieHeader,
+  }) async {
+    final client = DioClient(baseUrl: baseUrl).dio;
+
+    DsmLogger.request(
+      module: 'FileStation',
+      action: 'download',
+      method: 'GET',
+      path: path,
+      sid: sid,
+      synoToken: synoToken,
+      cookieHeader: cookieHeader,
+      extra: {
+        'api': 'SYNO.FileStation.Download',
+        'method': 'download',
+      },
+    );
+
+    final response = await client.get(
+      '/webapi/entry.cgi',
+      queryParameters: {
+        'api': 'SYNO.FileStation.Download',
+        'version': '2',
+        'method': 'download',
+        'mode': 'download',
+        'path': jsonEncode([path]),
+        '_sid': sid,
+      },
+      options: _buildOptions(synoToken: synoToken, cookieHeader: cookieHeader).copyWith(
+        responseType: ResponseType.bytes,
+      ),
+    );
+
+    final data = response.data;
+    if (data is List<int>) {
+      DsmLogger.success(
+        module: 'FileStation',
+        action: 'download',
+        path: path,
+        extra: {
+          'bytes': data.length,
+        },
+      );
+      return Uint8List.fromList(data);
+    }
+
+    throw DioException(
+      requestOptions: response.requestOptions,
+      error: 'Failed to download file: $path',
+      response: response,
+    );
+  }
+
   Options _buildOptions({
     String? synoToken,
     String? cookieHeader,

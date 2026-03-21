@@ -120,4 +120,19 @@ class FileRepositoryImpl implements FileRepository {
       cookieHeader: session.cookieHeader,
     );
   }
+
+  @override
+  Future<Uint8List> downloadFile({
+    required NasServer server,
+    required NasSession session,
+    required String path,
+  }) {
+    return _api.downloadFile(
+      baseUrl: ServerUrlHelper.buildBaseUrl(server),
+      sid: session.sid,
+      path: path,
+      synoToken: session.synoToken,
+      cookieHeader: session.cookieHeader,
+    );
+  }
 }

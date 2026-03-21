@@ -44,4 +44,10 @@ abstract class FileRepository {
     required String fileName,
     required Uint8List bytes,
   });
+
+  Future<Uint8List> downloadFile({
+    required NasServer server,
+    required NasSession session,
+    required String path,
+  });
 }

@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/error/error_mapper.dart';
 import '../../../../domain/entities/file_item.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../transfers/presentation/providers/transfer_providers.dart';
 import 'file_providers.dart';
 import 'file_selection_providers.dart';
 
@@ -32,6 +33,26 @@ class FilePageActions {
 
   void clearSelection(WidgetRef ref) {
     ref.read(selectedFilePathsProvider.notifier).state = <String>{};
+  }
+
+  Future<void> downloadSelected(BuildContext context, WidgetRef ref, List<FileItem> files) async {
+    final selectedPaths = ref.read(selectedFilePathsProvider);
+    final selectedItems = files.where((item) => selectedPaths.contains(item.path) && !item.isDirectory).toList();
+    if (selectedItems.isEmpty) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('请至少选择一个文件进行下载')));
+      }
+      return;
+    }
+
+    await ref.read(transferControllerProvider.notifier).enqueueBatchDownload([
+      for (final item in selectedItems) (item.path, item.name),
+    ]);
+
+    clearSelection(ref);
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已加入 ${selectedItems.length} 个下载任务')));
+    }
   }
 
   Future<void> deleteSelected(BuildContext context, WidgetRef ref) async {
@@ -181,7 +202,11 @@ class FilePageActions {
                         errorText = null;
                       });
                       try {
-                        await ref.read(fileUploadProvider)(currentPath, fileName!, fileBytes!);
+                        await ref.read(transferControllerProvider.notifier).enqueueUpload(
+                              parentPath: currentPath,
+                              fileName: fileName!,
+                              bytes: fileBytes!,
+                            );
                         if (context.mounted) Navigator.of(context).pop();
                       } catch (e) {
                         setState(() {
