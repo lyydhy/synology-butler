@@ -38,7 +38,7 @@ class FilesHeader extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: theme.dividerColor.withOpacity(0.10)),
+        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.10)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

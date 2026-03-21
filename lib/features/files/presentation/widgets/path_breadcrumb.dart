@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+typedef BreadcrumbSegment = ({String label, String path, bool current});
+
 class PathBreadcrumb extends StatelessWidget {
   const PathBreadcrumb({
     super.key,
@@ -14,7 +16,9 @@ class PathBreadcrumb extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final segments = path == '/'
-        ? <({String label, String path, bool current})>[('/', '/', true)]
+        ? <BreadcrumbSegment>[
+            (label: '/', path: '/', current: true),
+          ]
         : _buildSegments(path);
 
     return SingleChildScrollView(
@@ -42,17 +46,19 @@ class PathBreadcrumb extends StatelessWidget {
     );
   }
 
-  List<({String label, String path, bool current})> _buildSegments(String rawPath) {
+  List<BreadcrumbSegment> _buildSegments(String rawPath) {
     final parts = rawPath.split('/').where((e) => e.isNotEmpty).toList();
-    final result = <({String label, String path, bool current})>[
+    final result = <BreadcrumbSegment>[
       (label: '/', path: '/', current: parts.isEmpty),
     ];
 
-    var current = '';
+    var currentPath = '';
     for (var i = 0; i < parts.length; i++) {
       final part = parts[i];
-      current += '/$part';
-      result.add((part, current, i == parts.length - 1));
+      currentPath += '/$part';
+      result.add(
+        (label: part, path: currentPath, current: i == parts.length - 1),
+      );
     }
 
     return result;
@@ -97,11 +103,6 @@ class _BreadcrumbNode extends StatelessWidget {
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-),
       ),
     );
   }

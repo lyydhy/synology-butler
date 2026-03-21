@@ -5,9 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/error/error_mapper.dart';
-import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../../domain/entities/file_item.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../auth/presentation/providers/auth_providers.dart';
 import '../providers/file_page_actions.dart';
 import '../providers/file_providers.dart';
 import '../providers/file_selection_providers.dart';
@@ -195,7 +195,10 @@ class FilesPage extends ConsumerWidget {
     final currentSession = ref.watch(currentSessionProvider);
 
     if (currentServer == null || currentSession == null) {
-      return Scaffold(appBar: AppBar(title: Text(l10n.filesTitle)), body: Center(child: Text(l10n.noSessionPleaseLogin)));
+      return Scaffold(
+        appBar: AppBar(title: Text(l10n.filesTitle)),
+        body: Center(child: Text(l10n.noSessionPleaseLogin)),
+      );
     }
 
     final actions = ref.read(filePageActionsProvider);
@@ -232,6 +235,8 @@ class FilesPage extends ConsumerWidget {
               actions.clearSelection(ref);
               ref.invalidate(fileListProvider);
             },
+            onUpload: () => actions.showUploadDialog(context, ref, path, _pickSingleFile),
+            onCreateFolder: () => actions.showCreateFolderDialog(context, ref, path),
           ),
           Expanded(
             child: filesAsync.when(
@@ -289,44 +294,6 @@ class FilesPage extends ConsumerWidget {
           ),
         ],
       ),
-      floatingActionButton: null,
-    );
-  }
-}
-),
-              loading: () => const Center(child: CircularProgressIndicator()),
-            ),
-          ),
-        ],
-      ),
-      floatingActionButton: null,
-    );
-  }
-}
-),
-              loading: () => const Center(child: CircularProgressIndicator()),
-            ),
-          ),
-        ],
-      ),
-      floatingActionButton: selectionMode
-          ? null
-          : Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                FloatingActionButton.small(
-                  heroTag: 'uploadFab',
-                  onPressed: () => actions.showUploadDialog(context, ref, path, _pickSingleFile),
-                  child: const Icon(Icons.upload_file_outlined),
-                ),
-                const SizedBox(height: 12),
-                FloatingActionButton(
-                  heroTag: 'createFolderFab',
-                  onPressed: () => actions.showCreateFolderDialog(context, ref, path),
-                  child: const Icon(Icons.create_new_folder_outlined),
-                ),
-              ],
-            ),
     );
   }
 }
