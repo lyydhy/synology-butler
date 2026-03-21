@@ -135,4 +135,36 @@ class FileRepositoryImpl implements FileRepository {
       cookieHeader: session.cookieHeader,
     );
   }
+
+  @override
+  Future<String> readTextFile({
+    required NasServer server,
+    required NasSession session,
+    required String path,
+  }) {
+    return _api.readTextFile(
+      baseUrl: ServerUrlHelper.buildBaseUrl(server),
+      sid: session.sid,
+      path: path,
+      synoToken: session.synoToken,
+      cookieHeader: session.cookieHeader,
+    );
+  }
+
+  @override
+  Future<void> writeTextFile({
+    required NasServer server,
+    required NasSession session,
+    required String path,
+    required String content,
+  }) {
+    return _api.writeTextFile(
+      baseUrl: ServerUrlHelper.buildBaseUrl(server),
+      sid: session.sid,
+      path: path,
+      content: content,
+      synoToken: session.synoToken,
+      cookieHeader: session.cookieHeader,
+    );
+  }
 }

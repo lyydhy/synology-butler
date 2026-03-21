@@ -23,6 +23,23 @@ abstract class FileStationApi {
     String? cookieHeader,
   });
 
+  Future<String> readTextFile({
+    required String baseUrl,
+    required String sid,
+    required String path,
+    String? synoToken,
+    String? cookieHeader,
+  });
+
+  Future<void> writeTextFile({
+    required String baseUrl,
+    required String sid,
+    required String path,
+    required String content,
+    String? synoToken,
+    String? cookieHeader,
+  });
+
   Future<void> createFolder({
     required String baseUrl,
     required String sid,
@@ -69,6 +86,49 @@ abstract class FileStationApi {
 }
 
 class DsmFileStationApi implements FileStationApi {
+  @override
+  Future<String> readTextFile({
+    required String baseUrl,
+    required String sid,
+    required String path,
+    String? synoToken,
+    String? cookieHeader,
+  }) async {
+    final bytes = await downloadFile(
+      baseUrl: baseUrl,
+      sid: sid,
+      path: path,
+      synoToken: synoToken,
+      cookieHeader: cookieHeader,
+    );
+    return utf8.decode(bytes, allowMalformed: true);
+  }
+
+  @override
+  Future<void> writeTextFile({
+    required String baseUrl,
+    required String sid,
+    required String path,
+    required String content,
+    String? synoToken,
+    String? cookieHeader,
+  }) async {
+    final normalizedPath = _normalizeFolderPath(path);
+    final slash = normalizedPath.lastIndexOf('/');
+    final parentPath = slash <= 0 ? '/' : normalizedPath.substring(0, slash);
+    final fileName = slash < 0 ? normalizedPath : normalizedPath.substring(slash + 1);
+
+    await uploadFile(
+      baseUrl: baseUrl,
+      sid: sid,
+      parentPath: parentPath,
+      fileName: fileName,
+      bytes: Uint8List.fromList(utf8.encode(content)),
+      synoToken: synoToken,
+      cookieHeader: cookieHeader,
+    );
+  }
+
   @override
   Future<Uint8List> downloadFile({
     required String baseUrl,

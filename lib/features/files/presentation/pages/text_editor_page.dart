@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class TextEditorPage extends StatefulWidget {
+import '../../../../core/error/error_mapper.dart';
+import '../providers/text_editor_providers.dart';
+
+class TextEditorPage extends ConsumerStatefulWidget {
   const TextEditorPage({
     super.key,
     required this.path,
@@ -11,12 +15,13 @@ class TextEditorPage extends StatefulWidget {
   final String name;
 
   @override
-  State<TextEditorPage> createState() => _TextEditorPageState();
+  ConsumerState<TextEditorPage> createState() => _TextEditorPageState();
 }
 
-class _TextEditorPageState extends State<TextEditorPage> {
+class _TextEditorPageState extends ConsumerState<TextEditorPage> {
   final TextEditingController _controller = TextEditingController();
   bool _dirty = false;
+  bool _initialized = false;
 
   @override
   void dispose() {
@@ -26,6 +31,17 @@ class _TextEditorPageState extends State<TextEditorPage> {
 
   @override
   Widget build(BuildContext context) {
+    final fileAsync = ref.watch(textFileProvider(widget.path));
+
+    ref.listen(textFileProvider(widget.path), (previous, next) {
+      next.whenData((value) {
+        if (!_initialized) {
+          _controller.text = value;
+          _initialized = true;
+        }
+      });
+    });
+
     return PopScope(
       canPop: !_dirty,
       onPopInvokedWithResult: (didPop, result) async {
@@ -51,8 +67,19 @@ class _TextEditorPageState extends State<TextEditorPage> {
           title: Text(widget.name),
           actions: [
             TextButton(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('文本读取/写回接口正在接入中')));
+              onPressed: () async {
+                try {
+                  await ref.read(saveTextFileProvider)(widget.path, _controller.text);
+                  if (mounted) {
+                    setState(() => _dirty = false);
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('保存成功')));
+                    ref.invalidate(textFileProvider(widget.path));
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(ErrorMapper.map(e).message)));
+                  }
+                }
               },
               child: const Text('保存'),
             ),
@@ -67,19 +94,22 @@ class _TextEditorPageState extends State<TextEditorPage> {
               child: Text(widget.path, maxLines: 1, overflow: TextOverflow.ellipsis),
             ),
             Expanded(
-              child: TextField(
-                controller: _controller,
-                onChanged: (_) => setState(() => _dirty = true),
-                expands: true,
-                maxLines: null,
-                minLines: null,
-                textAlignVertical: TextAlignVertical.top,
-                style: const TextStyle(fontFamily: 'monospace', fontSize: 14),
-                decoration: const InputDecoration(
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.all(16),
-                  hintText: '文本预览/编辑器正在接入真实读取与保存能力',
+              child: fileAsync.when(
+                data: (_) => TextField(
+                  controller: _controller,
+                  onChanged: (_) => setState(() => _dirty = true),
+                  expands: true,
+                  maxLines: null,
+                  minLines: null,
+                  textAlignVertical: TextAlignVertical.top,
+                  style: const TextStyle(fontFamily: 'monospace', fontSize: 14),
+                  decoration: const InputDecoration(
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.all(16),
+                  ),
                 ),
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (error, _) => Center(child: Text(ErrorMapper.map(error).message)),
               ),
             ),
           ],

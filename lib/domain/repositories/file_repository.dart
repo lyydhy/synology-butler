@@ -50,4 +50,17 @@ abstract class FileRepository {
     required NasSession session,
     required String path,
   });
+
+  Future<String> readTextFile({
+    required NasServer server,
+    required NasSession session,
+    required String path,
+  });
+
+  Future<void> writeTextFile({
+    required NasServer server,
+    required NasSession session,
+    required String path,
+    required String content,
+  });
 }
