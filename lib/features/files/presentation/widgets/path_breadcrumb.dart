@@ -18,7 +18,9 @@ class PathBreadcrumb extends StatelessWidget {
 
     if (segments.length == 1 && segments.first == '/') {
       return Wrap(
-        spacing: 4,
+        spacing: 6,
+        runSpacing: 6,
+        crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           ActionChip(label: const Text('/'), onPressed: () => onTapSegment('/')),
         ],
@@ -32,10 +34,26 @@ class PathBreadcrumb extends StatelessWidget {
     var current = '';
     for (final segment in segments) {
       current += '/$segment';
-      widgets.add(const Text('/'));
-      widgets.add(ActionChip(label: Text(segment), onPressed: () => onTapSegment(current)));
+      final targetPath = current;
+      widgets.add(
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 2),
+          child: Center(child: Text('/')),
+        ),
+      );
+      widgets.add(
+        ActionChip(
+          label: Text(segment),
+          onPressed: () => onTapSegment(targetPath),
+        ),
+      );
     }
 
-    return Wrap(spacing: 4, runSpacing: 4, children: widgets);
+    return Wrap(
+      spacing: 6,
+      runSpacing: 6,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: widgets,
+    );
   }
 }

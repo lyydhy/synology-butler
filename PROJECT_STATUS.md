@@ -63,6 +63,7 @@
   - 已根据用户抓包补接更稳定的存储数据源：`SYNO.Core.System method=poll type="storage"` -> `data.vol_info`
   - 首页存储空间现在会优先使用 `vol_info` 映射 volume 列表；若 `Utilization.space.volume` 缺失，也不再整块消失
   - 总存储占用百分比也会在 `space.total.utilization` 缺失时，由各 volume 的 used/total 反算兜底
+  - 为避免首页存储信息“先有一下又没了”，当前已停止用 realtime 数据覆盖 volume/storage 区域，仅保留 API/HTTP 数据源作为首页存储展示来源
   - 运行时间从纯 `HH:mm:ss` 改为超过 24 小时后显示 `X天 HH:mm:ss`
 
 ### 文件模块
@@ -250,4 +251,6 @@
 - `lib/domain/` 实体和仓库接口
 - `lib/features/` 功能模块页面与 provider
 - `lib/l10n/` 国际化资源
+- `RUN.md` 运行说明
+化资源
 - `RUN.md` 运行说明
