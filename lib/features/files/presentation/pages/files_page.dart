@@ -16,6 +16,7 @@ import '../providers/file_providers.dart';
 import '../providers/file_selection_providers.dart';
 import '../widgets/file_detail_sheet.dart';
 import '../widgets/file_list_item.dart';
+import '../widgets/file_type_helper.dart';
 import '../widgets/files_header.dart';
 import '../widgets/files_selection_bar.dart';
 
@@ -32,7 +33,14 @@ class _FilesPageState extends ConsumerState<FilesPage> {
   @override
   void initState() {
     super.initState();
-    _startPolling();
+    _pollTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+      if (!mounted) return;
+      final currentServer = ref.read(currentServerProvider);
+      final currentSession = ref.read(currentSessionProvider);
+      final selectionMode = ref.read(fileSelectionModeProvider);
+      if (currentServer == null || currentSession == null || selectionMode) return;
+      ref.invalidate(fileListProvider);
+    });
   }
 
   @override
@@ -41,23 +49,9 @@ class _FilesPageState extends ConsumerState<FilesPage> {
     super.dispose();
   }
 
-  void _startPolling() {
-    _pollTimer?.cancel();
-    _pollTimer = Timer.periodic(const Duration(seconds: 10), (_) {
-      if (!mounted) return;
-      final selectionMode = ref.read(fileSelectionModeProvider);
-      final currentServer = ref.read(currentServerProvider);
-      final currentSession = ref.read(currentSessionProvider);
-      if (selectionMode) return;
-      if (currentServer == null || currentSession == null) return;
-      ref.invalidate(fileListProvider);
-    });
-  }
-
   Future<({String fileName, Uint8List bytes})?> _pickSingleFile() async {
     final result = await FilePicker.platform.pickFiles(withData: true);
     if (result == null || result.files.isEmpty) return null;
-
     final file = result.files.single;
     if (file.bytes == null) return null;
     return (fileName: file.name, bytes: file.bytes!);
@@ -284,9 +278,7 @@ class _FilesPageState extends ConsumerState<FilesPage> {
                       icon: AnimatedRotation(
                         turns: activeTransferCount > 0 ? 0.125 : 0,
                         duration: const Duration(milliseconds: 300),
-                        child: Icon(
-                          activeTransferCount > 0 ? Icons.sync_rounded : Icons.swap_horiz_rounded,
-                        ),
+                        child: Icon(activeTransferCount > 0 ? Icons.sync_rounded : Icons.swap_horiz_rounded),
                       ),
                     ),
                     if (activeTransferCount > 0)
@@ -356,14 +348,20 @@ class _FilesPageState extends ConsumerState<FilesPage> {
                           actions.toggleSelection(ref, item);
                           return;
                         }
-
                         if (item.isDirectory) {
                           ref.read(currentPathProvider.notifier).state = item.path;
                           actions.clearSelection(ref);
                           ref.invalidate(fileListProvider);
-                        } else {
-                          _showFileDetail(context, item);
+                          return;
                         }
+                        if (FileTypeHelper.isTextEditable(item)) {
+                          GoRouter.of(context).push('/text-editor', extra: {
+                            'path': item.path,
+                            'name': item.name,
+                          });
+                          return;
+                        }
+                        _showFileDetail(context, item);
                       },
                       onMore: () => _showItemMenu(context, ref, item),
                     );

@@ -3,8 +3,8 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:path_provider/path_provider.dart';
 
+import '../../../../core/storage/platform_downloads_directory.dart';
 import '../../../../domain/entities/transfer_task.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../files/presentation/providers/file_providers.dart';
@@ -125,12 +125,7 @@ class TransferController extends StateNotifier<List<TransferTask>> {
   }
 
   Future<Directory> _resolveDownloadDirectory() async {
-    final docsDir = await getApplicationDocumentsDirectory();
-    final dir = Directory('${docsDir.path}/Download');
-    if (!await dir.exists()) {
-      await dir.create(recursive: true);
-    }
-    return dir;
+    return PlatformDownloadsDirectory.resolve();
   }
 
   Future<File> _resolveUniqueFile(Directory dir, String fileName) async {
