@@ -82,7 +82,7 @@ class DsmSystemApi implements SystemApi {
       final memory = utilizationData['memory'] as Map? ?? const {};
       final space = utilizationData['space'] as Map? ?? const {};
       final totalSpace = space['total'] as Map? ?? const {};
-      final volumeList = (space['volume'] as List?) ?? const [];
+      final volumeList = _extractVolumeList(space);
 
       final upgradeVersionText = await _fetchUpgradeVersion(
         client: client,
@@ -339,7 +339,7 @@ class DsmSystemApi implements SystemApi {
           final memory = data['memory'] as Map? ?? const {};
           final space = data['space'] as Map? ?? const {};
           final totalSpace = space['total'] as Map? ?? const {};
-          final volumeList = (space['volume'] as List?) ?? const [];
+          final volumeList = _extractVolumeList(space);
 
           controller.add(
             SystemStatusModel(
@@ -726,6 +726,28 @@ class DsmSystemApi implements SystemApi {
     }
 
     return 'DSM 版本未知';
+  }
+
+  List<Map> _extractVolumeList(Map space) {
+    final direct = space['volume'];
+    if (direct is List) {
+      return direct.whereType<Map>().toList();
+    }
+
+    final volumes = space['volumes'];
+    if (volumes is List) {
+      return volumes.whereType<Map>().toList();
+    }
+
+    final items = space['items'];
+    if (items is List) {
+      return items.whereType<Map>().where((item) {
+        final name = (item['display_name'] ?? item['device'] ?? item['name'] ?? '').toString().toLowerCase();
+        return name.startsWith('volume');
+      }).toList();
+    }
+
+    return const [];
   }
 
   double? _toDouble(dynamic value) {

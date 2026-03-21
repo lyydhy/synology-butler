@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
@@ -101,50 +102,98 @@ class DsmFileStationApi implements FileStationApi {
   }) async {
     final client = DioClient(baseUrl: baseUrl).dio;
     final folderPath = _normalizeFolderPath(path);
+    final isRoot = folderPath == '/';
+    final action = isRoot ? 'listShare' : 'list';
+    final payload = isRoot
+        ? <String, dynamic>{
+            'api': 'SYNO.FileStation.List',
+            'method': 'list_share',
+            'version': '2',
+            'filetype': jsonEncode('dir'),
+            'sort_by': jsonEncode('name'),
+            'check_dir': 'true',
+            'additional': jsonEncode([
+              'real_path',
+              'owner',
+              'time',
+              'perm',
+              'mount_point_type',
+              'sync_share',
+              'volume_status',
+              'indexed',
+              'hybrid_share',
+              'worm_share',
+              'tiering_xattr',
+            ]),
+            'enum_cluster': 'true',
+            'node': jsonEncode('fm_root'),
+          }
+        : <String, dynamic>{
+            'api': 'SYNO.FileStation.List',
+            'method': 'list',
+            'version': '2',
+            'offset': '0',
+            'limit': '1000',
+            'sort_by': jsonEncode('name'),
+            'sort_direction': jsonEncode('ASC'),
+            'action': jsonEncode('list'),
+            'check_dir': 'true',
+            'additional': jsonEncode([
+              'real_path',
+              'size',
+              'owner',
+              'time',
+              'perm',
+              'type',
+              'mount_point_type',
+              'description',
+              'indexed',
+            ]),
+            'filetype': jsonEncode('all'),
+            'folder_path': jsonEncode(folderPath),
+          };
 
     DsmLogger.request(
       module: 'FileStation',
-      action: 'list',
-      method: 'GET',
+      action: action,
+      method: 'POST',
       path: folderPath,
       sid: sid,
       synoToken: synoToken,
       cookieHeader: cookieHeader,
       extra: {
-        'api': 'SYNO.FileStation.List',
-        'version': '2',
+        'api': payload['api'],
+        'method': payload['method'],
+        'version': payload['version'],
       },
     );
 
-    final response = await client.get(
+    final response = await client.post(
       '/webapi/entry.cgi',
+      data: FormData.fromMap(payload),
       queryParameters: {
-        'api': 'SYNO.FileStation.List',
-        'version': '2',
-        'method': 'list',
-        'folder_path': folderPath,
-        'offset': '0',
-        'limit': '1000',
-        'sort_by': 'name',
-        'sort_direction': 'asc',
-        'additional': '["real_path","size","time","perm","type"]',
         '_sid': sid,
       },
-      options: _buildOptions(synoToken: synoToken, cookieHeader: cookieHeader),
+      options: _buildOptions(
+        synoToken: synoToken,
+        cookieHeader: cookieHeader,
+      ).copyWith(
+        contentType: Headers.formUrlEncodedContentType,
+      ),
     );
 
     if (response.data is Map && response.data['success'] == true) {
       final data = response.data['data'] as Map? ?? const {};
-      final files = (data['files'] as List?) ?? const [];
+      final items = isRoot ? ((data['shares'] as List?) ?? const []) : ((data['files'] as List?) ?? const []);
       DsmLogger.success(
         module: 'FileStation',
-        action: 'list',
+        action: action,
         path: folderPath,
         extra: {
-          'count': files.length,
+          'count': items.length,
         },
       );
-      return files.whereType<Map>().map((map) {
+      return items.whereType<Map>().map((map) {
         final additional = map['additional'] as Map? ?? const {};
         return FileItemModel(
           name: (map['name'] ?? '').toString(),
@@ -157,7 +206,7 @@ class DsmFileStationApi implements FileStationApi {
 
     DsmLogger.failure(
       module: 'FileStation',
-      action: 'list',
+      action: action,
       path: folderPath,
       response: response.data,
       sid: sid,
@@ -167,7 +216,7 @@ class DsmFileStationApi implements FileStationApi {
 
     throw DioException(
       requestOptions: response.requestOptions,
-      error: _extractError(action: 'list', data: response.data),
+      error: _extractError(action: action, data: response.data),
       response: response,
     );
   }

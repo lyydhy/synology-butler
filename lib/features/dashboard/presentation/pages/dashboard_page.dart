@@ -449,13 +449,19 @@ class _UptimeCardState extends State<_UptimeCard> {
   }
 
   String _formatDuration(Duration duration) {
-    final totalHours = duration.inHours;
+    final days = duration.inDays;
+    final hours = duration.inHours % 24;
     final minutes = duration.inMinutes % 60;
     final seconds = duration.inSeconds % 60;
 
-    final hh = totalHours.toString().padLeft(2, '0');
+    final hh = hours.toString().padLeft(2, '0');
     final mm = minutes.toString().padLeft(2, '0');
     final ss = seconds.toString().padLeft(2, '0');
+
+    if (days > 0) {
+      return '${days}天 $hh:$mm:$ss';
+    }
+
     return '$hh:$mm:$ss';
   }
 

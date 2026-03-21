@@ -58,6 +58,9 @@
 - 首页存储空间按 volume 展示占用情况
 - 首页存储空间补充“已用 / 总计”具体数值展示，并对空值做兜底
 - `volume1` / `volume2` 等默认名在首页转换为“存储空间1 / 存储空间2”样式
+- 已继续修正首页显示细节：
+  - 存储空间的 realtime volume 列表解析增加多种字段兜底，降低因 DSM 返回结构轻微变化导致“存储信息消失”的概率
+  - 运行时间从纯 `HH:mm:ss` 改为超过 24 小时后显示 `X天 HH:mm:ss`
 
 ### 文件模块
 - 文件列表
@@ -71,6 +74,11 @@
 - 上传对话框与上传接口骨架
 - 文件详情弹层
 - 已开始按 DSM 7 会话要求补强 FileStation 请求头（SynoToken / Cookie）与根路径兜底
+- 已根据用户抓包继续对齐 FileStation WebUI 调用方式：
+  - 根目录 `/` 不再误用普通 `list(folder_path=/)`，改为 `SYNO.FileStation.List method=list_share`
+  - 子目录继续使用 `SYNO.FileStation.List method=list`
+  - FileStation 列表接口已从原先 GET query 切到更贴近 WebUI 的 POST form
+  - 第一层解析 `data.shares`，下级目录解析 `data.files`
 
 ### 下载模块
 - 任务列表
