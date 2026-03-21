@@ -1,9 +1,8 @@
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
-
 import '../../core/network/dio_client.dart';
+import '../../core/utils/dsm_logger.dart';
 import '../models/file_item_model.dart';
 
 abstract class FileStationApi {
@@ -81,12 +80,15 @@ class DsmFileStationApi implements FileStationApi {
     return trimmed.startsWith('/') ? trimmed : '/$trimmed';
   }
 
-  String _extractError(dynamic data) {
-    if (data is Map && data['success'] == false) {
-      final code = data['error']?['code'];
-      return 'DSM FileStation failed, code=$code, data=$data';
-    }
-    return 'DSM FileStation failed, data=$data';
+  String _extractError({
+    required String action,
+    required dynamic data,
+  }) {
+    return DsmLogger.buildFailureMessage(
+      module: 'FileStation',
+      action: action,
+      response: data,
+    );
   }
 
   @override
@@ -99,6 +101,20 @@ class DsmFileStationApi implements FileStationApi {
   }) async {
     final client = DioClient(baseUrl: baseUrl).dio;
     final folderPath = _normalizeFolderPath(path);
+
+    DsmLogger.request(
+      module: 'FileStation',
+      action: 'list',
+      method: 'GET',
+      path: folderPath,
+      sid: sid,
+      synoToken: synoToken,
+      cookieHeader: cookieHeader,
+      extra: {
+        'api': 'SYNO.FileStation.List',
+        'version': '2',
+      },
+    );
 
     final response = await client.get(
       '/webapi/entry.cgi',
@@ -117,11 +133,17 @@ class DsmFileStationApi implements FileStationApi {
       options: _buildOptions(synoToken: synoToken, cookieHeader: cookieHeader),
     );
 
-    debugPrint('[FileStation][list] path=$folderPath response=${response.data}');
-
     if (response.data is Map && response.data['success'] == true) {
       final data = response.data['data'] as Map? ?? const {};
       final files = (data['files'] as List?) ?? const [];
+      DsmLogger.success(
+        module: 'FileStation',
+        action: 'list',
+        path: folderPath,
+        extra: {
+          'count': files.length,
+        },
+      );
       return files.whereType<Map>().map((map) {
         final additional = map['additional'] as Map? ?? const {};
         return FileItemModel(
@@ -133,9 +155,19 @@ class DsmFileStationApi implements FileStationApi {
       }).toList();
     }
 
+    DsmLogger.failure(
+      module: 'FileStation',
+      action: 'list',
+      path: folderPath,
+      response: response.data,
+      sid: sid,
+      synoToken: synoToken,
+      cookieHeader: cookieHeader,
+    );
+
     throw DioException(
       requestOptions: response.requestOptions,
-      error: _extractError(response.data),
+      error: _extractError(action: 'list', data: response.data),
       response: response,
     );
   }
@@ -151,13 +183,27 @@ class DsmFileStationApi implements FileStationApi {
   }) async {
     final client = DioClient(baseUrl: baseUrl).dio;
 
+    final normalizedParentPath = _normalizeFolderPath(parentPath);
+    DsmLogger.request(
+      module: 'FileStation',
+      action: 'createFolder',
+      method: 'GET',
+      path: normalizedParentPath,
+      sid: sid,
+      synoToken: synoToken,
+      cookieHeader: cookieHeader,
+      extra: {
+        'name': name,
+      },
+    );
+
     final response = await client.get(
       '/webapi/entry.cgi',
       queryParameters: {
         'api': 'SYNO.FileStation.CreateFolder',
         'version': '2',
         'method': 'create',
-        'folder_path': _normalizeFolderPath(parentPath),
+        'folder_path': normalizedParentPath,
         'name': name,
         '_sid': sid,
       },
@@ -165,12 +211,29 @@ class DsmFileStationApi implements FileStationApi {
     );
 
     if (response.data is Map && response.data['success'] == true) {
+      DsmLogger.success(
+        module: 'FileStation',
+        action: 'createFolder',
+        path: normalizedParentPath,
+        extra: {'name': name},
+      );
       return;
     }
 
+    DsmLogger.failure(
+      module: 'FileStation',
+      action: 'createFolder',
+      path: normalizedParentPath,
+      response: response.data,
+      sid: sid,
+      synoToken: synoToken,
+      cookieHeader: cookieHeader,
+      extra: {'name': name},
+    );
+
     throw DioException(
       requestOptions: response.requestOptions,
-      error: _extractError(response.data),
+      error: _extractError(action: 'createFolder', data: response.data),
       response: response,
     );
   }
@@ -185,6 +248,17 @@ class DsmFileStationApi implements FileStationApi {
     String? cookieHeader,
   }) async {
     final client = DioClient(baseUrl: baseUrl).dio;
+    DsmLogger.request(
+      module: 'FileStation',
+      action: 'rename',
+      method: 'GET',
+      path: path,
+      sid: sid,
+      synoToken: synoToken,
+      cookieHeader: cookieHeader,
+      extra: {'newName': newName},
+    );
+
     final response = await client.get(
       '/webapi/entry.cgi',
       queryParameters: {
@@ -198,11 +272,30 @@ class DsmFileStationApi implements FileStationApi {
       options: _buildOptions(synoToken: synoToken, cookieHeader: cookieHeader),
     );
 
-    if (response.data is Map && response.data['success'] == true) return;
+    if (response.data is Map && response.data['success'] == true) {
+      DsmLogger.success(
+        module: 'FileStation',
+        action: 'rename',
+        path: path,
+        extra: {'newName': newName},
+      );
+      return;
+    }
+
+    DsmLogger.failure(
+      module: 'FileStation',
+      action: 'rename',
+      path: path,
+      response: response.data,
+      sid: sid,
+      synoToken: synoToken,
+      cookieHeader: cookieHeader,
+      extra: {'newName': newName},
+    );
 
     throw DioException(
       requestOptions: response.requestOptions,
-      error: _extractError(response.data),
+      error: _extractError(action: 'rename', data: response.data),
       response: response,
     );
   }
@@ -216,6 +309,16 @@ class DsmFileStationApi implements FileStationApi {
     String? cookieHeader,
   }) async {
     final client = DioClient(baseUrl: baseUrl).dio;
+    DsmLogger.request(
+      module: 'FileStation',
+      action: 'delete',
+      method: 'GET',
+      path: path,
+      sid: sid,
+      synoToken: synoToken,
+      cookieHeader: cookieHeader,
+    );
+
     final response = await client.get(
       '/webapi/entry.cgi',
       queryParameters: {
@@ -228,11 +331,28 @@ class DsmFileStationApi implements FileStationApi {
       options: _buildOptions(synoToken: synoToken, cookieHeader: cookieHeader),
     );
 
-    if (response.data is Map && response.data['success'] == true) return;
+    if (response.data is Map && response.data['success'] == true) {
+      DsmLogger.success(
+        module: 'FileStation',
+        action: 'delete',
+        path: path,
+      );
+      return;
+    }
+
+    DsmLogger.failure(
+      module: 'FileStation',
+      action: 'delete',
+      path: path,
+      response: response.data,
+      sid: sid,
+      synoToken: synoToken,
+      cookieHeader: cookieHeader,
+    );
 
     throw DioException(
       requestOptions: response.requestOptions,
-      error: _extractError(response.data),
+      error: _extractError(action: 'delete', data: response.data),
       response: response,
     );
   }
@@ -246,6 +366,16 @@ class DsmFileStationApi implements FileStationApi {
     String? cookieHeader,
   }) async {
     final client = DioClient(baseUrl: baseUrl).dio;
+    DsmLogger.request(
+      module: 'FileStation',
+      action: 'createShareLink',
+      method: 'GET',
+      path: path,
+      sid: sid,
+      synoToken: synoToken,
+      cookieHeader: cookieHeader,
+    );
+
     final response = await client.get(
       '/webapi/entry.cgi',
       queryParameters: {
@@ -260,12 +390,30 @@ class DsmFileStationApi implements FileStationApi {
 
     if (response.data is Map && response.data['success'] == true) {
       final data = response.data['data'] as Map? ?? const {};
+      DsmLogger.success(
+        module: 'FileStation',
+        action: 'createShareLink',
+        path: path,
+        response: {
+          'url': data['links'] ?? data['url'],
+        },
+      );
       return data['links']?.toString() ?? data['url']?.toString() ?? '分享链接创建成功';
     }
 
+    DsmLogger.failure(
+      module: 'FileStation',
+      action: 'createShareLink',
+      path: path,
+      response: response.data,
+      sid: sid,
+      synoToken: synoToken,
+      cookieHeader: cookieHeader,
+    );
+
     throw DioException(
       requestOptions: response.requestOptions,
-      error: _extractError(response.data),
+      error: _extractError(action: 'createShareLink', data: response.data),
       response: response,
     );
   }
@@ -281,11 +429,26 @@ class DsmFileStationApi implements FileStationApi {
     String? cookieHeader,
   }) async {
     final client = DioClient(baseUrl: baseUrl).dio;
+    final normalizedParentPath = _normalizeFolderPath(parentPath);
+    DsmLogger.request(
+      module: 'FileStation',
+      action: 'uploadFile',
+      method: 'POST',
+      path: normalizedParentPath,
+      sid: sid,
+      synoToken: synoToken,
+      cookieHeader: cookieHeader,
+      extra: {
+        'fileName': fileName,
+        'bytes': bytes.length,
+      },
+    );
+
     final formData = FormData.fromMap({
       'api': 'SYNO.FileStation.Upload',
       'version': '2',
       'method': 'upload',
-      'path': _normalizeFolderPath(parentPath),
+      'path': normalizedParentPath,
       'create_parents': 'true',
       'overwrite': 'true',
       '_sid': sid,
@@ -297,11 +460,36 @@ class DsmFileStationApi implements FileStationApi {
       data: formData,
       options: _buildOptions(synoToken: synoToken, cookieHeader: cookieHeader),
     );
-    if (response.data is Map && response.data['success'] == true) return;
+    if (response.data is Map && response.data['success'] == true) {
+      DsmLogger.success(
+        module: 'FileStation',
+        action: 'uploadFile',
+        path: normalizedParentPath,
+        extra: {
+          'fileName': fileName,
+          'bytes': bytes.length,
+        },
+      );
+      return;
+    }
+
+    DsmLogger.failure(
+      module: 'FileStation',
+      action: 'uploadFile',
+      path: normalizedParentPath,
+      response: response.data,
+      sid: sid,
+      synoToken: synoToken,
+      cookieHeader: cookieHeader,
+      extra: {
+        'fileName': fileName,
+        'bytes': bytes.length,
+      },
+    );
 
     throw DioException(
       requestOptions: response.requestOptions,
-      error: _extractError(response.data),
+      error: _extractError(action: 'uploadFile', data: response.data),
       response: response,
     );
   }

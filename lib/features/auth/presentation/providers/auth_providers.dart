@@ -120,15 +120,23 @@ Future<void> _persistSessionSecrets(Ref ref, NasSession session) async {
 
   if (session.synoToken != null && session.synoToken!.isNotEmpty) {
     await secureStorage.write(AppConstants.savedSynoTokenKey, session.synoToken!);
+  } else {
+    await secureStorage.delete(AppConstants.savedSynoTokenKey);
   }
   if (session.cookieHeader != null && session.cookieHeader!.isNotEmpty) {
     await secureStorage.write(AppConstants.savedCookieHeaderKey, session.cookieHeader!);
+  } else {
+    await secureStorage.delete(AppConstants.savedCookieHeaderKey);
   }
   if (session.requestHashSeed != null && session.requestHashSeed!.isNotEmpty) {
     await secureStorage.write(AppConstants.savedRequestHashSeedKey, session.requestHashSeed!);
+  } else {
+    await secureStorage.delete(AppConstants.savedRequestHashSeedKey);
   }
   if (session.authToken != null && session.authToken!.isNotEmpty) {
     await secureStorage.write(AppConstants.savedAuthTokenKey, session.authToken!);
+  } else {
+    await secureStorage.delete(AppConstants.savedAuthTokenKey);
   }
 }
 

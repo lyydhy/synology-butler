@@ -93,6 +93,13 @@
 - 当前连接 / 本地保存状态展示
 - 基础联通测试（auth / file / download）
 - SynoToken / CookieHeader 存在性展示
+- 已新增统一 DSM 调试日志工具：
+  - `REQ / OK / FAIL` 三段式输出
+  - 日志中显式展示模块、动作、路径、DSM 错误码、错误原因、sid/token/cookie 是否存在
+  - 重点覆盖 auth / file / system，方便快速肉眼识别 `119` 这类鉴权失败
+- 已将 DSM 错误码映射抽到公共工具 `dsm_error_helper.dart`：
+  - `DsmLogger` 与 `ErrorMapper` 共用同一套 code -> 文案 逻辑
+  - 避免日志文案与 UI 错误提示后续出现两套映射不一致
 
 ### 主题与多语言
 - Material 3 主题模式切换（系统 / 浅色 / 深色）
@@ -140,6 +147,11 @@
 - 已补充 volume 级别容量字段读取（若接口返回则展示 used / total）
 - `subscribe` 当前返回错误码 `103`，已暂时移除，只保留 `get` 路径确保首页稳定展示
 - 首页当前已改为：HTTP 概览（设备名/版本/设备信息/uptime）+ WS 实时指标（CPU/内存/存储）合并展示
+- 已继续修正 WS 鉴权恢复链路：
+  - realtime 收到 `44"Authentication Error"` / `invalid sid` / `unauthorized` 等帧时会立即抛出明确错误，而不是静默吞掉
+  - `request_webapi` 返回疑似鉴权失败 payload 时，也会主动中断当前流并交给上层刷新会话
+  - bootstrap 超时不再盲重试旧请求，改为直接判定当前 realtime 鉴权上下文大概率已失效
+  - 目标是打通“底层识别 auth failure -> provider 刷新 session -> 新凭证重建 realtime”这条链路，避免旧 `_sid / SynoToken` 上无限重试
 
 ### 认证层
 - 已确认 DSM Web UI 的 realtime 业务层依赖 DSM v7 登录链路
@@ -154,6 +166,8 @@
   - `sid`
   - `synotoken`
   - `device_id`
+- refresh realtime session 后，当前已补做 cookie key 级合并，避免 refresh 只回部分 cookie 时把旧 cookie 头整体覆盖丢失
+- session secrets 持久化逻辑已补强：若新 session 某字段为空，会主动删除本地旧值，降低脏 token / cookie 残留污染后续恢复的概率
 - 登录前新增 DSM 版本探测逻辑，用于拦截 DSM 6 并给出明确提示
 - 但完整 Noise 握手 / `SynoHash` 生成链路仍未实现完毕
 

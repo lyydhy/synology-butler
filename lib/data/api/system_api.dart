@@ -6,6 +6,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../core/network/dio_client.dart';
+import '../../core/utils/dsm_logger.dart';
 import '../models/system_status_model.dart';
 
 abstract class SystemApi {
@@ -31,6 +32,23 @@ class DsmSystemApi implements SystemApi {
     String? synoToken,
   }) async {
     final client = DioClient(baseUrl: baseUrl).dio;
+
+    DsmLogger.request(
+      module: 'System',
+      action: 'fetchOverview',
+      method: 'GET',
+      path: baseUrl,
+      sid: sid,
+      synoToken: synoToken,
+      extra: {
+        'apis': [
+          'SYNO.Core.System',
+          'SYNO.Core.System.Utilization',
+          'SYNO.Entry.Request/SYNO.Core.Upgrade.Server.check',
+          'SYNO.Core.System.SystemHealth',
+        ],
+      },
+    );
 
     try {
       final infoResponse = await client.get(
@@ -78,7 +96,7 @@ class DsmSystemApi implements SystemApi {
       );
       final versionText = upgradeVersionText ?? _buildVersionText(infoData);
 
-      return SystemStatusModel(
+      final result = SystemStatusModel(
         serverName: (infoData['hostname'] ?? infoData['server_name'] ?? '我的 NAS').toString(),
         dsmVersion: versionText,
         cpuUsage: ((utilizationData['cpu']?['user_load'] as num?) ?? 0).toDouble() +
@@ -101,8 +119,29 @@ class DsmSystemApi implements SystemApi {
         serialNumber: (infoData['serial'] ?? infoData['serial_number'])?.toString(),
         uptimeText: systemHealthUptime ?? _formatUptime(infoData['uptime'] ?? infoData['uptime_seconds']),
       );
+
+      DsmLogger.success(
+        module: 'System',
+        action: 'fetchOverview',
+        path: baseUrl,
+        response: {
+          'serverName': result.serverName,
+          'dsmVersion': result.dsmVersion,
+          'volumes': result.volumes.length,
+          'uptimeText': result.uptimeText,
+        },
+      );
+
+      return result;
     } catch (e) {
-      debugPrint('[HTTP][System][Error] $e');
+      DsmLogger.failure(
+        module: 'System',
+        action: 'fetchOverview',
+        path: baseUrl,
+        reason: e.toString(),
+        sid: sid,
+        synoToken: synoToken,
+      );
       rethrow;
     }
   }
@@ -115,6 +154,20 @@ class DsmSystemApi implements SystemApi {
     String? cookieHeader,
   }) {
     final controller = StreamController<SystemStatusModel>();
+
+    DsmLogger.request(
+      module: 'System',
+      action: 'watchUtilization',
+      method: 'WS',
+      path: baseUrl,
+      sid: sid,
+      synoToken: synoToken,
+      cookieHeader: cookieHeader,
+      extra: {
+        'api': 'SYNO.Core.System.Utilization',
+        'type': 'current',
+      },
+    );
 
     Future<void>(() async {
       final origin = _buildOrigin(baseUrl);
@@ -151,6 +204,7 @@ class DsmSystemApi implements SystemApi {
 
       int requestIndex = 20;
       bool requested = false;
+      bool terminalStateReached = false;
       Timer? bootstrapTimer;
 
       void sendFrame(String frame) {
@@ -173,16 +227,50 @@ class DsmSystemApi implements SystemApi {
         requested = true;
       }
 
+      void failAuth(String reason) {
+        if (terminalStateReached || controller.isClosed) {
+          return;
+        }
+        terminalStateReached = true;
+        bootstrapTimer?.cancel();
+        DsmLogger.failure(
+          module: 'System',
+          action: 'watchUtilization',
+          path: baseUrl,
+          reason: 'Realtime authentication error: $reason',
+          sid: sid,
+          synoToken: synoToken,
+          cookieHeader: cookieHeader,
+        );
+        controller.addError(Exception('Realtime authentication error: $reason'));
+        socket.close();
+      }
+
+      void failBootstrapTimeout() {
+        if (terminalStateReached || controller.isClosed) {
+          return;
+        }
+        terminalStateReached = true;
+        bootstrapTimer?.cancel();
+        DsmLogger.failure(
+          module: 'System',
+          action: 'watchUtilization',
+          path: baseUrl,
+          reason: 'Realtime bootstrap timeout after websocket connect; auth likely expired',
+          sid: sid,
+          synoToken: synoToken,
+          cookieHeader: cookieHeader,
+        );
+        controller.addError(Exception('Realtime bootstrap timeout after websocket connect; auth likely expired'));
+        socket.close();
+      }
+
       sendFrame('2probe');
       sendFrame('5');
       sendFrame('40');
       requestCurrent();
 
-      bootstrapTimer = Timer(const Duration(seconds: 2), () {
-        debugPrint('[WS][Bootstrap Timeout] no business payload yet, retry request_webapi');
-        sendFrame('40');
-        requestCurrent();
-      });
+      bootstrapTimer = Timer(const Duration(seconds: 2), failBootstrapTimeout);
 
       controller.onCancel = () async {
         debugPrint('[WS][Closed by client]');
@@ -217,12 +305,34 @@ class DsmSystemApi implements SystemApi {
             return;
           }
 
-          final payload = _extractRequestWebApiPayload(text);
-          if (payload == null || payload['success'] != true) {
+          if (_isAuthenticationErrorFrame(text)) {
+            failAuth(text);
             return;
           }
 
+          final payload = _extractRequestWebApiPayload(text);
+          if (payload == null) {
+            return;
+          }
+
+          if (payload['success'] != true) {
+            if (_payloadLooksLikeAuthFailure(payload)) {
+              failAuth(jsonEncode(payload));
+            }
+            return;
+          }
+
+          terminalStateReached = true;
           bootstrapTimer?.cancel();
+
+          DsmLogger.success(
+            module: 'System',
+            action: 'watchUtilization',
+            path: baseUrl,
+            response: {
+              'received': true,
+            },
+          );
 
           final data = payload['data'] as Map? ?? const {};
           final cpu = data['cpu'] as Map? ?? const {};
@@ -375,6 +485,36 @@ class DsmSystemApi implements SystemApi {
     return match?.group(1);
   }
 
+  bool _isAuthenticationErrorFrame(String text) {
+    final normalized = text.toLowerCase();
+    return normalized.contains('authentication error') ||
+        normalized.contains('invalid sid') ||
+        normalized.contains('unauthorized');
+  }
+
+  bool _payloadLooksLikeAuthFailure(Map<String, dynamic> payload) {
+    final code = payload['code']?.toString();
+    final errors = payload['errors'];
+    final text = jsonEncode(payload).toLowerCase();
+
+    if (code == '119') {
+      return true;
+    }
+
+    if (errors is Map) {
+      final errorCode = errors['code']?.toString();
+      if (errorCode == '119') {
+        return true;
+      }
+    }
+
+    return text.contains('authentication error') ||
+        text.contains('invalid sid') ||
+        text.contains('synotoken') ||
+        text.contains('unauthorized') ||
+        text.contains('auth');
+  }
+
   String? _buildCookieHeader(List<String> setCookies) {
     if (setCookies.isEmpty) return null;
 
@@ -511,7 +651,13 @@ class DsmSystemApi implements SystemApi {
         }
       }
     } catch (e) {
-      debugPrint('[HTTP][Upgrade Version][Error] $e');
+      DsmLogger.failure(
+        module: 'System',
+        action: 'fetchUpgradeVersion',
+        reason: e.toString(),
+        sid: sid,
+        synoToken: synoToken,
+      );
     }
 
     return null;
@@ -546,7 +692,13 @@ class DsmSystemApi implements SystemApi {
       if (uptime == null || uptime.trim().isEmpty) return null;
       return uptime.trim();
     } catch (e) {
-      debugPrint('[HTTP][System Health][Error] $e');
+      DsmLogger.failure(
+        module: 'System',
+        action: 'fetchSystemHealthUptime',
+        reason: e.toString(),
+        sid: sid,
+        synoToken: synoToken,
+      );
     }
 
     return null;

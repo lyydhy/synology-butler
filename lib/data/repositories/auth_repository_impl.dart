@@ -9,6 +9,29 @@ class AuthRepositoryImpl implements AuthRepository {
 
   final AuthApi _authApi;
 
+  String? _mergeCookieHeaders(String? a, String? b) {
+    final parts = <String>[];
+    if (a != null && a.isNotEmpty) {
+      parts.addAll(a.split(';').map((e) => e.trim()).where((e) => e.isNotEmpty));
+    }
+    if (b != null && b.isNotEmpty) {
+      parts.addAll(b.split(';').map((e) => e.trim()).where((e) => e.isNotEmpty));
+    }
+    if (parts.isEmpty) return null;
+
+    final cookieMap = <String, String>{};
+    for (final part in parts) {
+      final idx = part.indexOf('=');
+      if (idx <= 0) continue;
+      final key = part.substring(0, idx).trim();
+      final value = part.substring(idx + 1).trim();
+      cookieMap[key] = value;
+    }
+
+    if (cookieMap.isEmpty) return null;
+    return cookieMap.entries.map((e) => '${e.key}=${e.value}').join('; ');
+  }
+
   @override
   Future<NasVersionInfo> probeVersion({
     required NasServer server,
@@ -36,11 +59,16 @@ class AuthRepositoryImpl implements AuthRepository {
       sid: session.sid,
     );
 
+    final mergedCookieHeader = _mergeCookieHeaders(
+      session.cookieHeader,
+      result.cookieHeader,
+    );
+
     return NasSession(
       serverId: server.id,
       sid: result.sid,
       synoToken: result.synoToken ?? session.synoToken,
-      cookieHeader: result.cookieHeader ?? session.cookieHeader,
+      cookieHeader: mergedCookieHeader ?? session.cookieHeader,
       requestHashSeed: result.requestHashSeed ?? session.requestHashSeed,
       authToken: result.authToken ?? session.authToken,
       requestNonce: session.requestNonce,

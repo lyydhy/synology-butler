@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../core/network/dio_client.dart';
+import '../../core/utils/dsm_logger.dart';
 import '../models/nas_server_model.dart';
 import 'auth_api.dart';
 
@@ -11,6 +12,17 @@ class DsmAuthApi implements AuthApi {
     required NasServerModel server,
   }) async {
     final client = DioClient(baseUrl: server.baseUrl).dio;
+
+    DsmLogger.request(
+      module: 'Auth',
+      action: 'probeVersion',
+      method: 'GET',
+      path: server.baseUrl,
+      extra: {
+        'api': 'SYNO.API.Info',
+        'query': 'SYNO.API.Auth',
+      },
+    );
 
     final response = await client.get(
       '/webapi/query.cgi',
@@ -33,7 +45,7 @@ class DsmAuthApi implements AuthApi {
     final productVersion = authInfo['productversion']?.toString();
     final versionString = authInfo['version_string']?.toString() ?? authInfo['fullversion']?.toString();
 
-    return DsmVersionInfo(
+    final infoResult = DsmVersionInfo(
       major: major,
       minor: minor,
       build: build,
@@ -41,6 +53,21 @@ class DsmAuthApi implements AuthApi {
       fullVersionString: versionString,
       isDsm7OrAbove: maxVersion != null ? maxVersion >= 7 : ((int.tryParse(major ?? '') ?? 0) >= 7),
     );
+
+    DsmLogger.success(
+      module: 'Auth',
+      action: 'probeVersion',
+      path: server.baseUrl,
+      response: {
+        'displayText': infoResult.displayText,
+        'isDsm7OrAbove': infoResult.isDsm7OrAbove,
+        'major': infoResult.major,
+        'minor': infoResult.minor,
+        'build': infoResult.build,
+      },
+    );
+
+    return infoResult;
   }
 
   @override
@@ -50,7 +77,17 @@ class DsmAuthApi implements AuthApi {
   }) async {
     final client = DioClient(baseUrl: server.baseUrl).dio;
 
-    debugPrint('[Auth][refresh] refreshing realtime session for ${server.baseUrl}');
+    DsmLogger.request(
+      module: 'Auth',
+      action: 'refreshRealtimeSession',
+      method: 'GET',
+      path: server.baseUrl,
+      sid: sid,
+      extra: {
+        'session': 'webui',
+        'enable_syno_token': true,
+      },
+    );
 
     final response = await client.get(
       '/webapi/entry.cgi',
@@ -65,7 +102,6 @@ class DsmAuthApi implements AuthApi {
     );
 
     final data = response.data;
-    debugPrint('[Auth][refresh][Response] $data');
 
     if (data is Map && data['success'] == true) {
       final responseData = data['data'] as Map? ?? const {};
@@ -73,7 +109,7 @@ class DsmAuthApi implements AuthApi {
       final setCookies = response.headers.map['set-cookie'] ?? const <String>[];
       final cookieHeader = _buildCookieHeader(setCookies);
 
-      return AuthLoginResult(
+      final result = AuthLoginResult(
         sid: refreshedSid,
         synoToken: responseData['synotoken']?.toString(),
         cookieHeader: cookieHeader,
@@ -81,7 +117,30 @@ class DsmAuthApi implements AuthApi {
         authToken: responseData['did']?.toString(),
         noiseIkMessage: responseData['ik_message']?.toString(),
       );
+
+      DsmLogger.success(
+        module: 'Auth',
+        action: 'refreshRealtimeSession',
+        path: server.baseUrl,
+        response: {
+          'sidChanged': refreshedSid != sid,
+          'synoToken': result.synoToken != null && result.synoToken!.isNotEmpty ? 'present' : 'missing',
+          'cookieHeader': result.cookieHeader != null && result.cookieHeader!.isNotEmpty ? 'present' : 'missing',
+          'requestHashSeed': result.requestHashSeed != null && result.requestHashSeed!.isNotEmpty ? 'present' : 'missing',
+          'authToken': result.authToken != null && result.authToken!.isNotEmpty ? 'present' : 'missing',
+        },
+      );
+
+      return result;
     }
+
+    DsmLogger.failure(
+      module: 'Auth',
+      action: 'refreshRealtimeSession',
+      path: server.baseUrl,
+      response: data,
+      sid: sid,
+    );
 
     throw DioException(
       requestOptions: response.requestOptions,
@@ -98,7 +157,17 @@ class DsmAuthApi implements AuthApi {
   }) async {
     final client = DioClient(baseUrl: server.baseUrl).dio;
 
-    debugPrint('[Auth][v7] starting DSM v7 login flow for ${server.baseUrl}');
+    DsmLogger.request(
+      module: 'Auth',
+      action: 'login',
+      method: 'GET',
+      path: server.baseUrl,
+      extra: {
+        'username': username,
+        'session': 'webui',
+        'enable_syno_token': true,
+      },
+    );
 
     final response = await client.get(
       '/webapi/entry.cgi',
@@ -114,7 +183,6 @@ class DsmAuthApi implements AuthApi {
     );
 
     final data = response.data;
-    debugPrint('[Auth][v7][Response] $data');
 
     if (data is Map && data['success'] == true) {
       final responseData = data['data'] as Map? ?? const {};
@@ -123,7 +191,7 @@ class DsmAuthApi implements AuthApi {
         final setCookies = response.headers.map['set-cookie'] ?? const <String>[];
         final cookieHeader = _buildCookieHeader(setCookies);
 
-        return AuthLoginResult(
+        final result = AuthLoginResult(
           sid: sid,
           synoToken: responseData['synotoken']?.toString(),
           cookieHeader: cookieHeader,
@@ -131,8 +199,30 @@ class DsmAuthApi implements AuthApi {
           authToken: responseData['did']?.toString(),
           noiseIkMessage: responseData['ik_message']?.toString(),
         );
+
+        DsmLogger.success(
+          module: 'Auth',
+          action: 'login',
+          path: server.baseUrl,
+          response: {
+            'sid': 'present',
+            'synoToken': result.synoToken != null && result.synoToken!.isNotEmpty ? 'present' : 'missing',
+            'cookieHeader': result.cookieHeader != null && result.cookieHeader!.isNotEmpty ? 'present' : 'missing',
+            'requestHashSeed': result.requestHashSeed != null && result.requestHashSeed!.isNotEmpty ? 'present' : 'missing',
+            'authToken': result.authToken != null && result.authToken!.isNotEmpty ? 'present' : 'missing',
+          },
+        );
+
+        return result;
       }
     }
+
+    DsmLogger.failure(
+      module: 'Auth',
+      action: 'login',
+      path: server.baseUrl,
+      response: data,
+    );
 
     throw DioException(
       requestOptions: response.requestOptions,
@@ -147,6 +237,16 @@ class DsmAuthApi implements AuthApi {
     required String sid,
   }) async {
     final client = DioClient(baseUrl: server.baseUrl).dio;
+    DsmLogger.request(
+      module: 'Auth',
+      action: 'logout',
+      method: 'GET',
+      path: server.baseUrl,
+      sid: sid,
+      extra: {
+        'session': 'webui',
+      },
+    );
     await client.get(
       '/webapi/entry.cgi',
       queryParameters: {
