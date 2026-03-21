@@ -173,6 +173,26 @@ final persistLoginProvider = Provider<Future<void> Function(NasServer, NasSessio
   };
 });
 
+final refreshSynoTokenProvider = Provider<Future<NasSession> Function()>((ref) {
+  return () async {
+    final server = ref.read(currentServerProvider);
+    final session = ref.read(currentSessionProvider);
+
+    if (server == null || session == null) {
+      throw Exception('No active NAS session to refresh token');
+    }
+
+    final refreshed = await ref.read(authRepositoryProvider).refreshSynoToken(
+          server: server,
+          session: session,
+        );
+
+    ref.read(currentSessionProvider.notifier).state = refreshed;
+    await _persistSessionSecrets(ref, refreshed);
+    return refreshed;
+  };
+});
+
 final refreshRealtimeSessionProvider = Provider<Future<NasSession> Function()>((ref) {
   return () async {
     final server = ref.read(currentServerProvider);

@@ -94,7 +94,11 @@ final dashboardRealtimeOverviewProvider = StreamProvider<SystemStatus>((ref) {
 
           if (_looksLikeRealtimeAuthFailure(error)) {
             try {
-              await ref.read(refreshRealtimeSessionProvider)();
+              try {
+                await ref.read(refreshSynoTokenProvider)();
+              } catch (_) {
+                await ref.read(refreshRealtimeSessionProvider)();
+              }
               final retried = ref.read(systemRepositoryProvider).watchOverview(
                     server: ref.read(currentServerProvider)!,
                     session: ref.read(currentSessionProvider)!,

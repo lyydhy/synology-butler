@@ -289,6 +289,16 @@ class FilesPage extends ConsumerWidget {
           ),
         ],
       ),
+      floatingActionButton: null,
+    );
+  }
+}
+),
+              loading: () => const Center(child: CircularProgressIndicator()),
+            ),
+          ),
+        ],
+      ),
       floatingActionButton: selectionMode
           ? null
           : Column(

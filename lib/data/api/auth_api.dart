@@ -62,6 +62,12 @@ abstract class AuthApi {
     required String sid,
   });
 
+  Future<AuthLoginResult> refreshSynoToken({
+    required NasServerModel server,
+    required String sid,
+    String? cookieHeader,
+  });
+
   Future<AuthLoginResult> login({
     required NasServerModel server,
     required String username,

@@ -71,6 +71,85 @@ class DsmAuthApi implements AuthApi {
   }
 
   @override
+  Future<AuthLoginResult> refreshSynoToken({
+    required NasServerModel server,
+    required String sid,
+    String? cookieHeader,
+  }) async {
+    final client = DioClient(baseUrl: server.baseUrl).dio;
+
+    DsmLogger.request(
+      module: 'Auth',
+      action: 'refreshSynoToken',
+      method: 'POST',
+      path: server.baseUrl,
+      sid: sid,
+      cookieHeader: cookieHeader,
+      extra: {
+        'api': 'SYNO.API.Auth',
+        'method': 'token',
+        'version': '6',
+        'updateSynoToken': true,
+      },
+    );
+
+    final headers = <String, dynamic>{};
+    if (cookieHeader != null && cookieHeader.isNotEmpty) {
+      headers['Cookie'] = cookieHeader;
+    }
+
+    final response = await client.post(
+      '/webapi/entry.cgi/SYNO.API.Auth',
+      data: {
+        'api': 'SYNO.API.Auth',
+        'method': 'token',
+        'version': '6',
+        'updateSynoToken': 'true',
+      },
+      options: Options(
+        headers: headers,
+        contentType: Headers.formUrlEncodedContentType,
+      ),
+    );
+
+    final data = response.data;
+    if (data is Map && data['success'] == true) {
+      final responseData = data['data'] as Map? ?? const {};
+      final result = AuthLoginResult(
+        sid: sid,
+        synoToken: responseData['synotoken']?.toString(),
+        cookieHeader: cookieHeader,
+      );
+
+      DsmLogger.success(
+        module: 'Auth',
+        action: 'refreshSynoToken',
+        path: server.baseUrl,
+        response: {
+          'synoToken': result.synoToken != null && result.synoToken!.isNotEmpty ? 'present' : 'missing',
+        },
+      );
+
+      return result;
+    }
+
+    DsmLogger.failure(
+      module: 'Auth',
+      action: 'refreshSynoToken',
+      path: server.baseUrl,
+      response: data,
+      sid: sid,
+      cookieHeader: cookieHeader,
+    );
+
+    throw DioException(
+      requestOptions: response.requestOptions,
+      error: 'DSM synotoken refresh failed',
+      response: response,
+    );
+  }
+
+  @override
   Future<AuthLoginResult> refreshRealtimeSession({
     required NasServerModel server,
     required String sid,

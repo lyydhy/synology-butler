@@ -61,15 +61,36 @@ class FilesHeader extends StatelessWidget {
                 ),
               ),
               PopupMenuButton<String>(
-                icon: const Icon(Icons.swap_vert_rounded),
-                initialValue: sort,
-                onSelected: onSortSelected,
+                icon: const Icon(Icons.more_horiz_rounded),
+                onSelected: (value) {
+                  switch (value) {
+                    case 'sort_name':
+                      onSortSelected('name');
+                      break;
+                    case 'sort_size':
+                      onSortSelected('size');
+                      break;
+                    case 'upload':
+                      onUpload();
+                      break;
+                    case 'create_folder':
+                      onCreateFolder();
+                      break;
+                    case 'refresh':
+                      onRefresh();
+                      break;
+                  }
+                },
                 itemBuilder: (context) => [
-                  PopupMenuItem(value: 'name', child: Text(l10n.sortByName)),
-                  PopupMenuItem(value: 'size', child: Text(l10n.sortBySize)),
+                  PopupMenuItem(value: 'upload', child: Text(l10n.uploadFile)),
+                  PopupMenuItem(value: 'create_folder', child: Text(l10n.createFolder)),
+                  const PopupMenuDivider(),
+                  PopupMenuItem(value: 'sort_name', child: Text(l10n.sortByName)),
+                  PopupMenuItem(value: 'sort_size', child: Text(l10n.sortBySize)),
+                  const PopupMenuDivider(),
+                  PopupMenuItem(value: 'refresh', child: Text(l10n.retry)),
                 ],
               ),
-              IconButton(onPressed: onRefresh, icon: const Icon(Icons.refresh_rounded)),
             ],
           ),
           const SizedBox(height: 14),

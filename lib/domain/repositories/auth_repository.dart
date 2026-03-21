@@ -45,6 +45,11 @@ abstract class AuthRepository {
     required NasSession session,
   });
 
+  Future<NasSession> refreshSynoToken({
+    required NasServer server,
+    required NasSession session,
+  });
+
   Future<NasSession> login({
     required NasServer server,
     required String username,

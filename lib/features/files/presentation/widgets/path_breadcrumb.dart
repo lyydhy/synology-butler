@@ -12,48 +12,92 @@ class PathBreadcrumb extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final segments = path == '/'
-        ? <String>['/']
-        : path.split('/').where((e) => e.isNotEmpty).toList();
+        ? <({String label, String path, bool current})>[('/', '/', true)]
+        : _buildSegments(path);
 
-    if (segments.length == 1 && segments.first == '/') {
-      return Wrap(
-        spacing: 6,
-        runSpacing: 6,
-        crossAxisAlignment: WrapCrossAlignment.center,
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
         children: [
-          ActionChip(label: const Text('/'), onPressed: () => onTapSegment('/')),
+          for (var i = 0; i < segments.length; i++) ...[
+            _BreadcrumbNode(
+              label: segments[i].label,
+              current: segments[i].current,
+              onTap: () => onTapSegment(segments[i].path),
+            ),
+            if (i != segments.length - 1)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Icon(
+                  Icons.chevron_right_rounded,
+                  size: 18,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+          ],
         ],
-      );
-    }
+      ),
+    );
+  }
 
-    final widgets = <Widget>[
-      ActionChip(label: const Text('/'), onPressed: () => onTapSegment('/')),
+  List<({String label, String path, bool current})> _buildSegments(String rawPath) {
+    final parts = rawPath.split('/').where((e) => e.isNotEmpty).toList();
+    final result = <({String label, String path, bool current})>[
+      ('/', '/', parts.isEmpty),
     ];
 
     var current = '';
-    for (final segment in segments) {
-      current += '/$segment';
-      final targetPath = current;
-      widgets.add(
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 2),
-          child: Center(child: Text('/')),
-        ),
-      );
-      widgets.add(
-        ActionChip(
-          label: Text(segment),
-          onPressed: () => onTapSegment(targetPath),
-        ),
-      );
+    for (var i = 0; i < parts.length; i++) {
+      final part = parts[i];
+      current += '/$part';
+      result.add((part, current, i == parts.length - 1));
     }
 
-    return Wrap(
-      spacing: 6,
-      runSpacing: 6,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: widgets,
+    return result;
+  }
+}
+
+class _BreadcrumbNode extends StatelessWidget {
+  const _BreadcrumbNode({
+    required this.label,
+    required this.current,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool current;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final backgroundColor = current ? theme.colorScheme.primaryContainer : theme.colorScheme.surfaceContainerHighest;
+    final foregroundColor = current ? theme.colorScheme.onPrimaryContainer : theme.colorScheme.onSurface;
+
+    return Material(
+      color: backgroundColor,
+      borderRadius: BorderRadius.circular(999),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(999),
+        onTap: onTap,
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: label == '/' ? 12 : 14,
+            vertical: 8,
+          ),
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.labelLarge?.copyWith(
+              color: foregroundColor,
+              fontWeight: current ? FontWeight.w800 : FontWeight.w600,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
