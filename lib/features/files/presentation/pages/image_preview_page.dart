@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/error/error_mapper.dart';
 import '../providers/file_preview_providers.dart';
+import '../providers/media_save_providers.dart';
 
 class ImagePreviewPage extends ConsumerWidget {
   const ImagePreviewPage({
@@ -21,7 +22,27 @@ class ImagePreviewPage extends ConsumerWidget {
     final imageAsync = ref.watch(fileBytesProvider(path));
 
     return Scaffold(
-      appBar: AppBar(title: Text(name)),
+      appBar: AppBar(
+        title: Text(name),
+        actions: [
+          IconButton(
+            tooltip: '保存到相册',
+            onPressed: () async {
+              try {
+                await ref.read(saveImageToGalleryProvider)(path, name);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('已保存到相册')));
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(ErrorMapper.map(e).message)));
+                }
+              }
+            },
+            icon: const Icon(Icons.save_alt_rounded),
+          ),
+        ],
+      ),
       backgroundColor: Colors.black,
       body: imageAsync.when(
         data: (bytes) => Center(

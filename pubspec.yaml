@@ -19,6 +19,7 @@ dependencies:
   shared_preferences: ^2.2.3
   path_provider: ^2.1.5
   file_picker: ^8.0.7
+  photo_manager: ^3.7.1
   intl: ^0.20.2
   cryptography: ^2.7.0
 
