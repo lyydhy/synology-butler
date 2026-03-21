@@ -13,6 +13,8 @@ class FilesHeader extends StatelessWidget {
     required this.onSortSelected,
     required this.onTapSegment,
     required this.onGoUp,
+    required this.onUpload,
+    required this.onCreateFolder,
   });
 
   final String path;
@@ -22,6 +24,8 @@ class FilesHeader extends StatelessWidget {
   final ValueChanged<String> onSortSelected;
   final ValueChanged<String> onTapSegment;
   final VoidCallback onGoUp;
+  final VoidCallback onUpload;
+  final VoidCallback onCreateFolder;
 
   @override
   Widget build(BuildContext context) {

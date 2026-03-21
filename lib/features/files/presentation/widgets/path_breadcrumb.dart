@@ -45,7 +45,7 @@ class PathBreadcrumb extends StatelessWidget {
   List<({String label, String path, bool current})> _buildSegments(String rawPath) {
     final parts = rawPath.split('/').where((e) => e.isNotEmpty).toList();
     final result = <({String label, String path, bool current})>[
-      ('/', '/', parts.isEmpty),
+      (label: '/', path: '/', current: parts.isEmpty),
     ];
 
     var current = '';
@@ -97,6 +97,11 @@ class _BreadcrumbNode extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+),
       ),
     );
   }
