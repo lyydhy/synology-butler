@@ -100,6 +100,13 @@ class DsmSystemApi implements SystemApi {
           )
           .toList();
 
+      final storagePollVolumes = await _fetchStoragePollVolumes(
+        client: client,
+        sid: sid,
+        synoToken: synoToken,
+      );
+      final resolvedVolumes = storagePollVolumes.isNotEmpty ? storagePollVolumes : mappedVolumes;
+
       final upgradeVersionText = await _fetchUpgradeVersion(
         client: client,
         sid: sid,
@@ -111,6 +118,7 @@ class DsmSystemApi implements SystemApi {
         synoToken: synoToken,
       );
       final versionText = upgradeVersionText ?? _buildVersionText(infoData);
+      final resolvedStorageUsage = _resolveStorageUsage(totalSpace, resolvedVolumes);
 
       final result = SystemStatusModel(
         serverName: (infoData['hostname'] ?? infoData['server_name'] ?? '我的 NAS').toString(),
@@ -119,8 +127,8 @@ class DsmSystemApi implements SystemApi {
             ((utilizationData['cpu']?['system_load'] as num?) ?? 0).toDouble() +
             ((utilizationData['cpu']?['other_load'] as num?) ?? 0).toDouble(),
         memoryUsage: ((memory['real_usage'] as num?) ?? 0).toDouble(),
-        storageUsage: ((totalSpace['utilization'] as num?) ?? 0).toDouble(),
-        volumes: mappedVolumes,
+        storageUsage: resolvedStorageUsage,
+        volumes: resolvedVolumes,
         modelName: (infoData['model'] ?? infoData['modelname'])?.toString(),
         serialNumber: (infoData['serial'] ?? infoData['serial_number'])?.toString(),
         uptimeText: systemHealthUptime ?? _formatUptime(infoData['uptime'] ?? infoData['uptime_seconds']),
@@ -592,6 +600,92 @@ class DsmSystemApi implements SystemApi {
       return Map<String, dynamic>.from(payload);
     }
     return null;
+  }
+
+  Future<List<StorageVolumeStatusModel>> _fetchStoragePollVolumes({
+    required Dio client,
+    required String sid,
+    String? synoToken,
+  }) async {
+    try {
+      final headers = <String, dynamic>{};
+      if (synoToken != null && synoToken.isNotEmpty) {
+        headers['X-SYNO-TOKEN'] = synoToken;
+      }
+
+      final response = await client.post(
+        '/webapi/entry.cgi',
+        data: {
+          'api': 'SYNO.Core.System',
+          'method': 'poll',
+          'version': '1',
+          'type': jsonEncode('storage'),
+          '_sid': sid,
+        },
+        options: Options(
+          headers: headers,
+          contentType: Headers.formUrlEncodedContentType,
+        ),
+      );
+
+      final data = response.data;
+      if (data is! Map || data['success'] != true) return const [];
+      final payload = data['data'] as Map? ?? const {};
+      final volInfo = (payload['vol_info'] as List?) ?? const [];
+
+      final result = volInfo.whereType<Map>().map((item) {
+        final total = _toDouble(item['total_size']);
+        final used = _toDouble(item['used_size']);
+        final usage = total != null && total > 0 && used != null ? (used / total) * 100 : 0.0;
+        return StorageVolumeStatusModel(
+          name: (item['name'] ?? item['volume'] ?? 'volume').toString(),
+          usage: usage,
+          usedBytes: used,
+          totalBytes: total,
+        );
+      }).toList();
+
+      DsmLogger.success(
+        module: 'System',
+        action: 'fetchStoragePollVolumes',
+        path: 'SYNO.Core.System.poll(storage)',
+        response: {
+          'count': result.length,
+          'names': result.map((e) => e.name).toList(),
+        },
+      );
+
+      return result;
+    } catch (e) {
+      DsmLogger.failure(
+        module: 'System',
+        action: 'fetchStoragePollVolumes',
+        reason: e.toString(),
+        sid: sid,
+        synoToken: synoToken,
+      );
+      return const [];
+    }
+  }
+
+  double _resolveStorageUsage(Map totalSpace, List<StorageVolumeStatusModel> volumes) {
+    final direct = (totalSpace['utilization'] as num?)?.toDouble();
+    if (direct != null && direct > 0) {
+      return direct;
+    }
+
+    double totalUsed = 0;
+    double totalCapacity = 0;
+    for (final volume in volumes) {
+      if (volume.usedBytes != null) totalUsed += volume.usedBytes!;
+      if (volume.totalBytes != null) totalCapacity += volume.totalBytes!;
+    }
+
+    if (totalCapacity > 0) {
+      return (totalUsed / totalCapacity) * 100;
+    }
+
+    return 0;
   }
 
   Future<String?> _fetchUpgradeVersion({

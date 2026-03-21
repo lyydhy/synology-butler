@@ -5,148 +5,34 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/error/error_mapper.dart';
-import '../../../../core/utils/file_size_formatter.dart';
-import '../../../../l10n/app_localizations.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../../domain/entities/file_item.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../providers/file_page_actions.dart';
 import '../providers/file_providers.dart';
+import '../providers/file_selection_providers.dart';
 import '../widgets/file_detail_sheet.dart';
-import '../widgets/path_breadcrumb.dart';
+import '../widgets/file_list_item.dart';
+import '../widgets/files_header.dart';
+import '../widgets/files_selection_bar.dart';
 
 class FilesPage extends ConsumerWidget {
   const FilesPage({super.key});
 
-  String parentPathOf(String path) {
-    if (path == '/' || path.isEmpty) return '/';
-    final normalized = path.endsWith('/') && path.length > 1 ? path.substring(0, path.length - 1) : path;
-    final index = normalized.lastIndexOf('/');
-    if (index <= 0) return '/';
-    return normalized.substring(0, index);
+  Future<({String fileName, Uint8List bytes})?> _pickSingleFile() async {
+    final result = await FilePicker.platform.pickFiles(withData: true);
+    if (result == null || result.files.isEmpty) return null;
+
+    final file = result.files.single;
+    if (file.bytes == null) return null;
+    return (fileName: file.name, bytes: file.bytes!);
   }
 
-  Future<void> _showCreateFolderDialog(BuildContext context, WidgetRef ref, String currentPath) async {
-    final l10n = AppLocalizations.of(context);
-    final controller = TextEditingController();
-    String? errorText;
-    bool isSubmitting = false;
-
-    await showDialog<void>(
+  void _showFileDetail(BuildContext context, FileItem item) {
+    showModalBottomSheet<void>(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: Text(l10n.createFolder),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(controller: controller, decoration: InputDecoration(labelText: l10n.folderName)),
-              if (errorText != null) ...[
-                const SizedBox(height: 12),
-                Text(errorText!, style: const TextStyle(color: Colors.red)),
-              ],
-            ],
-          ),
-          actions: [
-            TextButton(onPressed: isSubmitting ? null : () => Navigator.of(context).pop(), child: Text(l10n.cancel)),
-            FilledButton(
-              onPressed: isSubmitting
-                  ? null
-                  : () async {
-                      final name = controller.text.trim();
-                      if (name.isEmpty) {
-                        setState(() => errorText = l10n.folderName);
-                        return;
-                      }
-                      setState(() {
-                        isSubmitting = true;
-                        errorText = null;
-                      });
-                      try {
-                        await ref.read(fileActionProvider)(currentPath, name);
-                        if (context.mounted) Navigator.of(context).pop();
-                      } catch (e) {
-                        setState(() {
-                          errorText = ErrorMapper.map(e).message;
-                          isSubmitting = false;
-                        });
-                      }
-                    },
-              child: Text(isSubmitting ? l10n.processing : l10n.confirm),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _showUploadDialog(BuildContext context, WidgetRef ref, String currentPath) async {
-    final l10n = AppLocalizations.of(context);
-    String? fileName;
-    Uint8List? fileBytes;
-    String? errorText;
-    bool isSubmitting = false;
-
-    await showDialog<void>(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: Text(l10n.uploadFile),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('${l10n.targetFolder}：$currentPath'),
-              const SizedBox(height: 12),
-              OutlinedButton.icon(
-                onPressed: () async {
-                  final result = await FilePicker.platform.pickFiles(withData: true);
-                  if (result != null && result.files.isNotEmpty) {
-                    setState(() {
-                      fileName = result.files.single.name;
-                      fileBytes = result.files.single.bytes;
-                      errorText = null;
-                    });
-                  }
-                },
-                icon: const Icon(Icons.attach_file),
-                label: Text(l10n.chooseFile),
-              ),
-              const SizedBox(height: 8),
-              Text(fileName ?? l10n.noFileSelected),
-              if (errorText != null) ...[
-                const SizedBox(height: 12),
-                Text(errorText!, style: const TextStyle(color: Colors.red)),
-              ],
-            ],
-          ),
-          actions: [
-            TextButton(onPressed: isSubmitting ? null : () => Navigator.of(context).pop(), child: Text(l10n.cancel)),
-            FilledButton(
-              onPressed: isSubmitting
-                  ? null
-                  : () async {
-                      if (fileName == null || fileBytes == null) {
-                        setState(() => errorText = l10n.noFileSelected);
-                        return;
-                      }
-                      setState(() {
-                        isSubmitting = true;
-                        errorText = null;
-                      });
-                      try {
-                        await ref.read(fileUploadProvider)(currentPath, fileName!, fileBytes!);
-                        if (context.mounted) Navigator.of(context).pop();
-                      } catch (e) {
-                        setState(() {
-                          errorText = ErrorMapper.map(e).message;
-                          isSubmitting = false;
-                        });
-                      }
-                    },
-              child: Text(isSubmitting ? l10n.uploading : l10n.startUpload),
-            ),
-          ],
-        ),
-      ),
+      isScrollControlled: true,
+      builder: (context) => FileDetailSheet(item: item),
     );
   }
 
@@ -255,11 +141,50 @@ class FilesPage extends ConsumerWidget {
     }
   }
 
-  void _showFileDetail(BuildContext context, FileItem item) {
+  void _showItemMenu(BuildContext context, WidgetRef ref, FileItem item) {
+    final l10n = AppLocalizations.of(context);
     showModalBottomSheet<void>(
       context: context,
-      isScrollControlled: true,
-      builder: (context) => FileDetailSheet(item: item),
+      showDragHandle: true,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.info_outline_rounded),
+              title: Text(l10n.detail),
+              onTap: () {
+                Navigator.of(context).pop();
+                _showFileDetail(context, item);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.drive_file_rename_outline_rounded),
+              title: Text(l10n.rename),
+              onTap: () {
+                Navigator.of(context).pop();
+                _showRenameDialog(context, ref, item);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.link_rounded),
+              title: Text(l10n.generateShareLink),
+              onTap: () {
+                Navigator.of(context).pop();
+                _showShareLink(context, ref, item);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent),
+              title: Text(l10n.deleteConfirm, style: const TextStyle(color: Colors.redAccent)),
+              onTap: () {
+                Navigator.of(context).pop();
+                _confirmDelete(context, ref, item);
+              },
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -273,61 +198,40 @@ class FilesPage extends ConsumerWidget {
       return Scaffold(appBar: AppBar(title: Text(l10n.filesTitle)), body: Center(child: Text(l10n.noSessionPleaseLogin)));
     }
 
+    final actions = ref.read(filePageActionsProvider);
     final path = ref.watch(currentPathProvider);
     final sort = ref.watch(fileSortProvider);
     final filesAsync = ref.watch(fileListProvider);
     final canGoUp = path != '/';
+    final selectedPaths = ref.watch(selectedFilePathsProvider);
+    final selectionMode = ref.watch(fileSelectionModeProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.filesTitle)),
+      appBar: selectionMode
+          ? FilesSelectionBar(
+              selectedCount: selectedPaths.length,
+              onCancel: () => actions.clearSelection(ref),
+              onDelete: () => actions.deleteSelected(context, ref),
+            )
+          : AppBar(title: Text(l10n.filesTitle)),
       body: Column(
         children: [
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            color: Theme.of(context).colorScheme.surfaceContainerHighest,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.folder_open_outlined, size: 18),
-                    const SizedBox(width: 8),
-                    Expanded(child: Text('${l10n.currentPath}：$path')),
-                    PopupMenuButton<String>(
-                      icon: const Icon(Icons.sort),
-                      initialValue: sort,
-                      onSelected: (value) => ref.read(fileSortProvider.notifier).state = value,
-                      itemBuilder: (context) => [
-                        PopupMenuItem(value: 'name', child: Text(l10n.sortByName)),
-                        PopupMenuItem(value: 'size', child: Text(l10n.sortBySize)),
-                      ],
-                    ),
-                    IconButton(onPressed: () => ref.invalidate(fileListProvider), icon: const Icon(Icons.refresh)),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                PathBreadcrumb(
-                  path: path,
-                  onTapSegment: (selectedPath) {
-                    ref.read(currentPathProvider.notifier).state = selectedPath;
-                    ref.invalidate(fileListProvider);
-                  },
-                ),
-                if (canGoUp)
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: TextButton.icon(
-                      onPressed: () {
-                        ref.read(currentPathProvider.notifier).state = parentPathOf(path);
-                        ref.invalidate(fileListProvider);
-                      },
-                      icon: const Icon(Icons.arrow_upward),
-                      label: Text(l10n.goParent),
-                    ),
-                  ),
-              ],
-            ),
+          FilesHeader(
+            path: path,
+            sort: sort,
+            canGoUp: canGoUp,
+            onRefresh: () => ref.invalidate(fileListProvider),
+            onSortSelected: (value) => ref.read(fileSortProvider.notifier).state = value,
+            onTapSegment: (selectedPath) {
+              ref.read(currentPathProvider.notifier).state = selectedPath;
+              actions.clearSelection(ref);
+              ref.invalidate(fileListProvider);
+            },
+            onGoUp: () {
+              ref.read(currentPathProvider.notifier).state = actions.parentPathOf(path);
+              actions.clearSelection(ref);
+              ref.invalidate(fileListProvider);
+            },
           ),
           Expanded(
             child: filesAsync.when(
@@ -336,45 +240,33 @@ class FilesPage extends ConsumerWidget {
                   return Center(child: Text(l10n.folderIsEmpty));
                 }
                 return ListView.separated(
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 120),
                   itemCount: files.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  separatorBuilder: (_, __) => const SizedBox(height: 10),
                   itemBuilder: (context, index) {
                     final item = files[index];
-                    return ListTile(
-                      leading: Icon(item.isDirectory ? Icons.folder_outlined : Icons.insert_drive_file_outlined),
-                      title: Text(item.name),
-                      subtitle: Text(item.path),
-                      trailing: PopupMenuButton<String>(
-                        onSelected: (value) {
-                          if (value == 'rename') {
-                            _showRenameDialog(context, ref, item);
-                          } else if (value == 'delete') {
-                            _confirmDelete(context, ref, item);
-                          } else if (value == 'share') {
-                            _showShareLink(context, ref, item);
-                          } else if (value == 'detail') {
-                            _showFileDetail(context, item);
-                          }
-                        },
-                        itemBuilder: (context) => [
-                          PopupMenuItem(value: 'detail', child: Text(l10n.detail)),
-                          PopupMenuItem(value: 'rename', child: Text(l10n.rename)),
-                          PopupMenuItem(value: 'share', child: Text(l10n.generateShareLink)),
-                          PopupMenuItem(value: 'delete', child: Text(l10n.deleteConfirm)),
-                        ],
-                        child: item.isDirectory
-                            ? const Icon(Icons.more_vert)
-                            : Padding(
-                                padding: const EdgeInsets.only(top: 14),
-                                child: Text(FileSizeFormatter.format(item.size)),
-                              ),
-                      ),
-                      onTap: item.isDirectory
-                          ? () {
-                              ref.read(currentPathProvider.notifier).state = item.path;
-                              ref.invalidate(fileListProvider);
-                            }
-                          : () => _showFileDetail(context, item),
+                    final selected = selectedPaths.contains(item.path);
+
+                    return FileListItem(
+                      item: item,
+                      selected: selected,
+                      selectionMode: selectionMode,
+                      onLongPress: () => actions.toggleSelection(ref, item),
+                      onTap: () {
+                        if (selectionMode) {
+                          actions.toggleSelection(ref, item);
+                          return;
+                        }
+
+                        if (item.isDirectory) {
+                          ref.read(currentPathProvider.notifier).state = item.path;
+                          actions.clearSelection(ref);
+                          ref.invalidate(fileListProvider);
+                        } else {
+                          _showFileDetail(context, item);
+                        }
+                      },
+                      onMore: () => _showItemMenu(context, ref, item),
                     );
                   },
                 );
@@ -397,22 +289,24 @@ class FilesPage extends ConsumerWidget {
           ),
         ],
       ),
-      floatingActionButton: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          FloatingActionButton.small(
-            heroTag: 'uploadFab',
-            onPressed: () => _showUploadDialog(context, ref, path),
-            child: const Icon(Icons.upload_file_outlined),
-          ),
-          const SizedBox(height: 12),
-          FloatingActionButton(
-            heroTag: 'createFolderFab',
-            onPressed: () => _showCreateFolderDialog(context, ref, path),
-            child: const Icon(Icons.create_new_folder_outlined),
-          ),
-        ],
-      ),
+      floatingActionButton: selectionMode
+          ? null
+          : Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                FloatingActionButton.small(
+                  heroTag: 'uploadFab',
+                  onPressed: () => actions.showUploadDialog(context, ref, path, _pickSingleFile),
+                  child: const Icon(Icons.upload_file_outlined),
+                ),
+                const SizedBox(height: 12),
+                FloatingActionButton(
+                  heroTag: 'createFolderFab',
+                  onPressed: () => actions.showCreateFolderDialog(context, ref, path),
+                  child: const Icon(Icons.create_new_folder_outlined),
+                ),
+              ],
+            ),
     );
   }
 }

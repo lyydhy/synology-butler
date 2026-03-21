@@ -60,6 +60,9 @@
 - `volume1` / `volume2` 等默认名在首页转换为“存储空间1 / 存储空间2”样式
 - 已继续修正首页显示细节：
   - 存储空间的 realtime volume 列表解析增加多种字段兜底，降低因 DSM 返回结构轻微变化导致“存储信息消失”的概率
+  - 已根据用户抓包补接更稳定的存储数据源：`SYNO.Core.System method=poll type="storage"` -> `data.vol_info`
+  - 首页存储空间现在会优先使用 `vol_info` 映射 volume 列表；若 `Utilization.space.volume` 缺失，也不再整块消失
+  - 总存储占用百分比也会在 `space.total.utilization` 缺失时，由各 volume 的 used/total 反算兜底
   - 运行时间从纯 `HH:mm:ss` 改为超过 24 小时后显示 `X天 HH:mm:ss`
 
 ### 文件模块
@@ -80,6 +83,11 @@
   - FileStation 列表接口已从原先 GET query 切到更贴近 WebUI 的 POST form
   - 第一层解析 `data.shares`，下级目录解析 `data.files`
   - 在继续对齐时，已把列表请求从 `FormData` 改为真正的 `application/x-www-form-urlencoded` body，并先移除 `_sid` query，优先贴近浏览器抓包的 `Cookie + X-SYNO-TOKEN` 方式
+- 已开始按“后期方便维护”的方向重构文件页：
+  - 将文件页中的 UI 片段与页面动作拆出到独立 widgets/providers
+  - 新增文件类型辅助、文件列表项、顶部路径头、选择模式 app bar、页面动作封装等模块
+  - 文件列表 UI 已开始从朴素 `ListTile` 收口成更像文件管理器的卡片式样
+  - 已加入多选模式与批量删除基础能力，作为后续批量操作的起点
 
 ### 下载模块
 - 任务列表

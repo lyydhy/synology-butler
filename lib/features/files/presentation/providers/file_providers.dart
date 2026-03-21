@@ -95,6 +95,24 @@ final fileDeleteProvider = Provider<Future<void> Function(String)>((ref) {
   };
 });
 
+final fileBatchDeleteProvider = Provider<Future<void> Function(List<String>)>((ref) {
+  return (paths) async {
+    final server = ref.read(currentServerProvider);
+    final session = ref.read(currentSessionProvider);
+    if (server == null || session == null) throw Exception('No active NAS session');
+
+    for (final path in paths) {
+      await ref.read(fileRepositoryProvider).delete(
+            server: server,
+            session: session,
+            path: path,
+          );
+    }
+
+    ref.invalidate(fileListProvider);
+  };
+});
+
 final fileShareProvider = Provider<Future<String> Function(String)>((ref) {
   return (path) async {
     final server = ref.read(currentServerProvider);
