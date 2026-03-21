@@ -1,17 +1,19 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
 class VideoPreviewPage extends StatefulWidget {
   const VideoPreviewPage({
     super.key,
+    required this.baseUrl,
     required this.path,
     required this.name,
+    required this.synoToken,
   });
 
+  final String baseUrl;
   final String path;
   final String name;
+  final String? synoToken;
 
   @override
   State<VideoPreviewPage> createState() => _VideoPreviewPageState();
@@ -30,8 +32,23 @@ class _VideoPreviewPageState extends State<VideoPreviewPage> {
 
   Future<void> _init() async {
     try {
-      final file = File(widget.path);
-      final controller = VideoPlayerController.file(file);
+      final token = widget.synoToken;
+      if (token == null || token.isEmpty) {
+        throw Exception('缺少 SynoToken，无法远程播放');
+      }
+
+      final launchParam = 'ieMode=9&is_drive=false&path=${Uri.encodeComponent(widget.path)}&file_id=${Uri.encodeComponent(widget.path)}';
+      final uri = Uri.parse(widget.baseUrl).replace(
+        path: '/',
+        queryParameters: {
+          'launchApp': 'SYNO.SDS.VideoPlayer2.Application',
+          'SynoToken': token,
+          'launchParam': launchParam,
+          'ieMode': '9',
+        },
+      );
+
+      final controller = VideoPlayerController.networkUrl(uri);
       await controller.initialize();
       controller.play();
       if (!mounted) return;

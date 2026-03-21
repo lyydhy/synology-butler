@@ -50,8 +50,10 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) {
         final extra = state.extra as Map<String, dynamic>? ?? const {};
         return VideoPreviewPage(
+          baseUrl: extra['baseUrl']?.toString() ?? '',
           path: extra['path']?.toString() ?? '',
           name: extra['name']?.toString() ?? '视频预览',
+          synoToken: extra['synoToken']?.toString(),
         );
       },
     ),
