@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="syno_keeper"
+        android:label="群晖管家"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
