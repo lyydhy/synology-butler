@@ -202,6 +202,9 @@ class FilePageActions {
                         errorText = null;
                       });
                       try {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('已加入上传任务')));
+                        }
                         await ref.read(transferControllerProvider.notifier).enqueueUpload(
                               parentPath: currentPath,
                               fileName: fileName!,

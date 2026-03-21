@@ -69,12 +69,32 @@ class TransferController extends StateNotifier<List<TransferTask>> {
     required Uint8List bytes,
   }) async {
     _update(id, status: TransferTaskStatus.running, progress: 0.1);
-    try {
-      await _ref.read(fileUploadProvider)(parentPath, fileName, bytes);
-      _update(id, status: TransferTaskStatus.success, progress: 1, errorMessage: null);
-    } catch (e) {
-      _update(id, status: TransferTaskStatus.failed, progress: 1, errorMessage: e.toString());
+
+    var candidateName = fileName;
+    for (var attempt = 0; attempt < 20; attempt++) {
+      try {
+        await _ref.read(fileUploadProvider)(parentPath, candidateName, bytes);
+        _update(
+          id,
+          status: TransferTaskStatus.success,
+          progress: 1,
+          errorMessage: '$parentPath/$candidateName',
+        );
+        return;
+      } catch (e) {
+        final text = e.toString().toLowerCase();
+        final looksLikeExists = text.contains('407') || text.contains('exist') || text.contains('already');
+        if (!looksLikeExists) {
+          _update(id, status: TransferTaskStatus.failed, progress: 1, errorMessage: e.toString());
+          return;
+        }
+
+        candidateName = _renameLikeFinder(fileName, attempt + 1);
+        _update(id, progress: 0.2 + (attempt * 0.02));
+      }
     }
+
+    _update(id, status: TransferTaskStatus.failed, progress: 1, errorMessage: '上传重命名重试次数过多');
   }
 
   Future<void> _runDownload(
@@ -98,7 +118,7 @@ class TransferController extends StateNotifier<List<TransferTask>> {
 
       _update(id, progress: 0.75);
       await targetFile.writeAsBytes(bytes, flush: true);
-      _update(id, status: TransferTaskStatus.success, progress: 1, errorMessage: targetFile.path);
+      _update(id, status: TransferTaskStatus.success, progress: 1, errorMessage: '已保存到 ${targetFile.path}');
     } catch (e) {
       _update(id, status: TransferTaskStatus.failed, progress: 1, errorMessage: e.toString());
     }
@@ -114,18 +134,21 @@ class TransferController extends StateNotifier<List<TransferTask>> {
   }
 
   Future<File> _resolveUniqueFile(Directory dir, String fileName) async {
+    var candidate = File('${dir.path}/$fileName');
+    var index = 1;
+    while (await candidate.exists()) {
+      candidate = File('${dir.path}/${_renameLikeFinder(fileName, index)}');
+      index++;
+    }
+    return candidate;
+  }
+
+  String _renameLikeFinder(String fileName, int index) {
     final dotIndex = fileName.lastIndexOf('.');
     final hasExt = dotIndex > 0 && dotIndex < fileName.length - 1;
     final baseName = hasExt ? fileName.substring(0, dotIndex) : fileName;
     final ext = hasExt ? fileName.substring(dotIndex) : '';
-
-    var candidate = File('${dir.path}/$fileName');
-    var index = 1;
-    while (await candidate.exists()) {
-      candidate = File('${dir.path}/${baseName} ($index)$ext');
-      index++;
-    }
-    return candidate;
+    return '$baseName ($index)$ext';
   }
 
   void _update(

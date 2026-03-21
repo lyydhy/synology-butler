@@ -96,7 +96,10 @@ class _TransferList extends StatelessWidget {
                 Text('目标：${task.targetPath}', maxLines: 1, overflow: TextOverflow.ellipsis),
                 if (task.errorMessage != null && task.errorMessage!.isNotEmpty) ...[
                   const SizedBox(height: 8),
-                  Text(task.errorMessage!, style: TextStyle(color: task.status == TransferTaskStatus.failed ? Colors.redAccent : Colors.grey.shade700)),
+                  Text(
+                    task.status == TransferTaskStatus.success ? '结果：${task.errorMessage!}' : '原因：${task.errorMessage!}',
+                    style: TextStyle(color: task.status == TransferTaskStatus.failed ? Colors.redAccent : Colors.grey.shade700),
+                  ),
                 ],
               ],
             ),

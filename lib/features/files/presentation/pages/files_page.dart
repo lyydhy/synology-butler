@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
@@ -18,8 +19,40 @@ import '../widgets/file_list_item.dart';
 import '../widgets/files_header.dart';
 import '../widgets/files_selection_bar.dart';
 
-class FilesPage extends ConsumerWidget {
+class FilesPage extends ConsumerStatefulWidget {
   const FilesPage({super.key});
+
+  @override
+  ConsumerState<FilesPage> createState() => _FilesPageState();
+}
+
+class _FilesPageState extends ConsumerState<FilesPage> {
+  Timer? _pollTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _startPolling();
+  }
+
+  @override
+  void dispose() {
+    _pollTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startPolling() {
+    _pollTimer?.cancel();
+    _pollTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+      if (!mounted) return;
+      final selectionMode = ref.read(fileSelectionModeProvider);
+      final currentServer = ref.read(currentServerProvider);
+      final currentSession = ref.read(currentSessionProvider);
+      if (selectionMode) return;
+      if (currentServer == null || currentSession == null) return;
+      ref.invalidate(fileListProvider);
+    });
+  }
 
   Future<({String fileName, Uint8List bytes})?> _pickSingleFile() async {
     final result = await FilePicker.platform.pickFiles(withData: true);
@@ -76,6 +109,7 @@ class FilesPage extends ConsumerWidget {
                       });
                       try {
                         await ref.read(fileRenameProvider)(item.path, newName);
+                        ref.invalidate(fileListProvider);
                         if (context.mounted) Navigator.of(context).pop();
                       } catch (e) {
                         setState(() {
@@ -111,6 +145,7 @@ class FilesPage extends ConsumerWidget {
 
     try {
       await ref.read(fileDeleteProvider)(item.path);
+      ref.invalidate(fileListProvider);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.deleteSuccess)));
       }
@@ -173,13 +208,13 @@ class FilesPage extends ConsumerWidget {
               title: const Text('下载'),
               onTap: () async {
                 Navigator.of(context).pop();
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('开始下载 ${item.name}')));
+                }
                 await ref.read(transferControllerProvider.notifier).enqueueDownload(
                       remotePath: item.path,
                       displayName: item.name,
                     );
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('已加入下载任务')));
-                }
               },
             ),
             ListTile(
@@ -205,7 +240,7 @@ class FilesPage extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final currentServer = ref.watch(currentServerProvider);
     final currentSession = ref.watch(currentSessionProvider);
@@ -246,7 +281,13 @@ class FilesPage extends ConsumerWidget {
                     IconButton(
                       tooltip: '传输',
                       onPressed: () => GoRouter.of(context).push('/transfers'),
-                      icon: const Icon(Icons.swap_horiz_rounded),
+                      icon: AnimatedRotation(
+                        turns: activeTransferCount > 0 ? 0.125 : 0,
+                        duration: const Duration(milliseconds: 300),
+                        child: Icon(
+                          activeTransferCount > 0 ? Icons.sync_rounded : Icons.swap_horiz_rounded,
+                        ),
+                      ),
                     ),
                     if (activeTransferCount > 0)
                       Positioned(
