@@ -39,18 +39,21 @@ class TransferController extends StateNotifier<List<TransferTask>> {
     required String remotePath,
     required String displayName,
   }) async {
+    final targetDir = await _resolveDownloadDirectory();
+    final targetFile = await _resolveUniqueFile(targetDir, displayName);
+
     final task = TransferTask(
       id: _id(),
       type: TransferTaskType.download,
       status: TransferTaskStatus.queued,
       title: displayName,
       sourcePath: remotePath,
-      targetPath: 'local',
+      targetPath: targetFile.path,
       progress: 0,
       createdAt: DateTime.now(),
     );
     state = [task, ...state];
-    await _runDownload(task.id, remotePath: remotePath, displayName: displayName);
+    await _runDownload(task.id, remotePath: remotePath, targetFile: targetFile);
   }
 
   Future<void> enqueueBatchDownload(List<(String remotePath, String displayName)> items) async {
@@ -77,7 +80,7 @@ class TransferController extends StateNotifier<List<TransferTask>> {
   Future<void> _runDownload(
     String id, {
     required String remotePath,
-    required String displayName,
+    required File targetFile,
   }) async {
     _update(id, status: TransferTaskStatus.running, progress: 0.1);
     try {
@@ -94,20 +97,35 @@ class TransferController extends StateNotifier<List<TransferTask>> {
           );
 
       _update(id, progress: 0.75);
-
-      final dir = await getApplicationDocumentsDirectory();
-      final downloadsDir = Directory('${dir.path}/downloads');
-      if (!await downloadsDir.exists()) {
-        await downloadsDir.create(recursive: true);
-      }
-
-      final file = File('${downloadsDir.path}/$displayName');
-      await file.writeAsBytes(bytes, flush: true);
-
-      _update(id, status: TransferTaskStatus.success, progress: 1, errorMessage: file.path);
+      await targetFile.writeAsBytes(bytes, flush: true);
+      _update(id, status: TransferTaskStatus.success, progress: 1, errorMessage: targetFile.path);
     } catch (e) {
       _update(id, status: TransferTaskStatus.failed, progress: 1, errorMessage: e.toString());
     }
+  }
+
+  Future<Directory> _resolveDownloadDirectory() async {
+    final docsDir = await getApplicationDocumentsDirectory();
+    final dir = Directory('${docsDir.path}/Download');
+    if (!await dir.exists()) {
+      await dir.create(recursive: true);
+    }
+    return dir;
+  }
+
+  Future<File> _resolveUniqueFile(Directory dir, String fileName) async {
+    final dotIndex = fileName.lastIndexOf('.');
+    final hasExt = dotIndex > 0 && dotIndex < fileName.length - 1;
+    final baseName = hasExt ? fileName.substring(0, dotIndex) : fileName;
+    final ext = hasExt ? fileName.substring(dotIndex) : '';
+
+    var candidate = File('${dir.path}/$fileName');
+    var index = 1;
+    while (await candidate.exists()) {
+      candidate = File('${dir.path}/${baseName} ($index)$ext');
+      index++;
+    }
+    return candidate;
   }
 
   void _update(

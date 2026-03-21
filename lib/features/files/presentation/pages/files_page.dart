@@ -237,7 +237,39 @@ class FilesPage extends ConsumerWidget {
               },
               onDelete: () => actions.deleteSelected(context, ref),
             )
-          : AppBar(title: Text(l10n.filesTitle)),
+          : AppBar(
+              title: Text(l10n.filesTitle),
+              actions: [
+                Stack(
+                  alignment: Alignment.topRight,
+                  children: [
+                    IconButton(
+                      tooltip: '传输',
+                      onPressed: () => GoRouter.of(context).push('/transfers'),
+                      icon: const Icon(Icons.swap_horiz_rounded),
+                    ),
+                    if (activeTransferCount > 0)
+                      Positioned(
+                        right: 8,
+                        top: 8,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                          decoration: BoxDecoration(
+                            color: Colors.redAccent,
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+                          child: Text(
+                            activeTransferCount > 99 ? '99+' : '$activeTransferCount',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            ),
       body: Column(
         children: [
           FilesHeader(
@@ -258,8 +290,6 @@ class FilesPage extends ConsumerWidget {
             },
             onUpload: () => actions.showUploadDialog(context, ref, path, _pickSingleFile),
             onCreateFolder: () => actions.showCreateFolderDialog(context, ref, path),
-            onTransfers: () => GoRouter.of(context).push('/transfers'),
-            activeTransferCount: activeTransferCount,
           ),
           Expanded(
             child: filesAsync.when(
