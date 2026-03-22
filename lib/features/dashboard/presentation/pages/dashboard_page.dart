@@ -2,12 +2,14 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/utils/server_url_helper.dart';
 import '../../../../domain/entities/system_status.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../providers/dashboard_providers.dart';
+import '../widgets/quick_entry_card.dart';
 import '../widgets/summary_card.dart';
 
 class DashboardPage extends ConsumerWidget {
@@ -49,7 +51,7 @@ class DashboardPage extends ConsumerWidget {
         final messenger = ScaffoldMessenger.maybeOf(context);
         messenger?.hideCurrentSnackBar();
         messenger?.showSnackBar(
-          const SnackBar(content: Text('实时监控连接失败，已降级显示页面，其它功能不受影响')),
+          const SnackBar(content: Text('实时监控连接失败，已自动尝试刷新 token；页面已降级显示')),
         );
       });
     }
@@ -66,7 +68,7 @@ class DashboardPage extends ConsumerWidget {
             realtimeText: currentSession.synoToken == null || currentSession.synoToken!.isEmpty
                 ? 'SynoToken missing'
                 : realtimeFailed
-                    ? 'Realtime failed'
+                    ? 'Realtime retry failed'
                     : realtimeLoading
                         ? 'Realtime connecting'
                         : 'Realtime connected',
@@ -94,13 +96,20 @@ class DashboardPage extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 12),
+          QuickEntryCard(
+            icon: Icons.apps_rounded,
+            title: '套件中心',
+            subtitle: '查看 DSM 套件商店、已安装应用和可更新项目',
+            onTap: () => context.push('/packages'),
+          ),
+          const SizedBox(height: 12),
           _VolumeSection(volumes: data?.volumes ?? const []),
           const SizedBox(height: 12),
           _UptimeCard(uptimeText: data?.uptimeText),
           if (realtimeFailed) ...[
             const SizedBox(height: 12),
             const Text(
-              '实时资源监控当前连接失败，页面已降级显示。请查看控制台日志继续排查 websocket / cookie / socket.io 握手。',
+              '实时资源监控当前连接失败，系统已优先尝试 refreshSynoToken，再回退 refreshRealtimeSession。若仍失败，请查看控制台日志继续排查。',
               style: TextStyle(color: Colors.orange),
             ),
           ],
@@ -158,7 +167,7 @@ class _HeroCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.surface.withOpacity(0.7),
+                  color: theme.colorScheme.surface.withValues(alpha: 0.7),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: const Icon(Icons.dns_outlined),
@@ -208,14 +217,14 @@ class _MetricCard extends StatelessWidget {
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: color.withOpacity(0.25)),
+          border: Border.all(color: color.withValues(alpha: 0.25)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             CircleAvatar(
               radius: 18,
-              backgroundColor: color.withOpacity(0.12),
+              backgroundColor: color.withValues(alpha: 0.12),
               child: Icon(icon, color: color),
             ),
             const SizedBox(height: 16),
@@ -252,7 +261,7 @@ class _VolumeSection extends StatelessWidget {
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.14)),
+        border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: 0.14)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -459,7 +468,7 @@ class _UptimeCardState extends State<_UptimeCard> {
     final ss = seconds.toString().padLeft(2, '0');
 
     if (days > 0) {
-      return '${days}天 $hh:$mm:$ss';
+      return '$days天 $hh:$mm:$ss';
     }
 
     return '$hh:$mm:$ss';

@@ -18,7 +18,8 @@ final systemRepositoryProvider = Provider<SystemRepository>((ref) {
 
 bool _isSessionExpiredError(Object error) {
   final text = error.toString().toLowerCase();
-  return text.contains('authentication error') ||
+  return text.contains('session expired') ||
+      text.contains('login required') ||
       text.contains('unauthorized') ||
       text.contains('invalid sid') ||
       text.contains('expired') ||
@@ -27,19 +28,21 @@ bool _isSessionExpiredError(Object error) {
 
 bool _looksLikeRealtimeAuthFailure(Object error) {
   final text = error.toString().toLowerCase();
-  return text.contains('synotoken') ||
-      text.contains('token') ||
+  return text.contains('realtime authentication error') ||
+      text.contains('bootstrap timeout') ||
       text.contains('request_webapi') ||
       text.contains('websocket') ||
       text.contains('socket') ||
-      text.contains('auth');
+      text.contains('synotoken') ||
+      (text.contains('token') && text.contains('realtime')) ||
+      (text.contains('auth') && text.contains('realtime'));
 }
 
 Future<void> _handleSessionExpired(Ref ref) async {
   await ref.read(clearSessionProvider)(markExpired: true);
 
   final context = appNavigatorKey.currentContext;
-  if (context != null) {
+  if (context != null && context.mounted) {
     GoRouter.of(context).go('/login');
   }
 }
@@ -73,64 +76,62 @@ final dashboardRealtimeOverviewProvider = StreamProvider<SystemStatus>((ref) {
     throw Exception('No active NAS session');
   }
 
-  final source = ref.read(systemRepositoryProvider).watchOverview(
-        server: server,
-        session: session,
-      );
-
   late final StreamController<SystemStatus> controller;
   StreamSubscription<SystemStatus>? subscription;
 
-  controller = StreamController<SystemStatus>(
-    onListen: () {
-      subscription = source.listen(
-        controller.add,
-        onError: (error, stackTrace) async {
-          if (_isSessionExpiredError(error)) {
-            await _handleSessionExpired(ref);
-            controller.addError(error, stackTrace);
+  Future<void> startStream({bool allowRefresh = true}) async {
+    final activeServer = ref.read(currentServerProvider);
+    final activeSession = ref.read(currentSessionProvider);
+    if (activeServer == null || activeSession == null) {
+      controller.addError(Exception('No active NAS session'));
+      return;
+    }
+
+    final source = ref.read(systemRepositoryProvider).watchOverview(
+          server: activeServer,
+          session: activeSession,
+        );
+
+    await subscription?.cancel();
+    subscription = source.listen(
+      controller.add,
+      onError: (error, stackTrace) async {
+        if (allowRefresh && _looksLikeRealtimeAuthFailure(error)) {
+          try {
+            try {
+              await ref.read(refreshSynoTokenProvider)();
+            } catch (_) {
+              await ref.read(refreshRealtimeSessionProvider)();
+            }
+
+            await startStream(allowRefresh: false);
+            return;
+          } catch (refreshError, refreshStackTrace) {
+            if (_isSessionExpiredError(refreshError)) {
+              await _handleSessionExpired(ref);
+            }
+            controller.addError(refreshError, refreshStackTrace);
             return;
           }
+        }
 
-          if (_looksLikeRealtimeAuthFailure(error)) {
-            try {
-              try {
-                await ref.read(refreshSynoTokenProvider)();
-              } catch (_) {
-                await ref.read(refreshRealtimeSessionProvider)();
-              }
-              final retried = ref.read(systemRepositoryProvider).watchOverview(
-                    server: ref.read(currentServerProvider)!,
-                    session: ref.read(currentSessionProvider)!,
-                  );
+        if (_isSessionExpiredError(error)) {
+          await _handleSessionExpired(ref);
+        }
+        controller.addError(error, stackTrace);
+      },
+      onDone: () {
+        if (!controller.isClosed) {
+          controller.close();
+        }
+      },
+      cancelOnError: false,
+    );
+  }
 
-              await subscription?.cancel();
-              subscription = retried.listen(
-                controller.add,
-                onError: (retryError, retryStackTrace) async {
-                  if (_isSessionExpiredError(retryError)) {
-                    await _handleSessionExpired(ref);
-                  }
-                  controller.addError(retryError, retryStackTrace);
-                },
-                onDone: controller.close,
-                cancelOnError: false,
-              );
-              return;
-            } catch (refreshError, refreshStackTrace) {
-              if (_isSessionExpiredError(refreshError)) {
-                await _handleSessionExpired(ref);
-              }
-              controller.addError(refreshError, refreshStackTrace);
-              return;
-            }
-          }
-
-          controller.addError(error, stackTrace);
-        },
-        onDone: controller.close,
-        cancelOnError: false,
-      );
+  controller = StreamController<SystemStatus>(
+    onListen: () {
+      unawaited(startStream());
     },
     onCancel: () async {
       await subscription?.cancel();
@@ -139,7 +140,9 @@ final dashboardRealtimeOverviewProvider = StreamProvider<SystemStatus>((ref) {
 
   ref.onDispose(() async {
     await subscription?.cancel();
-    await controller.close();
+    if (!controller.isClosed) {
+      await controller.close();
+    }
   });
 
   return controller.stream;
