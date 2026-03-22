@@ -17,7 +17,7 @@
 2. 安装 Java 17
 3. 安装 Flutter stable
 4. `flutter pub get`
-5. `flutter analyze`
+5. `flutter analyze`（continue-on-error，不阻断流程）
 6. 构建 release APK（按 ABI 分包）
 7. 构建 release AAB
 8. 上传 APK / AAB / symbols / mapping
@@ -32,7 +32,7 @@
 2. 安装 Java 17
 3. 安装 Flutter stable
 4. `flutter pub get`
-5. `flutter analyze`
+5. `flutter analyze`（continue-on-error，不阻断流程）
 
 ## 产物位置
 
