@@ -143,7 +143,6 @@ Future<void> _persistSessionSecrets(Ref ref, NasSession session) async {
 final persistLoginProvider = Provider<Future<void> Function(NasServer, NasSession, String)>((ref) {
   return (server, session, username) async {
     final localStorage = ref.read(localStorageProvider);
-    final secureStorage = ref.read(secureStorageProvider);
 
     final existing = [...ref.read(savedServersProvider)];
     final index = existing.indexWhere((s) => s.id == server.id);

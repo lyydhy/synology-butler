@@ -136,6 +136,12 @@ class SettingsPage extends ConsumerWidget {
             },
           ),
           ListTile(
+            title: const Text('套件中心'),
+            subtitle: const Text('查看 DSM 套件商店、已安装应用和可更新项目'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/packages'),
+          ),
+          ListTile(
             title: Text(l10n.serverManagement),
             subtitle: const Text('查看、切换、编辑和删除已保存设备'),
             trailing: const Icon(Icons.chevron_right),

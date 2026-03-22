@@ -1,5 +1,4 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 
 import '../../core/network/dio_client.dart';
 import '../../core/utils/dsm_logger.dart';

@@ -8,6 +8,8 @@ import '../features/diagnostics/presentation/pages/diagnostics_page.dart';
 import '../features/files/presentation/pages/image_preview_page.dart';
 import '../features/files/presentation/pages/text_editor_page.dart';
 import '../features/files/presentation/pages/video_preview_page.dart';
+import '../features/packages/presentation/pages/package_detail_page.dart';
+import '../features/packages/presentation/pages/packages_page.dart';
 import '../features/server-management/presentation/pages/server_management_page.dart';
 import '../features/shell/main_shell_page.dart';
 import '../features/transfers/presentation/pages/transfers_page.dart';
@@ -25,6 +27,17 @@ final GoRouter appRouter = GoRouter(
     GoRoute(path: '/debug', builder: (context, state) => const DebugInfoPage()),
     GoRoute(path: '/diagnostics', builder: (context, state) => const DiagnosticsPage()),
     GoRoute(path: '/transfers', builder: (context, state) => const TransfersPage()),
+    GoRoute(path: '/packages', builder: (context, state) => const PackagesPage()),
+    GoRoute(
+      path: '/packages/detail',
+      builder: (context, state) {
+        final item = state.extra;
+        if (item is! dynamic) {
+          return const Scaffold(body: Center(child: Text('套件详情参数缺失')));
+        }
+        return PackageDetailPage(item: item);
+      },
+    ),
     GoRoute(
       path: '/text-editor',
       builder: (context, state) {
