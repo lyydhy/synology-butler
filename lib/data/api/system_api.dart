@@ -885,10 +885,10 @@ class DsmSystemApi implements SystemApi {
     final minutes = (seconds % 3600) ~/ 60;
 
     final parts = <String>[];
-    if (days > 0) parts.add('${days}天');
-    if (hours > 0) parts.add('${hours}小时');
-    if (minutes > 0) parts.add('${minutes}分钟');
-    if (parts.isEmpty) parts.add('${seconds}秒');
+    if (days > 0) parts.add('$days天');
+    if (hours > 0) parts.add('$hours小时');
+    if (minutes > 0) parts.add('$minutes分钟');
+    if (parts.isEmpty) parts.add('$seconds秒');
     return parts.join(' ');
   }
 }

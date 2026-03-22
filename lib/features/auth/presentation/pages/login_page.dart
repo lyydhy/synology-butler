@@ -1,4 +1,3 @@
-import 'package:characters/characters.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -312,9 +311,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: color.withOpacity(0.20)),
+        border: Border.all(color: color.withValues(alpha: 0.20)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -332,36 +331,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     );
   }
 
-  Widget _buildQuickActionChip({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(999),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(999),
-        child: Ink(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(999),
-            border: Border.all(color: Colors.black.withOpacity(0.06)),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 18, color: const Color(0xFF2563EB)),
-              const SizedBox(width: 8),
-              Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildServerSelector(
     List<NasServer> savedServers,
     Map<String, String> savedUsernames,
@@ -375,7 +344,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       ..sort((a, b) => (lastUsedMap[b.id] ?? 0).compareTo(lastUsedMap[a.id] ?? 0));
 
     return DropdownButtonFormField<String>(
-      value: selectedServerId != null && sortedServers.any((server) => server.id == selectedServerId) ? selectedServerId : null,
+      initialValue: selectedServerId != null && sortedServers.any((server) => server.id == selectedServerId) ? selectedServerId : null,
       decoration: _inputDecoration(
         label: '历史设备',
         icon: Icons.history_rounded,
@@ -434,11 +403,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(18),
-        borderSide: BorderSide(color: Colors.black.withOpacity(0.06)),
+        borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.06)),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(18),
-        borderSide: BorderSide(color: Colors.black.withOpacity(0.06)),
+        borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.06)),
       ),
       focusedBorder: const OutlineInputBorder(
         borderRadius: BorderRadius.all(Radius.circular(18)),
@@ -462,7 +431,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         decoration: BoxDecoration(
           color: const Color(0xFFF8FAFC),
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: Colors.black.withOpacity(0.06)),
+          border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
         ),
         child: Row(
           children: [
@@ -496,7 +465,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFF2563EB).withOpacity(0.16)),
+        border: Border.all(color: const Color(0xFF2563EB).withValues(alpha: 0.16)),
       ),
       child: Row(
         children: [
@@ -549,7 +518,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 28,
             offset: const Offset(0, 12),
           ),
@@ -605,7 +574,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 decoration: BoxDecoration(
                   color: const Color(0xFFF8FAFC),
                   borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: Colors.black.withOpacity(0.06)),
+                  border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
                 ),
                 child: Row(
                   children: [
@@ -715,7 +684,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 label: const Text('新账号 / 新设备登录'),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.grey.shade700,
-                  side: BorderSide(color: Colors.black.withOpacity(0.08)),
+                  side: BorderSide(color: Colors.black.withValues(alpha: 0.08)),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
                   textStyle: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600),
@@ -728,6 +697,59 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     );
   }
 
+  Widget _buildHttpsField() {
+    final statusText = https ? '已开启' : '未加密';
+    final statusColor = https ? const Color(0xFF2563EB) : Colors.orange.shade700;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'HTTPS',
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey.shade600,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              const Icon(Icons.lock_outline_rounded, color: Color(0xFF2563EB), size: 20),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  statusText,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontWeight: FontWeight.w700, color: statusColor),
+                ),
+              ),
+              Switch.adaptive(
+                value: https,
+                onChanged: (value) => setState(() => https = value),
+              ),
+            ],
+          ),
+          if (!https) ...[
+            const SizedBox(height: 6),
+            Text(
+              '当前连接未加密，建议仅在可信局域网中使用',
+              style: TextStyle(fontSize: 11.5, color: Colors.orange.shade700, height: 1.25),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   Widget _buildInputCard(AppLocalizations l10n, {required bool showBackToQuick}) {
     return Container(
       decoration: BoxDecoration(
@@ -735,7 +757,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 28,
             offset: const Offset(0, 12),
           ),
@@ -820,31 +842,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Container(
-                    height: 58,
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF8FAFC),
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: Colors.black.withOpacity(0.06)),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.lock_outline_rounded, color: Color(0xFF2563EB), size: 20),
-                        const SizedBox(width: 10),
-                        const Expanded(
-                          child: Text(
-                            'HTTPS',
-                            style: TextStyle(fontWeight: FontWeight.w600),
-                          ),
-                        ),
-                        Switch.adaptive(
-                          value: https,
-                          onChanged: (value) => setState(() => https = value),
-                        ),
-                      ],
-                    ),
-                  ),
+                  child: _buildHttpsField(),
                 ),
               ],
             ),
@@ -918,7 +916,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 label: Text(isTesting ? l10n.testingConnection : '测试连接'),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: const Color(0xFF2563EB),
-                  side: BorderSide(color: const Color(0xFF2563EB).withOpacity(0.18)),
+                  side: BorderSide(color: const Color(0xFF2563EB).withValues(alpha: 0.18)),
                   padding: const EdgeInsets.symmetric(vertical: 15),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
                   textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
@@ -991,7 +989,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF2563EB).withOpacity(0.16),
+                      color: const Color(0xFF2563EB).withValues(alpha: 0.16),
                       blurRadius: 20,
                       offset: const Offset(0, 10),
                     ),
@@ -1006,7 +1004,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           width: 44,
                           height: 44,
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.14),
+                            color: Colors.white.withValues(alpha: 0.14),
                             borderRadius: BorderRadius.circular(14),
                           ),
                           child: const Icon(Icons.dns_rounded, color: Colors.white, size: 24),
@@ -1026,7 +1024,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.12),
+                            color: Colors.white.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(999),
                           ),
                           child: const Text(
@@ -1040,7 +1038,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     Text(
                       showQuickLogin ? '已为你准备好快速登录。' : '连接你的群晖 DSM。',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.90),
+                        color: Colors.white.withValues(alpha: 0.90),
                         height: 1.35,
                         fontSize: 13,
                       ),
@@ -1097,3 +1095,4 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     );
   }
 }
+

@@ -29,7 +29,7 @@ class FileListItem extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Material(
-      color: selected ? color.withOpacity(0.08) : Colors.transparent,
+      color: selected ? color.withValues(alpha: 0.08) : Colors.transparent,
       borderRadius: BorderRadius.circular(18),
       child: InkWell(
         borderRadius: BorderRadius.circular(18),
@@ -40,7 +40,7 @@ class FileListItem extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(18),
             border: Border.all(
-              color: selected ? color.withOpacity(0.45) : theme.dividerColor.withOpacity(0.08),
+              color: selected ? color.withValues(alpha: 0.45) : theme.dividerColor.withValues(alpha: 0.08),
             ),
           ),
           child: Row(
@@ -53,7 +53,7 @@ class FileListItem extends StatelessWidget {
                 width: 42,
                 height: 42,
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.12),
+                  color: color.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Icon(icon, color: color),

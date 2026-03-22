@@ -33,7 +33,7 @@ class SplashPage extends ConsumerWidget {
                   context.go(restored ? '/home' : '/login');
                 }
               });
-              return _SplashContent(
+              return const _SplashContent(
                 title: '群晖管家',
                 subtitle: '正在恢复你的连接与设备状态',
                 loadingText: '正在进入...',
@@ -45,7 +45,7 @@ class SplashPage extends ConsumerWidget {
                   context.go('/login');
                 }
               });
-              return _SplashContent(
+              return const _SplashContent(
                 title: '群晖管家',
                 subtitle: '正在准备登录界面',
                 loadingText: '正在跳转登录...',

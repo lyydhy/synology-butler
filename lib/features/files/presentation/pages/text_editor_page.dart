@@ -42,25 +42,27 @@ class _TextEditorPageState extends ConsumerState<TextEditorPage> {
       });
     });
 
+    final navigator = Navigator.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+
     return PopScope(
       canPop: !_dirty,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop || !_dirty) return;
         final leave = await showDialog<bool>(
               context: context,
-              builder: (context) => AlertDialog(
+              builder: (dialogContext) => AlertDialog(
                 title: const Text('放弃修改？'),
                 content: const Text('当前文件有未保存修改，确定直接返回吗？'),
                 actions: [
-                  TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('取消')),
-                  FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('放弃')),
+                  TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: const Text('取消')),
+                  FilledButton(onPressed: () => Navigator.of(dialogContext).pop(true), child: const Text('放弃')),
                 ],
               ),
             ) ??
             false;
-        if (leave && context.mounted) {
-          Navigator.of(context).pop();
-        }
+        if (!mounted || !leave) return;
+        navigator.pop();
       },
       child: Scaffold(
         appBar: AppBar(
@@ -70,15 +72,13 @@ class _TextEditorPageState extends ConsumerState<TextEditorPage> {
               onPressed: () async {
                 try {
                   await ref.read(saveTextFileProvider)(widget.path, _controller.text);
-                  if (mounted) {
-                    setState(() => _dirty = false);
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('保存成功')));
-                    ref.invalidate(textFileProvider(widget.path));
-                  }
+                  if (!mounted) return;
+                  setState(() => _dirty = false);
+                  messenger.showSnackBar(const SnackBar(content: Text('保存成功')));
+                  ref.invalidate(textFileProvider(widget.path));
                 } catch (e) {
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(ErrorMapper.map(e).message)));
-                  }
+                  if (!mounted) return;
+                  messenger.showSnackBar(SnackBar(content: Text(ErrorMapper.map(e).message)));
                 }
               },
               child: const Text('保存'),
