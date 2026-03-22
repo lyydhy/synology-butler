@@ -31,11 +31,11 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/packages/detail',
       builder: (context, state) {
-        final item = state.extra;
-        if (item is! dynamic) {
+        final extra = state.extra;
+        if (extra == null) {
           return const Scaffold(body: Center(child: Text('套件详情参数缺失')));
         }
-        return PackageDetailPage(item: item);
+        return PackageDetailPage(item: extra as dynamic);
       },
     ),
     GoRoute(

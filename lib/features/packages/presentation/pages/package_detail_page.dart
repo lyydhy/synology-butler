@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/utils/file_size_formatter.dart';
 import '../../../../domain/entities/package_item.dart';
 import '../../../../domain/entities/package_volume.dart';
 import '../providers/package_providers.dart';
@@ -42,14 +43,20 @@ class PackageDetailPage extends ConsumerWidget {
 
     return (await showDialog<bool>(
           context: context,
-          builder: (context) => AlertDialog(
+          builder: (dialogContext) => AlertDialog(
             title: const Text('确认更新影响'),
             content: Text(
               '继续安装/更新 ${item.displayName} 时，以下套件可能会被暂停：\n\n${impact.pausedPackages.join('、')}',
             ),
             actions: [
-              TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('取消')),
-              FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('继续')),
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(false),
+                child: const Text('取消'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+                child: const Text('继续'),
+              ),
             ],
           ),
         )) ??
@@ -109,10 +116,8 @@ class PackageDetailPage extends ConsumerWidget {
                                           ? Colors.blue
                                           : Colors.grey,
                                 ),
-                                if (item.isRunning)
-                                  const _DetailChip(text: '运行中', color: Colors.green),
-                                if (item.isBeta)
-                                  const _DetailChip(text: 'Beta', color: Colors.deepPurple),
+                                if (item.isRunning) const _DetailChip(text: '运行中', color: Colors.green),
+                                if (item.isBeta) const _DetailChip(text: 'Beta', color: Colors.deepPurple),
                               ],
                             ),
                           ],
@@ -139,7 +144,10 @@ class PackageDetailPage extends ConsumerWidget {
           ),
           if (item.screenshots.isNotEmpty) ...[
             const SizedBox(height: 16),
-            Text('截图', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+            Text(
+              '截图',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+            ),
             const SizedBox(height: 12),
             SizedBox(
               height: 180,
@@ -147,24 +155,24 @@ class PackageDetailPage extends ConsumerWidget {
                 scrollDirection: Axis.horizontal,
                 itemCount: item.screenshots.length,
                 separatorBuilder: (_, __) => const SizedBox(width: 12),
-                itemBuilder: (context, index) => Container(
-                  width: 280,
-                  decoration: BoxDecoration(
+                itemBuilder: (context, index) {
+                  final screenshot = item.screenshots[index];
+                  final isHttp = screenshot.startsWith('http://') || screenshot.startsWith('https://');
+                  return ClipRRect(
                     borderRadius: BorderRadius.circular(18),
-                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                  ),
-                  child: Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Text(
-                        item.screenshots[index],
-                        maxLines: 3,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
-                      ),
+                    child: Container(
+                      width: 280,
+                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      child: isHttp
+                          ? Image.network(
+                              screenshot,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) => _ScreenshotFallback(url: screenshot),
+                            )
+                          : _ScreenshotFallback(url: screenshot),
                     ),
-                  ),
-                ),
+                  );
+                },
               ),
             ),
           ],
@@ -177,7 +185,11 @@ class PackageDetailPage extends ConsumerWidget {
                 padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [
-                    const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)),
+                    const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
                     const SizedBox(width: 12),
                     Expanded(child: Text('当前任务：$installStatus')),
                   ],
@@ -220,12 +232,18 @@ class PackageDetailPage extends ConsumerWidget {
                   onPressed: () async {
                     final confirmed = await showDialog<bool>(
                           context: context,
-                          builder: (context) => AlertDialog(
+                          builder: (dialogContext) => AlertDialog(
                             title: const Text('确认卸载'),
                             content: Text('确定要卸载 ${item.displayName} 吗？'),
                             actions: [
-                              TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('取消')),
-                              FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('卸载')),
+                              TextButton(
+                                onPressed: () => Navigator.of(dialogContext).pop(false),
+                                child: const Text('取消'),
+                              ),
+                              FilledButton(
+                                onPressed: () => Navigator.of(dialogContext).pop(true),
+                                child: const Text('卸载'),
+                              ),
                             ],
                           ),
                         ) ??
@@ -285,6 +303,34 @@ class PackageDetailPage extends ConsumerWidget {
   }
 }
 
+class _ScreenshotFallback extends StatelessWidget {
+  final String url;
+
+  const _ScreenshotFallback({required this.url});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.image_not_supported_outlined, size: 32),
+            const SizedBox(height: 10),
+            Text(
+              url,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _InfoRow extends StatelessWidget {
   final String label;
   final String value;
@@ -298,7 +344,10 @@ class _InfoRow extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(width: 92, child: Text(label, style: TextStyle(color: Colors.grey.shade700))),
+          SizedBox(
+            width: 92,
+            child: Text(label, style: TextStyle(color: Colors.grey.shade700)),
+          ),
           const SizedBox(width: 8),
           Expanded(child: Text(value)),
         ],
@@ -321,7 +370,10 @@ class _DetailChip extends StatelessWidget {
         color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(999),
       ),
-      child: Text(text, style: TextStyle(color: color, fontWeight: FontWeight.w700)),
+      child: Text(
+        text,
+        style: TextStyle(color: color, fontWeight: FontWeight.w700),
+      ),
     );
   }
 }
@@ -333,6 +385,10 @@ class _DetailVolumeTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final freeText = volume.freeBytes != null && volume.freeBytes!.isNotEmpty
+        ? FileSizeFormatter.format(int.tryParse(volume.freeBytes!) ?? 0)
+        : null;
+
     return ListTile(
       leading: const Icon(Icons.storage_rounded),
       title: Text(volume.displayName.isEmpty ? volume.path : volume.displayName),
@@ -340,7 +396,7 @@ class _DetailVolumeTile extends StatelessWidget {
         [
           if (volume.description.isNotEmpty) volume.description,
           if (volume.fsType.isNotEmpty) volume.fsType,
-          if (volume.freeBytes != null && volume.freeBytes!.isNotEmpty) '可用 ${volume.freeBytes}',
+          if (freeText != null) '可用 $freeText',
         ].join(' · '),
       ),
       onTap: () => Navigator.of(context).pop(volume.path),
