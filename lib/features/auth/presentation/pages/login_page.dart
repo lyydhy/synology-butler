@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -31,6 +32,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   bool https = true;
   bool ignoreBadCertificate = false;
+  bool rememberPassword = false;
   bool isLoading = false;
   bool isTesting = false;
   bool obscurePassword = true;
@@ -72,7 +74,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       return;
     }
 
-    serverNameController.text = server.name;
     hostController.text = server.host;
     portController.text = server.port.toString();
     usernameController.text = savedUsername ?? '';
@@ -170,7 +171,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
     return NasServer(
       id: '$normalizedHost:${portController.text.trim()}:${https ? 'https' : 'http'}:${ignoreBadCertificate ? 'insecure' : 'strict'}',
-      name: serverNameController.text.trim().isEmpty ? '我的 NAS' : serverNameController.text.trim(),
+      name: '我的 NAS',
       host: normalizedHost,
       port: int.tryParse(portController.text.trim()) ?? 5001,
       https: https,
@@ -224,12 +225,43 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         infoText = '连接成功：已探测到 DSM Web API';
       });
     } on DioException catch (e) {
+      final details = [
+        '测试连接失败',
+        '类型: ${e.type.name}',
+        '请求: ${e.requestOptions.uri}',
+        if (e.response?.statusCode != null) '状态码: ${e.response?.statusCode}',
+        if (e.error != null) '底层错误: ${e.error}',
+        '异常: $e',
+        if (e.response?.data != null) '响应: ${e.response?.data}',
+      ].join('\n');
       await LocalAppLogger.log(
         level: 'error',
         module: 'auth',
         event: 'test_connection_failed',
-        message: e.toString(),
+        message: details,
       );
+      if (mounted) {
+        await showDialog<void>(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: const Text('测试连接失败'),
+            content: SingleChildScrollView(child: SelectableText(details)),
+            actions: [
+              TextButton(
+                onPressed: () async {
+                  await Clipboard.setData(ClipboardData(text: details));
+                  if (dialogContext.mounted) Navigator.of(dialogContext).pop();
+                },
+                child: const Text('复制'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: const Text('关闭'),
+              ),
+            ],
+          ),
+        );
+      }
       setState(() {
         errorText = ErrorMapper.map(e).message;
       });
@@ -313,7 +345,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         },
       );
       ref.read(currentSessionProvider.notifier).state = session;
-      await ref.read(persistLoginProvider)(server, session, username);
+      await ref.read(persistLoginProvider)(server, session, username, password: passwordController.text, rememberPassword: rememberPassword);
       if (mounted) context.go('/home');
     } catch (e) {
       await LocalAppLogger.log(
@@ -400,42 +432,39 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   }
 
   Widget _buildHttpsField() {
-    final statusText = https ? '已开启' : '未开启';
-    final statusColor = https ? const Color(0xFF2563EB) : Colors.grey.shade700;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+    final text = https ? 'HTTPS' : 'HTTP';
+    final color = https ? const Color(0xFF2563EB) : Colors.orange.shade700;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('HTTPS', style: TextStyle(fontSize: 12, color: Colors.grey.shade600, fontWeight: FontWeight.w500)),
-          const SizedBox(height: 8),
-          Row(
+        onTap: () {
+          setState(() {
+            https = !https;
+            if (!https) ignoreBadCertificate = false;
+          });
+          if (!https) {
+            final messenger = ScaffoldMessenger.of(context);
+            messenger.hideCurrentSnackBar();
+            messenger.showSnackBar(const SnackBar(content: Text('已切换为 HTTP，请仅在可信局域网中使用')));
+          }
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF8FAFC),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.lock_outline_rounded, color: Color(0xFF2563EB), size: 20),
-              const SizedBox(width: 10),
-              Expanded(child: Text(statusText, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontWeight: FontWeight.w700, color: statusColor))),
-              Switch.adaptive(
-                value: https,
-                onChanged: (value) {
-                  setState(() {
-                    https = value;
-                    if (!value) ignoreBadCertificate = false;
-                  });
-                  if (!value) {
-                    final messenger = ScaffoldMessenger.of(context);
-                    messenger.hideCurrentSnackBar();
-                    messenger.showSnackBar(const SnackBar(content: Text('已切换为 HTTP，请仅在可信局域网中使用')));
-                  }
-                },
-              ),
+              Icon(https ? Icons.lock_outline_rounded : Icons.lock_open_rounded, color: const Color(0xFF2563EB), size: 18),
+              const SizedBox(width: 8),
+              Text(text, style: TextStyle(fontWeight: FontWeight.w700, color: color)),
             ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -605,15 +634,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             if (showBackToQuick) TextButton(onPressed: () => setState(() => loginMode = _LoginMode.quick), child: const Text('快速登录')),
           ]),
           const SizedBox(height: 18),
-          TextField(controller: serverNameController, decoration: _inputDecoration(label: '设备名称', icon: Icons.badge_outlined)),
-          const SizedBox(height: 12),
-          TextField(controller: hostController, onChanged: (_) => setState(() => _validateFields()), decoration: _inputDecoration(label: l10n.addressOrHost, icon: Icons.language_outlined, errorText: hostValidationText)),
-          const SizedBox(height: 12),
           Row(children: [
-            Expanded(child: TextField(controller: portController, keyboardType: TextInputType.number, onChanged: (_) => setState(() => _validateFields()), decoration: _inputDecoration(label: l10n.port, icon: Icons.settings_ethernet_outlined, errorText: portValidationText))),
+            _buildHttpsField(),
             const SizedBox(width: 12),
-            Expanded(child: _buildHttpsField()),
+            Expanded(child: TextField(controller: hostController, onChanged: (_) => setState(() => _validateFields()), decoration: _inputDecoration(label: l10n.addressOrHost, icon: Icons.language_outlined, errorText: hostValidationText))),
           ]),
+          const SizedBox(height: 12),
+          TextField(controller: portController, keyboardType: TextInputType.number, onChanged: (_) => setState(() => _validateFields()), decoration: _inputDecoration(label: l10n.port, icon: Icons.settings_ethernet_outlined, errorText: portValidationText)),
           const SizedBox(height: 12),
           SwitchListTile.adaptive(
             contentPadding: EdgeInsets.zero,
@@ -633,7 +660,15 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             decoration: _inputDecoration(label: l10n.password, icon: Icons.lock_outline, errorText: passwordValidationText, suffixIcon: IconButton(onPressed: () => setState(() => obscurePassword = !obscurePassword), icon: Icon(obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined))),
             onSubmitted: (_) => isLoading ? null : login(),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 8),
+          CheckboxListTile(
+            contentPadding: EdgeInsets.zero,
+            value: rememberPassword,
+            onChanged: (value) => setState(() => rememberPassword = value ?? false),
+            title: const Text('记住密码'),
+            controlAffinity: ListTileControlAffinity.leading,
+          ),
+          const SizedBox(height: 12),
           SizedBox(width: double.infinity, child: FilledButton.icon(onPressed: _canSubmit ? login : null, icon: isLoading ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Icon(Icons.login_rounded), label: Text(isLoading ? l10n.loggingIn : '登录 DSM'))),
           const SizedBox(height: 10),
           SizedBox(width: double.infinity, child: OutlinedButton.icon(onPressed: isTesting ? null : testConnection, icon: isTesting ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.wifi_tethering_outlined), label: Text(isTesting ? l10n.testingConnection : '测试连接'))),
@@ -647,11 +682,17 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     final l10n = AppLocalizations.of(context);
     final currentServer = ref.watch(currentServerProvider);
     final savedUsername = ref.watch(savedUsernameProvider);
+    final savedPassword = ref.watch(savedPasswordProvider);
+    final savedRememberPassword = ref.watch(savedRememberPasswordProvider);
     final savedServers = ref.watch(savedServersProvider);
     final savedServerUsernames = ref.watch(savedServerUsernamesProvider);
     final savedServerLastUsed = ref.watch(savedServerLastUsedProvider);
     final sessionExpiredAsync = ref.watch(localStorageProvider).readString(AppConstants.sessionExpiredFlagKey);
     fillInitialValues(currentServer, savedUsername, savedServers.isNotEmpty);
+    if (passwordController.text.isEmpty && (savedPassword?.isNotEmpty ?? false)) {
+      passwordController.text = savedPassword!;
+      rememberPassword = savedRememberPassword;
+    }
 
     if (selectedServerId == null && currentServer == null && savedServers.isNotEmpty) {
       final sortedServers = [...savedServers]..sort((a, b) => (savedServerLastUsed[b.id] ?? 0).compareTo(savedServerLastUsed[a.id] ?? 0));

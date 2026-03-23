@@ -22,6 +22,8 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
 
 final savedServersProvider = StateProvider<List<NasServer>>((ref) => []);
 final savedUsernameProvider = StateProvider<String?>((ref) => null);
+final savedPasswordProvider = StateProvider<String?>((ref) => null);
+final savedRememberPasswordProvider = StateProvider<bool>((ref) => false);
 final savedServerUsernamesProvider = StateProvider<Map<String, String>>((ref) => {});
 final savedServerLastUsedProvider = StateProvider<Map<String, int>>((ref) => {});
 final currentServerProvider = StateProvider<NasServer?>((ref) => null);
@@ -53,6 +55,8 @@ final restoreSessionProvider = FutureProvider<bool>((ref) async {
   final savedRequestHashSeed = await secureStorage.read(AppConstants.savedRequestHashSeedKey);
   final savedAuthToken = await secureStorage.read(AppConstants.savedAuthTokenKey);
   final savedUsername = await localStorage.readString(AppConstants.savedUsernameKey);
+  final savedRememberPassword = await localStorage.readString(AppConstants.savedRememberPasswordKey);
+  final savedPassword = currentServerId == null ? null : await secureStorage.read('${AppConstants.savedPasswordPrefix}$currentServerId');
   final savedServerUsernamesRaw = await localStorage.readJsonMap(AppConstants.savedServerUsernamesKey);
   final savedServerLastUsedRaw = await localStorage.readJsonMap(AppConstants.savedServerLastUsedKey);
 
@@ -64,6 +68,8 @@ final restoreSessionProvider = FutureProvider<bool>((ref) async {
   );
 
   ref.read(savedUsernameProvider.notifier).state = savedUsername;
+  ref.read(savedPasswordProvider.notifier).state = savedRememberPassword == '1' ? savedPassword : null;
+  ref.read(savedRememberPasswordProvider.notifier).state = savedRememberPassword == '1';
   ref.read(savedServerUsernamesProvider.notifier).state = savedServerUsernames;
   ref.read(savedServerLastUsedProvider.notifier).state = savedServerLastUsed;
 
@@ -140,9 +146,10 @@ Future<void> _persistSessionSecrets(Ref ref, NasSession session) async {
   }
 }
 
-final persistLoginProvider = Provider<Future<void> Function(NasServer, NasSession, String)>((ref) {
-  return (server, session, username) async {
+final persistLoginProvider = Provider<Future<void> Function(NasServer, NasSession, String, {String? password, required bool rememberPassword})>((ref) {
+  return (server, session, username, {String? password, required bool rememberPassword}) async {
     final localStorage = ref.read(localStorageProvider);
+    final secureStorage = ref.read(secureStorageProvider);
 
     final existing = [...ref.read(savedServersProvider)];
     final index = existing.indexWhere((s) => s.id == server.id);
@@ -153,6 +160,8 @@ final persistLoginProvider = Provider<Future<void> Function(NasServer, NasSessio
     }
     ref.read(savedServersProvider.notifier).state = existing;
     ref.read(savedUsernameProvider.notifier).state = username;
+    ref.read(savedRememberPasswordProvider.notifier).state = rememberPassword;
+    ref.read(savedPasswordProvider.notifier).state = rememberPassword ? password : null;
 
     final usernameMap = {...ref.read(savedServerUsernamesProvider)};
     usernameMap[server.id] = username;
@@ -167,6 +176,12 @@ final persistLoginProvider = Provider<Future<void> Function(NasServer, NasSessio
     await _persistServerLastUsed(ref, lastUsedMap);
     await localStorage.writeString(AppConstants.savedCurrentServerIdKey, server.id);
     await localStorage.writeString(AppConstants.savedUsernameKey, username);
+    await localStorage.writeString(AppConstants.savedRememberPasswordKey, rememberPassword ? '1' : '0');
+    if (rememberPassword && password != null && password.isNotEmpty) {
+      await secureStorage.write('${AppConstants.savedPasswordPrefix}${server.id}', password);
+    } else {
+      await secureStorage.delete('${AppConstants.savedPasswordPrefix}${server.id}');
+    }
     await localStorage.remove(AppConstants.sessionExpiredFlagKey);
     await _persistSessionSecrets(ref, session);
   };

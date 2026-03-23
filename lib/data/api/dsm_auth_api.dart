@@ -233,7 +233,7 @@ class DsmAuthApi implements AuthApi {
     required String username,
     required String password,
   }) async {
-    final client = DioClient(baseUrl: server.baseUrl).dio;
+    final client = DioClient(baseUrl: server.baseUrl, ignoreBadCertificate: server.ignoreBadCertificate).dio;
 
     DsmLogger.request(
       module: 'Auth',
