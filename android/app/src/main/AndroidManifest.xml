@@ -1,4 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 核心网络权限 -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- 可选：允许访问网络状态（帮助排查网络问题） -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <application
         android:label="群晖管家"
         android:name="${applicationName}"

@@ -30,3 +30,17 @@
 
 # Preserve line numbers for crash symbolication where possible
 -keepattributes SourceFile,LineNumberTable,*Annotation*,EnclosingMethod,InnerClasses,Signature
+
+
+# 保留 Dio 库不被混淆
+-keep class com.shuyu.gsyvideoplayer.** { *; }
+-keep class io.flutter.plugins.** { *; }
+-keep class dio.** { *; }
+-keep class com.example.你的项目包名.** { *; }
+
+# 保留网络相关类
+-keepclasseswithmembernames class * {
+    native <methods>;
+}
+-keepattributes Signature
+-keepattributes *Annotation*
