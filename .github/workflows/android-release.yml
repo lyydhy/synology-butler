@@ -48,7 +48,7 @@ jobs:
           storePassword=${{ secrets.ANDROID_STORE_PASSWORD }}
           keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}
           keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}
-          storeFile=app/qunhui-mage-release.jks
+          storeFile=qunhui-mage-release.jks
           EOF
 
       - name: 代码分析
