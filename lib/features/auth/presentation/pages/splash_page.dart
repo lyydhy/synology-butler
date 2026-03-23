@@ -28,7 +28,8 @@ class SplashPage extends ConsumerWidget {
         child: SafeArea(
           child: restoreAsync.when(
             data: (restored) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
+              WidgetsBinding.instance.addPostFrameCallback((_) async {
+                await Future<void>.delayed(const Duration(milliseconds: 700));
                 if (context.mounted) {
                   context.go(restored ? '/home' : '/login');
                 }
@@ -40,7 +41,8 @@ class SplashPage extends ConsumerWidget {
               );
             },
             error: (_, __) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
+              WidgetsBinding.instance.addPostFrameCallback((_) async {
+                await Future<void>.delayed(const Duration(milliseconds: 700));
                 if (context.mounted) {
                   context.go('/login');
                 }

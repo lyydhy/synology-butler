@@ -11,10 +11,7 @@ import '../../../../domain/entities/nas_server.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../providers/auth_providers.dart';
 
-enum _LoginMode {
-  quick,
-  manual,
-}
+enum _LoginMode { quick, manual }
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -27,12 +24,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   final serverNameController = TextEditingController();
   final hostController = TextEditingController();
   final portController = TextEditingController();
-  final basePathController = TextEditingController();
   final usernameController = TextEditingController();
   final passwordController = TextEditingController();
   final passwordFocusNode = FocusNode();
 
   bool https = true;
+  bool ignoreBadCertificate = false;
   bool isLoading = false;
   bool isTesting = false;
   bool obscurePassword = true;
@@ -53,7 +50,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     serverNameController.dispose();
     hostController.dispose();
     portController.dispose();
-    basePathController.dispose();
     usernameController.dispose();
     passwordController.dispose();
     passwordFocusNode.dispose();
@@ -77,7 +73,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     serverNameController.text = server.name;
     hostController.text = server.host;
     portController.text = server.port.toString();
-    basePathController.text = server.basePath ?? '';
     usernameController.text = savedUsername ?? '';
     https = server.https;
     selectedServerId = server.id;
@@ -90,7 +85,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       serverNameController.text = server.name;
       hostController.text = server.host;
       portController.text = server.port.toString();
-      basePathController.text = server.basePath ?? '';
       https = server.https;
       loginMode = _LoginMode.quick;
       if (username != null && username.isNotEmpty) {
@@ -122,9 +116,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         if (serverNameController.text == server.name) serverNameController.clear();
         if (hostController.text == server.host) hostController.clear();
         if (portController.text == server.port.toString()) portController.clear();
-        if ((basePathController.text.isEmpty ? null : basePathController.text) == server.basePath) {
-          basePathController.clear();
-        }
         usernameController.clear();
         passwordController.clear();
         quickLoginEditUsername = false;
@@ -135,9 +126,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
     final messenger = ScaffoldMessenger.of(context);
     messenger.hideCurrentSnackBar();
-    messenger.showSnackBar(
-      SnackBar(content: Text('已删除 ${server.name} 的历史记录')),
-    );
+    messenger.showSnackBar(SnackBar(content: Text('已删除 ${server.name} 的历史记录')));
   }
 
   void _validateFields() {
@@ -174,15 +163,15 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   NasServer buildServer() {
     final normalizedHost = ServerUrlHelper.normalizeHost(hostController.text.trim());
-    final basePath = basePathController.text.trim();
 
     return NasServer(
-      id: '$normalizedHost:${portController.text.trim()}:$basePath',
+      id: '$normalizedHost:${portController.text.trim()}:${https ? 'https' : 'http'}',
       name: serverNameController.text.trim().isEmpty ? '我的 NAS' : serverNameController.text.trim(),
       host: normalizedHost,
       port: int.tryParse(portController.text.trim()) ?? 5001,
       https: https,
-      basePath: basePath.isEmpty ? null : (basePath.startsWith('/') ? basePath : '/$basePath'),
+      basePath: null,
+      ignoreBadCertificate: ignoreBadCertificate,
     );
   }
 
@@ -345,10 +334,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
     return DropdownButtonFormField<String>(
       initialValue: selectedServerId != null && sortedServers.any((server) => server.id == selectedServerId) ? selectedServerId : null,
-      decoration: _inputDecoration(
-        label: '历史设备',
-        icon: Icons.history_rounded,
-      ),
+      decoration: _inputDecoration(label: '历史设备', icon: Icons.history_rounded),
       items: sortedServers.map((server) {
         final username = savedUsernames[server.id];
         final lastUsed = _formatLastUsed(lastUsedMap[server.id]);
@@ -506,10 +492,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     );
   }
 
-  Widget _buildQuickLoginCard(
-    AppLocalizations l10n,
-    List<NasServer> savedServers,
-  ) {
+  Widget _buildQuickLoginCard(AppLocalizations l10n, List<NasServer> savedServers) {
     final selectedServer = _findSelectedServer(savedServers);
 
     return Container(
@@ -545,10 +528,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        '快速登录',
-                        style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
-                      ),
+                      const Text('快速登录', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17)),
                       const SizedBox(height: 2),
                       Text(
                         selectedServerId == null ? '选择设备后输入密码即可登录' : '设备已就绪，输入密码即可登录',
@@ -584,10 +564,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            '用户名',
-                            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                          ),
+                          Text('用户名', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
                           const SizedBox(height: 4),
                           Text(
                             usernameController.text.trim().isEmpty ? '未记录用户名，请点击更换账号' : usernameController.text.trim(),
@@ -698,55 +675,29 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   }
 
   Widget _buildHttpsField() {
-    final statusText = https ? '已开启' : '未加密';
-    final statusColor = https ? const Color(0xFF2563EB) : Colors.orange.shade700;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'HTTPS',
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey.shade600,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              const Icon(Icons.lock_outline_rounded, color: Color(0xFF2563EB), size: 20),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  statusText,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontWeight: FontWeight.w700, color: statusColor),
-                ),
-              ),
-              Switch.adaptive(
-                value: https,
-                onChanged: (value) => setState(() => https = value),
-              ),
-            ],
-          ),
-          if (!https) ...[
-            const SizedBox(height: 6),
-            Text(
-              '当前连接未加密，建议仅在可信局域网中使用',
-              style: TextStyle(fontSize: 11.5, color: Colors.orange.shade700, height: 1.25),
-            ),
-          ],
-        ],
-      ),
+    return DropdownButtonFormField<bool>(
+      initialValue: https,
+      decoration: _inputDecoration(label: 'HTTPS', icon: Icons.lock_outline_rounded),
+      items: const [
+        DropdownMenuItem(value: true, child: Text('开启')), 
+        DropdownMenuItem(value: false, child: Text('关闭')),
+      ],
+      onChanged: (value) {
+        if (value == null || value == https) return;
+        setState(() {
+          https = value;
+          if (!value) {
+            ignoreBadCertificate = false;
+          }
+        });
+        if (!value) {
+          final messenger = ScaffoldMessenger.of(context);
+          messenger.hideCurrentSnackBar();
+          messenger.showSnackBar(
+            const SnackBar(content: Text('已切换为 HTTP，请仅在可信局域网中使用')),
+          );
+        }
+      },
     );
   }
 
@@ -784,15 +735,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        '连接信息',
-                        style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
-                      ),
+                      const Text('连接信息', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
                       const SizedBox(height: 2),
-                      Text(
-                        '填写 NAS 地址与 DSM 账号信息',
-                        style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
-                      ),
+                      Text('填写 NAS 地址与 DSM 账号信息', style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
                     ],
                   ),
                 ),
@@ -841,15 +786,19 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   ),
                 ),
                 const SizedBox(width: 12),
-                Expanded(
-                  child: _buildHttpsField(),
-                ),
+                Expanded(child: _buildHttpsField()),
               ],
             ),
             const SizedBox(height: 12),
-            TextField(
-              controller: basePathController,
-              decoration: _inputDecoration(label: l10n.basePathOptional, icon: Icons.route_outlined),
+            SwitchListTile.adaptive(
+              contentPadding: EdgeInsets.zero,
+              value: ignoreBadCertificate,
+              onChanged: https ? (value) => setState(() => ignoreBadCertificate = value) : null,
+              title: const Text('忽略 SSL 证书'),
+              subtitle: Text(
+                https ? '仅适用于自签名或异常证书场景' : '仅 HTTPS 下可用',
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 12.5),
+              ),
             ),
             const SizedBox(height: 12),
             TextField(
@@ -907,11 +856,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               child: OutlinedButton.icon(
                 onPressed: isTesting ? null : testConnection,
                 icon: isTesting
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
+                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
                     : const Icon(Icons.wifi_tethering_outlined),
                 label: Text(isTesting ? l10n.testingConnection : '测试连接'),
                 style: OutlinedButton.styleFrom(
@@ -1060,10 +1005,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
                       ),
                       const SizedBox(height: 6),
-                      Text(
-                        '有历史记录时优先显示这个界面，减少输入内容。',
-                        style: TextStyle(color: Colors.grey.shade600),
-                      ),
+                      Text('有历史记录时优先显示这个界面，减少输入内容。', style: TextStyle(color: Colors.grey.shade600)),
                     ],
                   ),
                 ),
@@ -1079,10 +1021,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
                       ),
                       const SizedBox(height: 6),
-                      Text(
-                        '支持局域网 IP、域名、端口和自定义基础路径。',
-                        style: TextStyle(color: Colors.grey.shade600),
-                      ),
+                      Text('支持局域网 IP、域名和端口。', style: TextStyle(color: Colors.grey.shade600)),
                     ],
                   ),
                 ),
@@ -1095,4 +1034,3 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     );
   }
 }
-

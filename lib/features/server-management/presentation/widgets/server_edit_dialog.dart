@@ -18,8 +18,8 @@ class _ServerEditDialogState extends State<ServerEditDialog> {
   late final TextEditingController nameController;
   late final TextEditingController hostController;
   late final TextEditingController portController;
-  late final TextEditingController basePathController;
   late bool https;
+  late bool ignoreBadCertificate;
 
   @override
   void initState() {
@@ -27,8 +27,8 @@ class _ServerEditDialogState extends State<ServerEditDialog> {
     nameController = TextEditingController(text: widget.server.name);
     hostController = TextEditingController(text: widget.server.host);
     portController = TextEditingController(text: widget.server.port.toString());
-    basePathController = TextEditingController(text: widget.server.basePath ?? '');
     https = widget.server.https;
+    ignoreBadCertificate = widget.server.ignoreBadCertificate;
   }
 
   @override
@@ -36,7 +36,6 @@ class _ServerEditDialogState extends State<ServerEditDialog> {
     nameController.dispose();
     hostController.dispose();
     portController.dispose();
-    basePathController.dispose();
     super.dispose();
   }
 
@@ -54,13 +53,25 @@ class _ServerEditDialogState extends State<ServerEditDialog> {
             const SizedBox(height: 12),
             TextField(controller: portController, decoration: const InputDecoration(labelText: '端口')),
             const SizedBox(height: 12),
-            TextField(controller: basePathController, decoration: const InputDecoration(labelText: '基础路径（可选）')),
-            const SizedBox(height: 12),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
               value: https,
-              onChanged: (value) => setState(() => https = value),
+              onChanged: (value) {
+                setState(() {
+                  https = value;
+                  if (!value) {
+                    ignoreBadCertificate = false;
+                  }
+                });
+              },
               title: const Text('使用 HTTPS'),
+            ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              value: ignoreBadCertificate,
+              onChanged: https ? (value) => setState(() => ignoreBadCertificate = value) : null,
+              title: const Text('忽略 SSL 证书'),
+              subtitle: const Text('仅适用于自签名或异常证书场景'),
             ),
           ],
         ),
@@ -71,12 +82,13 @@ class _ServerEditDialogState extends State<ServerEditDialog> {
           onPressed: () {
             Navigator.of(context).pop(
               NasServer(
-                id: '${hostController.text.trim()}:${portController.text.trim()}:${basePathController.text.trim()}',
+                id: '${hostController.text.trim()}:${portController.text.trim()}:${https ? 'https' : 'http'}:${ignoreBadCertificate ? 'insecure' : 'strict'}',
                 name: nameController.text.trim().isEmpty ? widget.server.name : nameController.text.trim(),
                 host: hostController.text.trim(),
                 port: int.tryParse(portController.text.trim()) ?? widget.server.port,
                 https: https,
-                basePath: basePathController.text.trim().isEmpty ? null : basePathController.text.trim(),
+                basePath: null,
+                ignoreBadCertificate: ignoreBadCertificate,
               ),
             );
           },

@@ -314,7 +314,7 @@ class DsmAuthApi implements AuthApi {
     required NasServerModel server,
     required String sid,
   }) async {
-    final client = DioClient(baseUrl: server.baseUrl).dio;
+    final client = DioClient(baseUrl: server.baseUrl, ignoreBadCertificate: server.ignoreBadCertificate).dio;
     DsmLogger.request(
       module: 'Auth',
       action: 'logout',

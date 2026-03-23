@@ -5,6 +5,7 @@ class NasServer {
   final int port;
   final bool https;
   final String? basePath;
+  final bool ignoreBadCertificate;
 
   const NasServer({
     required this.id,
@@ -13,5 +14,6 @@ class NasServer {
     required this.port,
     required this.https,
     this.basePath,
+    this.ignoreBadCertificate = false,
   });
 }

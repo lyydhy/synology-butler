@@ -21,6 +21,8 @@ class ServerMapper {
       port: model.port,
       https: model.https,
       basePath: model.basePath,
+      ignoreBadCertificate: model.ignoreBadCertificate,
     );
   }
 }
+
