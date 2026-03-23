@@ -24,9 +24,6 @@
   - `app-armeabi-v7a-release.apk`
   - `app-x86_64-release.apk`
 
-### 正式发布
-- AAB release
-
 ## 推荐命令
 
 ### APK（按 ABI 分包）

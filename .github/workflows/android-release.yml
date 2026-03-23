@@ -63,12 +63,6 @@ jobs:
           name: android-apk-release
           path: build/app/outputs/flutter-apk/*.apk
 
-      - name: Upload AAB artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-aab-release
-          path: build/app/outputs/bundle/release/*.aab
-
       - name: Upload obfuscation symbols
         uses: actions/upload-artifact@v4
         with:

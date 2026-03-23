@@ -39,7 +39,6 @@
 GitHub Actions 执行完成后，在 Actions 页面对应运行记录的 Artifacts 中可下载：
 
 - `android-apk-release`
-- `android-aab-release`
 - `android-obfuscation-symbols`
 - `android-r8-mapping`
 

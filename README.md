@@ -90,7 +90,7 @@ GitHub CI workflows are included:
 
 Current behavior:
 - PR check runs `flutter analyze`
-- Android release workflow builds APK + AAB
+- Android release workflow currently only builds and uploads APK artifacts
 - Analyze is configured as **non-blocking** for now, to avoid existing lint debt from blocking release artifacts
 
 See also:
