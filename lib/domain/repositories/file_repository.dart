@@ -49,6 +49,7 @@ abstract class FileRepository {
     required NasServer server,
     required NasSession session,
     required String path,
+    void Function(int received, int total)? onReceiveProgress,
   });
 
   Future<String> readTextFile({

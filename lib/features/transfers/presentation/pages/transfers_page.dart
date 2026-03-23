@@ -85,7 +85,7 @@ class _TransferList extends StatelessWidget {
                         ],
                       ),
                     ),
-                    Text(_statusText(task.status), style: TextStyle(color: _statusColor(task.status), fontWeight: FontWeight.w700)),
+                    Text(_statusText(task), style: TextStyle(color: _statusColor(task.status), fontWeight: FontWeight.w700)),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -109,12 +109,13 @@ class _TransferList extends StatelessWidget {
     );
   }
 
-  String _statusText(TransferTaskStatus status) {
-    switch (status) {
+  String _statusText(TransferTask task) {
+    switch (task.status) {
       case TransferTaskStatus.queued:
         return '排队中';
       case TransferTaskStatus.running:
-        return '进行中';
+        final percent = (task.progress.clamp(0, 1) * 100).round();
+        return '进行中 $percent%';
       case TransferTaskStatus.success:
         return '已完成';
       case TransferTaskStatus.failed:

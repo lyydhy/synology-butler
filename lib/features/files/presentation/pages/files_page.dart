@@ -12,6 +12,7 @@ import '../../../../domain/entities/file_item.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../transfers/presentation/providers/transfer_providers.dart';
+import '../../../preferences/providers/preferences_providers.dart';
 import '../providers/file_page_actions.dart';
 import '../providers/file_providers.dart';
 import '../providers/file_selection_providers.dart';
@@ -173,6 +174,24 @@ class _FilesPageState extends ConsumerState<FilesPage> {
     }
   }
 
+  Future<bool> _ensureDownloadDirectorySelected(BuildContext context, WidgetRef ref) async {
+    final current = ref.read(downloadDirectoryProvider);
+    if (current != null && current.isNotEmpty) return true;
+
+    final selected = await FilePicker.platform.getDirectoryPath();
+    if (selected == null || selected.isEmpty) {
+      return false;
+    }
+
+    await ref.read(saveDownloadDirectoryProvider)(selected);
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('下载目录已设置为 $selected')),
+      );
+    }
+    return true;
+  }
+
   void _showItemMenu(BuildContext context, WidgetRef ref, FileItem item) {
     final l10n = AppLocalizations.of(context);
     showModalBottomSheet<void>(
@@ -215,6 +234,8 @@ class _FilesPageState extends ConsumerState<FilesPage> {
               title: const Text('下载'),
               onTap: () async {
                 Navigator.of(context).pop();
+                final ready = await _ensureDownloadDirectorySelected(context, ref);
+                if (!ready) return;
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('开始下载 ${item.name}')));
                 }
@@ -268,7 +289,17 @@ class _FilesPageState extends ConsumerState<FilesPage> {
     final selectionMode = ref.watch(fileSelectionModeProvider);
     final activeTransferCount = ref.watch(activeTransferCountProvider);
 
-    return Scaffold(
+    return PopScope(
+      canPop: !canGoUp,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        if (canGoUp) {
+          final parentPath = actions.parentPathOf(path);
+          ref.read(currentPathProvider.notifier).state = parentPath;
+          ref.invalidate(fileListProvider);
+        }
+      },
+      child: Scaffold(
       appBar: selectionMode
           ? FilesSelectionBar(
               selectedCount: selectedPaths.length,
@@ -415,6 +446,6 @@ class _FilesPageState extends ConsumerState<FilesPage> {
           ),
         ],
       ),
-    );
+    ));
   }
 }

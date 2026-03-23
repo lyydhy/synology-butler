@@ -8,6 +8,7 @@ import '../../../../core/storage/platform_downloads_directory.dart';
 import '../../../../domain/entities/transfer_task.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../files/presentation/providers/file_providers.dart';
+import '../../../preferences/providers/preferences_providers.dart';
 
 class TransferController extends StateNotifier<List<TransferTask>> {
   TransferController(this._ref) : super(const []);
@@ -114,9 +115,14 @@ class TransferController extends StateNotifier<List<TransferTask>> {
             server: server,
             session: session,
             path: remotePath,
+            onReceiveProgress: (received, total) {
+              if (total <= 0) return;
+              final progress = received / total;
+              _update(id, progress: progress.clamp(0.0, 0.98));
+            },
           );
 
-      _update(id, progress: 0.75);
+      _update(id, progress: 0.99);
       await targetFile.writeAsBytes(bytes, flush: true);
       _update(id, status: TransferTaskStatus.success, progress: 1, errorMessage: '已保存到 ${targetFile.path}');
     } catch (e) {
@@ -125,6 +131,14 @@ class TransferController extends StateNotifier<List<TransferTask>> {
   }
 
   Future<Directory> _resolveDownloadDirectory() async {
+    final savedPath = _ref.read(downloadDirectoryProvider);
+    if (savedPath != null && savedPath.isNotEmpty) {
+      final dir = Directory(savedPath);
+      if (!await dir.exists()) {
+        await dir.create(recursive: true);
+      }
+      return dir;
+    }
     return PlatformDownloadsDirectory.resolve();
   }
 

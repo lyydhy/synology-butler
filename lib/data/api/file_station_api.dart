@@ -21,6 +21,7 @@ abstract class FileStationApi {
     required String path,
     String? synoToken,
     String? cookieHeader,
+    void Function(int received, int total)? onReceiveProgress,
   });
 
   Future<String> readTextFile({
@@ -136,6 +137,7 @@ class DsmFileStationApi implements FileStationApi {
     required String path,
     String? synoToken,
     String? cookieHeader,
+    void Function(int received, int total)? onReceiveProgress,
   }) async {
     final client = DioClient(baseUrl: baseUrl).dio;
 
@@ -155,6 +157,7 @@ class DsmFileStationApi implements FileStationApi {
 
     final response = await client.get(
       '/webapi/entry.cgi',
+      onReceiveProgress: onReceiveProgress,
       queryParameters: {
         'api': 'SYNO.FileStation.Download',
         'version': '2',

@@ -244,6 +244,10 @@ class DsmAuthApi implements AuthApi {
         'username': username,
         'session': 'webui',
         'enable_syno_token': true,
+        'enable_device_token': true,
+        'enable_sync_token': true,
+        'isIframeLogin': true,
+        'otp_code': 'empty',
       },
     );
 
@@ -257,6 +261,10 @@ class DsmAuthApi implements AuthApi {
         'passwd': password,
         'session': 'webui',
         'enable_syno_token': 'yes',
+        'enable_device_token': 'yes',
+        'enable_sync_token': 'yes',
+        'isIframeLogin': 'yes',
+        'otp_code': '',
       },
     );
 

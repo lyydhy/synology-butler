@@ -13,6 +13,7 @@ enum AppLocaleOption { system, zh, en }
 final themeModeProvider = StateProvider<AppThemeModeOption>((ref) => AppThemeModeOption.system);
 final themeColorProvider = StateProvider<AppThemeColorOption>((ref) => AppThemeColorOption.blue);
 final localeProvider = StateProvider<AppLocaleOption>((ref) => AppLocaleOption.system);
+final downloadDirectoryProvider = StateProvider<String?>((ref) => null);
 
 final restorePreferencesProvider = FutureProvider<void>((ref) async {
   final storage = ref.read(localStorageProvider);
@@ -20,6 +21,7 @@ final restorePreferencesProvider = FutureProvider<void>((ref) async {
   final themeMode = await storage.readString(AppConstants.themeModeKey);
   final themeColor = await storage.readString(AppConstants.themeColorKey);
   final locale = await storage.readString(AppConstants.localeKey);
+  final downloadDirectory = await storage.readString(AppConstants.downloadDirectoryKey);
 
   ref.read(themeModeProvider.notifier).state = switch (themeMode) {
     'light' => AppThemeModeOption.light,
@@ -39,6 +41,8 @@ final restorePreferencesProvider = FutureProvider<void>((ref) async {
     'en' => AppLocaleOption.en,
     _ => AppLocaleOption.system,
   };
+
+  ref.read(downloadDirectoryProvider.notifier).state = downloadDirectory;
 });
 
 final saveThemeModeProvider = Provider<Future<void> Function(AppThemeModeOption)>((ref) {
@@ -84,6 +88,18 @@ final saveLocaleProvider = Provider<Future<void> Function(AppLocaleOption)>((ref
         AppLocaleOption.system => 'system',
       },
     );
+  };
+});
+
+final saveDownloadDirectoryProvider = Provider<Future<void> Function(String?)>((ref) {
+  return (path) async {
+    ref.read(downloadDirectoryProvider.notifier).state = path;
+    final storage = ref.read(localStorageProvider);
+    if (path == null || path.isEmpty) {
+      await storage.remove(AppConstants.downloadDirectoryKey);
+    } else {
+      await storage.writeString(AppConstants.downloadDirectoryKey, path);
+    }
   };
 });
 

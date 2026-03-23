@@ -1,3 +1,4 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -55,6 +56,7 @@ class SettingsPage extends ConsumerWidget {
     final themeMode = ref.watch(themeModeProvider);
     final themeColor = ref.watch(themeColorProvider);
     final locale = ref.watch(localeProvider);
+    final downloadDirectory = ref.watch(downloadDirectoryProvider);
 
     final serverLabel = server == null
         ? l10n.notAvailableYet
@@ -116,6 +118,22 @@ class SettingsPage extends ConsumerWidget {
                 DropdownMenuItem(value: AppLocaleOption.en, child: Text(l10n.english)),
               ],
             ),
+          ),
+          ListTile(
+            title: const Text('下载目录'),
+            subtitle: Text(downloadDirectory ?? '首次下载时选择，之后可在这里修改'),
+            trailing: const Icon(Icons.folder_open_outlined),
+            onTap: () async {
+              final selected = await FilePicker.platform.getDirectoryPath();
+              if (selected != null && selected.isNotEmpty) {
+                await ref.read(saveDownloadDirectoryProvider)(selected);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('下载目录已更新')),
+                  );
+                }
+              }
+            },
           ),
           const ListTile(title: Text('证书策略'), subtitle: Text('默认严格校验')),
           const Padding(

@@ -126,6 +126,7 @@ class FileRepositoryImpl implements FileRepository {
     required NasServer server,
     required NasSession session,
     required String path,
+    void Function(int received, int total)? onReceiveProgress,
   }) {
     return _api.downloadFile(
       baseUrl: ServerUrlHelper.buildBaseUrl(server),
@@ -133,6 +134,7 @@ class FileRepositoryImpl implements FileRepository {
       path: path,
       synoToken: session.synoToken,
       cookieHeader: session.cookieHeader,
+      onReceiveProgress: onReceiveProgress,
     );
   }
 

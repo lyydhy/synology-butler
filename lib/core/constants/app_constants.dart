@@ -15,4 +15,5 @@ class AppConstants {
   static const themeModeKey = 'theme_mode';
   static const themeColorKey = 'theme_color';
   static const localeKey = 'locale';
+  static const downloadDirectoryKey = 'download_directory';
 }
