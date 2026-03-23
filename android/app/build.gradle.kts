@@ -35,8 +35,10 @@ android {
             // TODO: Replace with a real release signing config before publishing.
             // Keeping debug signing temporarily so local release builds still work.
             signingConfig = signingConfigs.getByName("debug")
-            isMinifyEnabled = true
-            isShrinkResources = true
+            // 临时关闭 minify，用于排查“开发版可登录、构建包无法解析域名”的差异问题。
+            // 根因确认后再重新开启并补精确 keep 规则。
+            isMinifyEnabled = false
+            isShrinkResources = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
