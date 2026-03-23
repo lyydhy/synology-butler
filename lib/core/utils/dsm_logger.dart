@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 
 import 'dsm_error_helper.dart';
+import 'local_app_logger.dart';
 
 class DsmLogger {
   static void request({
@@ -25,7 +26,19 @@ class DsmLogger {
       if (extra != null && extra.isNotEmpty) 'extra=${_pretty(extra)}',
     ];
 
-    debugPrint(lines.join('\n'));
+    final text = lines.join('\n');
+    debugPrint(text);
+    LocalAppLogger.log(
+      level: 'info',
+      module: module,
+      event: '$action.req',
+      message: text,
+      extra: {
+        if (method != null) 'method': method,
+        if (path != null) 'path': path,
+        if (extra != null) ...extra,
+      },
+    );
   }
 
   static void success({
@@ -42,7 +55,18 @@ class DsmLogger {
       if (response != null) 'response=${_pretty(response)}',
     ];
 
-    debugPrint(lines.join('\n'));
+    final text = lines.join('\n');
+    debugPrint(text);
+    LocalAppLogger.log(
+      level: 'info',
+      module: module,
+      event: '$action.ok',
+      message: text,
+      extra: {
+        if (path != null) 'path': path,
+        if (extra != null) ...extra,
+      },
+    );
   }
 
   static void failure({
@@ -72,7 +96,20 @@ class DsmLogger {
       if (response != null) 'response=${_pretty(response)}',
     ];
 
-    debugPrint(lines.join('\n'));
+    final text = lines.join('\n');
+    debugPrint(text);
+    LocalAppLogger.log(
+      level: 'error',
+      module: module,
+      event: '$action.fail',
+      message: text,
+      extra: {
+        if (path != null) 'path': path,
+        if (resolvedCode != null) 'code': resolvedCode,
+        if (resolvedReason != null) 'reason': resolvedReason,
+        if (extra != null) ...extra,
+      },
+    );
   }
 
   static String buildFailureMessage({

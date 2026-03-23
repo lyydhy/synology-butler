@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/error/error_mapper.dart';
 import '../../../../core/network/dio_client.dart';
+import '../../../../core/utils/local_app_logger.dart';
 import '../../../../core/utils/server_url_helper.dart';
 import '../../../../domain/entities/nas_server.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -67,6 +68,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       portController.text = '5001';
       usernameController.text = savedUsername ?? '';
       https = true;
+      ignoreBadCertificate = false;
       return;
     }
 
@@ -75,6 +77,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     portController.text = server.port.toString();
     usernameController.text = savedUsername ?? '';
     https = server.https;
+    ignoreBadCertificate = server.ignoreBadCertificate;
     selectedServerId = server.id;
     _validateFields();
   }
@@ -86,6 +89,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       hostController.text = server.host;
       portController.text = server.port.toString();
       https = server.https;
+      ignoreBadCertificate = server.ignoreBadCertificate;
       loginMode = _LoginMode.quick;
       if (username != null && username.isNotEmpty) {
         usernameController.text = username;
@@ -165,7 +169,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     final normalizedHost = ServerUrlHelper.normalizeHost(hostController.text.trim());
 
     return NasServer(
-      id: '$normalizedHost:${portController.text.trim()}:${https ? 'https' : 'http'}',
+      id: '$normalizedHost:${portController.text.trim()}:${https ? 'https' : 'http'}:${ignoreBadCertificate ? 'insecure' : 'strict'}',
       name: serverNameController.text.trim().isEmpty ? '我的 NAS' : serverNameController.text.trim(),
       host: normalizedHost,
       port: int.tryParse(portController.text.trim()) ?? 5001,
@@ -185,8 +189,21 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     final server = buildServer();
     final baseUrl = ServerUrlHelper.buildBaseUrl(server);
 
+    await LocalAppLogger.log(
+      level: 'info',
+      module: 'auth',
+      event: 'test_connection_start',
+      extra: {
+        'host': server.host,
+        'port': server.port,
+        'https': server.https,
+        'ignoreBadCertificate': server.ignoreBadCertificate,
+        'baseUrl': baseUrl,
+      },
+    );
+
     try {
-      final client = DioClient(baseUrl: baseUrl).dio;
+      final client = DioClient(baseUrl: baseUrl, ignoreBadCertificate: server.ignoreBadCertificate).dio;
       await client.get(
         '/webapi/query.cgi',
         queryParameters: {
@@ -197,14 +214,32 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         },
       );
 
+      await LocalAppLogger.log(
+        level: 'info',
+        module: 'auth',
+        event: 'test_connection_success',
+        extra: {'baseUrl': baseUrl},
+      );
       setState(() {
         infoText = '连接成功：已探测到 DSM Web API';
       });
     } on DioException catch (e) {
+      await LocalAppLogger.log(
+        level: 'error',
+        module: 'auth',
+        event: 'test_connection_failed',
+        message: e.toString(),
+      );
       setState(() {
         errorText = ErrorMapper.map(e).message;
       });
     } catch (e) {
+      await LocalAppLogger.log(
+        level: 'error',
+        module: 'auth',
+        event: 'test_connection_failed',
+        message: e.toString(),
+      );
       setState(() {
         errorText = ErrorMapper.map(e).message;
       });
@@ -232,8 +267,30 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     final username = usernameController.text.trim();
     ref.read(currentServerProvider.notifier).state = server;
 
+    await LocalAppLogger.log(
+      level: 'info',
+      module: 'auth',
+      event: 'login_start',
+      extra: {
+        'host': server.host,
+        'port': server.port,
+        'https': server.https,
+        'ignoreBadCertificate': server.ignoreBadCertificate,
+        'username': username,
+      },
+    );
+
     try {
       final version = await ref.read(authRepositoryProvider).probeVersion(server: server);
+      await LocalAppLogger.log(
+        level: 'info',
+        module: 'auth',
+        event: 'probe_version_result',
+        extra: {
+          'displayText': version.displayText,
+          'isDsm7OrAbove': version.isDsm7OrAbove,
+        },
+      );
       if (!version.isDsm7OrAbove) {
         setState(() {
           errorText = '检测到当前设备为 ${version.displayText}。本应用当前仅支持 DSM 7，暂不支持 DSM 6 登录。';
@@ -246,10 +303,25 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             username: username,
             password: passwordController.text,
           );
+      await LocalAppLogger.log(
+        level: 'info',
+        module: 'auth',
+        event: 'login_success',
+        extra: {
+          'sidPresent': session.sid.isNotEmpty,
+          'synoTokenPresent': session.synoToken != null && session.synoToken!.isNotEmpty,
+        },
+      );
       ref.read(currentSessionProvider.notifier).state = session;
       await ref.read(persistLoginProvider)(server, session, username);
       if (mounted) context.go('/home');
     } catch (e) {
+      await LocalAppLogger.log(
+        level: 'error',
+        module: 'auth',
+        event: 'login_failed',
+        message: e.toString(),
+      );
       setState(() {
         errorText = ErrorMapper.map(e).message;
       });
@@ -262,7 +334,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   String _formatLastUsed(int? timestampMs) {
     if (timestampMs == null || timestampMs <= 0) return '未记录登录时间';
-
     final diff = DateTime.now().difference(DateTime.fromMillisecondsSinceEpoch(timestampMs));
     if (diff.inMinutes < 1) return '刚刚使用';
     if (diff.inHours < 1) return '${diff.inMinutes} 分钟前使用';
@@ -285,16 +356,29 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     return null;
   }
 
-  Widget _buildStatusBanner() {
-    if (errorText == null && infoText == null) {
-      return const SizedBox.shrink();
-    }
+  InputDecoration _inputDecoration({required String label, required IconData icon, Widget? suffixIcon, String? errorText}) {
+    return InputDecoration(
+      labelText: label,
+      prefixIcon: Icon(icon),
+      suffixIcon: suffixIcon,
+      errorText: errorText,
+      filled: true,
+      fillColor: const Color(0xFFF8FAFC),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(18), borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.06))),
+      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(18), borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.06))),
+      focusedBorder: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(18)), borderSide: BorderSide(color: Color(0xFF2563EB), width: 1.4)),
+      errorBorder: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(18)), borderSide: BorderSide(color: Colors.redAccent, width: 1.1)),
+      focusedErrorBorder: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(18)), borderSide: BorderSide(color: Colors.redAccent, width: 1.4)),
+    );
+  }
 
+  Widget _buildStatusBanner() {
+    if (errorText == null && infoText == null) return const SizedBox.shrink();
     final isError = errorText != null;
     final color = isError ? Colors.red : Colors.green;
     final icon = isError ? Icons.error_outline : Icons.check_circle_outline;
     final text = errorText ?? infoText!;
-
     return AnimatedContainer(
       duration: const Duration(milliseconds: 220),
       margin: const EdgeInsets.only(bottom: 16),
@@ -309,56 +393,71 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         children: [
           Icon(icon, color: color),
           const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              text,
-              style: TextStyle(color: color.shade700, height: 1.35, fontWeight: FontWeight.w500),
-            ),
+          Expanded(child: Text(text, style: TextStyle(color: color.shade700, height: 1.35, fontWeight: FontWeight.w500))),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHttpsField() {
+    final statusText = https ? '已开启' : '未开启';
+    final statusColor = https ? const Color(0xFF2563EB) : Colors.grey.shade700;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('HTTPS', style: TextStyle(fontSize: 12, color: Colors.grey.shade600, fontWeight: FontWeight.w500)),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              const Icon(Icons.lock_outline_rounded, color: Color(0xFF2563EB), size: 20),
+              const SizedBox(width: 10),
+              Expanded(child: Text(statusText, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontWeight: FontWeight.w700, color: statusColor))),
+              Switch.adaptive(
+                value: https,
+                onChanged: (value) {
+                  setState(() {
+                    https = value;
+                    if (!value) ignoreBadCertificate = false;
+                  });
+                  if (!value) {
+                    final messenger = ScaffoldMessenger.of(context);
+                    messenger.hideCurrentSnackBar();
+                    messenger.showSnackBar(const SnackBar(content: Text('已切换为 HTTP，请仅在可信局域网中使用')));
+                  }
+                },
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _buildServerSelector(
-    List<NasServer> savedServers,
-    Map<String, String> savedUsernames,
-    Map<String, int> lastUsedMap,
-  ) {
-    if (savedServers.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    final sortedServers = [...savedServers]
-      ..sort((a, b) => (lastUsedMap[b.id] ?? 0).compareTo(lastUsedMap[a.id] ?? 0));
-
+  Widget _buildServerSelector(List<NasServer> savedServers, Map<String, String> savedUsernames, Map<String, int> lastUsedMap) {
+    if (savedServers.isEmpty) return const SizedBox.shrink();
+    final sortedServers = [...savedServers]..sort((a, b) => (lastUsedMap[b.id] ?? 0).compareTo(lastUsedMap[a.id] ?? 0));
     return DropdownButtonFormField<String>(
       initialValue: selectedServerId != null && sortedServers.any((server) => server.id == selectedServerId) ? selectedServerId : null,
       decoration: _inputDecoration(label: '历史设备', icon: Icons.history_rounded),
       items: sortedServers.map((server) {
         final username = savedUsernames[server.id];
         final lastUsed = _formatLastUsed(lastUsedMap[server.id]);
-        final subtitle = [
-          if (username != null && username.isNotEmpty) username,
-          lastUsed,
-        ].join(' · ');
-
+        final subtitle = [if (username != null && username.isNotEmpty) username, lastUsed].join(' · ');
         return DropdownMenuItem<String>(
           value: server.id,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
-                server.name,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontWeight: FontWeight.w700),
-              ),
-              Text(
-                subtitle,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-              ),
+              Text(server.name, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w700)),
+              Text(subtitle, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
             ],
           ),
         );
@@ -367,46 +466,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         if (value == null) return;
         final matched = sortedServers.where((server) => server.id == value);
         if (matched.isEmpty) return;
-        final server = matched.first;
-        applyServerPreset(server, username: savedUsernames[server.id]);
+        applyServerPreset(matched.first, username: savedUsernames[matched.first.id]);
       },
-    );
-  }
-
-  InputDecoration _inputDecoration({
-    required String label,
-    required IconData icon,
-    Widget? suffixIcon,
-    String? errorText,
-  }) {
-    return InputDecoration(
-      labelText: label,
-      prefixIcon: Icon(icon),
-      suffixIcon: suffixIcon,
-      errorText: errorText,
-      filled: true,
-      fillColor: const Color(0xFFF8FAFC),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(18),
-        borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.06)),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(18),
-        borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.06)),
-      ),
-      focusedBorder: const OutlineInputBorder(
-        borderRadius: BorderRadius.all(Radius.circular(18)),
-        borderSide: BorderSide(color: Color(0xFF2563EB), width: 1.4),
-      ),
-      errorBorder: const OutlineInputBorder(
-        borderRadius: BorderRadius.all(Radius.circular(18)),
-        borderSide: BorderSide(color: Colors.redAccent, width: 1.1),
-      ),
-      focusedErrorBorder: const OutlineInputBorder(
-        borderRadius: BorderRadius.all(Radius.circular(18)),
-        borderSide: BorderSide(color: Colors.redAccent, width: 1.4),
-      ),
     );
   }
 
@@ -414,462 +475,169 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     if (server == null) {
       return Container(
         padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF8FAFC),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                color: const Color(0xFFEFF6FF),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: const Icon(Icons.history_toggle_off_rounded, color: Color(0xFF2563EB)),
-            ),
-            const SizedBox(width: 12),
-            const Expanded(
-              child: Text(
-                '请选择一个历史设备后再快速登录',
-                style: TextStyle(fontWeight: FontWeight.w600),
-              ),
-            ),
-          ],
-        ),
+        decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(18), border: Border.all(color: Colors.black.withValues(alpha: 0.06))),
+        child: Row(children: [
+          Container(width: 42, height: 42, decoration: BoxDecoration(color: const Color(0xFFEFF6FF), borderRadius: BorderRadius.circular(14)), child: const Icon(Icons.history_toggle_off_rounded, color: Color(0xFF2563EB))),
+          const SizedBox(width: 12),
+          const Expanded(child: Text('请选择一个历史设备后再快速登录', style: TextStyle(fontWeight: FontWeight.w600))),
+        ]),
       );
     }
-
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFEEF4FF), Color(0xFFF8FBFF)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        gradient: const LinearGradient(colors: [Color(0xFFEEF4FF), Color(0xFFF8FBFF)], begin: Alignment.topLeft, end: Alignment.bottomRight),
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: const Color(0xFF2563EB).withValues(alpha: 0.16)),
       ),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: const Color(0xFF2563EB),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              _buildServerInitials(server),
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  server.name,
-                  style: const TextStyle(fontWeight: FontWeight.w800),
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  ServerUrlHelper.buildBaseUrl(server),
-                  style: TextStyle(color: Colors.grey.shade700, fontSize: 12),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+      child: Row(children: [
+        Container(width: 44, height: 44, decoration: BoxDecoration(color: const Color(0xFF2563EB), borderRadius: BorderRadius.circular(14)), alignment: Alignment.center, child: Text(_buildServerInitials(server), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800))),
+        const SizedBox(width: 12),
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(server.name, style: const TextStyle(fontWeight: FontWeight.w800), overflow: TextOverflow.ellipsis),
+          const SizedBox(height: 4),
+          Text(ServerUrlHelper.buildBaseUrl(server), style: TextStyle(color: Colors.grey.shade700, fontSize: 12), overflow: TextOverflow.ellipsis),
+        ])),
+      ]),
     );
   }
 
   Widget _buildQuickLoginCard(AppLocalizations l10n, List<NasServer> savedServers) {
     final selectedServer = _findSelectedServer(savedServers);
-
     return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 28,
-            offset: const Offset(0, 12),
-          ),
-        ],
-      ),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(28), boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 28, offset: const Offset(0, 12))]),
       child: Padding(
         padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEEF4FF),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(Icons.flash_on_rounded, color: Color(0xFF2563EB), size: 20),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('快速登录', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17)),
-                      const SizedBox(height: 2),
-                      Text(
-                        selectedServerId == null ? '选择设备后输入密码即可登录' : '设备已就绪，输入密码即可登录',
-                        style: TextStyle(color: Colors.grey.shade600, fontSize: 12.5),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            _buildSelectedServerSummary(selectedServer),
-            const SizedBox(height: 12),
-            _buildServerSelector(
-              ref.watch(savedServersProvider),
-              ref.watch(savedServerUsernamesProvider),
-              ref.watch(savedServerLastUsedProvider),
-            ),
-            const SizedBox(height: 10),
-            if (!quickLoginEditUsername)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.person_outline, color: Color(0xFF2563EB)),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('用户名', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
-                          const SizedBox(height: 4),
-                          Text(
-                            usernameController.text.trim().isEmpty ? '未记录用户名，请点击更换账号' : usernameController.text.trim(),
-                            style: const TextStyle(fontWeight: FontWeight.w700),
-                          ),
-                        ],
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        setState(() {
-                          quickLoginEditUsername = true;
-                        });
-                      },
-                      child: Text(usernameController.text.trim().isEmpty ? '填写' : '更换账号'),
-                    ),
-                  ],
-                ),
-              )
-            else
-              Padding(
-                padding: const EdgeInsets.only(top: 2),
-                child: TextField(
-                  controller: usernameController,
-                  onChanged: (_) => setState(() {}),
-                  decoration: _inputDecoration(
-                    label: l10n.username,
-                    icon: Icons.person_outline,
-                    errorText: null,
-                    suffixIcon: TextButton(
-                      onPressed: () {
-                        setState(() {
-                          quickLoginEditUsername = false;
-                        });
-                      },
-                      child: const Text('完成'),
-                    ),
-                  ),
-                ),
-              ),
-            const SizedBox(height: 10),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            Container(width: 38, height: 38, decoration: BoxDecoration(color: const Color(0xFFEEF4FF), borderRadius: BorderRadius.circular(12)), child: const Icon(Icons.flash_on_rounded, color: Color(0xFF2563EB), size: 20)),
+            const SizedBox(width: 10),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              const Text('快速登录', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17)),
+              const SizedBox(height: 2),
+              Text(selectedServerId == null ? '选择设备后输入密码即可登录' : '设备已就绪，输入密码即可登录', style: TextStyle(color: Colors.grey.shade600, fontSize: 12.5)),
+            ])),
+          ]),
+          const SizedBox(height: 14),
+          _buildSelectedServerSummary(selectedServer),
+          const SizedBox(height: 12),
+          _buildServerSelector(ref.watch(savedServersProvider), ref.watch(savedServerUsernamesProvider), ref.watch(savedServerLastUsedProvider)),
+          const SizedBox(height: 10),
+          if (!quickLoginEditUsername)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(18), border: Border.all(color: Colors.black.withValues(alpha: 0.06))),
+              child: Row(children: [
+                const Icon(Icons.person_outline, color: Color(0xFF2563EB)),
+                const SizedBox(width: 12),
+                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text('用户名', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                  const SizedBox(height: 4),
+                  Text(usernameController.text.trim().isEmpty ? '未记录用户名，请点击更换账号' : usernameController.text.trim(), style: const TextStyle(fontWeight: FontWeight.w700)),
+                ])),
+                TextButton(onPressed: () => setState(() => quickLoginEditUsername = true), child: Text(usernameController.text.trim().isEmpty ? '填写' : '更换账号')),
+              ]),
+            )
+          else
             TextField(
-              controller: passwordController,
-              focusNode: passwordFocusNode,
-              obscureText: obscurePassword,
-              onChanged: (_) => setState(() => _validateFields()),
-              decoration: _inputDecoration(
-                label: l10n.password,
-                icon: Icons.lock_outline,
-                errorText: passwordValidationText,
-                suffixIcon: IconButton(
-                  onPressed: () => setState(() => obscurePassword = !obscurePassword),
-                  icon: Icon(obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined),
-                ),
-              ),
-              onSubmitted: (_) => isLoading ? null : login(),
+              controller: usernameController,
+              onChanged: (_) => setState(() {}),
+              decoration: _inputDecoration(label: l10n.username, icon: Icons.person_outline, suffixIcon: TextButton(onPressed: () => setState(() => quickLoginEditUsername = false), child: const Text('完成'))),
             ),
-            const SizedBox(height: 14),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                onPressed: _canQuickLogin ? login : null,
-                icon: isLoading
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                      )
-                    : const Icon(Icons.login_rounded),
-                label: Text(isLoading ? l10n.loggingIn : '登录 DSM'),
-                style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFF2563EB),
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(vertical: 17),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                  textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-                ),
-              ),
+          const SizedBox(height: 10),
+          TextField(
+            controller: passwordController,
+            focusNode: passwordFocusNode,
+            obscureText: obscurePassword,
+            onChanged: (_) => setState(() => _validateFields()),
+            decoration: _inputDecoration(
+              label: l10n.password,
+              icon: Icons.lock_outline,
+              errorText: passwordValidationText,
+              suffixIcon: IconButton(onPressed: () => setState(() => obscurePassword = !obscurePassword), icon: Icon(obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined)),
             ),
-            const SizedBox(height: 10),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: () {
-                  setState(() {
-                    loginMode = _LoginMode.manual;
-                    quickLoginEditUsername = false;
-                    errorText = null;
-                    infoText = '已切换到新账号 / 新设备登录';
-                  });
-                },
-                icon: const Icon(Icons.edit_outlined, size: 18),
-                label: const Text('新账号 / 新设备登录'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.grey.shade700,
-                  side: BorderSide(color: Colors.black.withValues(alpha: 0.08)),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                  textStyle: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600),
-                ),
-              ),
+            onSubmitted: (_) => isLoading ? null : login(),
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: _canQuickLogin ? login : null,
+              icon: isLoading ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Icon(Icons.login_rounded),
+              label: Text(isLoading ? l10n.loggingIn : '登录 DSM'),
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () {
+                setState(() {
+                  loginMode = _LoginMode.manual;
+                  quickLoginEditUsername = false;
+                  errorText = null;
+                  infoText = '已切换到新账号 / 新设备登录';
+                });
+              },
+              icon: const Icon(Icons.edit_outlined, size: 18),
+              label: const Text('新账号 / 新设备登录'),
+            ),
+          ),
+        ]),
       ),
-    );
-  }
-
-  Widget _buildHttpsField() {
-    return DropdownButtonFormField<bool>(
-      initialValue: https,
-      decoration: _inputDecoration(label: 'HTTPS', icon: Icons.lock_outline_rounded),
-      items: const [
-        DropdownMenuItem(value: true, child: Text('开启')), 
-        DropdownMenuItem(value: false, child: Text('关闭')),
-      ],
-      onChanged: (value) {
-        if (value == null || value == https) return;
-        setState(() {
-          https = value;
-          if (!value) {
-            ignoreBadCertificate = false;
-          }
-        });
-        if (!value) {
-          final messenger = ScaffoldMessenger.of(context);
-          messenger.hideCurrentSnackBar();
-          messenger.showSnackBar(
-            const SnackBar(content: Text('已切换为 HTTP，请仅在可信局域网中使用')),
-          );
-        }
-      },
     );
   }
 
   Widget _buildInputCard(AppLocalizations l10n, {required bool showBackToQuick}) {
     return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 28,
-            offset: const Offset(0, 12),
-          ),
-        ],
-      ),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(28), boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 28, offset: const Offset(0, 12))]),
       child: Padding(
         padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEEF4FF),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: const Icon(Icons.admin_panel_settings_outlined, color: Color(0xFF2563EB)),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('连接信息', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
-                      const SizedBox(height: 2),
-                      Text('填写 NAS 地址与 DSM 账号信息', style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
-                    ],
-                  ),
-                ),
-                if (showBackToQuick)
-                  TextButton(
-                    onPressed: () {
-                      setState(() {
-                        loginMode = _LoginMode.quick;
-                        quickLoginEditUsername = false;
-                        errorText = null;
-                        infoText = '已切换回快速登录';
-                      });
-                    },
-                    child: const Text('快速登录'),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 18),
-            TextField(
-              controller: serverNameController,
-              decoration: _inputDecoration(label: '设备名称', icon: Icons.badge_outlined),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: hostController,
-              onChanged: (_) => setState(() => _validateFields()),
-              decoration: _inputDecoration(
-                label: l10n.addressOrHost,
-                icon: Icons.language_outlined,
-                errorText: hostValidationText,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: portController,
-                    keyboardType: TextInputType.number,
-                    onChanged: (_) => setState(() => _validateFields()),
-                    decoration: _inputDecoration(
-                      label: l10n.port,
-                      icon: Icons.settings_ethernet_outlined,
-                      errorText: portValidationText,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(child: _buildHttpsField()),
-              ],
-            ),
-            const SizedBox(height: 12),
-            SwitchListTile.adaptive(
-              contentPadding: EdgeInsets.zero,
-              value: ignoreBadCertificate,
-              onChanged: https ? (value) => setState(() => ignoreBadCertificate = value) : null,
-              title: const Text('忽略 SSL 证书'),
-              subtitle: Text(
-                https ? '仅适用于自签名或异常证书场景' : '仅 HTTPS 下可用',
-                style: TextStyle(color: Colors.grey.shade600, fontSize: 12.5),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: usernameController,
-              onChanged: (_) => setState(() => _validateFields()),
-              decoration: _inputDecoration(
-                label: l10n.username,
-                icon: Icons.person_outline,
-                errorText: usernameValidationText,
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: passwordController,
-              focusNode: passwordFocusNode,
-              obscureText: obscurePassword,
-              onChanged: (_) => setState(() => _validateFields()),
-              decoration: _inputDecoration(
-                label: l10n.password,
-                icon: Icons.lock_outline,
-                errorText: passwordValidationText,
-                suffixIcon: IconButton(
-                  onPressed: () => setState(() => obscurePassword = !obscurePassword),
-                  icon: Icon(obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined),
-                ),
-              ),
-              onSubmitted: (_) => isLoading ? null : login(),
-            ),
-            const SizedBox(height: 18),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                onPressed: _canSubmit ? login : null,
-                icon: isLoading
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                      )
-                    : const Icon(Icons.login_rounded),
-                label: Text(isLoading ? l10n.loggingIn : '登录 DSM'),
-                style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFF2563EB),
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(vertical: 17),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                  textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-                ),
-              ),
-            ),
-            const SizedBox(height: 10),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: isTesting ? null : testConnection,
-                icon: isTesting
-                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Icon(Icons.wifi_tethering_outlined),
-                label: Text(isTesting ? l10n.testingConnection : '测试连接'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: const Color(0xFF2563EB),
-                  side: BorderSide(color: const Color(0xFF2563EB).withValues(alpha: 0.18)),
-                  padding: const EdgeInsets.symmetric(vertical: 15),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                  textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
-                ),
-              ),
-            ),
-          ],
-        ),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            Container(width: 42, height: 42, decoration: BoxDecoration(color: const Color(0xFFEEF4FF), borderRadius: BorderRadius.circular(14)), child: const Icon(Icons.admin_panel_settings_outlined, color: Color(0xFF2563EB))),
+            const SizedBox(width: 12),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              const Text('连接信息', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
+              const SizedBox(height: 2),
+              Text('填写 NAS 地址与 DSM 账号信息', style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
+            ])),
+            if (showBackToQuick) TextButton(onPressed: () => setState(() => loginMode = _LoginMode.quick), child: const Text('快速登录')),
+          ]),
+          const SizedBox(height: 18),
+          TextField(controller: serverNameController, decoration: _inputDecoration(label: '设备名称', icon: Icons.badge_outlined)),
+          const SizedBox(height: 12),
+          TextField(controller: hostController, onChanged: (_) => setState(() => _validateFields()), decoration: _inputDecoration(label: l10n.addressOrHost, icon: Icons.language_outlined, errorText: hostValidationText)),
+          const SizedBox(height: 12),
+          Row(children: [
+            Expanded(child: TextField(controller: portController, keyboardType: TextInputType.number, onChanged: (_) => setState(() => _validateFields()), decoration: _inputDecoration(label: l10n.port, icon: Icons.settings_ethernet_outlined, errorText: portValidationText))),
+            const SizedBox(width: 12),
+            Expanded(child: _buildHttpsField()),
+          ]),
+          const SizedBox(height: 12),
+          SwitchListTile.adaptive(
+            contentPadding: EdgeInsets.zero,
+            value: ignoreBadCertificate,
+            onChanged: https ? (value) => setState(() => ignoreBadCertificate = value) : null,
+            title: const Text('忽略 SSL 证书'),
+            subtitle: Text(https ? '仅适用于自签名或异常证书场景' : '仅 HTTPS 下可用', style: TextStyle(color: Colors.grey.shade600, fontSize: 12.5)),
+          ),
+          const SizedBox(height: 12),
+          TextField(controller: usernameController, onChanged: (_) => setState(() => _validateFields()), decoration: _inputDecoration(label: l10n.username, icon: Icons.person_outline, errorText: usernameValidationText)),
+          const SizedBox(height: 12),
+          TextField(
+            controller: passwordController,
+            focusNode: passwordFocusNode,
+            obscureText: obscurePassword,
+            onChanged: (_) => setState(() => _validateFields()),
+            decoration: _inputDecoration(label: l10n.password, icon: Icons.lock_outline, errorText: passwordValidationText, suffixIcon: IconButton(onPressed: () => setState(() => obscurePassword = !obscurePassword), icon: Icon(obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined))),
+            onSubmitted: (_) => isLoading ? null : login(),
+          ),
+          const SizedBox(height: 18),
+          SizedBox(width: double.infinity, child: FilledButton.icon(onPressed: _canSubmit ? login : null, icon: isLoading ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Icon(Icons.login_rounded), label: Text(isLoading ? l10n.loggingIn : '登录 DSM'))),
+          const SizedBox(height: 10),
+          SizedBox(width: double.infinity, child: OutlinedButton.icon(onPressed: isTesting ? null : testConnection, icon: isTesting ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.wifi_tethering_outlined), label: Text(isTesting ? l10n.testingConnection : '测试连接'))),
+        ]),
       ),
     );
   }
@@ -886,8 +654,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     fillInitialValues(currentServer, savedUsername, savedServers.isNotEmpty);
 
     if (selectedServerId == null && currentServer == null && savedServers.isNotEmpty) {
-      final sortedServers = [...savedServers]
-        ..sort((a, b) => (savedServerLastUsed[b.id] ?? 0).compareTo(savedServerLastUsed[a.id] ?? 0));
+      final sortedServers = [...savedServers]..sort((a, b) => (savedServerLastUsed[b.id] ?? 0).compareTo(savedServerLastUsed[a.id] ?? 0));
       final latest = sortedServers.first;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted || selectedServerId != null) return;
@@ -912,13 +679,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFFF3F7FF), Color(0xFFFFFFFF)],
-          ),
-        ),
+        decoration: const BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0xFFF3F7FF), Color(0xFFFFFFFF)])),
         child: SafeArea(
           child: ListView(
             padding: const EdgeInsets.fromLTRB(18, 18, 18, 28),
@@ -926,104 +687,42 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF1D4ED8), Color(0xFF2563EB)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
+                  gradient: const LinearGradient(colors: [Color(0xFF1D4ED8), Color(0xFF2563EB)], begin: Alignment.topLeft, end: Alignment.bottomRight),
                   borderRadius: BorderRadius.circular(24),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF2563EB).withValues(alpha: 0.16),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
+                  boxShadow: [BoxShadow(color: const Color(0xFF2563EB).withValues(alpha: 0.16), blurRadius: 20, offset: const Offset(0, 10))],
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.14),
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          child: const Icon(Icons.dns_rounded, color: Colors.white, size: 24),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            l10n.appTitle,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 22,
-                              fontWeight: FontWeight.w800,
-                              height: 1.1,
-                            ),
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                          child: const Text(
-                            'DSM 7+',
-                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 12),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      showQuickLogin ? '已为你准备好快速登录。' : '连接你的群晖 DSM。',
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.90),
-                        height: 1.35,
-                        fontSize: 13,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                  ],
-                ),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Row(children: [
+                    Container(width: 44, height: 44, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.14), borderRadius: BorderRadius.circular(14)), child: const Icon(Icons.dns_rounded, color: Colors.white, size: 24)),
+                    const SizedBox(width: 12),
+                    Expanded(child: Text(l10n.appTitle, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w800, height: 1.1))),
+                    Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6), decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(999)), child: const Text('DSM 7+', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 12))),
+                  ]),
+                  const SizedBox(height: 10),
+                  Text(showQuickLogin ? '已为你准备好快速登录。' : '连接你的群晖 DSM。', style: TextStyle(color: Colors.white.withValues(alpha: 0.90), height: 1.35, fontSize: 13)),
+                  const SizedBox(height: 4),
+                ]),
               ),
               const SizedBox(height: 18),
               _buildStatusBanner(),
               if (showQuickLogin) ...[
                 Padding(
                   padding: const EdgeInsets.only(left: 2, bottom: 12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '快速重新登录',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
-                      ),
-                      const SizedBox(height: 6),
-                      Text('有历史记录时优先显示这个界面，减少输入内容。', style: TextStyle(color: Colors.grey.shade600)),
-                    ],
-                  ),
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text('快速重新登录', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+                    const SizedBox(height: 6),
+                    Text('有历史记录时优先显示这个界面，减少输入内容。', style: TextStyle(color: Colors.grey.shade600)),
+                  ]),
                 ),
                 _buildQuickLoginCard(l10n, savedServers),
               ] else ...[
                 Padding(
                   padding: const EdgeInsets.only(left: 2, bottom: 12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '登录到 NAS',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
-                      ),
-                      const SizedBox(height: 6),
-                      Text('支持局域网 IP、域名和端口。', style: TextStyle(color: Colors.grey.shade600)),
-                    ],
-                  ),
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text('登录到 NAS', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+                    const SizedBox(height: 6),
+                    Text('支持局域网 IP、域名和端口。', style: TextStyle(color: Colors.grey.shade600)),
+                  ]),
                 ),
                 _buildInputCard(l10n, showBackToQuick: savedServers.isNotEmpty),
               ],

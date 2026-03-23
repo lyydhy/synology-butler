@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/utils/local_app_logger.dart';
 import '../providers/auth_providers.dart';
 
 class SplashPage extends ConsumerWidget {
@@ -29,8 +32,20 @@ class SplashPage extends ConsumerWidget {
           child: restoreAsync.when(
             data: (restored) {
               WidgetsBinding.instance.addPostFrameCallback((_) async {
-                await Future<void>.delayed(const Duration(milliseconds: 700));
+                await LocalAppLogger.log(
+                  level: 'info',
+                  module: 'splash',
+                  event: 'restore_completed',
+                  extra: {'restored': restored},
+                );
+                await Future<void>.delayed(const Duration(milliseconds: 1600));
                 if (context.mounted) {
+                  unawaited(LocalAppLogger.log(
+                    level: 'info',
+                    module: 'splash',
+                    event: 'navigate',
+                    extra: {'target': restored ? '/home' : '/login'},
+                  ));
                   context.go(restored ? '/home' : '/login');
                 }
               });
@@ -42,8 +57,19 @@ class SplashPage extends ConsumerWidget {
             },
             error: (_, __) {
               WidgetsBinding.instance.addPostFrameCallback((_) async {
-                await Future<void>.delayed(const Duration(milliseconds: 700));
+                await LocalAppLogger.log(
+                  level: 'error',
+                  module: 'splash',
+                  event: 'restore_failed',
+                );
+                await Future<void>.delayed(const Duration(milliseconds: 1600));
                 if (context.mounted) {
+                  unawaited(LocalAppLogger.log(
+                    level: 'info',
+                    module: 'splash',
+                    event: 'navigate',
+                    extra: {'target': '/login'},
+                  ));
                   context.go('/login');
                 }
               });
