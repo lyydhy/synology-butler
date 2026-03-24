@@ -310,4 +310,58 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get progress => '进度';
+
+  @override
+  String get appLogsTitle => '应用日志';
+
+  @override
+  String get appLogsSubtitle => '查看本地日志文件、复制内容或快速清空';
+
+  @override
+  String get appLogsEmpty => '还没有日志文件';
+
+  @override
+  String get appLogsEmptyContent => '当前日志为空';
+
+  @override
+  String get appLogsCopySanitized => '复制脱敏内容';
+
+  @override
+  String get appLogsExportToLogsDir => '导出到日志目录';
+
+  @override
+  String get appLogsExportToDirectory => '导出到指定目录';
+
+  @override
+  String get appLogsClearCurrent => '清空当前日志';
+
+  @override
+  String get appLogsClearAll => '清空全部日志内容';
+
+  @override
+  String get appLogsCopied => '脱敏日志已复制';
+
+  @override
+  String appLogsExported(Object path) {
+    return '已导出到：$path';
+  }
+
+  @override
+  String appLogsExportedToInternal(Object path) {
+    return '已导出脱敏日志：$path';
+  }
+
+  @override
+  String appLogsFileCount(Object count) {
+    return '共 $count 个日志文件';
+  }
+
+  @override
+  String get appLogsSanitizedBadge => '已脱敏';
+
+  @override
+  String get appLogsRawBadge => '原始日志';
+
+  @override
+  String get appLogsViewerHint => '当前展示的是脱敏后的内容，适合复制或导出给别人排查问题。';
 }

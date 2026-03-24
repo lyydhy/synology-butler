@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/utils/server_url_helper.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -64,6 +65,14 @@ class DebugInfoPage extends ConsumerWidget {
               title: Text(server.name),
               subtitle: Text(ServerUrlHelper.buildBaseUrl(server)),
             ),
+          ),
+          const SizedBox(height: 16),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            title: Text(l10n.appLogsTitle),
+            subtitle: Text(l10n.appLogsSubtitle),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/app-logs'),
           ),
           const SizedBox(height: 16),
           Text(l10n.debugTips, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),

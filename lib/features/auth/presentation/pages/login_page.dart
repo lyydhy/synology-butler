@@ -642,12 +642,15 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           const SizedBox(height: 12),
           TextField(controller: portController, keyboardType: TextInputType.number, onChanged: (_) => setState(() => _validateFields()), decoration: _inputDecoration(label: l10n.port, icon: Icons.settings_ethernet_outlined, errorText: portValidationText)),
           const SizedBox(height: 12),
-          SwitchListTile.adaptive(
-            contentPadding: EdgeInsets.zero,
-            value: ignoreBadCertificate,
-            onChanged: https ? (value) => setState(() => ignoreBadCertificate = value) : null,
-            title: const Text('忽略 SSL 证书'),
-            subtitle: Text(https ? '仅适用于自签名或异常证书场景' : '仅 HTTPS 下可用', style: TextStyle(color: Colors.grey.shade600, fontSize: 12.5)),
+          Material(
+            color: Colors.transparent,
+            child: SwitchListTile.adaptive(
+              contentPadding: EdgeInsets.zero,
+              value: ignoreBadCertificate,
+              onChanged: https ? (value) => setState(() => ignoreBadCertificate = value) : null,
+              title: const Text('忽略 SSL 证书'),
+              subtitle: Text(https ? '仅适用于自签名或异常证书场景' : '仅 HTTPS 下可用', style: TextStyle(color: Colors.grey.shade600, fontSize: 12.5)),
+            ),
           ),
           const SizedBox(height: 12),
           TextField(controller: usernameController, onChanged: (_) => setState(() => _validateFields()), decoration: _inputDecoration(label: l10n.username, icon: Icons.person_outline, errorText: usernameValidationText)),
@@ -661,12 +664,15 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             onSubmitted: (_) => isLoading ? null : login(),
           ),
           const SizedBox(height: 8),
-          CheckboxListTile(
-            contentPadding: EdgeInsets.zero,
-            value: rememberPassword,
-            onChanged: (value) => setState(() => rememberPassword = value ?? false),
-            title: const Text('记住密码'),
-            controlAffinity: ListTileControlAffinity.leading,
+          Material(
+            color: Colors.transparent,
+            child: CheckboxListTile(
+              contentPadding: EdgeInsets.zero,
+              value: rememberPassword,
+              onChanged: (value) => setState(() => rememberPassword = value ?? false),
+              title: const Text('记住密码'),
+              controlAffinity: ListTileControlAffinity.leading,
+            ),
           ),
           const SizedBox(height: 12),
           SizedBox(width: double.infinity, child: FilledButton.icon(onPressed: _canSubmit ? login : null, icon: isLoading ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Icon(Icons.login_rounded), label: Text(isLoading ? l10n.loggingIn : '登录 DSM'))),

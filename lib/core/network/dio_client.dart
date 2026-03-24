@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 
+import 'request_log_interceptor.dart';
+
 class DioClient {
   DioClient({
     required String baseUrl,
@@ -16,6 +18,8 @@ class DioClient {
             contentType: Headers.formUrlEncodedContentType,
           ),
         ) {
+    dio.interceptors.add(RequestLogInterceptor());
+
     final adapter = dio.httpClientAdapter;
     if (ignoreBadCertificate && adapter is IOHttpClientAdapter) {
       adapter.createHttpClient = () {

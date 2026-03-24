@@ -171,6 +171,12 @@ class SettingsPage extends ConsumerWidget {
             trailing: const Icon(Icons.bug_report_outlined),
             onTap: () => context.go('/debug'),
           ),
+          ListTile(
+            title: Text(l10n.appLogsTitle),
+            subtitle: Text(l10n.appLogsSubtitle),
+            trailing: const Icon(Icons.receipt_long_outlined),
+            onTap: () => context.push('/app-logs'),
+          ),
           const ListTile(
             title: Text('模块诊断'),
             subtitle: Text('快速测试认证、文件和下载模块的联通情况'),

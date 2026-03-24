@@ -99,5 +99,36 @@
   "file": "File",
   "taskId": "Task ID",
   "status": "Status",
-  "progress": "Progress"
+  "progress": "Progress",
+  "appLogsTitle": "App logs",
+  "appLogsSubtitle": "View local log files, copy content, or clear them quickly",
+  "appLogsEmpty": "No log files yet",
+  "appLogsEmptyContent": "This log is empty",
+  "appLogsCopySanitized": "Copy sanitized content",
+  "appLogsExportToLogsDir": "Export to logs directory",
+  "appLogsExportToDirectory": "Export to selected folder",
+  "appLogsClearCurrent": "Clear current log",
+  "appLogsClearAll": "Clear all log content",
+  "appLogsCopied": "Sanitized log copied",
+  "appLogsExported": "Exported to: {path}",
+  "@appLogsExported": {
+    "placeholders": {
+      "path": {}
+    }
+  },
+  "appLogsExportedToInternal": "Sanitized log exported: {path}",
+  "@appLogsExportedToInternal": {
+    "placeholders": {
+      "path": {}
+    }
+  },
+  "appLogsFileCount": "{count} log files",
+  "@appLogsFileCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "appLogsSanitizedBadge": "Sanitized",
+  "appLogsRawBadge": "Raw log",
+  "appLogsViewerHint": "You are viewing sanitized content, which is safer to copy or export for troubleshooting."
 }

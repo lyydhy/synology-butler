@@ -703,6 +703,102 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'进度'**
   String get progress;
+
+  /// No description provided for @appLogsTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'应用日志'**
+  String get appLogsTitle;
+
+  /// No description provided for @appLogsSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'查看本地日志文件、复制内容或快速清空'**
+  String get appLogsSubtitle;
+
+  /// No description provided for @appLogsEmpty.
+  ///
+  /// In zh, this message translates to:
+  /// **'还没有日志文件'**
+  String get appLogsEmpty;
+
+  /// No description provided for @appLogsEmptyContent.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前日志为空'**
+  String get appLogsEmptyContent;
+
+  /// No description provided for @appLogsCopySanitized.
+  ///
+  /// In zh, this message translates to:
+  /// **'复制脱敏内容'**
+  String get appLogsCopySanitized;
+
+  /// No description provided for @appLogsExportToLogsDir.
+  ///
+  /// In zh, this message translates to:
+  /// **'导出到日志目录'**
+  String get appLogsExportToLogsDir;
+
+  /// No description provided for @appLogsExportToDirectory.
+  ///
+  /// In zh, this message translates to:
+  /// **'导出到指定目录'**
+  String get appLogsExportToDirectory;
+
+  /// No description provided for @appLogsClearCurrent.
+  ///
+  /// In zh, this message translates to:
+  /// **'清空当前日志'**
+  String get appLogsClearCurrent;
+
+  /// No description provided for @appLogsClearAll.
+  ///
+  /// In zh, this message translates to:
+  /// **'清空全部日志内容'**
+  String get appLogsClearAll;
+
+  /// No description provided for @appLogsCopied.
+  ///
+  /// In zh, this message translates to:
+  /// **'脱敏日志已复制'**
+  String get appLogsCopied;
+
+  /// No description provided for @appLogsExported.
+  ///
+  /// In zh, this message translates to:
+  /// **'已导出到：{path}'**
+  String appLogsExported(Object path);
+
+  /// No description provided for @appLogsExportedToInternal.
+  ///
+  /// In zh, this message translates to:
+  /// **'已导出脱敏日志：{path}'**
+  String appLogsExportedToInternal(Object path);
+
+  /// No description provided for @appLogsFileCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'共 {count} 个日志文件'**
+  String appLogsFileCount(Object count);
+
+  /// No description provided for @appLogsSanitizedBadge.
+  ///
+  /// In zh, this message translates to:
+  /// **'已脱敏'**
+  String get appLogsSanitizedBadge;
+
+  /// No description provided for @appLogsRawBadge.
+  ///
+  /// In zh, this message translates to:
+  /// **'原始日志'**
+  String get appLogsRawBadge;
+
+  /// No description provided for @appLogsViewerHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前展示的是脱敏后的内容，适合复制或导出给别人排查问题。'**
+  String get appLogsViewerHint;
 }
 
 class _AppLocalizationsDelegate

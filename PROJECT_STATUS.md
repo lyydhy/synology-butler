@@ -121,6 +121,42 @@
 - 已将 DSM 错误码映射抽到公共工具 `dsm_error_helper.dart`：
   - `DsmLogger` 与 `ErrorMapper` 共用同一套 code -> 文案 逻辑
   - 避免日志文案与 UI 错误提示后续出现两套映射不一致
+- 当前又向前推进了一步 App 本地日志第一版：
+  - 新增网络层 `RequestLogInterceptor`，开始统一记录 Dio 的 request / response / error
+  - `DioClient` 已接入请求日志拦截器，说明网络请求链路正在逐步纳入本地日志体系
+  - 登录页“测试连接失败”已支持弹窗展示详细内容并复制，日志能力已经开始从“写入本地”扩展到“辅助用户诊断”
+  - 已新增应用内日志查看第一版：
+    - 设置页新增“应用日志”入口
+    - 调试信息页新增“应用日志”入口
+    - 新增 `AppLogsPage`，可列出本地日志文件并打开查看
+    - 支持复制整份日志内容
+    - 支持清空单个日志文件
+    - 支持刷新列表与清空全部日志内容
+  - 已继续补上日志脱敏与导出基础：
+    - 日志查看页默认展示脱敏后的内容
+    - 复制动作默认复制脱敏文本
+    - 可在本地生成 `*.sanitized.txt` 脱敏副本文件
+    - 已开始对 `password` / `cookie` / `token` / `sid` / `synotoken` 等敏感字段做基础遮盖
+  - 已进一步把导出能力从“写入日志目录”扩展到“导出到用户选择目录”：
+    - 当前使用 `FilePicker.platform.getDirectoryPath()` 选择目录
+    - 脱敏日志可直接落到用户指定目录
+    - 暂未引入额外分享依赖，系统分享面板仍待后续接入
+  - 已继续增强脱敏规则：
+    - 不再只按整行 key 判断
+    - 现已覆盖 `key: value`、`key=value`、URI/query 参数片段等多种形式
+    - 对 `password / passwd / pwd / cookie / authorization / token / synoToken / sid` 等敏感值统一遮盖
+  - 已开始把日志功能接回项目统一的多语言体系：
+    - 日志页相关文案已补入 `app_zh.arb` / `app_en.arb`
+    - 设置页 / 调试信息页 / 日志页入口与按钮文案已开始切换为 `AppLocalizations`
+  - 日志页 UI 已从工具型朴素列表收口到更成体系的卡片式界面：
+    - 顶部增加渐变摘要卡
+    - 列表项加入状态 badge / 图标 / 阴影 / 圆角
+    - 查看弹层增加说明区与更清晰的操作层级
+  - 日志页相关 l10n 已完成闭环：
+    - `app_zh.arb` / `app_en.arb` 已新增 `appLogs*` 文案
+    - 页面代码已切换为调用 `AppLocalizations` 中对应字段
+    - 已使用 Flutter 绝对路径完成 `flutter pub get`、`flutter gen-l10n` 与 `flutter analyze`
+    - 当前分析结果：`No issues found!`
 
 ### 主题与多语言
 - Material 3 主题模式切换（系统 / 浅色 / 深色）
@@ -153,6 +189,7 @@
   - 阿里云 `central`
   - 阿里云 `gradle-plugin`
   - 官方源兜底（`google()` / `mavenCentral()` / `gradlePluginPortal()`）
+- 用户已确认：此前一度出现的“登录失败”问题，目前根因更接近 Android 侧**未声明网络权限**，该问题应视为已修复；后续不再把“登录失败”作为当前主卡点，而是转回登录页 UI、splash、日志展示等收尾工作
 
 ### DSM Realtime Socket
 - 已确认 DSM 首页资源数据来自 socket 推送，而不是简单 HTTP 概览接口

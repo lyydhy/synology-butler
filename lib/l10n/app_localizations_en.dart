@@ -311,4 +311,60 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get progress => 'Progress';
+
+  @override
+  String get appLogsTitle => 'App logs';
+
+  @override
+  String get appLogsSubtitle =>
+      'View local log files, copy content, or clear them quickly';
+
+  @override
+  String get appLogsEmpty => 'No log files yet';
+
+  @override
+  String get appLogsEmptyContent => 'This log is empty';
+
+  @override
+  String get appLogsCopySanitized => 'Copy sanitized content';
+
+  @override
+  String get appLogsExportToLogsDir => 'Export to logs directory';
+
+  @override
+  String get appLogsExportToDirectory => 'Export to selected folder';
+
+  @override
+  String get appLogsClearCurrent => 'Clear current log';
+
+  @override
+  String get appLogsClearAll => 'Clear all log content';
+
+  @override
+  String get appLogsCopied => 'Sanitized log copied';
+
+  @override
+  String appLogsExported(Object path) {
+    return 'Exported to: $path';
+  }
+
+  @override
+  String appLogsExportedToInternal(Object path) {
+    return 'Sanitized log exported: $path';
+  }
+
+  @override
+  String appLogsFileCount(Object count) {
+    return '$count log files';
+  }
+
+  @override
+  String get appLogsSanitizedBadge => 'Sanitized';
+
+  @override
+  String get appLogsRawBadge => 'Raw log';
+
+  @override
+  String get appLogsViewerHint =>
+      'You are viewing sanitized content, which is safer to copy or export for troubleshooting.';
 }
