@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/error/error_mapper.dart';
 import '../providers/text_editor_providers.dart';
@@ -68,6 +69,16 @@ class _TextEditorPageState extends ConsumerState<TextEditorPage> {
         appBar: AppBar(
           title: Text(widget.name),
           actions: [
+            IconButton(
+              tooltip: '预览',
+              onPressed: () {
+                context.push('/text-preview', extra: {
+                  'path': widget.path,
+                  'name': widget.name,
+                });
+              },
+              icon: const Icon(Icons.visibility_outlined),
+            ),
             TextButton(
               onPressed: () async {
                 try {

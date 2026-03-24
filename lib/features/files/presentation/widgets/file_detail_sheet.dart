@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/utils/file_size_formatter.dart';
 import '../../../../domain/entities/file_item.dart';
 import '../../../../l10n/app_localizations.dart';
+import 'file_type_helper.dart';
 
 class FileDetailSheet extends StatelessWidget {
   const FileDetailSheet({
@@ -15,6 +18,7 @@ class FileDetailSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -41,6 +45,57 @@ class FileDetailSheet extends StatelessWidget {
               leading: const Icon(Icons.data_object_outlined),
               title: Text(l10n.fileSize),
               subtitle: Text(item.isDirectory ? '-' : FileSizeFormatter.format(item.size)),
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                if (FileTypeHelper.isImage(item))
+                  FilledButton.tonalIcon(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      context.push('/image-preview', extra: {
+                        'path': item.path,
+                        'name': item.name,
+                      });
+                    },
+                    icon: const Icon(Icons.image_outlined),
+                    label: const Text('预览图片'),
+                  ),
+                if (FileTypeHelper.isVideo(item))
+                  FilledButton.tonalIcon(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    icon: const Icon(Icons.movie_outlined),
+                    label: const Text('视频预览请从列表打开'),
+                  ),
+                if (FileTypeHelper.isTextPreviewable(item))
+                  FilledButton.tonalIcon(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      context.push('/text-preview', extra: {
+                        'path': item.path,
+                        'name': item.name,
+                      });
+                    },
+                    icon: const Icon(Icons.visibility_outlined),
+                    label: Text(FileTypeHelper.isNfo(item) ? '预览 NFO' : '预览文本'),
+                  ),
+                OutlinedButton.icon(
+                  onPressed: () async {
+                    await Clipboard.setData(ClipboardData(text: item.path));
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('路径已复制')),
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.copy_all_outlined),
+                  label: const Text('复制路径'),
+                ),
+              ],
             ),
             const SizedBox(height: 12),
             Align(

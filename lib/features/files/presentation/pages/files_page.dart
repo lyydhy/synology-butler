@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/error/error_mapper.dart';
+import '../../../../core/utils/file_launcher.dart';
 import '../../../../core/utils/server_url_helper.dart';
 import '../../../../domain/entities/file_item.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -31,6 +32,7 @@ class FilesPage extends ConsumerStatefulWidget {
 
 class _FilesPageState extends ConsumerState<FilesPage> {
   Timer? _pollTimer;
+  String? _lastFinishedDownloadId;
 
   @override
   void initState() {
@@ -42,6 +44,31 @@ class _FilesPageState extends ConsumerState<FilesPage> {
       final selectionMode = ref.read(fileSelectionModeProvider);
       if (currentServer == null || currentSession == null || selectionMode) return;
       ref.invalidate(fileListProvider);
+    });
+
+    ref.listenManual(latestFinishedDownloadProvider, (previous, next) {
+      if (!mounted || next == null) return;
+      if (_lastFinishedDownloadId == next.id) return;
+      _lastFinishedDownloadId = next.id;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${next.title} 下载完成'),
+          action: SnackBarAction(
+            label: '打开',
+            onPressed: () async {
+              try {
+                await FileLauncher.open(next.targetPath);
+              } catch (e) {
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(ErrorMapper.map(e).message)),
+                );
+              }
+            },
+          ),
+        ),
+      );
     });
   }
 
@@ -213,6 +240,18 @@ class _FilesPageState extends ConsumerState<FilesPage> {
                   });
                 },
               ),
+            if (FileTypeHelper.isTextPreviewable(item))
+              ListTile(
+                leading: const Icon(Icons.visibility_outlined),
+                title: Text(FileTypeHelper.isNfo(item) ? '预览 NFO' : '预览文本'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  GoRouter.of(context).push('/text-preview', extra: {
+                    'path': item.path,
+                    'name': item.name,
+                  });
+                },
+              ),
             ListTile(
               leading: const Icon(Icons.info_outline_rounded),
               title: Text(l10n.detail),
@@ -245,6 +284,25 @@ class _FilesPageState extends ConsumerState<FilesPage> {
                     );
               },
             ),
+            if (FileTypeHelper.isImage(item) || FileTypeHelper.isVideo(item))
+              ListTile(
+                leading: const Icon(Icons.play_circle_outline_rounded),
+                title: const Text('下载并打开'),
+                onTap: () async {
+                  Navigator.of(context).pop();
+                  final ready = await _ensureDownloadDirectorySelected(context, ref);
+                  if (!ready) return;
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('开始下载 ${item.name}，完成后可直接打开')),
+                    );
+                  }
+                  await ref.read(transferControllerProvider.notifier).enqueueDownload(
+                        remotePath: item.path,
+                        displayName: item.name,
+                      );
+                },
+              ),
             ListTile(
               leading: const Icon(Icons.link_rounded),
               title: Text(l10n.generateShareLink),
@@ -398,8 +456,8 @@ class _FilesPageState extends ConsumerState<FilesPage> {
                           ref.invalidate(fileListProvider);
                           return;
                         }
-                        if (FileTypeHelper.isTextEditable(item)) {
-                          GoRouter.of(context).push('/text-editor', extra: {
+                        if (FileTypeHelper.isTextPreviewable(item)) {
+                          GoRouter.of(context).push('/text-preview', extra: {
                             'path': item.path,
                             'name': item.name,
                           });

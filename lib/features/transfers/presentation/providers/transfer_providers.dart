@@ -63,6 +63,48 @@ class TransferController extends StateNotifier<List<TransferTask>> {
     }
   }
 
+  Future<void> retryTask(TransferTask task) async {
+    final retryId = _id();
+    final retryTask = TransferTask(
+      id: retryId,
+      type: task.type,
+      status: TransferTaskStatus.queued,
+      title: task.title,
+      sourcePath: task.sourcePath,
+      targetPath: task.targetPath,
+      progress: 0,
+      createdAt: DateTime.now(),
+    );
+    state = [retryTask, ...state];
+
+    if (task.type == TransferTaskType.download) {
+      final targetFile = File(task.targetPath);
+      await _runDownload(retryId, remotePath: task.sourcePath, targetFile: targetFile);
+      return;
+    }
+
+    state = state.map((item) {
+      if (item.id != retryId) return item;
+      return item.copyWith(
+        status: TransferTaskStatus.failed,
+        progress: 1,
+        errorMessage: '上传任务暂不支持从传输页直接重试，请回到文件页重新选择上传',
+      );
+    }).toList();
+  }
+
+  void removeTask(String id) {
+    state = state.where((task) => task.id != id).toList();
+  }
+
+  void clearCompleted() {
+    state = state.where((task) => task.status != TransferTaskStatus.success).toList();
+  }
+
+  void clearFailed() {
+    state = state.where((task) => task.status != TransferTaskStatus.failed).toList();
+  }
+
   Future<void> _runUpload(
     String id, {
     required String parentPath,
@@ -186,4 +228,12 @@ final transferControllerProvider = StateNotifierProvider<TransferController, Lis
 
 final activeTransferCountProvider = Provider<int>((ref) {
   return ref.watch(transferControllerProvider).where((t) => t.status == TransferTaskStatus.queued || t.status == TransferTaskStatus.running).length;
+});
+
+final latestFinishedDownloadProvider = Provider<TransferTask?>((ref) {
+  final tasks = ref.watch(transferControllerProvider);
+  final downloads = tasks.where((t) => t.type == TransferTaskType.download && t.status == TransferTaskStatus.success).toList();
+  if (downloads.isEmpty) return null;
+  downloads.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+  return downloads.first;
 });

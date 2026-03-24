@@ -1,10 +1,15 @@
-import 'package:flutter/material.dart';
+import 'dart:typed_data';
 
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../../core/error/error_mapper.dart';
 import '../../../../core/utils/file_size_formatter.dart';
 import '../../../../domain/entities/file_item.dart';
+import '../providers/file_preview_providers.dart';
 import 'file_type_helper.dart';
 
-class FileListItem extends StatelessWidget {
+class FileListItem extends ConsumerWidget {
   const FileListItem({
     super.key,
     required this.item,
@@ -23,7 +28,7 @@ class FileListItem extends StatelessWidget {
   final VoidCallback onMore;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final color = FileTypeHelper.colorFor(context, item);
     final icon = FileTypeHelper.iconFor(item);
     final theme = Theme.of(context);
@@ -49,15 +54,7 @@ class FileListItem extends StatelessWidget {
                 Checkbox(value: selected, onChanged: (_) => onTap()),
                 const SizedBox(width: 4),
               ],
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(icon, color: color),
-              ),
+              _LeadingVisual(item: item, color: color, icon: icon),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -95,5 +92,51 @@ class FileListItem extends StatelessWidget {
   String _buildSubtitle() {
     final size = FileSizeFormatter.format(item.size);
     return '${item.path} · $size';
+  }
+}
+
+class _LeadingVisual extends ConsumerWidget {
+  const _LeadingVisual({
+    required this.item,
+    required this.color,
+    required this.icon,
+  });
+
+  final FileItem item;
+  final Color color;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (FileTypeHelper.isImage(item)) {
+      final imageAsync = ref.watch(fileBytesProvider(item.path));
+      return Container(
+        width: 42,
+        height: 42,
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: imageAsync.when(
+          data: (bytes) => Image.memory(Uint8List.fromList(bytes), fit: BoxFit.cover),
+          loading: () => Icon(Icons.image_outlined, color: color),
+          error: (error, _) => Tooltip(
+            message: ErrorMapper.map(error).message,
+            child: Icon(Icons.broken_image_outlined, color: color),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      width: 42,
+      height: 42,
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Icon(icon, color: color),
+    );
   }
 }

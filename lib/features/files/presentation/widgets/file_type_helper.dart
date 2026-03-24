@@ -19,6 +19,7 @@ class FileTypeHelper {
       case 'txt':
       case 'md':
       case 'log':
+      case 'nfo':
         return Icons.article_outlined;
       case 'zip':
       case 'rar':
@@ -64,6 +65,7 @@ class FileTypeHelper {
       case 'txt':
       case 'md':
       case 'log':
+      case 'nfo':
         return Colors.teal;
       case 'zip':
       case 'rar':
@@ -77,18 +79,36 @@ class FileTypeHelper {
       case 'gif':
       case 'webp':
         return Colors.purple;
+      case 'mp4':
+      case 'mkv':
+      case 'avi':
+      case 'mov':
+        return Colors.redAccent;
       default:
         return scheme.secondary;
     }
   }
 
-  static bool isTextEditable(FileItem item) {
-    if (item.isDirectory) return false;
+  static bool isTextEditable(FileItem item) => isTextEditableName(item.name) && !item.isDirectory;
+
+  static bool isTextEditableName(String name) {
     const editable = {
       'txt', 'md', 'json', 'yaml', 'yml', 'toml', 'ini', 'conf', 'env', 'xml', 'log'
     };
-    return editable.contains(extensionOf(item.name));
+    return editable.contains(extensionOf(name));
   }
+
+  static bool isTextPreviewable(FileItem item) {
+    if (item.isDirectory) return false;
+    const previewable = {
+      'txt', 'md', 'json', 'yaml', 'yml', 'toml', 'ini', 'conf', 'env', 'xml', 'log', 'nfo'
+    };
+    return previewable.contains(extensionOf(item.name));
+  }
+
+  static bool isNfo(FileItem item) => isNfoName(item.name);
+
+  static bool isNfoName(String name) => extensionOf(name) == 'nfo';
 
   static bool isImage(FileItem item) {
     if (item.isDirectory) return false;
@@ -100,6 +120,29 @@ class FileTypeHelper {
     if (item.isDirectory) return false;
     const videoExts = {'mp4', 'mkv', 'avi', 'mov'};
     return videoExts.contains(extensionOf(item.name));
+  }
+
+  static int sortTypeOrder(FileItem item) {
+    if (item.isDirectory) return 0;
+    if (isImage(item)) return 1;
+    if (isVideo(item)) return 2;
+    if (isTextPreviewable(item)) return 3;
+    final ext = extensionOf(item.name);
+    switch (ext) {
+      case 'zip':
+      case 'rar':
+      case '7z':
+      case 'tar':
+      case 'gz':
+        return 4;
+      case 'mp3':
+      case 'flac':
+      case 'wav':
+      case 'm4a':
+        return 5;
+      default:
+        return 6;
+    }
   }
 
   static String extensionOf(String name) {

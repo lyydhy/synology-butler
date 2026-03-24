@@ -8,6 +8,7 @@ import '../features/debug/presentation/pages/debug_info_page.dart';
 import '../features/diagnostics/presentation/pages/diagnostics_page.dart';
 import '../features/files/presentation/pages/image_preview_page.dart';
 import '../features/files/presentation/pages/text_editor_page.dart';
+import '../features/files/presentation/pages/text_preview_page.dart';
 import '../features/files/presentation/pages/video_preview_page.dart';
 import '../features/packages/presentation/pages/package_detail_page.dart';
 import '../features/packages/presentation/pages/packages_page.dart';
@@ -38,6 +39,16 @@ final GoRouter appRouter = GoRouter(
           return const Scaffold(body: Center(child: Text('套件详情参数缺失')));
         }
         return PackageDetailPage(item: extra as dynamic);
+      },
+    ),
+    GoRoute(
+      path: '/text-preview',
+      builder: (context, state) {
+        final extra = state.extra as Map<String, dynamic>? ?? const {};
+        return TextPreviewPage(
+          path: extra['path']?.toString() ?? '',
+          name: extra['name']?.toString() ?? '文本预览',
+        );
       },
     ),
     GoRoute(

@@ -7,9 +7,10 @@ import '../../../../data/repositories/file_repository_impl.dart';
 import '../../../../domain/entities/file_item.dart';
 import '../../../../domain/repositories/file_repository.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
+import '../widgets/file_type_helper.dart';
 
 final currentPathProvider = StateProvider<String>((ref) => '/');
-final fileSortProvider = StateProvider<String>((ref) => 'name');
+final fileSortProvider = StateProvider<String>((ref) => 'type');
 
 final fileStationApiProvider = Provider<FileStationApi>((ref) => DsmFileStationApi());
 
@@ -37,8 +38,14 @@ final fileListProvider = FutureProvider<List<FileItem>>((ref) async {
 
   if (sort == 'size') {
     sorted.sort((a, b) => b.size.compareTo(a.size));
-  } else {
+  } else if (sort == 'name') {
     sorted.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+  } else {
+    sorted.sort((a, b) {
+      final typeCompare = FileTypeHelper.sortTypeOrder(a).compareTo(FileTypeHelper.sortTypeOrder(b));
+      if (typeCompare != 0) return typeCompare;
+      return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+    });
   }
 
   return sorted;
