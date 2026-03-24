@@ -110,6 +110,13 @@ class DashboardPage extends ConsumerWidget {
             onTap: () => context.push('/packages'),
           ),
           const SizedBox(height: 12),
+          QuickEntryCard(
+            icon: Icons.sync_alt_rounded,
+            title: '传输中心',
+            subtitle: '查看文件的上传和下载传输任务',
+            onTap: () => context.push('/transfers'),
+          ),
+          const SizedBox(height: 12),
           _VolumeSection(volumes: data?.volumes ?? const []),
           const SizedBox(height: 12),
           _UptimeCard(uptimeText: data?.uptimeText),
