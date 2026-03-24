@@ -204,7 +204,7 @@ class DsmSystemApi implements SystemApi {
         thermalStatus: _resolveThermalStatus(systemHealthData),
         timezone: _resolveTimezone(timeData),
         dnsServer: _resolveDns(networkData),
-        gateway: _resolveGateway(networkData),
+        gateway: _resolveGateway(networkData, gatewayListData),
         workgroup: _resolveWorkgroup(networkData),
         externalDevices: externalDevices,
         lanNetworks: networks,
@@ -1094,6 +1094,9 @@ class DsmSystemApi implements SystemApi {
 
   List<InformationCenterLanNetworkModel> _extractLanNetworks(Map networkData, Map ethernetData, Map gatewayListData) {
     final candidateLists = [
+      ethernetData['eth'],
+      ethernetData['interfaces'],
+      ethernetData['list'],
       networkData['lan'],
       networkData['lans'],
       networkData['interfaces'],
@@ -1105,10 +1108,11 @@ class DsmSystemApi implements SystemApi {
       if (candidate is! List) continue;
       final result = candidate.whereType<Map>().map((item) {
         final ipv4 = _extractIpv4Map(item);
+        final ipAddr = (ipv4?['address'] ?? item['ip'] ?? item['ipaddr'])?.toString();
         return InformationCenterLanNetworkModel(
           name: (item['name'] ?? item['id'] ?? item['service'] ?? 'LAN').toString(),
           macAddress: (item['mac'] ?? item['mac_address'] ?? item['hwaddr'])?.toString(),
-          ipAddress: (ipv4?['address'] ?? item['ip'] ?? item['ipaddr'])?.toString(),
+          ipAddress: ipAddr == '0.0.0.0' ? '-' : ipAddr,
           subnetMask: (ipv4?['netmask'] ?? item['mask'] ?? item['subnet_mask'])?.toString(),
         );
       }).where((item) {
@@ -1257,6 +1261,15 @@ class DsmSystemApi implements SystemApi {
   }
 
   String? _resolveDns(Map networkData) {
+    final dnsPrimary = networkData['dns_primary'];
+    final dnsSecondary = networkData['dns_secondary'];
+    if (dnsPrimary != null && dnsPrimary.toString().trim().isNotEmpty) {
+      if (dnsSecondary != null && dnsSecondary.toString().trim().isNotEmpty) {
+        return '${dnsPrimary.toString().trim()} / ${dnsSecondary.toString().trim()}';
+      }
+      return dnsPrimary.toString().trim();
+    }
+
     final dns = networkData['dns'];
     if (dns is List) {
       final values = dns.map((e) => e.toString()).where((e) => e.trim().isNotEmpty).toList();
@@ -1270,7 +1283,15 @@ class DsmSystemApi implements SystemApi {
     return networkData['dns_server']?.toString();
   }
 
-  String? _resolveGateway(Map networkData) {
+  String? _resolveGateway(Map networkData, Map gatewayListData) {
+    final gatewayList = gatewayListData['list'] ?? gatewayListData['data'];
+    if (gatewayList is List && gatewayList.isNotEmpty) {
+      final first = gatewayList.first;
+      if (first is Map && first['gateway'] != null) {
+        return first['gateway'].toString().trim();
+      }
+    }
+
     final candidates = [
       networkData['gateway'],
       networkData['default_gateway'],
