@@ -113,29 +113,76 @@ class DsmSystemApi implements SystemApi {
         'version': '1',
         '_sid': sid,
       });
-      final networkData = await postEntry({
-        'api': 'SYNO.Core.Network',
-        'method': 'get',
+      final networkCompoundData = await postEntry({
+        'api': 'SYNO.Entry.Request',
+        'method': 'request',
         'version': '1',
+        'stop_when_error': 'false',
+        'mode': 'sequential',
+        'compound': jsonEncode([
+          {
+            'api': 'SYNO.Core.Network',
+            'method': 'get',
+            'version': 2,
+          },
+          {
+            'api': 'SYNO.Core.Network.Ethernet',
+            'method': 'list',
+            'version': 2,
+          },
+          {
+            'api': 'SYNO.Core.Network.PPPoE',
+            'method': 'list',
+            'version': 1,
+          },
+          {
+            'api': 'SYNO.Core.Network.Router.Gateway.List',
+            'method': 'get',
+            'version': 1,
+            'iptype': 'ipv4',
+            'type': 'wan',
+          },
+        ]),
         '_sid': sid,
       });
-      final esataData = await postEntry({
-        'api': 'SYNO.Core.ExternalDevice.Storage.eSATA',
-        'method': 'get',
+      final externalDeviceCompoundData = await postEntry({
+        'api': 'SYNO.Entry.Request',
+        'method': 'request',
         'version': '1',
+        'mode': 'sequential',
+        'compound': jsonEncode([
+          {
+            'api': 'SYNO.Core.ExternalDevice.Storage.USB',
+            'method': 'list',
+            'version': 1,
+            'additional': ['all'],
+          },
+          {
+            'api': 'SYNO.Core.ExternalDevice.Storage.eSATA',
+            'method': 'list',
+            'version': 1,
+            'additional': ['all'],
+          },
+        ]),
         '_sid': sid,
       });
       final diskData = await postEntry({
         'api': 'SYNO.Core.Storage.Disk',
         'method': 'list',
         'version': '1',
+        'additional': jsonEncode(['size_total', 'temp', 'serial']),
         '_sid': sid,
       });
 
       final memory = utilizationData['memory'] as Map? ?? const {};
       final cpu = utilizationData['cpu'] as Map? ?? const {};
-      final networks = _extractLanNetworks(networkData);
-      final externalDevices = _extractExternalDevices(esataData);
+      final networkData = _extractCompoundApiData(networkCompoundData, 'SYNO.Core.Network');
+      final ethernetData = _extractCompoundApiData(networkCompoundData, 'SYNO.Core.Network.Ethernet');
+      final gatewayListData = _extractCompoundApiData(networkCompoundData, 'SYNO.Core.Network.Router.Gateway.List');
+      final usbData = _extractCompoundApiData(externalDeviceCompoundData, 'SYNO.Core.ExternalDevice.Storage.USB');
+      final esataData = _extractCompoundApiData(externalDeviceCompoundData, 'SYNO.Core.ExternalDevice.Storage.eSATA');
+      final networks = _extractLanNetworks(networkData, ethernetData, gatewayListData);
+      final externalDevices = _extractExternalDevices(usbData, esataData);
       final disks = _extractDisks(diskData);
       final versionText = await _fetchUpgradeVersion(
             client: client,
@@ -1033,7 +1080,19 @@ class DsmSystemApi implements SystemApi {
     return const [];
   }
 
-  List<InformationCenterLanNetworkModel> _extractLanNetworks(Map networkData) {
+  Map _extractCompoundApiData(Map compoundResult, String targetApi) {
+    final resultList = compoundResult['result'];
+    if (resultList is! List) return const {};
+
+    for (final item in resultList) {
+      if (item is Map && item['api'] == targetApi && item['success'] == true) {
+        return item['data'] as Map? ?? const {};
+      }
+    }
+    return const {};
+  }
+
+  List<InformationCenterLanNetworkModel> _extractLanNetworks(Map networkData, Map ethernetData, Map gatewayListData) {
     final candidateLists = [
       networkData['lan'],
       networkData['lans'],
@@ -1076,7 +1135,14 @@ class DsmSystemApi implements SystemApi {
     return null;
   }
 
-  List<InformationCenterExternalDeviceModel> _extractExternalDevices(Map externalDeviceData) {
+  List<InformationCenterExternalDeviceModel> _extractExternalDevices(Map usbData, Map esataData) {
+    final usbDevices = _extractExternalDevicesFromMap(usbData);
+    final esataDevices = _extractExternalDevicesFromMap(esataData);
+    
+    return [...usbDevices, ...esataDevices];
+  }
+
+  List<InformationCenterExternalDeviceModel> _extractExternalDevicesFromMap(Map externalDeviceData) {
     final lists = [
       externalDeviceData['devices'],
       externalDeviceData['esata'],
