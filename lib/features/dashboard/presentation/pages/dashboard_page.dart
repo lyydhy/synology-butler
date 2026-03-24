@@ -9,7 +9,6 @@ import '../../../../domain/entities/system_status.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../providers/dashboard_providers.dart';
-import '../widgets/quick_entry_card.dart';
 import '../widgets/summary_card.dart';
 
 class DashboardPage extends ConsumerWidget {
@@ -75,6 +74,27 @@ class DashboardPage extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _IconEntry(
+                icon: Icons.info_outline_rounded,
+                label: '信息中心',
+                onTap: () => context.push('/information-center'),
+              ),
+              _IconEntry(
+                icon: Icons.apps_rounded,
+                label: '套件中心',
+                onTap: () => context.push('/packages'),
+              ),
+              _IconEntry(
+                icon: Icons.sync_alt_rounded,
+                label: '传输中心',
+                onTap: () => context.push('/transfers'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
             children: [
               Expanded(
                 child: _MetricCard(
@@ -94,27 +114,6 @@ class DashboardPage extends ConsumerWidget {
                 ),
               ),
             ],
-          ),
-          const SizedBox(height: 12),
-          QuickEntryCard(
-            icon: Icons.info_outline_rounded,
-            title: '信息中心',
-            subtitle: '查看系统、网络、存储和硬盘的完整信息',
-            onTap: () => context.push('/information-center'),
-          ),
-          const SizedBox(height: 12),
-          QuickEntryCard(
-            icon: Icons.apps_rounded,
-            title: '套件中心',
-            subtitle: '查看 DSM 套件商店、已安装应用和可更新项目',
-            onTap: () => context.push('/packages'),
-          ),
-          const SizedBox(height: 12),
-          QuickEntryCard(
-            icon: Icons.sync_alt_rounded,
-            title: '传输中心',
-            subtitle: '查看文件的上传和下载传输任务',
-            onTap: () => context.push('/transfers'),
           ),
           const SizedBox(height: 12),
           _VolumeSection(volumes: data?.volumes ?? const []),
@@ -204,6 +203,45 @@ class _HeroCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(realtimeText, style: theme.textTheme.labelLarge),
         ],
+      ),
+    );
+  }
+}
+
+class _IconEntry extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _IconEntry({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircleAvatar(
+              radius: 26,
+              backgroundColor: theme.colorScheme.primaryContainer,
+              child: Icon(icon, size: 26, color: theme.colorScheme.onPrimaryContainer),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+            ),
+          ],
+        ),
       ),
     );
   }
