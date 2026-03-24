@@ -746,17 +746,17 @@ abstract class AppLocalizations {
   /// **'导出到指定目录'**
   String get appLogsExportToDirectory;
 
-  /// No description provided for @appLogsClearCurrent.
+  /// No description provided for @appLogsDeleteCurrent.
   ///
   /// In zh, this message translates to:
-  /// **'清空当前日志'**
-  String get appLogsClearCurrent;
+  /// **'删除当前日志'**
+  String get appLogsDeleteCurrent;
 
-  /// No description provided for @appLogsClearAll.
+  /// No description provided for @appLogsDeleteAll.
   ///
   /// In zh, this message translates to:
-  /// **'清空全部日志内容'**
-  String get appLogsClearAll;
+  /// **'删除全部日志'**
+  String get appLogsDeleteAll;
 
   /// No description provided for @appLogsCopied.
   ///

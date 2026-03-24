@@ -335,10 +335,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appLogsExportToDirectory => 'Export to selected folder';
 
   @override
-  String get appLogsClearCurrent => 'Clear current log';
+  String get appLogsDeleteCurrent => 'Delete current log';
 
   @override
-  String get appLogsClearAll => 'Clear all log content';
+  String get appLogsDeleteAll => 'Delete all logs';
 
   @override
   String get appLogsCopied => 'Sanitized log copied';

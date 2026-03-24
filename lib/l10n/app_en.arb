@@ -107,8 +107,8 @@
   "appLogsCopySanitized": "Copy sanitized content",
   "appLogsExportToLogsDir": "Export to logs directory",
   "appLogsExportToDirectory": "Export to selected folder",
-  "appLogsClearCurrent": "Clear current log",
-  "appLogsClearAll": "Clear all log content",
+  "appLogsDeleteCurrent": "Delete current log",
+  "appLogsDeleteAll": "Delete all logs",
   "appLogsCopied": "Sanitized log copied",
   "appLogsExported": "Exported to: {path}",
   "@appLogsExported": {

@@ -177,7 +177,7 @@ class _AppLogsPageState extends State<AppLogsPage> {
                           await refresh();
                         },
                         icon: const Icon(Icons.delete_sweep_outlined),
-                        label: Text(l10n.appLogsClearCurrent),
+                        label: Text(l10n.appLogsDeleteCurrent),
                       ),
                     ],
                   ),
@@ -218,7 +218,7 @@ class _AppLogsPageState extends State<AppLogsPage> {
     await refresh();
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.appLogsClearAll)),
+      SnackBar(content: Text(l10n.appLogsDeleteAll)),
     );
   }
 

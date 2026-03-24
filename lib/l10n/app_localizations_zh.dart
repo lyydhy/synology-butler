@@ -333,10 +333,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appLogsExportToDirectory => '导出到指定目录';
 
   @override
-  String get appLogsClearCurrent => '清空当前日志';
+  String get appLogsDeleteCurrent => '删除当前日志';
 
   @override
-  String get appLogsClearAll => '清空全部日志内容';
+  String get appLogsDeleteAll => '删除全部日志';
 
   @override
   String get appLogsCopied => '脱敏日志已复制';

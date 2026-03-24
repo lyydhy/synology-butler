@@ -107,8 +107,8 @@
   "appLogsCopySanitized": "复制脱敏内容",
   "appLogsExportToLogsDir": "导出到日志目录",
   "appLogsExportToDirectory": "导出到指定目录",
-  "appLogsClearCurrent": "清空当前日志",
-  "appLogsClearAll": "清空全部日志内容",
+  "appLogsDeleteCurrent": "删除当前日志",
+  "appLogsDeleteAll": "删除全部日志",
   "appLogsCopied": "脱敏日志已复制",
   "appLogsExported": "已导出到：{path}",
   "@appLogsExported": {

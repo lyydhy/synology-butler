@@ -153,9 +153,7 @@ class LocalAppLogStore {
   }
 
   static Future<void> clearLogFile(String path) async {
-    final file = File(path);
-    if (!await file.exists()) return;
-    await file.writeAsString('');
+    await deleteLogFile(path);
   }
 
   static Future<void> deleteLogFile(String path) async {
@@ -167,7 +165,7 @@ class LocalAppLogStore {
   static Future<void> clearAllLogs() async {
     final files = await listLogFiles();
     for (final file in files) {
-      await File(file.path).writeAsString('');
+      await deleteLogFile(file.path);
     }
   }
 
