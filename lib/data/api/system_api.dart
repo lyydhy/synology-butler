@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../core/network/dio_client.dart';
 import '../../core/utils/dsm_logger.dart';
+import '../models/information_center_model.dart';
 import '../models/system_status_model.dart';
 
 abstract class SystemApi {
@@ -22,9 +23,174 @@ abstract class SystemApi {
     required String synoToken,
     String? cookieHeader,
   });
+
+  Future<InformationCenterModel> fetchInformationCenter({
+    required String baseUrl,
+    required String sid,
+    String? synoToken,
+    String? cookieHeader,
+    required String serverName,
+  });
 }
 
 class DsmSystemApi implements SystemApi {
+  @override
+  Future<InformationCenterModel> fetchInformationCenter({
+    required String baseUrl,
+    required String sid,
+    String? synoToken,
+    String? cookieHeader,
+    required String serverName,
+  }) async {
+    final client = DioClient(baseUrl: baseUrl).dio;
+    final headers = <String, dynamic>{};
+    if (synoToken != null && synoToken.isNotEmpty) {
+      headers['X-SYNO-TOKEN'] = synoToken;
+    }
+    if (cookieHeader != null && cookieHeader.isNotEmpty) {
+      headers['Cookie'] = cookieHeader;
+    }
+
+    Future<Map> postEntry(Map<String, dynamic> data) async {
+      final response = await client.post(
+        '/webapi/entry.cgi',
+        data: data,
+        options: Options(
+          headers: headers,
+          contentType: Headers.formUrlEncodedContentType,
+        ),
+      );
+      if (response.data is Map && response.data['success'] == true) {
+        return response.data['data'] as Map? ?? const {};
+      }
+      return const {};
+    }
+
+    DsmLogger.request(
+      module: 'System',
+      action: 'fetchInformationCenter',
+      method: 'POST',
+      path: baseUrl,
+      sid: sid,
+      synoToken: synoToken,
+      cookieHeader: cookieHeader,
+      extra: {
+        'apis': [
+          'SYNO.Core.System.info',
+          'SYNO.Core.System.Utilization.get',
+          'SYNO.Core.System.SystemHealth.get',
+          'SYNO.Core.System.Time.get',
+          'SYNO.Core.Network.get',
+          'SYNO.Core.ExternalDevice.Storage.eSATA.get',
+          'SYNO.Core.Storage.Disk.list',
+        ],
+      },
+    );
+
+    try {
+      final infoData = await postEntry({
+        'api': 'SYNO.Core.System',
+        'method': 'info',
+        'version': '1',
+        '_sid': sid,
+      });
+      final utilizationData = await postEntry({
+        'api': 'SYNO.Core.System.Utilization',
+        'method': 'get',
+        'version': '1',
+        'type': 'current',
+        '_sid': sid,
+      });
+      final systemHealthData = await postEntry({
+        'api': 'SYNO.Core.System.SystemHealth',
+        'method': 'get',
+        'version': '1',
+        '_sid': sid,
+      });
+      final timeData = await postEntry({
+        'api': 'SYNO.Core.System.Time',
+        'method': 'get',
+        'version': '1',
+        '_sid': sid,
+      });
+      final networkData = await postEntry({
+        'api': 'SYNO.Core.Network',
+        'method': 'get',
+        'version': '1',
+        '_sid': sid,
+      });
+      final esataData = await postEntry({
+        'api': 'SYNO.Core.ExternalDevice.Storage.eSATA',
+        'method': 'get',
+        'version': '1',
+        '_sid': sid,
+      });
+      final diskData = await postEntry({
+        'api': 'SYNO.Core.Storage.Disk',
+        'method': 'list',
+        'version': '1',
+        '_sid': sid,
+      });
+
+      final memory = utilizationData['memory'] as Map? ?? const {};
+      final cpu = utilizationData['cpu'] as Map? ?? const {};
+      final networks = _extractLanNetworks(networkData);
+      final externalDevices = _extractExternalDevices(esataData);
+      final disks = _extractDisks(diskData);
+      final versionText = await _fetchUpgradeVersion(
+            client: client,
+            sid: sid,
+            synoToken: synoToken,
+          ) ??
+          _buildVersionText(infoData);
+
+      final model = InformationCenterModel(
+        serverName: (infoData['hostname'] ?? infoData['server_name'] ?? serverName).toString(),
+        serialNumber: (infoData['serial'] ?? infoData['serial_number'])?.toString(),
+        modelName: (infoData['model'] ?? infoData['modelname'])?.toString(),
+        cpuName: (infoData['cpu_family'] ?? cpu['model'] ?? cpu['name'])?.toString(),
+        cpuCores: _toInt(infoData['cpu_cores'] ?? cpu['cores'] ?? cpu['core']),
+        memoryBytes: _toDouble(infoData['physical_memory'] ?? memory['real_total'] ?? memory['avail_real']),
+        dsmVersion: versionText,
+        systemTime: _resolveSystemTime(timeData),
+        uptimeText: systemHealthData['uptime']?.toString() ?? _formatUptime(infoData['uptime'] ?? infoData['uptime_seconds']),
+        thermalStatus: _resolveThermalStatus(systemHealthData),
+        timezone: _resolveTimezone(timeData),
+        dnsServer: _resolveDns(networkData),
+        gateway: _resolveGateway(networkData),
+        workgroup: _resolveWorkgroup(networkData),
+        externalDevices: externalDevices,
+        lanNetworks: networks,
+        disks: disks,
+      );
+
+      DsmLogger.success(
+        module: 'System',
+        action: 'fetchInformationCenter',
+        path: baseUrl,
+        response: {
+          'serverName': model.serverName,
+          'lanCount': model.lanNetworks.length,
+          'diskCount': model.disks.length,
+          'externalDeviceCount': model.externalDevices.length,
+        },
+      );
+
+      return model;
+    } catch (e) {
+      DsmLogger.failure(
+        module: 'System',
+        action: 'fetchInformationCenter',
+        path: baseUrl,
+        reason: e.toString(),
+        sid: sid,
+        synoToken: synoToken,
+        cookieHeader: cookieHeader,
+      );
+      rethrow;
+    }
+  }
+
   @override
   Future<SystemStatusModel> fetchOverview({
     required String baseUrl,
@@ -865,6 +1031,222 @@ class DsmSystemApi implements SystemApi {
     }
 
     return const [];
+  }
+
+  List<InformationCenterLanNetworkModel> _extractLanNetworks(Map networkData) {
+    final candidateLists = [
+      networkData['lan'],
+      networkData['lans'],
+      networkData['interfaces'],
+      networkData['networks'],
+      networkData['service'],
+    ];
+
+    for (final candidate in candidateLists) {
+      if (candidate is! List) continue;
+      final result = candidate.whereType<Map>().map((item) {
+        final ipv4 = _extractIpv4Map(item);
+        return InformationCenterLanNetworkModel(
+          name: (item['name'] ?? item['id'] ?? item['service'] ?? 'LAN').toString(),
+          macAddress: (item['mac'] ?? item['mac_address'] ?? item['hwaddr'])?.toString(),
+          ipAddress: (ipv4?['address'] ?? item['ip'] ?? item['ipaddr'])?.toString(),
+          subnetMask: (ipv4?['netmask'] ?? item['mask'] ?? item['subnet_mask'])?.toString(),
+        );
+      }).where((item) {
+        return item.macAddress != null || item.ipAddress != null || item.subnetMask != null;
+      }).toList();
+      if (result.isNotEmpty) {
+        return result;
+      }
+    }
+
+    return const [];
+  }
+
+  Map? _extractIpv4Map(Map item) {
+    final ipv4 = item['ipv4'];
+    if (ipv4 is Map) return ipv4;
+
+    final ip = item['ip'];
+    if (ip is Map) return ip;
+
+    final inet = item['inet'];
+    if (inet is Map) return inet;
+
+    return null;
+  }
+
+  List<InformationCenterExternalDeviceModel> _extractExternalDevices(Map externalDeviceData) {
+    final lists = [
+      externalDeviceData['devices'],
+      externalDeviceData['esata'],
+      externalDeviceData['usb'],
+      externalDeviceData['list'],
+    ];
+
+    for (final candidate in lists) {
+      if (candidate is! List) continue;
+      final result = candidate.whereType<Map>().map((item) {
+        return InformationCenterExternalDeviceModel(
+          name: (item['name'] ?? item['display_name'] ?? item['dev_name'] ?? '外接设备').toString(),
+          type: (item['type'] ?? item['device_type'])?.toString(),
+          status: (item['status'] ?? item['state'])?.toString(),
+        );
+      }).toList();
+      if (result.isNotEmpty) {
+        return result;
+      }
+    }
+
+    return const [];
+  }
+
+  List<InformationCenterDiskModel> _extractDisks(Map diskData) {
+    final candidateLists = [
+      diskData['disks'],
+      diskData['items'],
+      diskData['list'],
+    ];
+
+    for (final candidate in candidateLists) {
+      if (candidate is! List) continue;
+      final result = candidate.whereType<Map>().map((item) {
+        final tempValue = item['temp'] ?? item['temperature'] ?? item['smart_temp'];
+        return InformationCenterDiskModel(
+          name: (item['name'] ?? item['device'] ?? item['diskno'] ?? '硬盘').toString(),
+          serialNumber: (item['serial'] ?? item['serial_number'])?.toString(),
+          capacityBytes: _toDouble(item['size_total'] ?? item['size'] ?? item['total_size']),
+          temperatureText: _resolveTemperatureText(tempValue),
+        );
+      }).toList();
+      if (result.isNotEmpty) {
+        return result;
+      }
+    }
+
+    return const [];
+  }
+
+  String? _resolveSystemTime(Map timeData) {
+    final candidates = [
+      timeData['time'],
+      timeData['system_time'],
+      timeData['current_time'],
+      timeData['date_time'],
+    ];
+    for (final value in candidates) {
+      if (value != null && value.toString().trim().isNotEmpty) {
+        return value.toString().trim();
+      }
+    }
+    return null;
+  }
+
+  String? _resolveTimezone(Map timeData) {
+    final timezone = timeData['timezone'];
+    if (timezone is Map) {
+      final display = timezone['display'] ?? timezone['name'] ?? timezone['tz'];
+      if (display != null && display.toString().trim().isNotEmpty) {
+        return display.toString().trim();
+      }
+    }
+
+    final candidates = [timeData['tz'], timeData['timezone'], timeData['time_zone']];
+    for (final value in candidates) {
+      if (value != null && value.toString().trim().isNotEmpty) {
+        return value.toString().trim();
+      }
+    }
+    return null;
+  }
+
+  String? _resolveThermalStatus(Map systemHealthData) {
+    final thermal = systemHealthData['thermal'];
+    if (thermal is Map) {
+      final status = thermal['status'] ?? thermal['message'] ?? thermal['level'];
+      if (status != null && status.toString().trim().isNotEmpty) {
+        return status.toString().trim();
+      }
+    }
+
+    final fan = systemHealthData['fan'];
+    if (fan is Map) {
+      final status = fan['status'] ?? fan['message'] ?? fan['level'];
+      if (status != null && status.toString().trim().isNotEmpty) {
+        return status.toString().trim();
+      }
+    }
+
+    final candidates = [
+      systemHealthData['thermal_status'],
+      systemHealthData['fan_status'],
+      systemHealthData['cooling_status'],
+    ];
+    for (final value in candidates) {
+      if (value != null && value.toString().trim().isNotEmpty) {
+        return value.toString().trim();
+      }
+    }
+    return null;
+  }
+
+  String? _resolveDns(Map networkData) {
+    final dns = networkData['dns'];
+    if (dns is List) {
+      final values = dns.map((e) => e.toString()).where((e) => e.trim().isNotEmpty).toList();
+      if (values.isNotEmpty) {
+        return values.join(' / ');
+      }
+    }
+    if (dns != null && dns.toString().trim().isNotEmpty) {
+      return dns.toString().trim();
+    }
+    return networkData['dns_server']?.toString();
+  }
+
+  String? _resolveGateway(Map networkData) {
+    final candidates = [
+      networkData['gateway'],
+      networkData['default_gateway'],
+      networkData['gw'],
+    ];
+    for (final value in candidates) {
+      if (value != null && value.toString().trim().isNotEmpty) {
+        return value.toString().trim();
+      }
+    }
+    return null;
+  }
+
+  String? _resolveWorkgroup(Map networkData) {
+    final candidates = [
+      networkData['workgroup'],
+      networkData['work_group'],
+      networkData['domain'],
+    ];
+    for (final value in candidates) {
+      if (value != null && value.toString().trim().isNotEmpty) {
+        return value.toString().trim();
+      }
+    }
+    return null;
+  }
+
+  String? _resolveTemperatureText(dynamic value) {
+    if (value == null) return null;
+    final number = _toDouble(value);
+    if (number == null) {
+      final text = value.toString().trim();
+      return text.isEmpty ? null : text;
+    }
+    return '${number.toStringAsFixed(number % 1 == 0 ? 0 : 1)}°C';
+  }
+
+  int? _toInt(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    return int.tryParse(value.toString());
   }
 
   double? _toDouble(dynamic value) {

@@ -154,6 +154,12 @@ class SettingsPage extends ConsumerWidget {
             },
           ),
           ListTile(
+            title: const Text('信息中心'),
+            subtitle: const Text('查看系统、网络、存储和硬盘信息'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/information-center'),
+          ),
+          ListTile(
             title: const Text('套件中心'),
             subtitle: const Text('查看 DSM 套件商店、已安装应用和可更新项目'),
             trailing: const Icon(Icons.chevron_right),

@@ -158,6 +158,36 @@
     - 已使用 Flutter 绝对路径完成 `flutter pub get`、`flutter gen-l10n` 与 `flutter analyze`
     - 当前分析结果：`No issues found!`
 
+### 信息中心
+- 已新增独立“信息中心”页面
+- 页面当前已按信息架构分为：
+  - 基本信息
+  - 时间信息
+  - 外接设备
+  - 网络基础信息
+  - 局域网列表
+  - 存储空间
+  - 硬盘信息
+- 当前数据来源已开始接 DSM 系统接口聚合：
+  - `SYNO.Core.System info`
+  - `SYNO.Core.System.Utilization get`
+  - `SYNO.Core.System.SystemHealth get`
+  - `SYNO.Core.System.Time get`
+  - `SYNO.Core.Network get`
+  - `SYNO.Core.ExternalDevice.Storage.eSATA get`
+  - `SYNO.Core.Storage.Disk list`
+- 当前已可展示的核心字段包括：
+  - 序列号 / 型号 / CPU / CPU 核心 / 物理内存 / DSM 版本 / 系统时间 / 运行时间 / 散热状态
+  - 服务器地址 / 时区
+  - DNS / 网关 / 工作群组
+  - 多个 LAN 网卡的 MAC / IP / 子网掩码
+  - 外接设备名称 / 类型 / 状态
+  - 存储空间概览
+  - 硬盘名称 / 序列号 / 容量 / 温度
+- 首页已新增“信息中心”快捷入口
+- 设置页已新增“信息中心”入口
+- 当前实现已完成 `flutter analyze` 校验通过；后续仍需继续在真实 DSM 设备上补样例，收紧不同机型/版本下的字段兼容
+
 ### 主题与多语言
 - Material 3 主题模式切换（系统 / 浅色 / 深色）
 - 主题色切换（蓝 / 绿 / 橙 / 紫）

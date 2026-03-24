@@ -97,6 +97,13 @@ class DashboardPage extends ConsumerWidget {
           ),
           const SizedBox(height: 12),
           QuickEntryCard(
+            icon: Icons.info_outline_rounded,
+            title: '信息中心',
+            subtitle: '查看系统、网络、存储和硬盘的完整信息',
+            onTap: () => context.push('/information-center'),
+          ),
+          const SizedBox(height: 12),
+          QuickEntryCard(
             icon: Icons.apps_rounded,
             title: '套件中心',
             subtitle: '查看 DSM 套件商店、已安装应用和可更新项目',

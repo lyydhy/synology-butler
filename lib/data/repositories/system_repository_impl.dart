@@ -1,4 +1,5 @@
 import '../../core/utils/server_url_helper.dart';
+import '../../domain/entities/information_center.dart';
 import '../../domain/entities/nas_server.dart';
 import '../../domain/entities/nas_session.dart';
 import '../../domain/entities/system_status.dart';
@@ -9,6 +10,66 @@ class SystemRepositoryImpl implements SystemRepository {
   const SystemRepositoryImpl(this._systemApi);
 
   final SystemApi _systemApi;
+
+  @override
+  Future<InformationCenterData> fetchInformationCenter({
+    required NasServer server,
+    required NasSession session,
+  }) async {
+    final model = await _systemApi.fetchInformationCenter(
+      baseUrl: ServerUrlHelper.buildBaseUrl(server),
+      sid: session.sid,
+      synoToken: session.synoToken,
+      cookieHeader: session.cookieHeader,
+      serverName: server.name,
+    );
+
+    return InformationCenterData(
+      serverName: model.serverName,
+      serialNumber: model.serialNumber,
+      modelName: model.modelName,
+      cpuName: model.cpuName,
+      cpuCores: model.cpuCores,
+      memoryBytes: model.memoryBytes,
+      dsmVersion: model.dsmVersion,
+      systemTime: model.systemTime,
+      uptimeText: model.uptimeText,
+      thermalStatus: model.thermalStatus,
+      timezone: model.timezone,
+      dnsServer: model.dnsServer,
+      gateway: model.gateway,
+      workgroup: model.workgroup,
+      externalDevices: model.externalDevices
+          .map(
+            (item) => InformationCenterExternalDevice(
+              name: item.name,
+              type: item.type,
+              status: item.status,
+            ),
+          )
+          .toList(),
+      lanNetworks: model.lanNetworks
+          .map(
+            (item) => InformationCenterLanNetwork(
+              name: item.name,
+              macAddress: item.macAddress,
+              ipAddress: item.ipAddress,
+              subnetMask: item.subnetMask,
+            ),
+          )
+          .toList(),
+      disks: model.disks
+          .map(
+            (item) => InformationCenterDisk(
+              name: item.name,
+              serialNumber: item.serialNumber,
+              capacityBytes: item.capacityBytes,
+              temperatureText: item.temperatureText,
+            ),
+          )
+          .toList(),
+    );
+  }
 
   @override
   Future<SystemStatus> fetchOverview({
