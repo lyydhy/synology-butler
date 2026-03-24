@@ -32,7 +32,13 @@ final GoRouter appRouter = GoRouter(
     GoRoute(path: '/diagnostics', builder: (context, state) => const DiagnosticsPage()),
     GoRoute(path: '/transfers', builder: (context, state) => const TransfersPage()),
     GoRoute(path: '/packages', builder: (context, state) => const PackagesPage()),
-    GoRoute(path: '/information-center', builder: (context, state) => const InformationCenterPage()),
+    GoRoute(
+      path: '/information-center',
+      builder: (context, state) {
+        final tab = state.uri.queryParameters['tab'];
+        return InformationCenterPage(initialTab: tab);
+      },
+    ),
     GoRoute(
       path: '/packages/detail',
       builder: (context, state) {

@@ -5,11 +5,41 @@ import '../../../../domain/entities/information_center.dart';
 import '../../../dashboard/presentation/providers/dashboard_providers.dart';
 import '../providers/information_center_providers.dart';
 
-class InformationCenterPage extends ConsumerWidget {
-  const InformationCenterPage({super.key});
+class InformationCenterPage extends ConsumerStatefulWidget {
+  final String? initialTab;
+
+  const InformationCenterPage({super.key, this.initialTab});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<InformationCenterPage> createState() => _InformationCenterPageState();
+}
+
+class _InformationCenterPageState extends ConsumerState<InformationCenterPage> {
+  final ScrollController _scrollController = ScrollController();
+  final GlobalKey _storageKey = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialTab == 'storage') {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollToStorage();
+      });
+    }
+  }
+
+  void _scrollToStorage() {
+    if (_storageKey.currentContext != null) {
+      Scrollable.ensureVisible(
+        _storageKey.currentContext!,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final infoAsync = ref.watch(informationCenterProvider);
     final overviewAsync = ref.watch(dashboardOverviewSafeProvider);
     final theme = Theme.of(context);
@@ -32,6 +62,7 @@ class InformationCenterPage extends ConsumerWidget {
         data: (info) {
           final overview = overviewAsync.valueOrNull;
           return ListView(
+            controller: _scrollController,
             padding: const EdgeInsets.all(16),
             children: [
               Container(
@@ -130,6 +161,7 @@ class InformationCenterPage extends ConsumerWidget {
               ),
               const SizedBox(height: 12),
               _SectionCard(
+                key: _storageKey,
                 icon: Icons.storage_rounded,
                 title: '存储 · 存储空间',
                 children: [
@@ -188,6 +220,7 @@ class _SectionCard extends StatelessWidget {
   final List<Widget> children;
 
   const _SectionCard({
+    super.key,
     required this.icon,
     required this.title,
     required this.children,
