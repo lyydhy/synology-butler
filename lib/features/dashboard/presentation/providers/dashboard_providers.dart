@@ -98,18 +98,11 @@ final dashboardRealtimeOverviewProvider = StreamProvider<SystemStatus>((ref) {
       onError: (error, stackTrace) async {
         if (allowRefresh && _looksLikeRealtimeAuthFailure(error)) {
           try {
-            try {
-              await ref.read(refreshSynoTokenProvider)();
-            } catch (_) {
-              await ref.read(refreshRealtimeSessionProvider)();
-            }
-
+            await ref.read(recoverSessionProvider)();
             await startStream(allowRefresh: false);
             return;
           } catch (refreshError, refreshStackTrace) {
-            if (_isSessionExpiredError(refreshError)) {
-              await _handleSessionExpired(ref);
-            }
+            await _handleSessionExpired(ref);
             controller.addError(refreshError, refreshStackTrace);
             return;
           }

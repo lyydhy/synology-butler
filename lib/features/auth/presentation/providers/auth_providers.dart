@@ -187,44 +187,44 @@ final persistLoginProvider = Provider<Future<void> Function(NasServer, NasSessio
   };
 });
 
-final refreshSynoTokenProvider = Provider<Future<NasSession> Function()>((ref) {
-  return () async {
-    final server = ref.read(currentServerProvider);
-    final session = ref.read(currentSessionProvider);
+Future<NasSession>? _recoverSessionInFlight;
 
-    if (server == null || session == null) {
-      throw Exception('No active NAS session to refresh token');
-    }
+final recoverSessionProvider = Provider<Future<NasSession> Function()>((ref) {
+  return () {
+    return _recoverSessionInFlight ??= (() async {
+      final server = ref.read(currentServerProvider);
+      final username = ref.read(savedUsernameProvider);
+      final password = ref.read(savedPasswordProvider);
 
-    final refreshed = await ref.read(authRepositoryProvider).refreshSynoToken(
-          server: server,
-          session: session,
-        );
+      if (server == null) {
+        throw Exception('No active NAS server to recover session');
+      }
+      if (username == null || username.isEmpty || password == null || password.isEmpty) {
+        throw Exception('Missing saved credential for automatic re-login');
+      }
 
-    ref.read(currentSessionProvider.notifier).state = refreshed;
-    await _persistSessionSecrets(ref, refreshed);
-    return refreshed;
+      final recovered = await ref.read(authRepositoryProvider).login(
+            server: server,
+            username: username,
+            password: password,
+          );
+
+      ref.read(currentSessionProvider.notifier).state = recovered;
+      await _persistSessionSecrets(ref, recovered);
+      await ref.read(localStorageProvider).remove(AppConstants.sessionExpiredFlagKey);
+      return recovered;
+    })().whenComplete(() {
+      _recoverSessionInFlight = null;
+    });
   };
 });
 
+final refreshSynoTokenProvider = Provider<Future<NasSession> Function()>((ref) {
+  return () => ref.read(recoverSessionProvider)();
+});
+
 final refreshRealtimeSessionProvider = Provider<Future<NasSession> Function()>((ref) {
-  return () async {
-    final server = ref.read(currentServerProvider);
-    final session = ref.read(currentSessionProvider);
-
-    if (server == null || session == null) {
-      throw Exception('No active NAS session to refresh');
-    }
-
-    final refreshed = await ref.read(authRepositoryProvider).refreshRealtimeSession(
-          server: server,
-          session: session,
-        );
-
-    ref.read(currentSessionProvider.notifier).state = refreshed;
-    await _persistSessionSecrets(ref, refreshed);
-    return refreshed;
-  };
+  return () => ref.read(recoverSessionProvider)();
 });
 
 final switchCurrentServerProvider = Provider<Future<void> Function(NasServer)>((ref) {

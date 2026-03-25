@@ -122,7 +122,7 @@ class DashboardPage extends ConsumerWidget {
           if (realtimeFailed) ...[
             const SizedBox(height: 12),
             const Text(
-              '实时资源监控当前连接失败，系统已优先尝试 refreshSynoToken，再回退 refreshRealtimeSession。若仍失败，请查看控制台日志继续排查。',
+              '实时资源监控当前连接失败，系统会尝试自动重新登录并重建会话；若仍失败，请重新登录并查看控制台日志。',
               style: TextStyle(color: Colors.orange),
             ),
           ],
@@ -301,44 +301,52 @@ class _VolumeSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (volumes.isEmpty) {
-      return const SummaryCard(
+      return SummaryCard(
         title: '存储空间',
         subtitle: '暂未获取到存储空间信息',
-        trailing: Icon(Icons.storage_rounded),
+        trailing: const Icon(Icons.storage_rounded),
+        onTap: () => context.push('/information-center?tab=storage'),
       );
     }
 
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: 0.14)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.storage_rounded),
-              const SizedBox(width: 10),
-              Text(
-                '存储空间',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          ...volumes.asMap().entries.map(
-            (entry) => Padding(
-              padding: EdgeInsets.only(bottom: entry.key == volumes.length - 1 ? 0 : 14),
-              child: _VolumeUsageTile(
-                volume: entry.value,
-                index: entry.key,
+    return InkWell(
+      borderRadius: BorderRadius.circular(20),
+      onTap: () => context.push('/information-center?tab=storage'),
+      child: Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: 0.14)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.storage_rounded),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    '存储空间',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+                  ),
+                ),
+                const Icon(Icons.chevron_right_rounded, size: 20, color: Colors.grey),
+              ],
+            ),
+            const SizedBox(height: 14),
+            ...volumes.asMap().entries.map(
+              (entry) => Padding(
+                padding: EdgeInsets.only(bottom: entry.key == volumes.length - 1 ? 0 : 14),
+                child: _VolumeUsageTile(
+                  volume: entry.value,
+                  index: entry.key,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
