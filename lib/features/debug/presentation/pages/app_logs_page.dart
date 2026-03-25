@@ -17,6 +17,46 @@ class _AppLogsPageState extends State<AppLogsPage> {
   String? errorMessage;
   List<LocalAppLogFileSummary> logFiles = const [];
 
+  Future<void> _showCopyableErrorDialog(String title, Object error) async {
+    final text = error.toString();
+    if (!mounted) return;
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text(title),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: SelectableText(text),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                await Clipboard.setData(ClipboardData(text: text));
+                if (dialogContext.mounted) {
+                  Navigator.of(dialogContext).pop();
+                }
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('错误内容已复制')),
+                  );
+                }
+              },
+              child: const Text('复制'),
+            ),
+            FilledButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+              },
+              child: const Text('关闭'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -224,10 +264,7 @@ class _AppLogsPageState extends State<AppLogsPage> {
       },
     );
     } catch (error) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('日志打开失败: $error')),
-      );
+      await _showCopyableErrorDialog('日志打开失败', error);
     }
   }
 
@@ -269,10 +306,22 @@ class _AppLogsPageState extends State<AppLogsPage> {
                         const SizedBox(height: 8),
                         Text(errorMessage!, textAlign: TextAlign.center),
                         const SizedBox(height: 16),
-                        FilledButton.icon(
-                          onPressed: refresh,
-                          icon: const Icon(Icons.refresh),
-                          label: const Text('重试'),
+                        Wrap(
+                          spacing: 12,
+                          runSpacing: 12,
+                          alignment: WrapAlignment.center,
+                          children: [
+                            OutlinedButton.icon(
+                              onPressed: () => _showCopyableErrorDialog('日志中心加载失败', errorMessage!),
+                              icon: const Icon(Icons.copy_all_outlined),
+                              label: const Text('复制错误'),
+                            ),
+                            FilledButton.icon(
+                              onPressed: refresh,
+                              icon: const Icon(Icons.refresh),
+                              label: const Text('重试'),
+                            ),
+                          ],
                         ),
                       ],
                     ),
