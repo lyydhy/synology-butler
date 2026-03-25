@@ -127,6 +127,15 @@ final dashboardRealtimeOverviewProvider = StreamProvider<SystemStatus>((ref) {
 
   final reconnectCallback = () async {
     if (controller.isClosed) return;
+    final latestSession = ref.read(currentSessionProvider);
+    final sidPreview = latestSession == null
+        ? 'missing'
+        : (latestSession.sid.length > 8 ? latestSession.sid.substring(0, 8) : latestSession.sid);
+    final synoTokenPreview = latestSession?.synoToken == null || latestSession!.synoToken!.isEmpty
+        ? 'missing'
+        : (latestSession.synoToken!.length > 8 ? latestSession.synoToken!.substring(0, 8) : latestSession.synoToken!);
+    // ignore: avoid_print
+    print('[Realtime][Reconnect] restart stream with latest session sid=$sidPreview token=$synoTokenPreview');
     await startStream(allowRefresh: false);
   };
   RealtimeReconnectBridge.callback = reconnectCallback;

@@ -214,6 +214,12 @@ final recoverSessionProvider = Provider<Future<NasSession> Function()>((ref) {
       ref.read(currentSessionProvider.notifier).state = recovered;
       await _persistSessionSecrets(ref, recovered);
       await ref.read(localStorageProvider).remove(AppConstants.sessionExpiredFlagKey);
+      final sidPreview = recovered.sid.length > 8 ? recovered.sid.substring(0, 8) : recovered.sid;
+      final synoTokenPreview = recovered.synoToken == null || recovered.synoToken!.isEmpty
+          ? 'missing'
+          : (recovered.synoToken!.length > 8 ? recovered.synoToken!.substring(0, 8) : recovered.synoToken!);
+      // ignore: avoid_print
+      print('[Auth][Recover] session refreshed, trigger realtime reconnect sid=$sidPreview token=$synoTokenPreview');
       await RealtimeReconnectBridge.callback?.call();
       return recovered;
     })().whenComplete(() {
