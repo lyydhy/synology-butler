@@ -42,9 +42,9 @@ class OverviewTab extends StatelessWidget {
                 spacing: 10,
                 runSpacing: 10,
                 children: [
-                  Badge(text: info.modelName ?? '型号未知', icon: Icons.memory_outlined),
-                  Badge(text: info.serialNumber ?? '序列号未知', icon: Icons.qr_code_2_outlined),
-                  Badge(text: info.timezone ?? '时区未知', icon: Icons.schedule_outlined),
+                  InfoBadge(text: info.modelName ?? '型号未知', icon: Icons.memory_outlined),
+                  InfoBadge(text: info.serialNumber ?? '序列号未知', icon: Icons.qr_code_2_outlined),
+                  InfoBadge(text: info.timezone ?? '时区未知', icon: Icons.schedule_outlined),
                 ],
               ),
             ],

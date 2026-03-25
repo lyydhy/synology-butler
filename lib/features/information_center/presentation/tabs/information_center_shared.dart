@@ -121,11 +121,11 @@ class EmptyHint extends StatelessWidget {
   }
 }
 
-class Badge extends StatelessWidget {
+class InfoBadge extends StatelessWidget {
   final String text;
   final IconData icon;
 
-  const Badge({super.key, required this.text, required this.icon});
+  const InfoBadge({super.key, required this.text, required this.icon});
 
   @override
   Widget build(BuildContext context) {
@@ -187,12 +187,12 @@ class DiskTile extends StatelessWidget {
       ),
       title: Text(disk.name),
       subtitle: Text(
-        [disk.type, disk.status, disk.temperature == null ? null : '${disk.temperature!.toStringAsFixed(0)}°C']
+        [disk.serialNumber, disk.temperatureText]
             .whereType<String>()
             .where((e) => e.trim().isNotEmpty)
             .join(' · '),
       ),
-      trailing: Text(_formatBytes(disk.sizeBytes)),
+      trailing: Text(_formatBytes(disk.capacityBytes)),
     );
   }
 }

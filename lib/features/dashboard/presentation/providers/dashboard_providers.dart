@@ -125,7 +125,7 @@ final dashboardRealtimeOverviewProvider = StreamProvider<SystemStatus>((ref) {
     },
   );
 
-  final reconnectCallback = () async {
+  Future<void> reconnectCallback() async {
     if (controller.isClosed) return;
     final latestSession = ref.read(currentSessionProvider);
     final sidPreview = latestSession == null
@@ -137,7 +137,7 @@ final dashboardRealtimeOverviewProvider = StreamProvider<SystemStatus>((ref) {
     // ignore: avoid_print
     print('[Realtime][Reconnect] restart stream with latest session sid=$sidPreview token=$synoTokenPreview');
     await startStream(allowRefresh: false);
-  };
+  }
   RealtimeReconnectBridge.callback = reconnectCallback;
 
   ref.onDispose(() async {
