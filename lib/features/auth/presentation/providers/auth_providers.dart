@@ -69,7 +69,7 @@ final restoreSessionProvider = FutureProvider<bool>((ref) async {
   );
 
   ref.read(savedUsernameProvider.notifier).state = savedUsername;
-  ref.read(savedPasswordProvider.notifier).state = savedRememberPassword == '1' ? savedPassword : null;
+  ref.read(savedPasswordProvider.notifier).state = savedPassword;
   ref.read(savedRememberPasswordProvider.notifier).state = savedRememberPassword == '1';
   ref.read(savedServerUsernamesProvider.notifier).state = savedServerUsernames;
   ref.read(savedServerLastUsedProvider.notifier).state = savedServerLastUsed;
@@ -87,7 +87,7 @@ final restoreSessionProvider = FutureProvider<bool>((ref) async {
   }
   final currentServer = matched.first;
 
-  AppDioFactory.setConnection(
+  setConnection(
     server: currentServer,
     session: NasSession(
       serverId: currentServer.id,
@@ -104,7 +104,7 @@ final restoreSessionProvider = FutureProvider<bool>((ref) async {
 
 final clearSessionProvider = Provider<Future<void> Function({bool markExpired})>((ref) {
   return ({bool markExpired = false}) async {
-    AppDioFactory.clearSession();
+    clearSession();
 
     final localStorage = ref.read(localStorageProvider);
     final secureStorage = ref.read(secureStorageProvider);
@@ -151,6 +151,9 @@ Future<void> _persistSessionSecrets(Ref ref, NasSession session) async {
 
 final persistLoginProvider = Provider<Future<void> Function(NasServer, NasSession, String, {String? password, required bool rememberPassword})>((ref) {
   return (server, session, username, {String? password, required bool rememberPassword}) async {
+    // Keep memory store in sync with storage — prevents stale state on hot-reload
+    setConnection(server: server, session: session);
+
     final localStorage = ref.read(localStorageProvider);
     final secureStorage = ref.read(secureStorageProvider);
 
@@ -166,6 +169,13 @@ final persistLoginProvider = Provider<Future<void> Function(NasServer, NasSessio
     ref.read(savedRememberPasswordProvider.notifier).state = rememberPassword;
     ref.read(savedPasswordProvider.notifier).state = rememberPassword ? password : null;
 
+    // Persist in connectionStore for hot-reload-safe session recovery
+    if (rememberPassword && password != null && password.isNotEmpty) {
+      connectionStore.setCredentials(username: username, password: password);
+    } else {
+      connectionStore.clearCredentials();
+    }
+
     final usernameMap = {...ref.read(savedServerUsernamesProvider)};
     usernameMap[server.id] = username;
     ref.read(savedServerUsernamesProvider.notifier).state = usernameMap;
@@ -180,7 +190,7 @@ final persistLoginProvider = Provider<Future<void> Function(NasServer, NasSessio
     await localStorage.writeString(AppConstants.savedCurrentServerIdKey, server.id);
     await localStorage.writeString(AppConstants.savedUsernameKey, username);
     await localStorage.writeString(AppConstants.savedRememberPasswordKey, rememberPassword ? '1' : '0');
-    if (rememberPassword && password != null && password.isNotEmpty) {
+    if ( password != null && password.isNotEmpty) {
       await secureStorage.write('${AppConstants.savedPasswordPrefix}${server.id}', password);
     } else {
       await secureStorage.delete('${AppConstants.savedPasswordPrefix}${server.id}');
@@ -195,9 +205,12 @@ Future<NasSession>? _recoverSessionInFlight;
 final recoverSessionProvider = Provider<Future<NasSession> Function()>((ref) {
   Future<NasSession> recover() {
     return _recoverSessionInFlight ??= (() async {
-      final server = AppDioFactory.connectionStore.server;
-      final username = ref.read(savedUsernameProvider);
-      final password = ref.read(savedPasswordProvider);
+      final server = connectionStore.server;
+      // Read credentials from connectionStore first (survives hot-reload).
+      // Fall back to Riverpod providers in case this is a cold start.
+      final stored = connectionStore.credentials;
+      final username = stored?.username ?? ref.read(savedUsernameProvider);
+      final password = stored?.password ?? ref.read(savedPasswordProvider);
 
       if (server == null) {
         throw Exception('No active NAS server to recover session');
@@ -212,7 +225,7 @@ final recoverSessionProvider = Provider<Future<NasSession> Function()>((ref) {
             password: password,
           );
 
-      AppDioFactory.setSession(recovered);
+      setSession(recovered);
       await _persistSessionSecrets(ref, recovered);
       await ref.read(localStorageProvider).remove(AppConstants.sessionExpiredFlagKey);
       final sidPreview = recovered.sid.length > 8 ? recovered.sid.substring(0, 8) : recovered.sid;
@@ -250,8 +263,8 @@ final refreshRealtimeSessionProvider = Provider<Future<NasSession> Function()>((
 
 final switchCurrentServerProvider = Provider<Future<void> Function(NasServer)>((ref) {
   return (server) async {
-    AppDioFactory.setServer(server);
-    AppDioFactory.clearSession();
+    setServer(server);
+    clearSession();
     final localStorage = ref.read(localStorageProvider);
     final secureStorage = ref.read(secureStorageProvider);
     await localStorage.writeString(AppConstants.savedCurrentServerIdKey, server.id);
@@ -290,9 +303,9 @@ final updateServerProvider = Provider<Future<void> Function(NasServer)>((ref) {
         await _persistServerLastUsed(ref, lastUsed);
       }
 
-      final current = AppDioFactory.connectionStore.server;
+      final current = connectionStore.server;
       if (current != null && (current.id == oldServerId || current.name == server.name)) {
-        AppDioFactory.setServer(server);
+        setServer(server);
         final localStorage = ref.read(localStorageProvider);
         await localStorage.writeString(AppConstants.savedCurrentServerIdKey, server.id);
       }
@@ -316,10 +329,10 @@ final deleteServerProvider = Provider<Future<void> Function(NasServer)>((ref) {
     await _persistServerUsernames(ref, usernames);
     await _persistServerLastUsed(ref, lastUsed);
 
-    final current = AppDioFactory.connectionStore.server;
+    final current = connectionStore.server;
     if (current?.id == server.id) {
-      AppDioFactory.clearAll();
-      AppDioFactory.clearSession();
+      clearAll();
+      clearSession();
       await localStorage.remove(AppConstants.savedCurrentServerIdKey);
       await secureStorage.delete(AppConstants.savedSidKey);
       await secureStorage.delete(AppConstants.savedSynoTokenKey);
@@ -332,8 +345,8 @@ final deleteServerProvider = Provider<Future<void> Function(NasServer)>((ref) {
 
 final logoutProvider = Provider<Future<void> Function()>((ref) {
   return () async {
-    final server = AppDioFactory.connectionStore.server;
-    final session = AppDioFactory.connectionStore.session;
+    final server = connectionStore.server;
+    final session = connectionStore.session;
 
     if (server != null && session != null) {
       try {
@@ -341,7 +354,7 @@ final logoutProvider = Provider<Future<void> Function()>((ref) {
       } catch (_) {}
     }
 
-    AppDioFactory.clearAll();
+    clearAll();
 
     final localStorage = ref.read(localStorageProvider);
     await localStorage.remove(AppConstants.savedCurrentServerIdKey);

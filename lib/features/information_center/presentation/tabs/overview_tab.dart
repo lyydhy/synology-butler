@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:syno_keeper/core/utils/time_util.dart';
 
 import '../../../../domain/entities/information_center.dart';
 import 'information_center_shared.dart';
@@ -33,18 +34,27 @@ class OverviewTab extends StatelessWidget {
             children: [
               Text(
                 info.serverName,
-                style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
+                style: theme.textTheme.headlineSmall
+                    ?.copyWith(fontWeight: FontWeight.w800),
               ),
               const SizedBox(height: 6),
-              Text(info.dsmVersion?.trim().isNotEmpty == true ? info.dsmVersion! : 'DSM 版本未知'),
+              Text(info.dsmVersion?.trim().isNotEmpty == true
+                  ? info.dsmVersion!
+                  : 'DSM 版本未知'),
               const SizedBox(height: 14),
               Wrap(
                 spacing: 10,
                 runSpacing: 10,
                 children: [
-                  InfoBadge(text: info.modelName ?? '型号未知', icon: Icons.memory_outlined),
-                  InfoBadge(text: info.serialNumber ?? '序列号未知', icon: Icons.qr_code_2_outlined),
-                  InfoBadge(text: info.timezone ?? '时区未知', icon: Icons.schedule_outlined),
+                  InfoBadge(
+                      text: info.modelName ?? '型号未知',
+                      icon: Icons.memory_outlined),
+                  InfoBadge(
+                      text: info.serialNumber ?? '序列号未知',
+                      icon: Icons.qr_code_2_outlined),
+                  InfoBadge(
+                      text: info.timezone ?? '时区未知',
+                      icon: Icons.schedule_outlined),
                 ],
               ),
             ],
@@ -58,12 +68,20 @@ class OverviewTab extends StatelessWidget {
             InfoRow(label: '产品序列号', value: info.serialNumber),
             InfoRow(label: '产品型号', value: info.modelName),
             InfoRow(label: 'CPU', value: info.cpuName),
-            InfoRow(label: 'CPU 核心', value: info.cpuCores?.toString()),
-            InfoRow(label: '物理内存', value: formatBytes(info.memoryBytes)),
+            InfoRow(label: 'CPU 核心', value: info.cpuClockSpeedStr),
+            InfoRow(label: '物理内存', value: "${info.ramSize}MB"),
             InfoRow(label: 'DSM 版本', value: info.dsmVersion),
-            InfoRow(label: '系统时间', value: info.systemTime),
-            InfoRow(label: '运行时间', value: info.uptimeText),
-            InfoRow(label: '散热状态', value: info.thermalStatus),
+            InfoRow(label: '系统时间', value: info.time),
+            InfoRow(label: '运行时间', value: parseOpTime(info.uptimeText) ?? ''),
+            InfoRow(
+                label: '散热状态',
+                value:
+                    "${info.sysTemp}℃ ${info.temperatureWarning == null ? ((info.sysTemp ?? 0) > 80 ? "警告" : "正常") : (info.temperatureWarning == true ? "警告" : "正常")}",
+                color: info.temperatureWarning == null
+                    ? ((info.sysTemp ?? 0) > 80 ? Colors.red : Colors.green)
+                    : (info.temperatureWarning == true
+                        ? Colors.red
+                        : Colors.green)),
           ],
         ),
         const SizedBox(height: 12),
@@ -84,7 +102,10 @@ class OverviewTab extends StatelessWidget {
               : info.externalDevices
                   .map((item) => InfoTile(
                         title: item.name,
-                        subtitle: [item.type, item.status].whereType<String>().where((e) => e.trim().isNotEmpty).join(' · '),
+                        subtitle: [item.type, item.status]
+                            .whereType<String>()
+                            .where((e) => e.trim().isNotEmpty)
+                            .join(' · '),
                         icon: Icons.usb_rounded,
                       ))
                   .toList(),

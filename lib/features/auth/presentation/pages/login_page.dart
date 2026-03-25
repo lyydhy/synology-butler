@@ -1,4 +1,4 @@
-import 'package:dio/dio.dart';
+﻿import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,7 +6,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/error/error_mapper.dart';
-import '../../../../core/network/dio_client.dart';
 import '../../../../core/utils/local_app_logger.dart';
 import '../../../../core/utils/server_url_helper.dart';
 import '../../../../domain/entities/nas_server.dart';
@@ -299,7 +298,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
     final server = buildServer();
     final username = usernameController.text.trim();
-    AppDioFactory.setServer(server);
+    setServer(server);
 
     await LocalAppLogger.log(
       level: 'info',
@@ -346,7 +345,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           'synoTokenPresent': session.synoToken != null && session.synoToken!.isNotEmpty,
         },
       );
-      AppDioFactory.setSession(session);
+      setSession(session);
       await ref.read(persistLoginProvider)(server, session, username, password: passwordController.text, rememberPassword: rememberPassword);
       if (mounted) context.go('/home');
     } catch (e) {
@@ -471,34 +470,119 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     );
   }
 
-  Widget _buildServerSelector(List<NasServer> savedServers, Map<String, String> savedUsernames, Map<String, int> lastUsedMap) {
-    if (savedServers.isEmpty) return const SizedBox.shrink();
-    final sortedServers = [...savedServers]..sort((a, b) => (lastUsedMap[b.id] ?? 0).compareTo(lastUsedMap[a.id] ?? 0));
-    return DropdownButtonFormField<String>(
-      initialValue: selectedServerId != null && sortedServers.any((server) => server.id == selectedServerId) ? selectedServerId : null,
-      decoration: _inputDecoration(label: '历史设备', icon: Icons.history_rounded),
-      items: sortedServers.map((server) {
-        final username = savedUsernames[server.id];
-        final lastUsed = _formatLastUsed(lastUsedMap[server.id]);
-        final subtitle = [if (username != null && username.isNotEmpty) username, lastUsed].join(' · ');
-        return DropdownMenuItem<String>(
-          value: server.id,
+  Widget _buildServerSelector() {
+    return SizedBox(
+      width: double.infinity,
+      child: TextButton.icon(
+        onPressed: () => _showServerHistorySheet(
+          ref.watch(savedServersProvider),
+          ref.watch(savedServerUsernamesProvider),
+          ref.watch(savedServerLastUsedProvider),
+        ),
+        icon: const Icon(Icons.history_rounded, size: 18),
+        label: const Text('从历史登录设备中选择', style: TextStyle(fontWeight: FontWeight.w600)),
+        style: TextButton.styleFrom(
+          foregroundColor: const Color(0xFF2563EB),
+          padding: const EdgeInsets.symmetric(vertical: 14),
+        ),
+      ),
+    );
+  }
+
+  void _showServerHistorySheet(
+    List<NasServer> savedServers,
+    Map<String, String> savedUsernames,
+    Map<String, int> lastUsedMap,
+  ) {
+    final sortedServers = [...savedServers]..sort(
+      (a, b) => (lastUsedMap[b.id] ?? 0).compareTo(lastUsedMap[a.id] ?? 0),
+    );
+
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetCtx) => DraggableScrollableSheet(
+        initialChildSize: 0.55,
+        minChildSize: 0.3,
+        maxChildSize: 0.85,
+        builder: (_, scrollController) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(server.name, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w700)),
-              Text(subtitle, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+              // Handle bar
+              Container(
+                margin: const EdgeInsets.only(top: 12, bottom: 8),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              // Header
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                child: Row(
+                  children: [
+                    const Icon(Icons.history_rounded, color: Color(0xFF2563EB)),
+                    const SizedBox(width: 10),
+                    const Text('历史登录设备', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+                    const Spacer(),
+                    IconButton(
+                      onPressed: () => Navigator.pop(sheetCtx),
+                      icon: const Icon(Icons.close_rounded),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              // Server list
+              Expanded(
+                child: ListView.builder(
+                  controller: scrollController,
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  itemCount: sortedServers.length,
+                  itemBuilder: (_, index) {
+                    final server = sortedServers[index];
+                    final username = savedUsernames[server.id];
+                    final lastUsed = _formatLastUsed(lastUsedMap[server.id]);
+
+                    return ListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 6),
+                      leading: CircleAvatar(
+                        radius: 22,
+                        backgroundColor: const Color(0xFFEFF6FF),
+                        child: Text(
+                          _buildServerInitials(server),
+                          style: const TextStyle(
+                            color: Color(0xFF2563EB),
+                            fontWeight: FontWeight.w700,
+                            fontSize: 15,
+                          ),
+                        ),
+                      ),
+                      title: Text(server.name, style: const TextStyle(fontWeight: FontWeight.w700)),
+                      subtitle: Text(
+                        [if (username != null && username.isNotEmpty) username, lastUsed].join(' · '),
+                        style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+                      ),
+                      trailing: const Icon(Icons.chevron_right_rounded, color: Colors.grey),
+                      onTap: () {
+                        Navigator.pop(sheetCtx);
+                        applyServerPreset(server, username: username);
+                      },
+                    );
+                  },
+                ),
+              ),
             ],
           ),
-        );
-      }).toList(),
-      onChanged: (value) {
-        if (value == null) return;
-        final matched = sortedServers.where((server) => server.id == value);
-        if (matched.isEmpty) return;
-        applyServerPreset(matched.first, username: savedUsernames[matched.first.id]);
-      },
+        ),
+      ),
     );
   }
 
@@ -551,8 +635,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           ]),
           const SizedBox(height: 14),
           _buildSelectedServerSummary(selectedServer),
-          const SizedBox(height: 12),
-          _buildServerSelector(ref.watch(savedServersProvider), ref.watch(savedServerUsernamesProvider), ref.watch(savedServerLastUsedProvider)),
           const SizedBox(height: 10),
           if (!quickLoginEditUsername)
             Container(
@@ -764,6 +846,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   ]),
                 ),
                 _buildQuickLoginCard(l10n, savedServers),
+                _buildServerSelector(),
               ] else ...[
                 Padding(
                   padding: const EdgeInsets.only(left: 2, bottom: 12),

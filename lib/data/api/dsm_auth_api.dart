@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 
-import '../../core/network/dio_client.dart';
+import '../../core/network/app_dio.dart';
 import '../../core/utils/dsm_logger.dart';
 import '../models/nas_server_model.dart';
 import 'auth_api.dart';

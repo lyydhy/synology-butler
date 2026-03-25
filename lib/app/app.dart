@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
+import '../features/auth/presentation/providers/auth_providers.dart';
 import '../features/preferences/providers/preferences_providers.dart';
 import '../l10n/app_localizations.dart';
 import 'router.dart';
@@ -16,6 +17,7 @@ class QunhuiManagerApp extends ConsumerWidget {
     final themeMode = ref.watch(themeModeProvider);
     final themeColor = ref.watch(themeColorProvider);
     final localeOption = ref.watch(localeProvider);
+    final _ = ref.watch(recoverSessionProvider);
     final seedColor = seedColorFor(themeColor);
 
     return MaterialApp.router(

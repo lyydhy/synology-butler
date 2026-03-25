@@ -5,29 +5,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router.dart';
+import '../../../../core/network/app_dio.dart';
 import '../../../../core/network/realtime_reconnect_bridge.dart';
 import '../../../../data/api/system_api.dart';
 import '../../../../data/repositories/system_repository_impl.dart';
 import '../../../../domain/entities/system_status.dart';
 import '../../../../domain/repositories/system_repository.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
-import '../../../../core/network/app_dio.dart';
 
 final systemApiProvider = Provider<SystemApi>((ref) {
-  final server = AppDioFactory.connectionStore.server;
-  if (server == null) {
-    throw Exception('No active NAS session');
-  }
-
-  return DsmSystemApi(
-    dio: AppDioFactory.businessDio(ignoreBadCertificate: server.ignoreBadCertificate),
-  );
+  final server = connectionStore.server;
+  return DsmSystemApi(ignoreBadCertificate: server?.ignoreBadCertificate ?? false);
 });
 
 final systemRepositoryProvider = Provider<SystemRepository>((ref) {
-  return SystemRepositoryImpl(
-    ref.read(systemApiProvider),
-  );
+  return SystemRepositoryImpl(ref.read(systemApiProvider));
 });
 
 bool _isSessionExpiredError(Object error) {
@@ -73,11 +65,10 @@ final dashboardBaseOverviewProvider = FutureProvider<SystemStatus>((ref) async {
 });
 
 final dashboardRealtimeOverviewProvider = StreamProvider<SystemStatus>((ref) {
-
   late final StreamController<SystemStatus> controller;
   StreamSubscription<SystemStatus>? subscription;
 
-  Future<void> startStream({bool allowRefresh = true}) async {
+  Future<void> startStream() async {
     try {
       final source = ref.read(systemRepositoryProvider).watchOverview();
 
@@ -118,16 +109,15 @@ final dashboardRealtimeOverviewProvider = StreamProvider<SystemStatus>((ref) {
 
   Future<void> reconnectCallback() async {
     if (controller.isClosed) return;
-    final latestSession = AppDioFactory.connectionStore.session;
+    final latestSession = connectionStore.session;
     final sidPreview = latestSession == null
         ? 'missing'
         : (latestSession.sid.length > 8 ? latestSession.sid.substring(0, 8) : latestSession.sid);
     final synoTokenPreview = latestSession?.synoToken == null || latestSession!.synoToken!.isEmpty
         ? 'missing'
         : (latestSession.synoToken!.length > 8 ? latestSession.synoToken!.substring(0, 8) : latestSession.synoToken!);
-    // ignore: avoid_print
     debugPrint('[Realtime][Reconnect] restart stream with latest session sid=$sidPreview token=$synoTokenPreview');
-    await startStream(allowRefresh: false);
+    await startStream();
   }
 
   RealtimeReconnectBridge.callback = reconnectCallback;

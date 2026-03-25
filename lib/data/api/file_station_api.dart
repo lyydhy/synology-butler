@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 
+import '../../core/network/app_dio.dart';
 import '../../core/utils/dsm_logger.dart';
 import '../models/file_item_model.dart';
 
@@ -51,9 +52,7 @@ abstract class FileStationApi {
 }
 
 class DsmFileStationApi implements FileStationApi {
-  DsmFileStationApi({required Dio dio}) : _dio = dio;
-
-  final Dio _dio;
+  Dio get _dio => businessDio();
 
   @override
   Future<String> readTextFile({
