@@ -208,15 +208,7 @@ class TransferController extends StateNotifier<List<TransferTask>> {
   }) async {
     _update(id, status: TransferTaskStatus.running, progress: 0.1);
     try {
-      final server = _ref.read(currentServerProvider);
-      final session = _ref.read(currentSessionProvider);
-      if (server == null || session == null) {
-        throw Exception('No active NAS session');
-      }
-
       final bytes = await _ref.read(fileRepositoryProvider).downloadFile(
-            server: server,
-            session: session,
             path: remotePath,
             onReceiveProgress: (received, total) {
               if (total <= 0) return;

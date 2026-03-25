@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -10,11 +11,15 @@ import '../../../../data/repositories/system_repository_impl.dart';
 import '../../../../domain/entities/system_status.dart';
 import '../../../../domain/repositories/system_repository.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
+import '../../../auth/presentation/providers/business_connection_providers.dart';
 
 final systemApiProvider = Provider<SystemApi>((ref) => DsmSystemApi());
 
 final systemRepositoryProvider = Provider<SystemRepository>((ref) {
-  return SystemRepositoryImpl(ref.read(systemApiProvider));
+  return SystemRepositoryImpl(
+    ref.read(systemApiProvider),
+    ref.watch(businessConnectionContextProvider),
+  );
 });
 
 bool _isSessionExpiredError(Object error) {
@@ -49,18 +54,8 @@ Future<void> _handleSessionExpired(Ref ref) async {
 }
 
 final dashboardBaseOverviewProvider = FutureProvider<SystemStatus>((ref) async {
-  final server = ref.watch(currentServerProvider);
-  final session = ref.watch(currentSessionProvider);
-
-  if (server == null || session == null) {
-    throw Exception('No active NAS session');
-  }
-
   try {
-    return await ref.read(systemRepositoryProvider).fetchOverview(
-          server: server,
-          session: session,
-        );
+    return await ref.read(systemRepositoryProvider).fetchOverview();
   } catch (error) {
     if (_isSessionExpiredError(error)) {
       await _handleSessionExpired(ref);
@@ -70,50 +65,39 @@ final dashboardBaseOverviewProvider = FutureProvider<SystemStatus>((ref) async {
 });
 
 final dashboardRealtimeOverviewProvider = StreamProvider<SystemStatus>((ref) {
-  final server = ref.watch(currentServerProvider);
-  final session = ref.watch(currentSessionProvider);
-
-  if (server == null || session == null) {
-    throw Exception('No active NAS session');
-  }
+  ref.watch(businessConnectionContextProvider);
 
   late final StreamController<SystemStatus> controller;
   StreamSubscription<SystemStatus>? subscription;
 
   Future<void> startStream({bool allowRefresh = true}) async {
-    final activeServer = ref.read(currentServerProvider);
-    final activeSession = ref.read(currentSessionProvider);
-    if (activeServer == null || activeSession == null) {
-      controller.addError(Exception('No active NAS session'));
-      return;
-    }
+    try {
+      final source = ref.read(systemRepositoryProvider).watchOverview();
 
-    final source = ref.read(systemRepositoryProvider).watchOverview(
-          server: activeServer,
-          session: activeSession,
-        );
+      await subscription?.cancel();
+      subscription = source.listen(
+        controller.add,
+        onError: (error, stackTrace) async {
+          if (_looksLikeRealtimeAuthFailure(error)) {
+            controller.addError(error, stackTrace);
+            return;
+          }
 
-    await subscription?.cancel();
-    subscription = source.listen(
-      controller.add,
-      onError: (error, stackTrace) async {
-        if (_looksLikeRealtimeAuthFailure(error)) {
+          if (_isSessionExpiredError(error)) {
+            await _handleSessionExpired(ref);
+          }
           controller.addError(error, stackTrace);
-          return;
-        }
-
-        if (_isSessionExpiredError(error)) {
-          await _handleSessionExpired(ref);
-        }
-        controller.addError(error, stackTrace);
-      },
-      onDone: () {
-        if (!controller.isClosed) {
-          controller.close();
-        }
-      },
-      cancelOnError: false,
-    );
+        },
+        onDone: () {
+          if (!controller.isClosed) {
+            controller.close();
+          }
+        },
+        cancelOnError: false,
+      );
+    } catch (error, stackTrace) {
+      controller.addError(error, stackTrace);
+    }
   }
 
   controller = StreamController<SystemStatus>(
@@ -135,9 +119,10 @@ final dashboardRealtimeOverviewProvider = StreamProvider<SystemStatus>((ref) {
         ? 'missing'
         : (latestSession.synoToken!.length > 8 ? latestSession.synoToken!.substring(0, 8) : latestSession.synoToken!);
     // ignore: avoid_print
-    print('[Realtime][Reconnect] restart stream with latest session sid=$sidPreview token=$synoTokenPreview');
+    debugPrint('[Realtime][Reconnect] restart stream with latest session sid=$sidPreview token=$synoTokenPreview');
     await startStream(allowRefresh: false);
   }
+
   RealtimeReconnectBridge.callback = reconnectCallback;
 
   ref.onDispose(() async {

@@ -10,6 +10,7 @@ class DioClient {
   DioClient({
     required String baseUrl,
     bool ignoreBadCertificate = false,
+    List<Interceptor>? interceptors,
   }) : dio = Dio(
           BaseOptions(
             baseUrl: baseUrl,
@@ -19,8 +20,10 @@ class DioClient {
             contentType: Headers.formUrlEncodedContentType,
           ),
         ) {
-    dio.interceptors.add(RequestLogInterceptor());
-    dio.interceptors.add(SessionRecoveryInterceptor(ignoreBadCertificate: ignoreBadCertificate));
+    dio.interceptors.addAll(interceptors ?? [
+      RequestLogInterceptor(),
+      SessionRecoveryInterceptor(ignoreBadCertificate: ignoreBadCertificate),
+    ]);
 
     final adapter = dio.httpClientAdapter;
     if (ignoreBadCertificate && adapter is IOHttpClientAdapter) {

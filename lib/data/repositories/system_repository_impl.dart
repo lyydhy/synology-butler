@@ -1,27 +1,24 @@
+import '../../core/network/business_connection_context.dart';
 import '../../core/utils/server_url_helper.dart';
 import '../../domain/entities/information_center.dart';
-import '../../domain/entities/nas_server.dart';
-import '../../domain/entities/nas_session.dart';
 import '../../domain/entities/system_status.dart';
 import '../../domain/repositories/system_repository.dart';
 import '../api/system_api.dart';
 
 class SystemRepositoryImpl implements SystemRepository {
-  const SystemRepositoryImpl(this._systemApi);
+  const SystemRepositoryImpl(this._systemApi, this._context);
 
   final SystemApi _systemApi;
+  final BusinessConnectionContext _context;
 
   @override
-  Future<InformationCenterData> fetchInformationCenter({
-    required NasServer server,
-    required NasSession session,
-  }) async {
+  Future<InformationCenterData> fetchInformationCenter() async {
     final model = await _systemApi.fetchInformationCenter(
-      baseUrl: ServerUrlHelper.buildBaseUrl(server),
-      sid: session.sid,
-      synoToken: session.synoToken,
-      cookieHeader: session.cookieHeader,
-      serverName: server.name,
+      baseUrl: ServerUrlHelper.buildBaseUrl(_context.server),
+      sid: _context.session.sid,
+      synoToken: _context.session.synoToken,
+      cookieHeader: _context.session.cookieHeader,
+      serverName: _context.server.name,
     );
 
     return InformationCenterData(
@@ -72,15 +69,8 @@ class SystemRepositoryImpl implements SystemRepository {
   }
 
   @override
-  Future<SystemStatus> fetchOverview({
-    required NasServer server,
-    required NasSession session,
-  }) async {
-    final model = await _systemApi.fetchOverview(
-      baseUrl: ServerUrlHelper.buildBaseUrl(server),
-      sid: session.sid,
-      synoToken: session.synoToken,
-    );
+  Future<SystemStatus> fetchOverview() async {
+    final model = await _systemApi.fetchOverview(baseUrl: ServerUrlHelper.buildBaseUrl(_context.server), sid: _context.session.sid, synoToken: _context.session.synoToken);
 
     return SystemStatus(
       serverName: model.serverName,
@@ -103,9 +93,15 @@ class SystemRepositoryImpl implements SystemRepository {
       networkDownloadBytesPerSecond: model.networkDownloadBytesPerSecond,
       diskReadBytesPerSecond: model.diskReadBytesPerSecond,
       diskWriteBytesPerSecond: model.diskWriteBytesPerSecond,
-      networkInterfaces: model.networkInterfaces.map((item) => NetworkInterfaceStatus(name: item.name, uploadBytesPerSecond: item.uploadBytesPerSecond, downloadBytesPerSecond: item.downloadBytesPerSecond)).toList(),
-      disks: model.disks.map((item) => DiskStatus(name: item.name, utilization: item.utilization, readBytesPerSecond: item.readBytesPerSecond, writeBytesPerSecond: item.writeBytesPerSecond, readIops: item.readIops, writeIops: item.writeIops)).toList(),
-      volumePerformances: model.volumePerformances.map((item) => VolumePerformanceStatus(name: item.name, utilization: item.utilization, readBytesPerSecond: item.readBytesPerSecond, writeBytesPerSecond: item.writeBytesPerSecond, readIops: item.readIops, writeIops: item.writeIops)).toList(),
+      networkInterfaces: model.networkInterfaces
+          .map((item) => NetworkInterfaceStatus(name: item.name, uploadBytesPerSecond: item.uploadBytesPerSecond, downloadBytesPerSecond: item.downloadBytesPerSecond))
+          .toList(),
+      disks: model.disks
+          .map((item) => DiskStatus(name: item.name, utilization: item.utilization, readBytesPerSecond: item.readBytesPerSecond, writeBytesPerSecond: item.writeBytesPerSecond, readIops: item.readIops, writeIops: item.writeIops))
+          .toList(),
+      volumePerformances: model.volumePerformances
+          .map((item) => VolumePerformanceStatus(name: item.name, utilization: item.utilization, readBytesPerSecond: item.readBytesPerSecond, writeBytesPerSecond: item.writeBytesPerSecond, readIops: item.readIops, writeIops: item.writeIops))
+          .toList(),
       volumes: model.volumes
           .map(
             (item) => StorageVolumeStatus(
@@ -123,23 +119,20 @@ class SystemRepositoryImpl implements SystemRepository {
   }
 
   @override
-  Stream<SystemStatus> watchOverview({
-    required NasServer server,
-    required NasSession session,
-  }) {
-    final synoToken = session.synoToken;
+  Stream<SystemStatus> watchOverview() {
+    final synoToken = _context.session.synoToken;
     if (synoToken == null || synoToken.isEmpty) {
       throw Exception('Missing SynoToken for realtime utilization');
     }
 
     return _systemApi.watchUtilization(
-      baseUrl: ServerUrlHelper.buildBaseUrl(server),
-      sid: session.sid,
+      baseUrl: ServerUrlHelper.buildBaseUrl(_context.server),
+      sid: _context.session.sid,
       synoToken: synoToken,
-      cookieHeader: session.cookieHeader,
+      cookieHeader: _context.session.cookieHeader,
     ).map(
       (model) => SystemStatus(
-        serverName: server.name,
+        serverName: _context.server.name,
         dsmVersion: model.dsmVersion,
         cpuUsage: model.cpuUsage,
         cpuUserUsage: model.cpuUserUsage,
@@ -159,9 +152,15 @@ class SystemRepositoryImpl implements SystemRepository {
         networkDownloadBytesPerSecond: model.networkDownloadBytesPerSecond,
         diskReadBytesPerSecond: model.diskReadBytesPerSecond,
         diskWriteBytesPerSecond: model.diskWriteBytesPerSecond,
-        networkInterfaces: model.networkInterfaces.map((item) => NetworkInterfaceStatus(name: item.name, uploadBytesPerSecond: item.uploadBytesPerSecond, downloadBytesPerSecond: item.downloadBytesPerSecond)).toList(),
-        disks: model.disks.map((item) => DiskStatus(name: item.name, utilization: item.utilization, readBytesPerSecond: item.readBytesPerSecond, writeBytesPerSecond: item.writeBytesPerSecond, readIops: item.readIops, writeIops: item.writeIops)).toList(),
-        volumePerformances: model.volumePerformances.map((item) => VolumePerformanceStatus(name: item.name, utilization: item.utilization, readBytesPerSecond: item.readBytesPerSecond, writeBytesPerSecond: item.writeBytesPerSecond, readIops: item.readIops, writeIops: item.writeIops)).toList(),
+        networkInterfaces: model.networkInterfaces
+            .map((item) => NetworkInterfaceStatus(name: item.name, uploadBytesPerSecond: item.uploadBytesPerSecond, downloadBytesPerSecond: item.downloadBytesPerSecond))
+            .toList(),
+        disks: model.disks
+            .map((item) => DiskStatus(name: item.name, utilization: item.utilization, readBytesPerSecond: item.readBytesPerSecond, writeBytesPerSecond: item.writeBytesPerSecond, readIops: item.readIops, writeIops: item.writeIops))
+            .toList(),
+        volumePerformances: model.volumePerformances
+            .map((item) => VolumePerformanceStatus(name: item.name, utilization: item.utilization, readBytesPerSecond: item.readBytesPerSecond, writeBytesPerSecond: item.writeBytesPerSecond, readIops: item.readIops, writeIops: item.writeIops))
+            .toList(),
         volumes: model.volumes
             .map(
               (item) => StorageVolumeStatus(

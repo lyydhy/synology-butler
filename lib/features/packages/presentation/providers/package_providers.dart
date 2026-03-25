@@ -7,12 +7,15 @@ import '../../../../data/repositories/package_repository_impl.dart';
 import '../../../../domain/entities/package_item.dart';
 import '../../../../domain/entities/package_volume.dart';
 import '../../../../domain/repositories/package_repository.dart';
-import '../../../auth/presentation/providers/auth_providers.dart';
+import '../../../auth/presentation/providers/business_connection_providers.dart';
 
 final packageApiProvider = Provider<PackageApi>((ref) => DsmPackageApi());
 
 final packageRepositoryProvider = Provider<PackageRepository>((ref) {
-  return PackageRepositoryImpl(ref.read(packageApiProvider));
+  return PackageRepositoryImpl(
+    ref.read(packageApiProvider),
+    ref.watch(businessConnectionContextProvider),
+  );
 });
 
 final packageTabProvider = StateProvider<String>((ref) => 'all');
@@ -21,36 +24,15 @@ final packageInstallStatusProvider = StateProvider<String?>((ref) => null);
 final packagePendingQueueImpactProvider = StateProvider<PackageQueueCheckResult?>((ref) => null);
 
 final storePackagesProvider = FutureProvider<List<PackageItem>>((ref) async {
-  final server = ref.watch(currentServerProvider);
-  final session = ref.watch(currentSessionProvider);
-  if (server == null || session == null) throw Exception('No active NAS session');
-
-  return ref.read(packageRepositoryProvider).fetchStorePackages(
-        server: server,
-        session: session,
-      );
+  return ref.read(packageRepositoryProvider).fetchStorePackages();
 });
 
 final installedPackagesProvider = FutureProvider<List<PackageItem>>((ref) async {
-  final server = ref.watch(currentServerProvider);
-  final session = ref.watch(currentSessionProvider);
-  if (server == null || session == null) throw Exception('No active NAS session');
-
-  return ref.read(packageRepositoryProvider).fetchInstalledPackages(
-        server: server,
-        session: session,
-      );
+  return ref.read(packageRepositoryProvider).fetchInstalledPackages();
 });
 
 final packageVolumesProvider = FutureProvider<List<PackageVolume>>((ref) async {
-  final server = ref.watch(currentServerProvider);
-  final session = ref.watch(currentSessionProvider);
-  if (server == null || session == null) throw Exception('No active NAS session');
-
-  return ref.read(packageRepositoryProvider).fetchVolumes(
-        server: server,
-        session: session,
-      );
+  return ref.read(packageRepositoryProvider).fetchVolumes();
 });
 
 final mergedPackagesProvider = FutureProvider<List<PackageItem>>((ref) async {
@@ -115,13 +97,7 @@ final visiblePackagesProvider = FutureProvider<List<PackageItem>>((ref) async {
 
 final packageStartProvider = Provider<Future<void> Function(PackageItem)>((ref) {
   return (item) async {
-    final server = ref.read(currentServerProvider);
-    final session = ref.read(currentSessionProvider);
-    if (server == null || session == null) throw Exception('No active NAS session');
-
     await ref.read(packageRepositoryProvider).startPackage(
-          server: server,
-          session: session,
           packageId: item.id,
           dsmAppName: item.dsmAppName,
         );
@@ -134,13 +110,7 @@ final packageStartProvider = Provider<Future<void> Function(PackageItem)>((ref) 
 
 final packageStopProvider = Provider<Future<void> Function(PackageItem)>((ref) {
   return (item) async {
-    final server = ref.read(currentServerProvider);
-    final session = ref.read(currentSessionProvider);
-    if (server == null || session == null) throw Exception('No active NAS session');
-
     await ref.read(packageRepositoryProvider).stopPackage(
-          server: server,
-          session: session,
           packageId: item.id,
         );
 
@@ -152,13 +122,7 @@ final packageStopProvider = Provider<Future<void> Function(PackageItem)>((ref) {
 
 final packageUninstallProvider = Provider<Future<void> Function(PackageItem)>((ref) {
   return (item) async {
-    final server = ref.read(currentServerProvider);
-    final session = ref.read(currentSessionProvider);
-    if (server == null || session == null) throw Exception('No active NAS session');
-
     await ref.read(packageRepositoryProvider).uninstallPackage(
-          server: server,
-          session: session,
           packageId: item.id,
         );
 
@@ -171,13 +135,7 @@ final packageUninstallProvider = Provider<Future<void> Function(PackageItem)>((r
 
 final packagePrepareInstallProvider = Provider<Future<PackageQueueCheckResult> Function(PackageItem)>((ref) {
   return (item) async {
-    final server = ref.read(currentServerProvider);
-    final session = ref.read(currentSessionProvider);
-    if (server == null || session == null) throw Exception('No active NAS session');
-
     final queue = await ref.read(packageRepositoryProvider).checkInstallQueue(
-          server: server,
-          session: session,
           packageId: item.id,
           version: item.version,
           beta: item.isBeta,
@@ -190,17 +148,11 @@ final packagePrepareInstallProvider = Provider<Future<PackageQueueCheckResult> F
 
 final packageInstallProvider = Provider<Future<void> Function(PackageItem, String)>((ref) {
   return (item, volumePath) async {
-    final server = ref.read(currentServerProvider);
-    final session = ref.read(currentSessionProvider);
-    if (server == null || session == null) throw Exception('No active NAS session');
-
     ref.read(packageInstallingProvider.notifier).state = item.id;
     ref.read(packageInstallStatusProvider.notifier).state = '准备安装…';
 
     try {
       final taskId = await ref.read(packageRepositoryProvider).installPackage(
-            server: server,
-            session: session,
             packageId: item.id,
             volumePath: volumePath,
           );
@@ -211,8 +163,6 @@ final packageInstallProvider = Provider<Future<void> Function(PackageItem, Strin
 
       for (var i = 0; i < 90; i++) {
         final status = await ref.read(packageRepositoryProvider).getInstallStatus(
-              server: server,
-              session: session,
               taskId: taskId,
             );
 

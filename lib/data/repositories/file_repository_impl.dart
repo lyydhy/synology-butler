@@ -1,29 +1,27 @@
 import 'dart:typed_data';
 
+import '../../core/network/business_connection_context.dart';
 import '../../core/utils/server_url_helper.dart';
 import '../../domain/entities/file_item.dart';
-import '../../domain/entities/nas_server.dart';
-import '../../domain/entities/nas_session.dart';
 import '../../domain/repositories/file_repository.dart';
 import '../api/file_station_api.dart';
 
 class FileRepositoryImpl implements FileRepository {
-  const FileRepositoryImpl(this._api);
+  const FileRepositoryImpl(this._api, this._context);
 
   final FileStationApi _api;
+  final BusinessConnectionContext _context;
 
   @override
   Future<List<FileItem>> listFiles({
-    required NasServer server,
-    required NasSession session,
     required String path,
   }) async {
     final items = await _api.listFiles(
-      baseUrl: ServerUrlHelper.buildBaseUrl(server),
-      sid: session.sid,
+      baseUrl: ServerUrlHelper.buildBaseUrl(_context.server),
+      sid: _context.session.sid,
       path: path,
-      synoToken: session.synoToken,
-      cookieHeader: session.cookieHeader,
+      synoToken: _context.session.synoToken,
+      cookieHeader: _context.session.cookieHeader,
     );
 
     return items
@@ -40,133 +38,117 @@ class FileRepositoryImpl implements FileRepository {
 
   @override
   Future<void> createFolder({
-    required NasServer server,
-    required NasSession session,
     required String parentPath,
     required String name,
   }) {
     return _api.createFolder(
-      baseUrl: ServerUrlHelper.buildBaseUrl(server),
-      sid: session.sid,
+      baseUrl: ServerUrlHelper.buildBaseUrl(_context.server),
+      sid: _context.session.sid,
       parentPath: parentPath,
       name: name,
-      synoToken: session.synoToken,
-      cookieHeader: session.cookieHeader,
+      synoToken: _context.session.synoToken,
+      cookieHeader: _context.session.cookieHeader,
     );
   }
 
   @override
   Future<void> rename({
-    required NasServer server,
-    required NasSession session,
     required String path,
     required String newName,
   }) {
     return _api.rename(
-      baseUrl: ServerUrlHelper.buildBaseUrl(server),
-      sid: session.sid,
+      baseUrl: ServerUrlHelper.buildBaseUrl(_context.server),
+      sid: _context.session.sid,
       path: path,
+      synoToken: _context.session.synoToken,
+      cookieHeader: _context.session.cookieHeader,
       newName: newName,
-      synoToken: session.synoToken,
-      cookieHeader: session.cookieHeader,
     );
   }
 
   @override
   Future<void> delete({
-    required NasServer server,
-    required NasSession session,
     required String path,
   }) {
     return _api.delete(
-      baseUrl: ServerUrlHelper.buildBaseUrl(server),
-      sid: session.sid,
+      baseUrl: ServerUrlHelper.buildBaseUrl(_context.server),
+      sid: _context.session.sid,
       path: path,
-      synoToken: session.synoToken,
-      cookieHeader: session.cookieHeader,
+      synoToken: _context.session.synoToken,
+      cookieHeader: _context.session.cookieHeader,
     );
   }
 
   @override
   Future<String> createShareLink({
-    required NasServer server,
-    required NasSession session,
     required String path,
   }) {
     return _api.createShareLink(
-      baseUrl: ServerUrlHelper.buildBaseUrl(server),
-      sid: session.sid,
+      baseUrl: ServerUrlHelper.buildBaseUrl(_context.server),
+      sid: _context.session.sid,
       path: path,
-      synoToken: session.synoToken,
-      cookieHeader: session.cookieHeader,
+      synoToken: _context.session.synoToken,
+      cookieHeader: _context.session.cookieHeader,
     );
   }
 
   @override
   Future<void> uploadFile({
-    required NasServer server,
-    required NasSession session,
     required String parentPath,
     required String fileName,
     required Uint8List bytes,
   }) {
     return _api.uploadFile(
-      baseUrl: ServerUrlHelper.buildBaseUrl(server),
-      sid: session.sid,
+      baseUrl: ServerUrlHelper.buildBaseUrl(_context.server),
+      sid: _context.session.sid,
       parentPath: parentPath,
       fileName: fileName,
       bytes: bytes,
-      synoToken: session.synoToken,
-      cookieHeader: session.cookieHeader,
+      synoToken: _context.session.synoToken,
+      cookieHeader: _context.session.cookieHeader,
     );
   }
 
   @override
   Future<Uint8List> downloadFile({
-    required NasServer server,
-    required NasSession session,
     required String path,
     void Function(int received, int total)? onReceiveProgress,
   }) {
     return _api.downloadFile(
-      baseUrl: ServerUrlHelper.buildBaseUrl(server),
-      sid: session.sid,
+      baseUrl: ServerUrlHelper.buildBaseUrl(_context.server),
+      sid: _context.session.sid,
       path: path,
-      synoToken: session.synoToken,
-      cookieHeader: session.cookieHeader,
+      synoToken: _context.session.synoToken,
+      cookieHeader: _context.session.cookieHeader,
       onReceiveProgress: onReceiveProgress,
     );
   }
 
   @override
   Future<String> readTextFile({
-    required NasServer server,
-    required NasSession session,
     required String path,
   }) {
     return _api.readTextFile(
-      baseUrl: ServerUrlHelper.buildBaseUrl(server),
-      sid: session.sid,
+      baseUrl: ServerUrlHelper.buildBaseUrl(_context.server),
+      sid: _context.session.sid,
       path: path,
-      synoToken: session.synoToken,
-      cookieHeader: session.cookieHeader,
+      synoToken: _context.session.synoToken,
+      cookieHeader: _context.session.cookieHeader,
     );
   }
 
   @override
   Future<void> writeTextFile({
-    required NasServer server,
-    required NasSession session,
     required String path,
     required String content,
   }) {
     return _api.writeTextFile(
-      baseUrl: ServerUrlHelper.buildBaseUrl(server),
-      sid: session.sid,
+      baseUrl: ServerUrlHelper.buildBaseUrl(_context.server),
+      sid: _context.session.sid,
       path: path,
+      synoToken: _context.session.synoToken,
+      cookieHeader: _context.session.cookieHeader,
       content: content,
-      synoToken: session.synoToken,
-      cookieHeader: session.cookieHeader,
     );
   }
 }

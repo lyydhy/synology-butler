@@ -1,27 +1,25 @@
+import '../../core/network/business_connection_context.dart';
 import '../../core/utils/server_url_helper.dart';
-import '../../domain/entities/nas_server.dart';
-import '../../domain/entities/nas_session.dart';
 import '../../domain/entities/package_item.dart';
 import '../../domain/entities/package_volume.dart';
 import '../../domain/repositories/package_repository.dart';
 import '../api/package_api.dart';
 
 class PackageRepositoryImpl implements PackageRepository {
-  const PackageRepositoryImpl(this._api);
+  const PackageRepositoryImpl(this._api, this._context);
 
   final PackageApi _api;
+  final BusinessConnectionContext _context;
 
   @override
   Future<List<PackageItem>> fetchStorePackages({
-    required NasServer server,
-    required NasSession session,
     bool others = false,
   }) async {
     final items = await _api.fetchStorePackages(
-      baseUrl: ServerUrlHelper.buildBaseUrl(server),
-      sid: session.sid,
-      synoToken: session.synoToken,
-      cookieHeader: session.cookieHeader,
+      baseUrl: ServerUrlHelper.buildBaseUrl(_context.server),
+      sid: _context.session.sid,
+      synoToken: _context.session.synoToken,
+      cookieHeader: _context.session.cookieHeader,
       others: others,
     );
 
@@ -53,15 +51,12 @@ class PackageRepositoryImpl implements PackageRepository {
   }
 
   @override
-  Future<List<PackageItem>> fetchInstalledPackages({
-    required NasServer server,
-    required NasSession session,
-  }) async {
+  Future<List<PackageItem>> fetchInstalledPackages() async {
     final items = await _api.fetchInstalledPackages(
-      baseUrl: ServerUrlHelper.buildBaseUrl(server),
-      sid: session.sid,
-      synoToken: session.synoToken,
-      cookieHeader: session.cookieHeader,
+      baseUrl: ServerUrlHelper.buildBaseUrl(_context.server),
+      sid: _context.session.sid,
+      synoToken: _context.session.synoToken,
+      cookieHeader: _context.session.cookieHeader,
     );
 
     return items
@@ -92,15 +87,12 @@ class PackageRepositoryImpl implements PackageRepository {
   }
 
   @override
-  Future<List<PackageVolume>> fetchVolumes({
-    required NasServer server,
-    required NasSession session,
-  }) async {
+  Future<List<PackageVolume>> fetchVolumes() async {
     final items = await _api.fetchVolumes(
-      baseUrl: ServerUrlHelper.buildBaseUrl(server),
-      sid: session.sid,
-      synoToken: session.synoToken,
-      cookieHeader: session.cookieHeader,
+      baseUrl: ServerUrlHelper.buildBaseUrl(_context.server),
+      sid: _context.session.sid,
+      synoToken: _context.session.synoToken,
+      cookieHeader: _context.session.cookieHeader,
     );
 
     return items
@@ -118,20 +110,18 @@ class PackageRepositoryImpl implements PackageRepository {
 
   @override
   Future<PackageQueueCheckResult> checkInstallQueue({
-    required NasServer server,
-    required NasSession session,
     required String packageId,
     required String version,
     bool beta = false,
   }) async {
     final data = await _api.checkInstallQueue(
-      baseUrl: ServerUrlHelper.buildBaseUrl(server),
-      sid: session.sid,
+      baseUrl: ServerUrlHelper.buildBaseUrl(_context.server),
+      sid: _context.session.sid,
       packageId: packageId,
       version: version,
+      synoToken: _context.session.synoToken,
+      cookieHeader: _context.session.cookieHeader,
       beta: beta,
-      synoToken: session.synoToken,
-      cookieHeader: session.cookieHeader,
     );
 
     final paused = (data['paused_pkgs'] as List?)?.map((e) => e.toString()).toList() ?? const <String>[];
@@ -145,18 +135,16 @@ class PackageRepositoryImpl implements PackageRepository {
 
   @override
   Future<String> installPackage({
-    required NasServer server,
-    required NasSession session,
     required String packageId,
     required String volumePath,
   }) async {
     final data = await _api.installPackage(
-      baseUrl: ServerUrlHelper.buildBaseUrl(server),
-      sid: session.sid,
+      baseUrl: ServerUrlHelper.buildBaseUrl(_context.server),
+      sid: _context.session.sid,
       packageId: packageId,
       volumePath: volumePath,
-      synoToken: session.synoToken,
-      cookieHeader: session.cookieHeader,
+      synoToken: _context.session.synoToken,
+      cookieHeader: _context.session.cookieHeader,
     );
 
     return data['taskid']?.toString() ?? '';
@@ -164,16 +152,14 @@ class PackageRepositoryImpl implements PackageRepository {
 
   @override
   Future<PackageInstallStatus> getInstallStatus({
-    required NasServer server,
-    required NasSession session,
     required String taskId,
   }) async {
     final data = await _api.getInstallStatus(
-      baseUrl: ServerUrlHelper.buildBaseUrl(server),
-      sid: session.sid,
+      baseUrl: ServerUrlHelper.buildBaseUrl(_context.server),
+      sid: _context.session.sid,
       taskId: taskId,
-      synoToken: session.synoToken,
-      cookieHeader: session.cookieHeader,
+      synoToken: _context.session.synoToken,
+      cookieHeader: _context.session.cookieHeader,
     );
 
     final progressRaw = data['progress'];
@@ -188,48 +174,42 @@ class PackageRepositoryImpl implements PackageRepository {
 
   @override
   Future<void> startPackage({
-    required NasServer server,
-    required NasSession session,
     required String packageId,
     String? dsmAppName,
   }) {
     return _api.startPackage(
-      baseUrl: ServerUrlHelper.buildBaseUrl(server),
-      sid: session.sid,
+      baseUrl: ServerUrlHelper.buildBaseUrl(_context.server),
+      sid: _context.session.sid,
       packageId: packageId,
       dsmAppName: dsmAppName,
-      synoToken: session.synoToken,
-      cookieHeader: session.cookieHeader,
+      synoToken: _context.session.synoToken,
+      cookieHeader: _context.session.cookieHeader,
     );
   }
 
   @override
   Future<void> stopPackage({
-    required NasServer server,
-    required NasSession session,
     required String packageId,
   }) {
     return _api.stopPackage(
-      baseUrl: ServerUrlHelper.buildBaseUrl(server),
-      sid: session.sid,
+      baseUrl: ServerUrlHelper.buildBaseUrl(_context.server),
+      sid: _context.session.sid,
       packageId: packageId,
-      synoToken: session.synoToken,
-      cookieHeader: session.cookieHeader,
+      synoToken: _context.session.synoToken,
+      cookieHeader: _context.session.cookieHeader,
     );
   }
 
   @override
   Future<void> uninstallPackage({
-    required NasServer server,
-    required NasSession session,
     required String packageId,
   }) {
     return _api.uninstallPackage(
-      baseUrl: ServerUrlHelper.buildBaseUrl(server),
-      sid: session.sid,
+      baseUrl: ServerUrlHelper.buildBaseUrl(_context.server),
+      sid: _context.session.sid,
       packageId: packageId,
-      synoToken: session.synoToken,
-      cookieHeader: session.cookieHeader,
+      synoToken: _context.session.synoToken,
+      cookieHeader: _context.session.cookieHeader,
     );
   }
 }

@@ -6,7 +6,7 @@ import '../../../../data/api/file_station_api.dart';
 import '../../../../data/repositories/file_repository_impl.dart';
 import '../../../../domain/entities/file_item.dart';
 import '../../../../domain/repositories/file_repository.dart';
-import '../../../auth/presentation/providers/auth_providers.dart';
+import '../../../auth/presentation/providers/business_connection_providers.dart';
 import '../widgets/file_type_helper.dart';
 
 final currentPathProvider = StateProvider<String>((ref) => '/');
@@ -15,21 +15,16 @@ final fileSortProvider = StateProvider<String>((ref) => 'type');
 final fileStationApiProvider = Provider<FileStationApi>((ref) => DsmFileStationApi());
 
 final fileRepositoryProvider = Provider<FileRepository>((ref) {
-  return FileRepositoryImpl(ref.read(fileStationApiProvider));
+  return FileRepositoryImpl(
+    ref.read(fileStationApiProvider),
+    ref.watch(businessConnectionContextProvider),
+  );
 });
 
 final fileListProvider = FutureProvider<List<FileItem>>((ref) async {
-  final server = ref.watch(currentServerProvider);
-  final session = ref.watch(currentSessionProvider);
   final path = ref.watch(currentPathProvider);
 
-  if (server == null || session == null) {
-    throw Exception('No active NAS session');
-  }
-
   final files = await ref.read(fileRepositoryProvider).listFiles(
-        server: server,
-        session: session,
         path: path,
       );
 
@@ -53,16 +48,7 @@ final fileListProvider = FutureProvider<List<FileItem>>((ref) async {
 
 final fileActionProvider = Provider<Future<void> Function(String, String)>((ref) {
   return (parentPath, name) async {
-    final server = ref.read(currentServerProvider);
-    final session = ref.read(currentSessionProvider);
-
-    if (server == null || session == null) {
-      throw Exception('No active NAS session');
-    }
-
     await ref.read(fileRepositoryProvider).createFolder(
-          server: server,
-          session: session,
           parentPath: parentPath,
           name: name,
         );
@@ -73,13 +59,7 @@ final fileActionProvider = Provider<Future<void> Function(String, String)>((ref)
 
 final fileRenameProvider = Provider<Future<void> Function(String, String)>((ref) {
   return (path, newName) async {
-    final server = ref.read(currentServerProvider);
-    final session = ref.read(currentSessionProvider);
-    if (server == null || session == null) throw Exception('No active NAS session');
-
     await ref.read(fileRepositoryProvider).rename(
-          server: server,
-          session: session,
           path: path,
           newName: newName,
         );
@@ -89,13 +69,7 @@ final fileRenameProvider = Provider<Future<void> Function(String, String)>((ref)
 
 final fileDeleteProvider = Provider<Future<void> Function(String)>((ref) {
   return (path) async {
-    final server = ref.read(currentServerProvider);
-    final session = ref.read(currentSessionProvider);
-    if (server == null || session == null) throw Exception('No active NAS session');
-
     await ref.read(fileRepositoryProvider).delete(
-          server: server,
-          session: session,
           path: path,
         );
     ref.invalidate(fileListProvider);
@@ -104,14 +78,8 @@ final fileDeleteProvider = Provider<Future<void> Function(String)>((ref) {
 
 final fileBatchDeleteProvider = Provider<Future<void> Function(List<String>)>((ref) {
   return (paths) async {
-    final server = ref.read(currentServerProvider);
-    final session = ref.read(currentSessionProvider);
-    if (server == null || session == null) throw Exception('No active NAS session');
-
     for (final path in paths) {
       await ref.read(fileRepositoryProvider).delete(
-            server: server,
-            session: session,
             path: path,
           );
     }
@@ -122,13 +90,7 @@ final fileBatchDeleteProvider = Provider<Future<void> Function(List<String>)>((r
 
 final fileShareProvider = Provider<Future<String> Function(String)>((ref) {
   return (path) async {
-    final server = ref.read(currentServerProvider);
-    final session = ref.read(currentSessionProvider);
-    if (server == null || session == null) throw Exception('No active NAS session');
-
     return ref.read(fileRepositoryProvider).createShareLink(
-          server: server,
-          session: session,
           path: path,
         );
   };
@@ -136,13 +98,7 @@ final fileShareProvider = Provider<Future<String> Function(String)>((ref) {
 
 final fileUploadProvider = Provider<Future<void> Function(String, String, Uint8List)>((ref) {
   return (parentPath, fileName, bytes) async {
-    final server = ref.read(currentServerProvider);
-    final session = ref.read(currentSessionProvider);
-    if (server == null || session == null) throw Exception('No active NAS session');
-
     await ref.read(fileRepositoryProvider).uploadFile(
-          server: server,
-          session: session,
           parentPath: parentPath,
           fileName: fileName,
           bytes: bytes,
