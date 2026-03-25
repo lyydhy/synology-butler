@@ -4,14 +4,12 @@ import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 
 import 'request_log_interceptor.dart';
-import 'session_recovery_bridge.dart';
 import 'session_recovery_interceptor.dart';
 
 class DioClient {
   DioClient({
     required String baseUrl,
     bool ignoreBadCertificate = false,
-    SessionRecoveryCallback? onRecoverSession,
   }) : dio = Dio(
           BaseOptions(
             baseUrl: baseUrl,
@@ -21,24 +19,8 @@ class DioClient {
             contentType: Headers.formUrlEncodedContentType,
           ),
         ) {
-    dio.interceptors.add(
-      InterceptorsWrapper(
-        onRequest: (options, handler) {
-          options.extra['__dio__'] = dio;
-          handler.next(options);
-        },
-      ),
-    );
     dio.interceptors.add(RequestLogInterceptor());
-    dio.interceptors.add(
-      SessionRecoveryInterceptor(() async {
-        final recoveryCallback = onRecoverSession ?? SessionRecoveryBridge.callback;
-        if (recoveryCallback == null) {
-          throw StateError('Session recovery callback is not registered');
-        }
-        return recoveryCallback();
-      }),
-    );
+    dio.interceptors.add(SessionRecoveryInterceptor(ignoreBadCertificate: ignoreBadCertificate));
 
     final adapter = dio.httpClientAdapter;
     if (ignoreBadCertificate && adapter is IOHttpClientAdapter) {

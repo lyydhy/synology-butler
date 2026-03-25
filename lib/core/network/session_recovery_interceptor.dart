@@ -1,4 +1,10 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
+import 'package:dio/io.dart';
+
+import 'request_log_interceptor.dart';
+import 'session_recovery_bridge.dart';
 
 // ignore: avoid_print
 void _recoveryLog(String message) => print(message);
@@ -6,9 +12,9 @@ void _recoveryLog(String message) => print(message);
 typedef SessionRecoveryCallback = Future<Map<String, String?>> Function();
 
 class SessionRecoveryInterceptor extends Interceptor {
-  SessionRecoveryInterceptor(this._recoverSession);
+  SessionRecoveryInterceptor({this.ignoreBadCertificate = false});
 
-  final SessionRecoveryCallback _recoverSession;
+  final bool ignoreBadCertificate;
 
   static const _retriedKey = 'session_recovery_retried';
 
@@ -79,6 +85,37 @@ class SessionRecoveryInterceptor extends Interceptor {
     );
   }
 
+  Dio _buildRetryDio(RequestOptions options) {
+    final dio = Dio(
+      BaseOptions(
+        baseUrl: options.baseUrl,
+        connectTimeout: options.connectTimeout,
+        receiveTimeout: options.receiveTimeout,
+        sendTimeout: options.sendTimeout,
+        contentType: options.contentType,
+        responseType: options.responseType,
+        followRedirects: options.followRedirects,
+        listFormat: options.listFormat,
+        maxRedirects: options.maxRedirects,
+        persistentConnection: options.persistentConnection,
+        receiveDataWhenStatusError: options.receiveDataWhenStatusError,
+        validateStatus: options.validateStatus,
+      ),
+    );
+    dio.interceptors.add(RequestLogInterceptor());
+
+    final adapter = dio.httpClientAdapter;
+    if (ignoreBadCertificate && adapter is IOHttpClientAdapter) {
+      adapter.createHttpClient = () {
+        final client = HttpClient();
+        client.badCertificateCallback = (_, __, ___) => true;
+        return client;
+      };
+    }
+
+    return dio;
+  }
+
   void _applyRecoveredSession(RequestOptions options, Map<String, String?> session) {
     final sid = session['sid'];
     final synoToken = session['synoToken'];
@@ -128,18 +165,17 @@ class SessionRecoveryInterceptor extends Interceptor {
     _recoveryLog('[SessionRecovery] detected expired session api=$api method=$method path=${options.path}');
 
     try {
-      final recovered = await _recoverSession();
+      final recoveryCallback = SessionRecoveryBridge.callback;
+      if (recoveryCallback == null) {
+        throw StateError('Session recovery callback is not registered');
+      }
+      final recovered = await recoveryCallback();
       final retryOptions = _cloneOptions(options);
       _applyRecoveredSession(retryOptions, recovered);
-      final dio = options.extra['__dio__'];
-      if (dio is! Dio) {
-        _recoveryLog('[SessionRecovery] missing dio instance for retry api=$api method=$method');
-        handler.next(response);
-        return;
-      }
+      final retryDio = _buildRetryDio(options);
 
       _recoveryLog('[SessionRecovery] retry request api=$api method=$method');
-      final retryResponse = await dio.fetch<dynamic>(retryOptions);
+      final retryResponse = await retryDio.fetch<dynamic>(retryOptions);
       handler.resolve(retryResponse);
     } catch (error) {
       _recoveryLog('[SessionRecovery] recover failed api=$api method=$method error=$error');
