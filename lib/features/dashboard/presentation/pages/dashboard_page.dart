@@ -74,24 +74,36 @@ class DashboardPage extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _IconEntry(
-                icon: Icons.info_outline_rounded,
-                label: '信息中心',
-                onTap: () => context.push('/information-center'),
+              Expanded(
+                child: _QuickEntryCard(
+                  icon: Icons.info_outline_rounded,
+                  label: '信息中心',
+                  hint: '系统信息 / 硬件 / 存储',
+                  color: Colors.indigo,
+                  onTap: () => context.push('/information-center'),
+                ),
               ),
-              _IconEntry(
-                icon: Icons.apps_rounded,
-                label: '套件中心',
-                onTap: () => context.push('/packages'),
-              ),
-              _IconEntry(
-                icon: Icons.sync_alt_rounded,
-                label: '传输中心',
-                onTap: () => context.push('/transfers'),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _QuickEntryCard(
+                  icon: Icons.apps_rounded,
+                  label: '套件中心',
+                  hint: '查看 / 安装 / 管理套件',
+                  color: Colors.deepPurple,
+                  onTap: () => context.push('/packages'),
+                ),
               ),
             ],
+          ),
+          const SizedBox(height: 10),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: _SecondaryQuickEntry(
+              icon: Icons.sync_alt_rounded,
+              label: '传输中心',
+              onTap: () => context.push('/transfers'),
+            ),
           ),
           const SizedBox(height: 16),
           Row(
@@ -208,12 +220,92 @@ class _HeroCard extends StatelessWidget {
   }
 }
 
-class _IconEntry extends StatelessWidget {
+class _QuickEntryCard extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String hint;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _QuickEntryCard({
+    required this.icon,
+    required this.label,
+    required this.hint,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: color.withValues(alpha: 0.18)),
+            gradient: LinearGradient(
+              colors: [
+                color.withValues(alpha: 0.12),
+                theme.colorScheme.surface,
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.14),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Icon(icon, color: color, size: 20),
+                  ),
+                  const Spacer(),
+                  Icon(Icons.chevron_right_rounded, color: theme.colorScheme.onSurfaceVariant),
+                ],
+              ),
+              const SizedBox(height: 14),
+              Text(
+                label,
+                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                hint,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  height: 1.35,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SecondaryQuickEntry extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback onTap;
 
-  const _IconEntry({
+  const _SecondaryQuickEntry({
     required this.icon,
     required this.label,
     required this.onTap,
@@ -222,25 +314,32 @@ class _IconEntry extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            CircleAvatar(
-              radius: 26,
-              backgroundColor: theme.colorScheme.primaryContainer,
-              child: Icon(icon, size: 26, color: theme.colorScheme.onPrimaryContainer),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-            ),
-          ],
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(999),
+        onTap: onTap,
+        child: Ink(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(color: theme.dividerColor.withValues(alpha: 0.18)),
+            color: theme.colorScheme.surface,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 18, color: theme.colorScheme.primary),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(width: 4),
+              Icon(Icons.chevron_right_rounded, size: 18, color: theme.colorScheme.onSurfaceVariant),
+            ],
+          ),
         ),
       ),
     );
