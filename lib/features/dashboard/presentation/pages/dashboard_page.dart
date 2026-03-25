@@ -11,11 +11,51 @@ import '../../../auth/presentation/providers/auth_providers.dart';
 import '../providers/dashboard_providers.dart';
 import '../widgets/summary_card.dart';
 
-class DashboardPage extends ConsumerWidget {
+class DashboardPage extends ConsumerStatefulWidget {
   const DashboardPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DashboardPage> createState() => _DashboardPageState();
+}
+
+class _DashboardPageState extends ConsumerState<DashboardPage> with WidgetsBindingObserver {
+  DateTime? _lastForegroundRefreshAt;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) {
+      return;
+    }
+
+    final now = DateTime.now();
+    if (_lastForegroundRefreshAt != null && now.difference(_lastForegroundRefreshAt!) < const Duration(seconds: 5)) {
+      return;
+    }
+    _lastForegroundRefreshAt = now;
+
+    if (ref.read(currentServerProvider) == null || ref.read(currentSessionProvider) == null) {
+      return;
+    }
+
+    // ignore: avoid_print
+    print('[Dashboard][Lifecycle] app resumed, refresh base overview');
+    ref.invalidate(dashboardBaseOverviewProvider);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final overview = ref.watch(dashboardOverviewSafeProvider);
     final realtimeState = ref.watch(dashboardRealtimeOverviewProvider);
