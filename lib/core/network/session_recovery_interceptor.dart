@@ -1,5 +1,8 @@
 import 'package:dio/dio.dart';
 
+// ignore: avoid_print
+void _recoveryLog(String message) => print(message);
+
 typedef SessionRecoveryCallback = Future<Map<String, String?>> Function();
 
 class SessionRecoveryInterceptor extends Interceptor {
@@ -103,24 +106,43 @@ class SessionRecoveryInterceptor extends Interceptor {
 
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) async {
-    if (_shouldSkipRecovery(response.requestOptions) || !_isSessionExpiredPayload(response.data) || !_canRetry(response.requestOptions)) {
+    final options = response.requestOptions;
+    final api = options.queryParameters['api']?.toString() ?? (options.data is Map ? options.data['api']?.toString() : null) ?? '-';
+    final method = options.queryParameters['method']?.toString() ?? (options.data is Map ? options.data['method']?.toString() : null) ?? '-';
+
+    if (_shouldSkipRecovery(options)) {
+      _recoveryLog('[SessionRecovery] skip api=$api method=$method path=${options.path}');
+      handler.next(response);
+      return;
+    }
+    if (!_isSessionExpiredPayload(response.data)) {
+      handler.next(response);
+      return;
+    }
+    if (!_canRetry(options)) {
+      _recoveryLog('[SessionRecovery] not retryable api=$api method=$method path=${options.path}');
       handler.next(response);
       return;
     }
 
+    _recoveryLog('[SessionRecovery] detected expired session api=$api method=$method path=${options.path}');
+
     try {
       final recovered = await _recoverSession();
-      final retryOptions = _cloneOptions(response.requestOptions);
+      final retryOptions = _cloneOptions(options);
       _applyRecoveredSession(retryOptions, recovered);
-      final dio = response.requestOptions.extra['__dio__'];
+      final dio = options.extra['__dio__'];
       if (dio is! Dio) {
+        _recoveryLog('[SessionRecovery] missing dio instance for retry api=$api method=$method');
         handler.next(response);
         return;
       }
 
+      _recoveryLog('[SessionRecovery] retry request api=$api method=$method');
       final retryResponse = await dio.fetch<dynamic>(retryOptions);
       handler.resolve(retryResponse);
-    } catch (_) {
+    } catch (error) {
+      _recoveryLog('[SessionRecovery] recover failed api=$api method=$method error=$error');
       handler.next(response);
     }
   }
