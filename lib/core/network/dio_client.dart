@@ -12,7 +12,6 @@ class DioClient {
     required String baseUrl,
     bool ignoreBadCertificate = false,
     SessionRecoveryCallback? onRecoverSession,
-    bool enableSessionRecovery = true,
   }) : dio = Dio(
           BaseOptions(
             baseUrl: baseUrl,
@@ -31,17 +30,15 @@ class DioClient {
       ),
     );
     dio.interceptors.add(RequestLogInterceptor());
-    if (enableSessionRecovery) {
-      dio.interceptors.add(
-        SessionRecoveryInterceptor(() async {
-          final recoveryCallback = onRecoverSession ?? SessionRecoveryBridge.callback;
-          if (recoveryCallback == null) {
-            throw StateError('Session recovery callback is not registered');
-          }
-          return recoveryCallback();
-        }),
-      );
-    }
+    dio.interceptors.add(
+      SessionRecoveryInterceptor(() async {
+        final recoveryCallback = onRecoverSession ?? SessionRecoveryBridge.callback;
+        if (recoveryCallback == null) {
+          throw StateError('Session recovery callback is not registered');
+        }
+        return recoveryCallback();
+      }),
+    );
 
     final adapter = dio.httpClientAdapter;
     if (ignoreBadCertificate && adapter is IOHttpClientAdapter) {

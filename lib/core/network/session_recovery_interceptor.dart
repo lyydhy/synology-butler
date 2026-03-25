@@ -9,6 +9,31 @@ class SessionRecoveryInterceptor extends Interceptor {
 
   static const _retriedKey = 'session_recovery_retried';
 
+  bool _shouldSkipRecovery(RequestOptions options) {
+    final path = options.path.toLowerCase();
+    final queryApi = options.queryParameters['api']?.toString();
+    final queryMethod = options.queryParameters['method']?.toString();
+    final body = options.data;
+    final bodyApi = body is Map ? body['api']?.toString() : null;
+    final bodyMethod = body is Map ? body['method']?.toString() : null;
+    final api = queryApi ?? bodyApi;
+    final method = queryMethod ?? bodyMethod;
+
+    if (api == 'SYNO.API.Auth') {
+      return true;
+    }
+    if (path.contains('/webapi/entry.cgi/syno.api.auth')) {
+      return true;
+    }
+    if (path.contains('/webapi/auth.cgi')) {
+      return true;
+    }
+    if (method == 'login' || method == 'token') {
+      return true;
+    }
+    return false;
+  }
+
   bool _isSessionExpiredPayload(dynamic data) {
     if (data is! Map) return false;
     if (data['success'] != false) return false;
@@ -78,7 +103,7 @@ class SessionRecoveryInterceptor extends Interceptor {
 
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) async {
-    if (!_isSessionExpiredPayload(response.data) || !_canRetry(response.requestOptions)) {
+    if (_shouldSkipRecovery(response.requestOptions) || !_isSessionExpiredPayload(response.data) || !_canRetry(response.requestOptions)) {
       handler.next(response);
       return;
     }
