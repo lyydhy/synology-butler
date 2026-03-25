@@ -7,10 +7,10 @@ import '../../../../data/repositories/package_repository_impl.dart';
 import '../../../../domain/entities/package_item.dart';
 import '../../../../domain/entities/package_volume.dart';
 import '../../../../domain/repositories/package_repository.dart';
-import '../../../auth/presentation/providers/business_connection_providers.dart';
+import '../../../../core/network/app_dio.dart';
 
 final packageApiProvider = Provider<PackageApi>((ref) {
-  return DsmPackageApi(dio: ref.watch(businessDioProvider));
+  return DsmPackageApi(dio: AppDioFactory.businessDio());
 });
 
 final packageRepositoryProvider = Provider<PackageRepository>((ref) {

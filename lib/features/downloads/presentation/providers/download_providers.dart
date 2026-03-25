@@ -4,10 +4,10 @@ import '../../../../data/api/download_station_api.dart';
 import '../../../../data/repositories/download_repository_impl.dart';
 import '../../../../domain/entities/download_task.dart';
 import '../../../../domain/repositories/download_repository.dart';
-import '../../../auth/presentation/providers/business_connection_providers.dart';
+import '../../../../core/network/app_dio.dart';
 
 final downloadStationApiProvider = Provider<DownloadStationApi>((ref) {
-  return DsmDownloadStationApi(dio: ref.watch(businessDioProvider));
+  return DsmDownloadStationApi(dio: AppDioFactory.businessDio());
 });
 final downloadFilterProvider = StateProvider<String>((ref) => 'all');
 

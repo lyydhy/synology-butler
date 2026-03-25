@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/utils/server_url_helper.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
+import '../../../auth/presentation/providers/current_connection_readers.dart';
 
 class DebugInfoPage extends ConsumerWidget {
   const DebugInfoPage({super.key});
@@ -12,8 +13,8 @@ class DebugInfoPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final currentServer = ref.watch(currentServerProvider);
-    final currentSession = ref.watch(currentSessionProvider);
+    final currentServer = ref.watch(activeServerProvider);
+    final currentSession = ref.watch(activeSessionProvider);
     final savedServers = ref.watch(savedServersProvider);
     final savedUsername = ref.watch(savedUsernameProvider);
 

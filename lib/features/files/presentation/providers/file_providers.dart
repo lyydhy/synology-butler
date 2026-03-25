@@ -6,14 +6,14 @@ import '../../../../data/api/file_station_api.dart';
 import '../../../../data/repositories/file_repository_impl.dart';
 import '../../../../domain/entities/file_item.dart';
 import '../../../../domain/repositories/file_repository.dart';
-import '../../../auth/presentation/providers/business_connection_providers.dart';
+import '../../../../core/network/app_dio.dart';
 import '../widgets/file_type_helper.dart';
 
 final currentPathProvider = StateProvider<String>((ref) => '/');
 final fileSortProvider = StateProvider<String>((ref) => 'type');
 
 final fileStationApiProvider = Provider<FileStationApi>((ref) {
-  return DsmFileStationApi(dio: ref.watch(businessDioProvider));
+  return DsmFileStationApi(dio: AppDioFactory.businessDio());
 });
 
 final fileRepositoryProvider = Provider<FileRepository>((ref) {

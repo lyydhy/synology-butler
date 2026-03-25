@@ -11,7 +11,9 @@ import '../../../../core/utils/local_app_logger.dart';
 import '../../../../core/utils/server_url_helper.dart';
 import '../../../../domain/entities/nas_server.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../core/network/app_dio.dart';
 import '../providers/auth_providers.dart';
+import '../providers/current_connection_readers.dart';
 
 enum _LoginMode { quick, manual }
 
@@ -297,7 +299,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
     final server = buildServer();
     final username = usernameController.text.trim();
-    ref.read(currentServerProvider.notifier).state = server;
+    AppDioFactory.setServer(server);
 
     await LocalAppLogger.log(
       level: 'info',
@@ -344,7 +346,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           'synoTokenPresent': session.synoToken != null && session.synoToken!.isNotEmpty,
         },
       );
-      ref.read(currentSessionProvider.notifier).state = session;
+      AppDioFactory.setSession(session);
       await ref.read(persistLoginProvider)(server, session, username, password: passwordController.text, rememberPassword: rememberPassword);
       if (mounted) context.go('/home');
     } catch (e) {
@@ -686,7 +688,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final currentServer = ref.watch(currentServerProvider);
+    final currentServer = ref.watch(activeServerProvider);
     final savedUsername = ref.watch(savedUsernameProvider);
     final savedPassword = ref.watch(savedPasswordProvider);
     final savedRememberPassword = ref.watch(savedRememberPasswordProvider);

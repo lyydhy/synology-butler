@@ -11,7 +11,7 @@ import '../../../../core/utils/file_launcher.dart';
 import '../../../../core/utils/server_url_helper.dart';
 import '../../../../domain/entities/file_item.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../auth/presentation/providers/auth_providers.dart';
+import '../../../auth/presentation/providers/current_connection_readers.dart';
 import '../../../transfers/presentation/providers/transfer_providers.dart';
 import '../../../preferences/providers/preferences_providers.dart';
 import '../providers/file_page_actions.dart';
@@ -39,8 +39,8 @@ class _FilesPageState extends ConsumerState<FilesPage> {
     super.initState();
     _pollTimer = Timer.periodic(const Duration(seconds: 10), (_) {
       if (!mounted) return;
-      final currentServer = ref.read(currentServerProvider);
-      final currentSession = ref.read(currentSessionProvider);
+      final currentServer = ref.read(activeServerProvider);
+      final currentSession = ref.read(activeSessionProvider);
       final selectionMode = ref.read(fileSelectionModeProvider);
       if (currentServer == null || currentSession == null || selectionMode) return;
       ref.invalidate(fileListProvider);
@@ -328,8 +328,8 @@ class _FilesPageState extends ConsumerState<FilesPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final currentServer = ref.watch(currentServerProvider);
-    final currentSession = ref.watch(currentSessionProvider);
+    final currentServer = ref.watch(activeServerProvider);
+    final currentSession = ref.watch(activeSessionProvider);
 
     if (currentServer == null || currentSession == null) {
       return Scaffold(

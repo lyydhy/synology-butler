@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
+import '../../../auth/presentation/providers/current_connection_readers.dart';
 import '../widgets/server_edit_dialog.dart';
 import '../widgets/server_management_tile.dart';
 
@@ -47,7 +48,7 @@ class ServerManagementPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final servers = ref.watch(savedServersProvider);
-    final currentServer = ref.watch(currentServerProvider);
+    final currentServer = ref.watch(activeServerProvider);
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.serverManagement)),

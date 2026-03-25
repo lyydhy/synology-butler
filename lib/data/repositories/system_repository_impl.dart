@@ -1,19 +1,18 @@
-import '../../core/network/business_connection_context.dart';
+import '../../core/network/app_dio.dart';
 import '../../domain/entities/information_center.dart';
 import '../../domain/entities/system_status.dart';
 import '../../domain/repositories/system_repository.dart';
 import '../api/system_api.dart';
 
 class SystemRepositoryImpl implements SystemRepository {
-  const SystemRepositoryImpl(this._systemApi, this._context);
+  const SystemRepositoryImpl(this._systemApi);
 
   final SystemApi _systemApi;
-  final BusinessConnectionContext _context;
 
   @override
   Future<InformationCenterData> fetchInformationCenter() async {
     final model = await _systemApi.fetchInformationCenter(
-      serverName: _context.server.name,
+      serverName: AppDioFactory.connectionStore.server?.name ?? '我的 NAS',
     );
 
     return InformationCenterData(
@@ -115,14 +114,14 @@ class SystemRepositoryImpl implements SystemRepository {
 
   @override
   Stream<SystemStatus> watchOverview() {
-    final synoToken = _context.session.synoToken;
+    final synoToken = AppDioFactory.connectionStore.session?.synoToken;
     if (synoToken == null || synoToken.isEmpty) {
       throw Exception('Missing SynoToken for realtime utilization');
     }
 
     return _systemApi.watchUtilization().map(
       (model) => SystemStatus(
-        serverName: _context.server.name,
+        serverName: AppDioFactory.connectionStore.server?.name ?? '我的 NAS',
         dsmVersion: model.dsmVersion,
         cpuUsage: model.cpuUsage,
         cpuUserUsage: model.cpuUserUsage,

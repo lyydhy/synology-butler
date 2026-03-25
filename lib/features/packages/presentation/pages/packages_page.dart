@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../domain/entities/package_item.dart';
 import '../../../../domain/entities/package_volume.dart';
-import '../../../auth/presentation/providers/auth_providers.dart';
+import '../../../auth/presentation/providers/current_connection_readers.dart';
 import '../providers/package_providers.dart';
 
 class PackagesPage extends ConsumerWidget {
@@ -12,8 +12,8 @@ class PackagesPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final server = ref.watch(currentServerProvider);
-    final session = ref.watch(currentSessionProvider);
+    final server = ref.watch(activeServerProvider);
+    final session = ref.watch(activeSessionProvider);
     final selectedTab = ref.watch(packageTabProvider);
     final packagesAsync = ref.watch(visiblePackagesProvider);
     final installStatus = ref.watch(packageInstallStatusProvider);

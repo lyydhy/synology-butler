@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../domain/entities/system_status.dart';
-import '../../../auth/presentation/providers/auth_providers.dart';
+import '../../../auth/presentation/providers/current_connection_readers.dart';
 import '../../../dashboard/presentation/providers/dashboard_providers.dart';
 
 class PerformancePage extends ConsumerStatefulWidget {
@@ -76,7 +76,7 @@ class _PerformancePageState extends ConsumerState<PerformancePage> with SingleTi
 
   @override
   Widget build(BuildContext context) {
-    final currentSession = ref.watch(currentSessionProvider);
+    final currentSession = ref.watch(activeSessionProvider);
     final overview = ref.watch(dashboardOverviewSafeProvider);
     final data = overview.valueOrNull;
 

@@ -5,7 +5,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
-import '../../core/network/business_connection_context.dart';
+import '../../core/network/app_dio.dart';
 import '../../core/network/dio_client.dart';
 import '../../core/utils/dsm_logger.dart';
 import '../models/information_center_model.dart';
@@ -22,12 +22,9 @@ abstract class SystemApi {
 }
 
 class DsmSystemApi implements SystemApi {
-  DsmSystemApi({required Dio dio, required BusinessConnectionContext context})
-      : _dio = dio,
-        _context = context;
+  DsmSystemApi({required Dio dio}) : _dio = dio;
 
   final Dio _dio;
-  final BusinessConnectionContext _context;
   @override
   Future<InformationCenterModel> fetchInformationCenter({
     required String serverName,
@@ -52,7 +49,7 @@ class DsmSystemApi implements SystemApi {
       module: 'System',
       action: 'fetchInformationCenter',
       method: 'POST',
-      path: _context.baseUrl,
+      path: (AppDioFactory.connectionStore.server == null ? '' : ''),
       extra: {
         'apis': [
           'SYNO.Core.System.info',
@@ -165,8 +162,8 @@ class DsmSystemApi implements SystemApi {
       final disks = _extractDisks(diskData);
       final versionText = await _fetchUpgradeVersion(
             client: client,
-            sid: _context.session.sid,
-            synoToken: _context.session.synoToken,
+            sid: AppDioFactory.connectionStore.session?.sid ?? '',
+            synoToken: AppDioFactory.connectionStore.session?.synoToken,
           ) ??
           _buildVersionText(infoData);
 
@@ -193,7 +190,7 @@ class DsmSystemApi implements SystemApi {
       DsmLogger.success(
         module: 'System',
         action: 'fetchInformationCenter',
-        path: _context.baseUrl,
+        path: (AppDioFactory.connectionStore.server == null ? '' : ''),
         response: {
           'serverName': model.serverName,
           'lanCount': model.lanNetworks.length,
@@ -207,7 +204,7 @@ class DsmSystemApi implements SystemApi {
       DsmLogger.failure(
         module: 'System',
         action: 'fetchInformationCenter',
-        path: _context.baseUrl,
+        path: (AppDioFactory.connectionStore.server == null ? '' : ''),
         reason: e.toString(),
       );
       rethrow;
@@ -222,7 +219,7 @@ class DsmSystemApi implements SystemApi {
       module: 'System',
       action: 'fetchOverview',
       method: 'GET',
-      path: _context.baseUrl,
+      path: (AppDioFactory.connectionStore.server == null ? '' : ''),
       extra: {
         'apis': [
           'SYNO.Core.System',
@@ -292,20 +289,20 @@ class DsmSystemApi implements SystemApi {
 
       final storagePollVolumes = await _fetchStoragePollVolumes(
         client: client,
-        sid: _context.session.sid,
-        synoToken: _context.session.synoToken,
+        sid: AppDioFactory.connectionStore.session?.sid ?? '',
+        synoToken: AppDioFactory.connectionStore.session?.synoToken,
       );
       final resolvedVolumes = storagePollVolumes.isNotEmpty ? storagePollVolumes : mappedVolumes;
 
       final upgradeVersionText = await _fetchUpgradeVersion(
         client: client,
-        sid: _context.session.sid,
-        synoToken: _context.session.synoToken,
+        sid: AppDioFactory.connectionStore.session?.sid ?? '',
+        synoToken: AppDioFactory.connectionStore.session?.synoToken,
       );
       final systemHealthUptime = await _fetchSystemHealthUptime(
         client: client,
-        sid: _context.session.sid,
-        synoToken: _context.session.synoToken,
+        sid: AppDioFactory.connectionStore.session?.sid ?? '',
+        synoToken: AppDioFactory.connectionStore.session?.synoToken,
       );
       final versionText = upgradeVersionText ?? _buildVersionText(infoData);
       final resolvedStorageUsage = _resolveStorageUsage(totalSpace, resolvedVolumes);
@@ -345,7 +342,7 @@ class DsmSystemApi implements SystemApi {
       DsmLogger.success(
         module: 'System',
         action: 'fetchOverview',
-        path: _context.baseUrl,
+        path: (AppDioFactory.connectionStore.server == null ? '' : ''),
         response: {
           'serverName': result.serverName,
           'dsmVersion': result.dsmVersion,
@@ -359,7 +356,7 @@ class DsmSystemApi implements SystemApi {
       DsmLogger.failure(
         module: 'System',
         action: 'fetchOverview',
-        path: _context.baseUrl,
+        path: (AppDioFactory.connectionStore.server == null ? '' : ''),
         reason: e.toString(),
       );
       rethrow;
@@ -368,20 +365,20 @@ class DsmSystemApi implements SystemApi {
 
   @override
   Stream<SystemStatusModel> watchUtilization() {
-    final synoToken = _context.session.synoToken;
-    final cookieHeader = _context.session.cookieHeader;
+    final synoToken = AppDioFactory.connectionStore.session?.synoToken;
+    final cookieHeader = AppDioFactory.connectionStore.session?.cookieHeader;
     if (synoToken == null || synoToken.isEmpty) {
       throw Exception('Missing SynoToken for realtime utilization');
     }
-    final baseUrl = _context.baseUrl;
-    final sid = _context.session.sid;
+    final baseUrl = (AppDioFactory.connectionStore.server == null ? '' : '');
+    final sid = AppDioFactory.connectionStore.session?.sid ?? '';
     final controller = StreamController<SystemStatusModel>();
 
     DsmLogger.request(
       module: 'System',
       action: 'watchUtilization',
       method: 'WS',
-      path: _context.baseUrl,
+      path: (AppDioFactory.connectionStore.server == null ? '' : ''),
       extra: {
         'api': 'SYNO.Core.System.Utilization',
         'type': 'current',
@@ -455,7 +452,7 @@ class DsmSystemApi implements SystemApi {
         DsmLogger.failure(
           module: 'System',
           action: 'watchUtilization',
-          path: _context.baseUrl,
+          path: (AppDioFactory.connectionStore.server == null ? '' : ''),
           reason: 'Realtime authentication error: $reason',
           sid: sid,
           synoToken: synoToken,
@@ -474,7 +471,7 @@ class DsmSystemApi implements SystemApi {
         DsmLogger.failure(
           module: 'System',
           action: 'watchUtilization',
-          path: _context.baseUrl,
+          path: (AppDioFactory.connectionStore.server == null ? '' : ''),
           reason: 'Realtime bootstrap timeout after websocket connect; auth likely expired',
           sid: sid,
           synoToken: synoToken,
@@ -549,7 +546,7 @@ class DsmSystemApi implements SystemApi {
           DsmLogger.success(
             module: 'System',
             action: 'watchUtilization',
-            path: _context.baseUrl,
+            path: (AppDioFactory.connectionStore.server == null ? '' : ''),
             response: {
               'received': true,
               'spaceKeys': spacePreview is Map ? spacePreview.keys.map((e) => e.toString()).toList() : [],
@@ -587,7 +584,7 @@ class DsmSystemApi implements SystemApi {
           DsmLogger.success(
             module: 'System',
             action: 'watchUtilizationVolumes',
-            path: _context.baseUrl,
+            path: (AppDioFactory.connectionStore.server == null ? '' : ''),
             response: {
               'count': mappedVolumes.length,
               'names': mappedVolumes.map((e) => e.name).toList(),

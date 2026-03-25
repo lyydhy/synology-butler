@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/error/error_mapper.dart';
-import '../../../auth/presentation/providers/auth_providers.dart';
+import '../../../auth/presentation/providers/current_connection_readers.dart';
 import '../../../downloads/presentation/providers/download_providers.dart';
 import '../../../files/presentation/providers/file_providers.dart';
 
@@ -24,8 +24,8 @@ class _DiagnosticsPageState extends ConsumerState<DiagnosticsPage> {
   Future<void> testAuth() async {
     setState(() => loadingAuth = true);
     try {
-      final server = ref.read(currentServerProvider);
-      final session = ref.read(currentSessionProvider);
+      final server = ref.read(activeServerProvider);
+      final session = ref.read(activeSessionProvider);
       if (server == null || session == null) throw Exception('当前没有可用会话');
       setState(() => authResult = '成功：已存在当前设备与会话');
     } catch (e) {

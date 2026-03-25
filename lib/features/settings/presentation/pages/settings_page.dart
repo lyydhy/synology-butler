@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/utils/server_url_helper.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
+import '../../../auth/presentation/providers/current_connection_readers.dart';
 import '../../../preferences/providers/preferences_providers.dart';
 import '../widgets/server_list_card.dart';
 
@@ -50,8 +51,8 @@ class SettingsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final server = ref.watch(currentServerProvider);
-    final session = ref.watch(currentSessionProvider);
+    final server = ref.watch(activeServerProvider);
+    final session = ref.watch(activeSessionProvider);
     final savedServers = ref.watch(savedServersProvider);
     final themeMode = ref.watch(themeModeProvider);
     final themeColor = ref.watch(themeColorProvider);

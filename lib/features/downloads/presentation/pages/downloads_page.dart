@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/error/error_mapper.dart';
 import '../../../../core/utils/download_status_helper.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../auth/presentation/providers/auth_providers.dart';
+import '../../../auth/presentation/providers/current_connection_readers.dart';
 import '../../../../domain/entities/download_task.dart';
 import '../providers/download_providers.dart';
 import '../widgets/download_task_detail_sheet.dart';
@@ -120,8 +120,8 @@ class DownloadsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final currentServer = ref.watch(currentServerProvider);
-    final currentSession = ref.watch(currentSessionProvider);
+    final currentServer = ref.watch(activeServerProvider);
+    final currentSession = ref.watch(activeSessionProvider);
 
     if (currentServer == null || currentSession == null) {
       return Scaffold(appBar: AppBar(title: Text(l10n.downloadsTitle)), body: Center(child: Text(l10n.noSessionPleaseLogin)));

@@ -7,7 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/utils/server_url_helper.dart';
 import '../../../../domain/entities/system_status.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../auth/presentation/providers/auth_providers.dart';
+import '../../../auth/presentation/providers/current_connection_readers.dart';
 import '../providers/dashboard_providers.dart';
 import '../widgets/summary_card.dart';
 
@@ -45,7 +45,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with WidgetsBindi
     }
     _lastForegroundRefreshAt = now;
 
-    if (ref.read(currentServerProvider) == null || ref.read(currentSessionProvider) == null) {
+    if (ref.read(activeServerProvider) == null || ref.read(activeSessionProvider) == null) {
       return;
     }
 
@@ -59,8 +59,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with WidgetsBindi
     final l10n = AppLocalizations.of(context);
     final overview = ref.watch(dashboardOverviewSafeProvider);
     final realtimeState = ref.watch(dashboardRealtimeOverviewProvider);
-    final currentServer = ref.watch(currentServerProvider);
-    final currentSession = ref.watch(currentSessionProvider);
+    final currentServer = ref.watch(activeServerProvider);
+    final currentSession = ref.watch(activeSessionProvider);
 
     if (currentServer == null || currentSession == null) {
       return Scaffold(

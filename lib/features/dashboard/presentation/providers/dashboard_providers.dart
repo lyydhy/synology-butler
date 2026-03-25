@@ -11,19 +11,22 @@ import '../../../../data/repositories/system_repository_impl.dart';
 import '../../../../domain/entities/system_status.dart';
 import '../../../../domain/repositories/system_repository.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
-import '../../../auth/presentation/providers/business_connection_providers.dart';
+import '../../../../core/network/app_dio.dart';
 
 final systemApiProvider = Provider<SystemApi>((ref) {
+  final server = AppDioFactory.connectionStore.server;
+  if (server == null) {
+    throw Exception('No active NAS session');
+  }
+
   return DsmSystemApi(
-    dio: ref.watch(businessDioProvider),
-    context: ref.watch(businessConnectionContextProvider),
+    dio: AppDioFactory.businessDio(ignoreBadCertificate: server.ignoreBadCertificate),
   );
 });
 
 final systemRepositoryProvider = Provider<SystemRepository>((ref) {
   return SystemRepositoryImpl(
     ref.read(systemApiProvider),
-    ref.watch(businessConnectionContextProvider),
   );
 });
 
@@ -70,7 +73,6 @@ final dashboardBaseOverviewProvider = FutureProvider<SystemStatus>((ref) async {
 });
 
 final dashboardRealtimeOverviewProvider = StreamProvider<SystemStatus>((ref) {
-  ref.watch(businessConnectionContextProvider);
 
   late final StreamController<SystemStatus> controller;
   StreamSubscription<SystemStatus>? subscription;
@@ -116,7 +118,7 @@ final dashboardRealtimeOverviewProvider = StreamProvider<SystemStatus>((ref) {
 
   Future<void> reconnectCallback() async {
     if (controller.isClosed) return;
-    final latestSession = ref.read(currentSessionProvider);
+    final latestSession = AppDioFactory.connectionStore.session;
     final sidPreview = latestSession == null
         ? 'missing'
         : (latestSession.sid.length > 8 ? latestSession.sid.substring(0, 8) : latestSession.sid);
