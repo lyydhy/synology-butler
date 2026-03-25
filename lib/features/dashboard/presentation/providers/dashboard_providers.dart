@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router.dart';
+import '../../../../core/network/realtime_reconnect_bridge.dart';
 import '../../../../data/api/system_api.dart';
 import '../../../../data/repositories/system_repository_impl.dart';
 import '../../../../domain/entities/system_status.dart';
@@ -96,16 +97,9 @@ final dashboardRealtimeOverviewProvider = StreamProvider<SystemStatus>((ref) {
     subscription = source.listen(
       controller.add,
       onError: (error, stackTrace) async {
-        if (allowRefresh && _looksLikeRealtimeAuthFailure(error)) {
-          try {
-            await ref.read(recoverSessionProvider)();
-            await startStream(allowRefresh: false);
-            return;
-          } catch (refreshError, refreshStackTrace) {
-            await _handleSessionExpired(ref);
-            controller.addError(refreshError, refreshStackTrace);
-            return;
-          }
+        if (_looksLikeRealtimeAuthFailure(error)) {
+          controller.addError(error, stackTrace);
+          return;
         }
 
         if (_isSessionExpiredError(error)) {
@@ -131,7 +125,16 @@ final dashboardRealtimeOverviewProvider = StreamProvider<SystemStatus>((ref) {
     },
   );
 
+  final reconnectCallback = () async {
+    if (controller.isClosed) return;
+    await startStream(allowRefresh: false);
+  };
+  RealtimeReconnectBridge.callback = reconnectCallback;
+
   ref.onDispose(() async {
+    if (identical(RealtimeReconnectBridge.callback, reconnectCallback)) {
+      RealtimeReconnectBridge.callback = null;
+    }
     await subscription?.cancel();
     if (!controller.isClosed) {
       await controller.close();

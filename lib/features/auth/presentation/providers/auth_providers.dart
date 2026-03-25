@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/network/realtime_reconnect_bridge.dart';
 import '../../../../core/network/session_recovery_bridge.dart';
 import '../../../../core/storage/local_storage_service.dart';
 import '../../../../core/storage/secure_storage_service.dart';
@@ -213,6 +214,7 @@ final recoverSessionProvider = Provider<Future<NasSession> Function()>((ref) {
       ref.read(currentSessionProvider.notifier).state = recovered;
       await _persistSessionSecrets(ref, recovered);
       await ref.read(localStorageProvider).remove(AppConstants.sessionExpiredFlagKey);
+      await RealtimeReconnectBridge.callback?.call();
       return recovered;
     })().whenComplete(() {
       _recoverSessionInFlight = null;
