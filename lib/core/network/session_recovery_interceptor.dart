@@ -143,9 +143,15 @@ class SessionRecoveryInterceptor extends Interceptor {
 
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) async {
+        _recoveryLog('[SessionRecovery] in 1');
     final options = response.requestOptions;
+            _recoveryLog('[SessionRecovery]   in 2');
+
     final api = options.queryParameters['api']?.toString() ?? (options.data is Map ? options.data['api']?.toString() : null) ?? '-';
+            _recoveryLog('[SessionRecovery]  in 3');
+
     final method = options.queryParameters['method']?.toString() ?? (options.data is Map ? options.data['method']?.toString() : null) ?? '-';
+        _recoveryLog('[SessionRecovery]  in 4');
 
     if (_shouldSkipRecovery(options)) {
       _recoveryLog('[SessionRecovery] skip api=$api method=$method path=${options.path}');
