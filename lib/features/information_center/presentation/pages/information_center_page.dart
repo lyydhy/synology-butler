@@ -53,9 +53,33 @@ class InformationCenterPage extends ConsumerWidget {
             ],
           ),
         ),
-        body: infoAsync.when(
-          data: (info) {
+        body: Builder(
+          builder: (context) {
             final overview = overviewAsync.valueOrNull;
+
+            if (infoAsync.isLoading) {
+              return TabBarView(
+                physics: const NeverScrollableScrollPhysics(),
+                children: List.generate(3, (_) => const _InformationCenterLoadingView()),
+              );
+            }
+
+            if (infoAsync.hasError) {
+              return TabBarView(
+                children: List.generate(
+                  3,
+                  (_) => _InformationCenterErrorView(
+                    error: infoAsync.error,
+                    onRetry: () {
+                      ref.invalidate(informationCenterProvider);
+                      ref.invalidate(dashboardBaseOverviewProvider);
+                    },
+                  ),
+                ),
+              );
+            }
+
+            final info = infoAsync.requireValue;
             return TabBarView(
               children: [
                 OverviewTab(info: info),
@@ -64,13 +88,58 @@ class InformationCenterPage extends ConsumerWidget {
               ],
             );
           },
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, _) => Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Text('信息中心加载失败\n$error', textAlign: TextAlign.center),
+        ),
+      ),
+    );
+  }
+}
+
+class _InformationCenterLoadingView extends StatelessWidget {
+  const _InformationCenterLoadingView();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: CircularProgressIndicator(),
+    );
+  }
+}
+
+class _InformationCenterErrorView extends StatelessWidget {
+  final Object? error;
+  final VoidCallback onRetry;
+
+  const _InformationCenterErrorView({
+    required this.error,
+    required this.onRetry,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.error_outline, size: 40),
+            const SizedBox(height: 12),
+            const Text('信息中心加载失败', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+            const SizedBox(height: 8),
+            Text(
+              '$error',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
             ),
-          ),
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh),
+              label: const Text('重新加载'),
+            ),
+          ],
         ),
       ),
     );
