@@ -1203,7 +1203,16 @@ class DsmSystemApi implements SystemApi {
 
     for (final item in resultList) {
       if (item is Map && item['api'] == targetApi && item['success'] == true) {
-        return item['data'] as Map? ?? const {};
+        final data = item['data'];
+        if (data is Map) {
+          return data;
+        }
+        if (data is List) {
+          return {
+            'list': data,
+          };
+        }
+        return const {};
       }
     }
     return const {};
