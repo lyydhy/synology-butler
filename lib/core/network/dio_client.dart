@@ -31,9 +31,16 @@ class DioClient {
       ),
     );
     dio.interceptors.add(RequestLogInterceptor());
-    final recoveryCallback = onRecoverSession ?? SessionRecoveryBridge.callback;
-    if (enableSessionRecovery && recoveryCallback != null) {
-      dio.interceptors.add(SessionRecoveryInterceptor(recoveryCallback));
+    if (enableSessionRecovery) {
+      dio.interceptors.add(
+        SessionRecoveryInterceptor(() async {
+          final recoveryCallback = onRecoverSession ?? SessionRecoveryBridge.callback;
+          if (recoveryCallback == null) {
+            throw StateError('Session recovery callback is not registered');
+          }
+          return recoveryCallback();
+        }),
+      );
     }
 
     final adapter = dio.httpClientAdapter;
