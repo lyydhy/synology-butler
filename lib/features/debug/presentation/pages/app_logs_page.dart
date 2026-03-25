@@ -14,6 +14,7 @@ class AppLogsPage extends StatefulWidget {
 
 class _AppLogsPageState extends State<AppLogsPage> {
   bool isLoading = true;
+  String? errorMessage;
   List<LocalAppLogFileSummary> logFiles = const [];
 
   @override
@@ -23,13 +24,24 @@ class _AppLogsPageState extends State<AppLogsPage> {
   }
 
   Future<void> refresh() async {
-    setState(() => isLoading = true);
-    final files = await LocalAppLogStore.listLogFiles();
-    if (!mounted) return;
     setState(() {
-      logFiles = files;
-      isLoading = false;
+      isLoading = true;
+      errorMessage = null;
     });
+    try {
+      final files = await LocalAppLogStore.listLogFiles();
+      if (!mounted) return;
+      setState(() {
+        logFiles = files;
+        isLoading = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        isLoading = false;
+        errorMessage = error.toString();
+      });
+    }
   }
 
   Future<void> _exportToSelectedDirectory(LocalAppLogFileSummary file) async {
@@ -50,11 +62,12 @@ class _AppLogsPageState extends State<AppLogsPage> {
 
   Future<void> openLog(LocalAppLogFileSummary file) async {
     final l10n = AppLocalizations.of(context);
-    final rawText = await LocalAppLogStore.readLogFile(file.path);
-    final sanitizedText = LocalAppLogStore.sanitizeLogText(rawText);
-    if (!mounted) return;
+    try {
+      final rawText = await LocalAppLogStore.readLogFile(file.path);
+      final sanitizedText = LocalAppLogStore.sanitizeLogText(rawText);
+      if (!mounted) return;
 
-    await showModalBottomSheet<void>(
+      await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
@@ -210,6 +223,12 @@ class _AppLogsPageState extends State<AppLogsPage> {
         );
       },
     );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('日志打开失败: $error')),
+      );
+    }
   }
 
   Future<void> clearAll() async {
@@ -237,7 +256,29 @@ class _AppLogsPageState extends State<AppLogsPage> {
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Column(
+          : errorMessage != null
+              ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.error_outline, size: 40),
+                        const SizedBox(height: 12),
+                        const Text('日志中心加载失败', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                        const SizedBox(height: 8),
+                        Text(errorMessage!, textAlign: TextAlign.center),
+                        const SizedBox(height: 16),
+                        FilledButton.icon(
+                          onPressed: refresh,
+                          icon: const Icon(Icons.refresh),
+                          label: const Text('重试'),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              : Column(
               children: [
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
