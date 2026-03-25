@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/network/session_recovery_bridge.dart';
 import '../../../../core/storage/local_storage_service.dart';
 import '../../../../core/storage/secure_storage_service.dart';
 import '../../../../core/utils/server_mapper.dart';
@@ -190,7 +191,7 @@ final persistLoginProvider = Provider<Future<void> Function(NasServer, NasSessio
 Future<NasSession>? _recoverSessionInFlight;
 
 final recoverSessionProvider = Provider<Future<NasSession> Function()>((ref) {
-  return () {
+  Future<NasSession> recover() {
     return _recoverSessionInFlight ??= (() async {
       final server = ref.read(currentServerProvider);
       final username = ref.read(savedUsernameProvider);
@@ -216,7 +217,18 @@ final recoverSessionProvider = Provider<Future<NasSession> Function()>((ref) {
     })().whenComplete(() {
       _recoverSessionInFlight = null;
     });
+  }
+
+  SessionRecoveryBridge.callback = () async {
+    final session = await recover();
+    return {
+      'sid': session.sid,
+      'synoToken': session.synoToken,
+      'cookieHeader': session.cookieHeader,
+    };
   };
+
+  return recover;
 });
 
 final refreshSynoTokenProvider = Provider<Future<NasSession> Function()>((ref) {

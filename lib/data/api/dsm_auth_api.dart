@@ -10,7 +10,7 @@ class DsmAuthApi implements AuthApi {
   Future<DsmVersionInfo> probeVersion({
     required NasServerModel server,
   }) async {
-    final client = DioClient(baseUrl: server.baseUrl).dio;
+    final client = DioClient(baseUrl: server.baseUrl, enableSessionRecovery: false).dio;
 
     DsmLogger.request(
       module: 'Auth',
@@ -75,7 +75,7 @@ class DsmAuthApi implements AuthApi {
     required String sid,
     String? cookieHeader,
   }) async {
-    final client = DioClient(baseUrl: server.baseUrl).dio;
+    final client = DioClient(baseUrl: server.baseUrl, enableSessionRecovery: false).dio;
 
     DsmLogger.request(
       module: 'Auth',
@@ -153,7 +153,7 @@ class DsmAuthApi implements AuthApi {
     required NasServerModel server,
     required String sid,
   }) async {
-    final client = DioClient(baseUrl: server.baseUrl).dio;
+    final client = DioClient(baseUrl: server.baseUrl, enableSessionRecovery: false).dio;
 
     DsmLogger.request(
       module: 'Auth',
@@ -233,7 +233,11 @@ class DsmAuthApi implements AuthApi {
     required String username,
     required String password,
   }) async {
-    final client = DioClient(baseUrl: server.baseUrl, ignoreBadCertificate: server.ignoreBadCertificate).dio;
+    final client = DioClient(
+      baseUrl: server.baseUrl,
+      ignoreBadCertificate: server.ignoreBadCertificate,
+      enableSessionRecovery: false,
+    ).dio;
 
     DsmLogger.request(
       module: 'Auth',
@@ -322,7 +326,11 @@ class DsmAuthApi implements AuthApi {
     required NasServerModel server,
     required String sid,
   }) async {
-    final client = DioClient(baseUrl: server.baseUrl, ignoreBadCertificate: server.ignoreBadCertificate).dio;
+    final client = DioClient(
+      baseUrl: server.baseUrl,
+      ignoreBadCertificate: server.ignoreBadCertificate,
+      enableSessionRecovery: false,
+    ).dio;
     DsmLogger.request(
       module: 'Auth',
       action: 'logout',
