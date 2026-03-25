@@ -12,12 +12,13 @@ import '../widgets/file_type_helper.dart';
 final currentPathProvider = StateProvider<String>((ref) => '/');
 final fileSortProvider = StateProvider<String>((ref) => 'type');
 
-final fileStationApiProvider = Provider<FileStationApi>((ref) => DsmFileStationApi());
+final fileStationApiProvider = Provider<FileStationApi>((ref) {
+  return DsmFileStationApi(dio: ref.watch(businessDioProvider));
+});
 
 final fileRepositoryProvider = Provider<FileRepository>((ref) {
   return FileRepositoryImpl(
     ref.read(fileStationApiProvider),
-    ref.watch(businessConnectionContextProvider),
   );
 });
 

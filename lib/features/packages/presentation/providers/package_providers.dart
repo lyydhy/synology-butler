@@ -9,12 +9,13 @@ import '../../../../domain/entities/package_volume.dart';
 import '../../../../domain/repositories/package_repository.dart';
 import '../../../auth/presentation/providers/business_connection_providers.dart';
 
-final packageApiProvider = Provider<PackageApi>((ref) => DsmPackageApi());
+final packageApiProvider = Provider<PackageApi>((ref) {
+  return DsmPackageApi(dio: ref.watch(businessDioProvider));
+});
 
 final packageRepositoryProvider = Provider<PackageRepository>((ref) {
   return PackageRepositoryImpl(
     ref.read(packageApiProvider),
-    ref.watch(businessConnectionContextProvider),
   );
 });
 

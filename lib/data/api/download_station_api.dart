@@ -1,52 +1,41 @@
 import 'package:dio/dio.dart';
 
-import '../../core/network/business_connection_context.dart';
-import '../../core/network/dio_client.dart';
 import '../models/download_task_model.dart';
 
 abstract class DownloadStationApi {
-  Future<List<DownloadTaskModel>> listTasks({
-    required BusinessConnectionContext context,
-  });
+  Future<List<DownloadTaskModel>> listTasks();
 
   Future<void> createTask({
-    required BusinessConnectionContext context,
     required String uri,
   });
 
   Future<void> pauseTask({
-    required BusinessConnectionContext context,
     required String id,
   });
 
   Future<void> resumeTask({
-    required BusinessConnectionContext context,
     required String id,
   });
 
   Future<void> deleteTask({
-    required BusinessConnectionContext context,
     required String id,
   });
 }
 
 class DsmDownloadStationApi implements DownloadStationApi {
-  Dio _dio(BusinessConnectionContext context) => DioClient(baseUrl: context.baseUrl).dio;
+  DsmDownloadStationApi({required Dio dio}) : _dio = dio;
+
+  final Dio _dio;
 
   @override
-  Future<List<DownloadTaskModel>> listTasks({
-    required BusinessConnectionContext context,
-  }) async {
-    final client = _dio(context);
-
-    final response = await client.get(
+  Future<List<DownloadTaskModel>> listTasks() async {
+    final response = await _dio.get(
       '/webapi/DownloadStation/task.cgi',
       queryParameters: {
         'api': 'SYNO.DownloadStation.Task',
         'version': '1',
         'method': 'list',
         'additional': 'detail,transfer',
-        '_sid': context.session.sid,
       },
     );
 
@@ -79,19 +68,15 @@ class DsmDownloadStationApi implements DownloadStationApi {
 
   @override
   Future<void> createTask({
-    required BusinessConnectionContext context,
     required String uri,
   }) async {
-    final client = _dio(context);
-
-    final response = await client.get(
+    final response = await _dio.get(
       '/webapi/DownloadStation/task.cgi',
       queryParameters: {
         'api': 'SYNO.DownloadStation.Task',
         'version': '1',
         'method': 'create',
         'uri': uri,
-        '_sid': context.session.sid,
       },
     );
 
@@ -108,18 +93,15 @@ class DsmDownloadStationApi implements DownloadStationApi {
 
   @override
   Future<void> pauseTask({
-    required BusinessConnectionContext context,
     required String id,
   }) async {
-    final client = _dio(context);
-    final response = await client.get(
+    final response = await _dio.get(
       '/webapi/DownloadStation/task.cgi',
       queryParameters: {
         'api': 'SYNO.DownloadStation.Task',
         'version': '1',
         'method': 'pause',
         'id': id,
-        '_sid': context.session.sid,
       },
     );
 
@@ -134,18 +116,15 @@ class DsmDownloadStationApi implements DownloadStationApi {
 
   @override
   Future<void> resumeTask({
-    required BusinessConnectionContext context,
     required String id,
   }) async {
-    final client = _dio(context);
-    final response = await client.get(
+    final response = await _dio.get(
       '/webapi/DownloadStation/task.cgi',
       queryParameters: {
         'api': 'SYNO.DownloadStation.Task',
         'version': '1',
         'method': 'resume',
         'id': id,
-        '_sid': context.session.sid,
       },
     );
 
@@ -160,11 +139,9 @@ class DsmDownloadStationApi implements DownloadStationApi {
 
   @override
   Future<void> deleteTask({
-    required BusinessConnectionContext context,
     required String id,
   }) async {
-    final client = _dio(context);
-    final response = await client.get(
+    final response = await _dio.get(
       '/webapi/DownloadStation/task.cgi',
       queryParameters: {
         'api': 'SYNO.DownloadStation.Task',
@@ -172,7 +149,6 @@ class DsmDownloadStationApi implements DownloadStationApi {
         'method': 'delete',
         'id': id,
         'force_complete': false,
-        '_sid': context.session.sid,
       },
     );
 

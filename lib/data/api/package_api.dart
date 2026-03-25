@@ -2,103 +2,57 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 
-import '../../core/network/dio_client.dart';
 import '../../core/utils/dsm_logger.dart';
 import '../models/package_item_model.dart';
 import '../models/package_volume_model.dart';
 
 abstract class PackageApi {
   Future<List<PackageItemModel>> fetchStorePackages({
-    required String baseUrl,
-    required String sid,
-    String? synoToken,
-    String? cookieHeader,
-    bool others = false,
+        bool others = false,
     int version = 2,
   });
 
   Future<List<PackageItemModel>> fetchInstalledPackages({
-    required String baseUrl,
-    required String sid,
-    String? synoToken,
-    String? cookieHeader,
-    int version = 2,
+        int version = 2,
   });
 
-  Future<List<PackageVolumeModel>> fetchVolumes({
-    required String baseUrl,
-    required String sid,
-    String? synoToken,
-    String? cookieHeader,
-  });
+  Future<List<PackageVolumeModel>> fetchVolumes();
 
   Future<Map<String, dynamic>> checkInstallQueue({
-    required String baseUrl,
-    required String sid,
     required String packageId,
     required String version,
-    String? synoToken,
-    String? cookieHeader,
     bool beta = false,
   });
 
   Future<Map<String, dynamic>> installPackage({
-    required String baseUrl,
-    required String sid,
     required String packageId,
     required String volumePath,
-    String? synoToken,
-    String? cookieHeader,
   });
 
   Future<Map<String, dynamic>> getInstallStatus({
-    required String baseUrl,
-    required String sid,
     required String taskId,
-    String? synoToken,
-    String? cookieHeader,
   });
 
   Future<void> startPackage({
-    required String baseUrl,
-    required String sid,
     required String packageId,
     String? dsmAppName,
-    String? synoToken,
-    String? cookieHeader,
   });
 
   Future<void> stopPackage({
-    required String baseUrl,
-    required String sid,
     required String packageId,
-    String? synoToken,
-    String? cookieHeader,
   });
 
   Future<void> uninstallPackage({
-    required String baseUrl,
-    required String sid,
     required String packageId,
-    String? synoToken,
-    String? cookieHeader,
   });
 }
 
 class DsmPackageApi implements PackageApi {
-  Options _buildOptions({
-    String? synoToken,
-    String? cookieHeader,
-  }) {
-    final headers = <String, dynamic>{};
-    if (synoToken != null && synoToken.isNotEmpty) {
-      headers['X-SYNO-TOKEN'] = synoToken;
-    }
-    if (cookieHeader != null && cookieHeader.isNotEmpty) {
-      headers['Cookie'] = cookieHeader;
-    }
+  DsmPackageApi({required Dio dio}) : _dio = dio;
+
+  final Dio _dio;
+  Options _buildOptions() {
     return Options(
-      headers: headers,
       contentType: Headers.formUrlEncodedContentType,
     );
   }
@@ -116,25 +70,18 @@ class DsmPackageApi implements PackageApi {
 
   @override
   Future<List<PackageItemModel>> fetchStorePackages({
-    required String baseUrl,
-    required String sid,
-    String? synoToken,
-    String? cookieHeader,
-    bool others = false,
+        bool others = false,
     int version = 2,
   }) async {
-    final client = DioClient(baseUrl: baseUrl).dio;
+    final client = _dio;
     final action = others ? 'fetchThirdPartyStorePackages' : 'fetchStorePackages';
 
     DsmLogger.request(
       module: 'Package',
       action: action,
       method: 'POST',
-      path: baseUrl,
-      sid: sid,
-      synoToken: synoToken,
-      cookieHeader: cookieHeader,
-      extra: {
+      path: '/webapi/entry.cgi',
+                        extra: {
         'api': 'SYNO.Core.Package.Server',
         'method': 'list',
         'version': version,
@@ -151,9 +98,8 @@ class DsmPackageApi implements PackageApi {
         'updateSprite': 'true',
         'blforcereload': 'false',
         'blloadothers': others.toString(),
-        '_sid': sid,
-      },
-      options: _buildOptions(synoToken: synoToken, cookieHeader: cookieHeader),
+              },
+      options: _buildOptions(),
     );
 
     final payload = response.data;
@@ -169,7 +115,7 @@ class DsmPackageApi implements PackageApi {
       DsmLogger.success(
         module: 'Package',
         action: action,
-        path: baseUrl,
+        path: '/webapi/entry.cgi',
         response: {
           'count': merged.length,
           'betaCount': betaPackages.length,
@@ -182,12 +128,9 @@ class DsmPackageApi implements PackageApi {
     DsmLogger.failure(
       module: 'Package',
       action: action,
-      path: baseUrl,
+      path: '/webapi/entry.cgi',
       response: payload,
-      sid: sid,
-      synoToken: synoToken,
-      cookieHeader: cookieHeader,
-    );
+                      );
 
     throw DioException(
       requestOptions: response.requestOptions,
@@ -198,13 +141,9 @@ class DsmPackageApi implements PackageApi {
 
   @override
   Future<List<PackageItemModel>> fetchInstalledPackages({
-    required String baseUrl,
-    required String sid,
-    String? synoToken,
-    String? cookieHeader,
-    int version = 2,
+        int version = 2,
   }) async {
-    final client = DioClient(baseUrl: baseUrl).dio;
+    final client = _dio;
     final additional = [
       'description',
       'description_enu',
@@ -234,11 +173,8 @@ class DsmPackageApi implements PackageApi {
       module: 'Package',
       action: 'fetchInstalledPackages',
       method: 'POST',
-      path: baseUrl,
-      sid: sid,
-      synoToken: synoToken,
-      cookieHeader: cookieHeader,
-      extra: {
+      path: '/webapi/entry.cgi',
+                        extra: {
         'api': 'SYNO.Core.Package',
         'method': 'list',
         'version': version,
@@ -253,9 +189,8 @@ class DsmPackageApi implements PackageApi {
         'method': 'list',
         'polling_interval': '15',
         'additional': jsonEncode(additional),
-        '_sid': sid,
-      },
-      options: _buildOptions(synoToken: synoToken, cookieHeader: cookieHeader),
+              },
+      options: _buildOptions(),
     );
 
     final payload = response.data;
@@ -270,7 +205,7 @@ class DsmPackageApi implements PackageApi {
       DsmLogger.success(
         module: 'Package',
         action: 'fetchInstalledPackages',
-        path: baseUrl,
+        path: '/webapi/entry.cgi',
         response: {
           'count': result.length,
         },
@@ -282,12 +217,9 @@ class DsmPackageApi implements PackageApi {
     DsmLogger.failure(
       module: 'Package',
       action: 'fetchInstalledPackages',
-      path: baseUrl,
+      path: '/webapi/entry.cgi',
       response: payload,
-      sid: sid,
-      synoToken: synoToken,
-      cookieHeader: cookieHeader,
-    );
+                      );
 
     throw DioException(
       requestOptions: response.requestOptions,
@@ -297,23 +229,15 @@ class DsmPackageApi implements PackageApi {
   }
 
   @override
-  Future<List<PackageVolumeModel>> fetchVolumes({
-    required String baseUrl,
-    required String sid,
-    String? synoToken,
-    String? cookieHeader,
-  }) async {
-    final client = DioClient(baseUrl: baseUrl).dio;
+  Future<List<PackageVolumeModel>> fetchVolumes() async {
+    final client = _dio;
 
     DsmLogger.request(
       module: 'Package',
       action: 'fetchVolumes',
       method: 'POST',
-      path: baseUrl,
-      sid: sid,
-      synoToken: synoToken,
-      cookieHeader: cookieHeader,
-      extra: {
+      path: '/webapi/entry.cgi',
+                        extra: {
         'api': 'SYNO.Core.Storage.Volume',
         'method': 'list',
       },
@@ -328,9 +252,8 @@ class DsmPackageApi implements PackageApi {
         'limit': '-1',
         'offset': '0',
         'location': 'internal',
-        '_sid': sid,
-      },
-      options: _buildOptions(synoToken: synoToken, cookieHeader: cookieHeader),
+              },
+      options: _buildOptions(),
     );
 
     final payload = response.data;
@@ -345,7 +268,7 @@ class DsmPackageApi implements PackageApi {
       DsmLogger.success(
         module: 'Package',
         action: 'fetchVolumes',
-        path: baseUrl,
+        path: '/webapi/entry.cgi',
         response: {
           'count': result.length,
         },
@@ -357,12 +280,9 @@ class DsmPackageApi implements PackageApi {
     DsmLogger.failure(
       module: 'Package',
       action: 'fetchVolumes',
-      path: baseUrl,
+      path: '/webapi/entry.cgi',
       response: payload,
-      sid: sid,
-      synoToken: synoToken,
-      cookieHeader: cookieHeader,
-    );
+                      );
 
     throw DioException(
       requestOptions: response.requestOptions,
@@ -373,25 +293,18 @@ class DsmPackageApi implements PackageApi {
 
   @override
   Future<Map<String, dynamic>> checkInstallQueue({
-    required String baseUrl,
-    required String sid,
     required String packageId,
     required String version,
-    String? synoToken,
-    String? cookieHeader,
     bool beta = false,
   }) async {
-    final client = DioClient(baseUrl: baseUrl).dio;
+    final client = _dio;
 
     DsmLogger.request(
       module: 'Package',
       action: 'checkInstallQueue',
       method: 'POST',
       path: packageId,
-      sid: sid,
-      synoToken: synoToken,
-      cookieHeader: cookieHeader,
-      extra: {
+                        extra: {
         'api': 'SYNO.Core.Package.Installation',
         'method': 'get_queue',
         'version': version,
@@ -406,9 +319,8 @@ class DsmPackageApi implements PackageApi {
         'version': '1',
         'method': 'get_queue',
         'pkgs': '[{"pkg":"$packageId", "version": "$version","beta":$beta}]',
-        '_sid': sid,
-      },
-      options: _buildOptions(synoToken: synoToken, cookieHeader: cookieHeader),
+              },
+      options: _buildOptions(),
     );
 
     final payload = response.data;
@@ -428,10 +340,7 @@ class DsmPackageApi implements PackageApi {
       action: 'checkInstallQueue',
       path: packageId,
       response: payload,
-      sid: sid,
-      synoToken: synoToken,
-      cookieHeader: cookieHeader,
-    );
+                      );
 
     throw DioException(
       requestOptions: response.requestOptions,
@@ -442,24 +351,17 @@ class DsmPackageApi implements PackageApi {
 
   @override
   Future<Map<String, dynamic>> installPackage({
-    required String baseUrl,
-    required String sid,
     required String packageId,
     required String volumePath,
-    String? synoToken,
-    String? cookieHeader,
   }) async {
-    final client = DioClient(baseUrl: baseUrl).dio;
+    final client = _dio;
 
     DsmLogger.request(
       module: 'Package',
       action: 'installPackage',
       method: 'POST',
       path: packageId,
-      sid: sid,
-      synoToken: synoToken,
-      cookieHeader: cookieHeader,
-      extra: {
+                        extra: {
         'api': 'SYNO.Core.Package.Installation',
         'method': 'install',
         'volumePath': volumePath,
@@ -478,9 +380,8 @@ class DsmPackageApi implements PackageApi {
         'is_syno': 'true',
         'beta': 'false',
         'installrunpackage': 'true',
-        '_sid': sid,
-      },
-      options: _buildOptions(synoToken: synoToken, cookieHeader: cookieHeader),
+              },
+      options: _buildOptions(),
     );
 
     final payload = response.data;
@@ -500,10 +401,7 @@ class DsmPackageApi implements PackageApi {
       action: 'installPackage',
       path: packageId,
       response: payload,
-      sid: sid,
-      synoToken: synoToken,
-      cookieHeader: cookieHeader,
-      extra: {
+                        extra: {
         'volumePath': volumePath,
       },
     );
@@ -517,23 +415,16 @@ class DsmPackageApi implements PackageApi {
 
   @override
   Future<Map<String, dynamic>> getInstallStatus({
-    required String baseUrl,
-    required String sid,
     required String taskId,
-    String? synoToken,
-    String? cookieHeader,
   }) async {
-    final client = DioClient(baseUrl: baseUrl).dio;
+    final client = _dio;
 
     DsmLogger.request(
       module: 'Package',
       action: 'getInstallStatus',
       method: 'POST',
       path: taskId,
-      sid: sid,
-      synoToken: synoToken,
-      cookieHeader: cookieHeader,
-      extra: {
+                        extra: {
         'api': 'SYNO.Core.Package.Installation',
         'method': 'status',
       },
@@ -546,9 +437,8 @@ class DsmPackageApi implements PackageApi {
         'version': '1',
         'method': 'status',
         'task_id': taskId,
-        '_sid': sid,
-      },
-      options: _buildOptions(synoToken: synoToken, cookieHeader: cookieHeader),
+              },
+      options: _buildOptions(),
     );
 
     final payload = response.data;
@@ -568,10 +458,7 @@ class DsmPackageApi implements PackageApi {
       action: 'getInstallStatus',
       path: taskId,
       response: payload,
-      sid: sid,
-      synoToken: synoToken,
-      cookieHeader: cookieHeader,
-    );
+                      );
 
     throw DioException(
       requestOptions: response.requestOptions,
@@ -582,24 +469,17 @@ class DsmPackageApi implements PackageApi {
 
   @override
   Future<void> startPackage({
-    required String baseUrl,
-    required String sid,
     required String packageId,
     String? dsmAppName,
-    String? synoToken,
-    String? cookieHeader,
   }) async {
-    final client = DioClient(baseUrl: baseUrl).dio;
+    final client = _dio;
 
     DsmLogger.request(
       module: 'Package',
       action: 'startPackage',
       method: 'POST',
       path: packageId,
-      sid: sid,
-      synoToken: synoToken,
-      cookieHeader: cookieHeader,
-      extra: {
+                        extra: {
         'api': 'SYNO.Core.Package.Control',
         'method': 'start',
       },
@@ -613,9 +493,8 @@ class DsmPackageApi implements PackageApi {
         'method': 'start',
         'id': packageId,
         if (dsmAppName != null && dsmAppName.isNotEmpty) 'dsm_apps': jsonEncode([dsmAppName]),
-        '_sid': sid,
-      },
-      options: _buildOptions(synoToken: synoToken, cookieHeader: cookieHeader),
+              },
+      options: _buildOptions(),
     );
 
     final payload = response.data;
@@ -629,10 +508,7 @@ class DsmPackageApi implements PackageApi {
       action: 'startPackage',
       path: packageId,
       response: payload,
-      sid: sid,
-      synoToken: synoToken,
-      cookieHeader: cookieHeader,
-    );
+                      );
 
     throw DioException(
       requestOptions: response.requestOptions,
@@ -643,23 +519,16 @@ class DsmPackageApi implements PackageApi {
 
   @override
   Future<void> stopPackage({
-    required String baseUrl,
-    required String sid,
     required String packageId,
-    String? synoToken,
-    String? cookieHeader,
   }) async {
-    final client = DioClient(baseUrl: baseUrl).dio;
+    final client = _dio;
 
     DsmLogger.request(
       module: 'Package',
       action: 'stopPackage',
       method: 'POST',
       path: packageId,
-      sid: sid,
-      synoToken: synoToken,
-      cookieHeader: cookieHeader,
-      extra: {
+                        extra: {
         'api': 'SYNO.Core.Package.Control',
         'method': 'stop',
       },
@@ -672,9 +541,8 @@ class DsmPackageApi implements PackageApi {
         'version': '1',
         'method': 'stop',
         'id': packageId,
-        '_sid': sid,
-      },
-      options: _buildOptions(synoToken: synoToken, cookieHeader: cookieHeader),
+              },
+      options: _buildOptions(),
     );
 
     final payload = response.data;
@@ -688,10 +556,7 @@ class DsmPackageApi implements PackageApi {
       action: 'stopPackage',
       path: packageId,
       response: payload,
-      sid: sid,
-      synoToken: synoToken,
-      cookieHeader: cookieHeader,
-    );
+                      );
 
     throw DioException(
       requestOptions: response.requestOptions,
@@ -702,23 +567,16 @@ class DsmPackageApi implements PackageApi {
 
   @override
   Future<void> uninstallPackage({
-    required String baseUrl,
-    required String sid,
     required String packageId,
-    String? synoToken,
-    String? cookieHeader,
   }) async {
-    final client = DioClient(baseUrl: baseUrl).dio;
+    final client = _dio;
 
     DsmLogger.request(
       module: 'Package',
       action: 'uninstallPackage',
       method: 'POST',
       path: packageId,
-      sid: sid,
-      synoToken: synoToken,
-      cookieHeader: cookieHeader,
-      extra: {
+                        extra: {
         'api': 'SYNO.Core.Package.Uninstallation',
         'method': 'uninstall',
       },
@@ -731,9 +589,8 @@ class DsmPackageApi implements PackageApi {
         'version': '1',
         'method': 'uninstall',
         'id': packageId,
-        '_sid': sid,
-      },
-      options: _buildOptions(synoToken: synoToken, cookieHeader: cookieHeader),
+              },
+      options: _buildOptions(),
     );
 
     final payload = response.data;
@@ -747,10 +604,7 @@ class DsmPackageApi implements PackageApi {
       action: 'uninstallPackage',
       path: packageId,
       response: payload,
-      sid: sid,
-      synoToken: synoToken,
-      cookieHeader: cookieHeader,
-    );
+                      );
 
     throw DioException(
       requestOptions: response.requestOptions,

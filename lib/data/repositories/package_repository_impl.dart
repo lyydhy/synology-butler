@@ -1,27 +1,18 @@
-import '../../core/network/business_connection_context.dart';
-import '../../core/utils/server_url_helper.dart';
 import '../../domain/entities/package_item.dart';
 import '../../domain/entities/package_volume.dart';
 import '../../domain/repositories/package_repository.dart';
 import '../api/package_api.dart';
 
 class PackageRepositoryImpl implements PackageRepository {
-  const PackageRepositoryImpl(this._api, this._context);
+  const PackageRepositoryImpl(this._api);
 
   final PackageApi _api;
-  final BusinessConnectionContext _context;
 
   @override
   Future<List<PackageItem>> fetchStorePackages({
     bool others = false,
   }) async {
-    final items = await _api.fetchStorePackages(
-      baseUrl: ServerUrlHelper.buildBaseUrl(_context.server),
-      sid: _context.session.sid,
-      synoToken: _context.session.synoToken,
-      cookieHeader: _context.session.cookieHeader,
-      others: others,
-    );
+    final items = await _api.fetchStorePackages(others: others);
 
     return items
         .map(
@@ -52,12 +43,7 @@ class PackageRepositoryImpl implements PackageRepository {
 
   @override
   Future<List<PackageItem>> fetchInstalledPackages() async {
-    final items = await _api.fetchInstalledPackages(
-      baseUrl: ServerUrlHelper.buildBaseUrl(_context.server),
-      sid: _context.session.sid,
-      synoToken: _context.session.synoToken,
-      cookieHeader: _context.session.cookieHeader,
-    );
+    final items = await _api.fetchInstalledPackages();
 
     return items
         .map(
@@ -88,12 +74,7 @@ class PackageRepositoryImpl implements PackageRepository {
 
   @override
   Future<List<PackageVolume>> fetchVolumes() async {
-    final items = await _api.fetchVolumes(
-      baseUrl: ServerUrlHelper.buildBaseUrl(_context.server),
-      sid: _context.session.sid,
-      synoToken: _context.session.synoToken,
-      cookieHeader: _context.session.cookieHeader,
-    );
+    final items = await _api.fetchVolumes();
 
     return items
         .map(
@@ -115,12 +96,8 @@ class PackageRepositoryImpl implements PackageRepository {
     bool beta = false,
   }) async {
     final data = await _api.checkInstallQueue(
-      baseUrl: ServerUrlHelper.buildBaseUrl(_context.server),
-      sid: _context.session.sid,
       packageId: packageId,
       version: version,
-      synoToken: _context.session.synoToken,
-      cookieHeader: _context.session.cookieHeader,
       beta: beta,
     );
 
@@ -139,12 +116,8 @@ class PackageRepositoryImpl implements PackageRepository {
     required String volumePath,
   }) async {
     final data = await _api.installPackage(
-      baseUrl: ServerUrlHelper.buildBaseUrl(_context.server),
-      sid: _context.session.sid,
       packageId: packageId,
       volumePath: volumePath,
-      synoToken: _context.session.synoToken,
-      cookieHeader: _context.session.cookieHeader,
     );
 
     return data['taskid']?.toString() ?? '';
@@ -154,13 +127,7 @@ class PackageRepositoryImpl implements PackageRepository {
   Future<PackageInstallStatus> getInstallStatus({
     required String taskId,
   }) async {
-    final data = await _api.getInstallStatus(
-      baseUrl: ServerUrlHelper.buildBaseUrl(_context.server),
-      sid: _context.session.sid,
-      taskId: taskId,
-      synoToken: _context.session.synoToken,
-      cookieHeader: _context.session.cookieHeader,
-    );
+    final data = await _api.getInstallStatus(taskId: taskId);
 
     final progressRaw = data['progress'];
     final progress = progressRaw is num ? progressRaw.toDouble() : double.tryParse(progressRaw?.toString() ?? '');
@@ -178,12 +145,8 @@ class PackageRepositoryImpl implements PackageRepository {
     String? dsmAppName,
   }) {
     return _api.startPackage(
-      baseUrl: ServerUrlHelper.buildBaseUrl(_context.server),
-      sid: _context.session.sid,
       packageId: packageId,
       dsmAppName: dsmAppName,
-      synoToken: _context.session.synoToken,
-      cookieHeader: _context.session.cookieHeader,
     );
   }
 
@@ -191,25 +154,13 @@ class PackageRepositoryImpl implements PackageRepository {
   Future<void> stopPackage({
     required String packageId,
   }) {
-    return _api.stopPackage(
-      baseUrl: ServerUrlHelper.buildBaseUrl(_context.server),
-      sid: _context.session.sid,
-      packageId: packageId,
-      synoToken: _context.session.synoToken,
-      cookieHeader: _context.session.cookieHeader,
-    );
+    return _api.stopPackage(packageId: packageId);
   }
 
   @override
   Future<void> uninstallPackage({
     required String packageId,
   }) {
-    return _api.uninstallPackage(
-      baseUrl: ServerUrlHelper.buildBaseUrl(_context.server),
-      sid: _context.session.sid,
-      packageId: packageId,
-      synoToken: _context.session.synoToken,
-      cookieHeader: _context.session.cookieHeader,
-    );
+    return _api.uninstallPackage(packageId: packageId);
   }
 }

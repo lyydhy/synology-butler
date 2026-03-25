@@ -6,13 +6,14 @@ import '../../../../domain/entities/download_task.dart';
 import '../../../../domain/repositories/download_repository.dart';
 import '../../../auth/presentation/providers/business_connection_providers.dart';
 
-final downloadStationApiProvider = Provider<DownloadStationApi>((ref) => DsmDownloadStationApi());
+final downloadStationApiProvider = Provider<DownloadStationApi>((ref) {
+  return DsmDownloadStationApi(dio: ref.watch(businessDioProvider));
+});
 final downloadFilterProvider = StateProvider<String>((ref) => 'all');
 
 final downloadRepositoryProvider = Provider<DownloadRepository>((ref) {
   return DownloadRepositoryImpl(
     ref.read(downloadStationApiProvider),
-    ref.watch(businessConnectionContextProvider),
   );
 });
 

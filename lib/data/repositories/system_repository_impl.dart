@@ -1,5 +1,4 @@
 import '../../core/network/business_connection_context.dart';
-import '../../core/utils/server_url_helper.dart';
 import '../../domain/entities/information_center.dart';
 import '../../domain/entities/system_status.dart';
 import '../../domain/repositories/system_repository.dart';
@@ -14,10 +13,6 @@ class SystemRepositoryImpl implements SystemRepository {
   @override
   Future<InformationCenterData> fetchInformationCenter() async {
     final model = await _systemApi.fetchInformationCenter(
-      baseUrl: ServerUrlHelper.buildBaseUrl(_context.server),
-      sid: _context.session.sid,
-      synoToken: _context.session.synoToken,
-      cookieHeader: _context.session.cookieHeader,
       serverName: _context.server.name,
     );
 
@@ -70,7 +65,7 @@ class SystemRepositoryImpl implements SystemRepository {
 
   @override
   Future<SystemStatus> fetchOverview() async {
-    final model = await _systemApi.fetchOverview(baseUrl: ServerUrlHelper.buildBaseUrl(_context.server), sid: _context.session.sid, synoToken: _context.session.synoToken);
+    final model = await _systemApi.fetchOverview();
 
     return SystemStatus(
       serverName: model.serverName,
@@ -125,12 +120,7 @@ class SystemRepositoryImpl implements SystemRepository {
       throw Exception('Missing SynoToken for realtime utilization');
     }
 
-    return _systemApi.watchUtilization(
-      baseUrl: ServerUrlHelper.buildBaseUrl(_context.server),
-      sid: _context.session.sid,
-      synoToken: synoToken,
-      cookieHeader: _context.session.cookieHeader,
-    ).map(
+    return _systemApi.watchUtilization().map(
       (model) => SystemStatus(
         serverName: _context.server.name,
         dsmVersion: model.dsmVersion,

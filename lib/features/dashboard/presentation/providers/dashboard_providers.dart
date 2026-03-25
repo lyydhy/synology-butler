@@ -13,7 +13,12 @@ import '../../../../domain/repositories/system_repository.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../auth/presentation/providers/business_connection_providers.dart';
 
-final systemApiProvider = Provider<SystemApi>((ref) => DsmSystemApi());
+final systemApiProvider = Provider<SystemApi>((ref) {
+  return DsmSystemApi(
+    dio: ref.watch(businessDioProvider),
+    context: ref.watch(businessConnectionContextProvider),
+  );
+});
 
 final systemRepositoryProvider = Provider<SystemRepository>((ref) {
   return SystemRepositoryImpl(

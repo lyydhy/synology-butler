@@ -1,28 +1,19 @@
 import 'dart:typed_data';
 
-import '../../core/network/business_connection_context.dart';
-import '../../core/utils/server_url_helper.dart';
 import '../../domain/entities/file_item.dart';
 import '../../domain/repositories/file_repository.dart';
 import '../api/file_station_api.dart';
 
 class FileRepositoryImpl implements FileRepository {
-  const FileRepositoryImpl(this._api, this._context);
+  const FileRepositoryImpl(this._api);
 
   final FileStationApi _api;
-  final BusinessConnectionContext _context;
 
   @override
   Future<List<FileItem>> listFiles({
     required String path,
   }) async {
-    final items = await _api.listFiles(
-      baseUrl: ServerUrlHelper.buildBaseUrl(_context.server),
-      sid: _context.session.sid,
-      path: path,
-      synoToken: _context.session.synoToken,
-      cookieHeader: _context.session.cookieHeader,
-    );
+    final items = await _api.listFiles(path: path);
 
     return items
         .map(
@@ -42,12 +33,8 @@ class FileRepositoryImpl implements FileRepository {
     required String name,
   }) {
     return _api.createFolder(
-      baseUrl: ServerUrlHelper.buildBaseUrl(_context.server),
-      sid: _context.session.sid,
       parentPath: parentPath,
       name: name,
-      synoToken: _context.session.synoToken,
-      cookieHeader: _context.session.cookieHeader,
     );
   }
 
@@ -57,11 +44,7 @@ class FileRepositoryImpl implements FileRepository {
     required String newName,
   }) {
     return _api.rename(
-      baseUrl: ServerUrlHelper.buildBaseUrl(_context.server),
-      sid: _context.session.sid,
       path: path,
-      synoToken: _context.session.synoToken,
-      cookieHeader: _context.session.cookieHeader,
       newName: newName,
     );
   }
@@ -70,26 +53,14 @@ class FileRepositoryImpl implements FileRepository {
   Future<void> delete({
     required String path,
   }) {
-    return _api.delete(
-      baseUrl: ServerUrlHelper.buildBaseUrl(_context.server),
-      sid: _context.session.sid,
-      path: path,
-      synoToken: _context.session.synoToken,
-      cookieHeader: _context.session.cookieHeader,
-    );
+    return _api.delete(path: path);
   }
 
   @override
   Future<String> createShareLink({
     required String path,
   }) {
-    return _api.createShareLink(
-      baseUrl: ServerUrlHelper.buildBaseUrl(_context.server),
-      sid: _context.session.sid,
-      path: path,
-      synoToken: _context.session.synoToken,
-      cookieHeader: _context.session.cookieHeader,
-    );
+    return _api.createShareLink(path: path);
   }
 
   @override
@@ -99,13 +70,9 @@ class FileRepositoryImpl implements FileRepository {
     required Uint8List bytes,
   }) {
     return _api.uploadFile(
-      baseUrl: ServerUrlHelper.buildBaseUrl(_context.server),
-      sid: _context.session.sid,
       parentPath: parentPath,
       fileName: fileName,
       bytes: bytes,
-      synoToken: _context.session.synoToken,
-      cookieHeader: _context.session.cookieHeader,
     );
   }
 
@@ -115,11 +82,7 @@ class FileRepositoryImpl implements FileRepository {
     void Function(int received, int total)? onReceiveProgress,
   }) {
     return _api.downloadFile(
-      baseUrl: ServerUrlHelper.buildBaseUrl(_context.server),
-      sid: _context.session.sid,
       path: path,
-      synoToken: _context.session.synoToken,
-      cookieHeader: _context.session.cookieHeader,
       onReceiveProgress: onReceiveProgress,
     );
   }
@@ -128,13 +91,7 @@ class FileRepositoryImpl implements FileRepository {
   Future<String> readTextFile({
     required String path,
   }) {
-    return _api.readTextFile(
-      baseUrl: ServerUrlHelper.buildBaseUrl(_context.server),
-      sid: _context.session.sid,
-      path: path,
-      synoToken: _context.session.synoToken,
-      cookieHeader: _context.session.cookieHeader,
-    );
+    return _api.readTextFile(path: path);
   }
 
   @override
@@ -143,11 +100,7 @@ class FileRepositoryImpl implements FileRepository {
     required String content,
   }) {
     return _api.writeTextFile(
-      baseUrl: ServerUrlHelper.buildBaseUrl(_context.server),
-      sid: _context.session.sid,
       path: path,
-      synoToken: _context.session.synoToken,
-      cookieHeader: _context.session.cookieHeader,
       content: content,
     );
   }

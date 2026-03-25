@@ -5,58 +5,40 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
+import '../../core/network/business_connection_context.dart';
 import '../../core/network/dio_client.dart';
 import '../../core/utils/dsm_logger.dart';
 import '../models/information_center_model.dart';
 import '../models/system_status_model.dart';
 
 abstract class SystemApi {
-  Future<SystemStatusModel> fetchOverview({
-    required String baseUrl,
-    required String sid,
-    String? synoToken,
-  });
+  Future<SystemStatusModel> fetchOverview();
 
-  Stream<SystemStatusModel> watchUtilization({
-    required String baseUrl,
-    required String sid,
-    required String synoToken,
-    String? cookieHeader,
-  });
+  Stream<SystemStatusModel> watchUtilization();
 
   Future<InformationCenterModel> fetchInformationCenter({
-    required String baseUrl,
-    required String sid,
-    String? synoToken,
-    String? cookieHeader,
     required String serverName,
   });
 }
 
 class DsmSystemApi implements SystemApi {
+  DsmSystemApi({required Dio dio, required BusinessConnectionContext context})
+      : _dio = dio,
+        _context = context;
+
+  final Dio _dio;
+  final BusinessConnectionContext _context;
   @override
   Future<InformationCenterModel> fetchInformationCenter({
-    required String baseUrl,
-    required String sid,
-    String? synoToken,
-    String? cookieHeader,
     required String serverName,
   }) async {
-    final client = DioClient(baseUrl: baseUrl).dio;
-    final headers = <String, dynamic>{};
-    if (synoToken != null && synoToken.isNotEmpty) {
-      headers['X-SYNO-TOKEN'] = synoToken;
-    }
-    if (cookieHeader != null && cookieHeader.isNotEmpty) {
-      headers['Cookie'] = cookieHeader;
-    }
+    final client = _dio;
 
     Future<Map> postEntry(Map<String, dynamic> data) async {
       final response = await client.post(
         '/webapi/entry.cgi',
         data: data,
         options: Options(
-          headers: headers,
           contentType: Headers.formUrlEncodedContentType,
         ),
       );
@@ -70,10 +52,7 @@ class DsmSystemApi implements SystemApi {
       module: 'System',
       action: 'fetchInformationCenter',
       method: 'POST',
-      path: baseUrl,
-      sid: sid,
-      synoToken: synoToken,
-      cookieHeader: cookieHeader,
+      path: _context.baseUrl,
       extra: {
         'apis': [
           'SYNO.Core.System.info',
@@ -92,26 +71,26 @@ class DsmSystemApi implements SystemApi {
         'api': 'SYNO.Core.System',
         'method': 'info',
         'version': '1',
-        '_sid': sid,
+        
       });
       final utilizationData = await postEntry({
         'api': 'SYNO.Core.System.Utilization',
         'method': 'get',
         'version': '1',
         'type': 'current',
-        '_sid': sid,
+        
       });
       final systemHealthData = await postEntry({
         'api': 'SYNO.Core.System.SystemHealth',
         'method': 'get',
         'version': '1',
-        '_sid': sid,
+        
       });
       final timeData = await postEntry({
         'api': 'SYNO.Core.System.Time',
         'method': 'get',
         'version': '1',
-        '_sid': sid,
+        
       });
       final networkCompoundData = await postEntry({
         'api': 'SYNO.Entry.Request',
@@ -143,7 +122,7 @@ class DsmSystemApi implements SystemApi {
             'type': 'wan',
           },
         ]),
-        '_sid': sid,
+        
       });
       final externalDeviceCompoundData = await postEntry({
         'api': 'SYNO.Entry.Request',
@@ -164,14 +143,14 @@ class DsmSystemApi implements SystemApi {
             'additional': ['all'],
           },
         ]),
-        '_sid': sid,
+        
       });
       final diskData = await postEntry({
         'api': 'SYNO.Core.Storage.Disk',
         'method': 'list',
         'version': '1',
         'additional': jsonEncode(['size_total', 'temp', 'serial']),
-        '_sid': sid,
+        
       });
 
       final memory = utilizationData['memory'] as Map? ?? const {};
@@ -186,8 +165,8 @@ class DsmSystemApi implements SystemApi {
       final disks = _extractDisks(diskData);
       final versionText = await _fetchUpgradeVersion(
             client: client,
-            sid: sid,
-            synoToken: synoToken,
+            sid: _context.session.sid,
+            synoToken: _context.session.synoToken,
           ) ??
           _buildVersionText(infoData);
 
@@ -214,7 +193,7 @@ class DsmSystemApi implements SystemApi {
       DsmLogger.success(
         module: 'System',
         action: 'fetchInformationCenter',
-        path: baseUrl,
+        path: _context.baseUrl,
         response: {
           'serverName': model.serverName,
           'lanCount': model.lanNetworks.length,
@@ -228,31 +207,22 @@ class DsmSystemApi implements SystemApi {
       DsmLogger.failure(
         module: 'System',
         action: 'fetchInformationCenter',
-        path: baseUrl,
+        path: _context.baseUrl,
         reason: e.toString(),
-        sid: sid,
-        synoToken: synoToken,
-        cookieHeader: cookieHeader,
       );
       rethrow;
     }
   }
 
   @override
-  Future<SystemStatusModel> fetchOverview({
-    required String baseUrl,
-    required String sid,
-    String? synoToken,
-  }) async {
-    final client = DioClient(baseUrl: baseUrl).dio;
+  Future<SystemStatusModel> fetchOverview() async {
+    final client = _dio;
 
     DsmLogger.request(
       module: 'System',
       action: 'fetchOverview',
       method: 'GET',
-      path: baseUrl,
-      sid: sid,
-      synoToken: synoToken,
+      path: _context.baseUrl,
       extra: {
         'apis': [
           'SYNO.Core.System',
@@ -270,7 +240,7 @@ class DsmSystemApi implements SystemApi {
           'api': 'SYNO.Core.System',
           'method': 'info',
           'version': '1',
-          '_sid': sid,
+          
         },
       );
 
@@ -281,7 +251,7 @@ class DsmSystemApi implements SystemApi {
           'method': 'get',
           'version': '1',
           'type': 'current',
-          '_sid': sid,
+          
         },
       );
 
@@ -322,20 +292,20 @@ class DsmSystemApi implements SystemApi {
 
       final storagePollVolumes = await _fetchStoragePollVolumes(
         client: client,
-        sid: sid,
-        synoToken: synoToken,
+        sid: _context.session.sid,
+        synoToken: _context.session.synoToken,
       );
       final resolvedVolumes = storagePollVolumes.isNotEmpty ? storagePollVolumes : mappedVolumes;
 
       final upgradeVersionText = await _fetchUpgradeVersion(
         client: client,
-        sid: sid,
-        synoToken: synoToken,
+        sid: _context.session.sid,
+        synoToken: _context.session.synoToken,
       );
       final systemHealthUptime = await _fetchSystemHealthUptime(
         client: client,
-        sid: sid,
-        synoToken: synoToken,
+        sid: _context.session.sid,
+        synoToken: _context.session.synoToken,
       );
       final versionText = upgradeVersionText ?? _buildVersionText(infoData);
       final resolvedStorageUsage = _resolveStorageUsage(totalSpace, resolvedVolumes);
@@ -375,7 +345,7 @@ class DsmSystemApi implements SystemApi {
       DsmLogger.success(
         module: 'System',
         action: 'fetchOverview',
-        path: baseUrl,
+        path: _context.baseUrl,
         response: {
           'serverName': result.serverName,
           'dsmVersion': result.dsmVersion,
@@ -389,32 +359,29 @@ class DsmSystemApi implements SystemApi {
       DsmLogger.failure(
         module: 'System',
         action: 'fetchOverview',
-        path: baseUrl,
+        path: _context.baseUrl,
         reason: e.toString(),
-        sid: sid,
-        synoToken: synoToken,
       );
       rethrow;
     }
   }
 
   @override
-  Stream<SystemStatusModel> watchUtilization({
-    required String baseUrl,
-    required String sid,
-    required String synoToken,
-    String? cookieHeader,
-  }) {
+  Stream<SystemStatusModel> watchUtilization() {
+    final synoToken = _context.session.synoToken;
+    final cookieHeader = _context.session.cookieHeader;
+    if (synoToken == null || synoToken.isEmpty) {
+      throw Exception('Missing SynoToken for realtime utilization');
+    }
+    final baseUrl = _context.baseUrl;
+    final sid = _context.session.sid;
     final controller = StreamController<SystemStatusModel>();
 
     DsmLogger.request(
       module: 'System',
       action: 'watchUtilization',
       method: 'WS',
-      path: baseUrl,
-      sid: sid,
-      synoToken: synoToken,
-      cookieHeader: cookieHeader,
+      path: _context.baseUrl,
       extra: {
         'api': 'SYNO.Core.System.Utilization',
         'type': 'current',
@@ -473,7 +440,7 @@ class DsmSystemApi implements SystemApi {
       void requestCurrent() {
         sendRequestWebApi('SYNO.Core.System.Utilization', 1, 'get', {
           'type': 'current',
-          '_sid': sid,
+          
           'SynoToken': synoToken,
         });
         requested = true;
@@ -488,7 +455,7 @@ class DsmSystemApi implements SystemApi {
         DsmLogger.failure(
           module: 'System',
           action: 'watchUtilization',
-          path: baseUrl,
+          path: _context.baseUrl,
           reason: 'Realtime authentication error: $reason',
           sid: sid,
           synoToken: synoToken,
@@ -507,7 +474,7 @@ class DsmSystemApi implements SystemApi {
         DsmLogger.failure(
           module: 'System',
           action: 'watchUtilization',
-          path: baseUrl,
+          path: _context.baseUrl,
           reason: 'Realtime bootstrap timeout after websocket connect; auth likely expired',
           sid: sid,
           synoToken: synoToken,
@@ -582,7 +549,7 @@ class DsmSystemApi implements SystemApi {
           DsmLogger.success(
             module: 'System',
             action: 'watchUtilization',
-            path: baseUrl,
+            path: _context.baseUrl,
             response: {
               'received': true,
               'spaceKeys': spacePreview is Map ? spacePreview.keys.map((e) => e.toString()).toList() : [],
@@ -620,7 +587,7 @@ class DsmSystemApi implements SystemApi {
           DsmLogger.success(
             module: 'System',
             action: 'watchUtilizationVolumes',
-            path: baseUrl,
+            path: _context.baseUrl,
             response: {
               'count': mappedVolumes.length,
               'names': mappedVolumes.map((e) => e.name).toList(),
@@ -883,10 +850,9 @@ class DsmSystemApi implements SystemApi {
           'method': 'poll',
           'version': '1',
           'type': jsonEncode('storage'),
-          '_sid': sid,
+          
         },
         options: Options(
-          headers: headers,
           contentType: Headers.formUrlEncodedContentType,
         ),
       );
@@ -978,7 +944,7 @@ class DsmSystemApi implements SystemApi {
               'need_auto_smallupdate': true,
             },
           ]),
-          '_sid': sid,
+          
         },
         options: Options(headers: headers),
       );
@@ -1060,7 +1026,7 @@ class DsmSystemApi implements SystemApi {
           'api': 'SYNO.Core.System.SystemHealth',
           'method': 'get',
           'version': '1',
-          '_sid': sid,
+          
         },
         options: Options(headers: headers),
       );
