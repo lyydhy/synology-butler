@@ -1,9 +1,11 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/constants/app_constants.dart';
 import '../../../../core/storage/platform_downloads_directory.dart';
 import '../../../../domain/entities/transfer_task.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
@@ -11,11 +13,64 @@ import '../../../files/presentation/providers/file_providers.dart';
 import '../../../preferences/providers/preferences_providers.dart';
 
 class TransferController extends StateNotifier<List<TransferTask>> {
-  TransferController(this._ref) : super(const []);
+  TransferController(this._ref) : super(const []) {
+    _restore();
+  }
 
   final Ref _ref;
 
   String _id() => '${DateTime.now().microsecondsSinceEpoch}_${Random().nextInt(9999)}';
+
+  Future<void> _restore() async {
+    final storage = _ref.read(localStorageProvider);
+    final raw = await storage.readStringList(AppConstants.transferHistoryKey);
+    if (raw.isEmpty) {
+      return;
+    }
+
+    final restored = <TransferTask>[];
+    for (final item in raw) {
+      try {
+        final decoded = jsonDecode(item);
+        if (decoded is! Map) continue;
+        final task = TransferTask.fromJson(decoded.cast<String, dynamic>());
+        if (task.id.isEmpty) continue;
+        restored.add(_normalizeRestoredTask(task));
+      } catch (_) {}
+    }
+
+    if (restored.isEmpty) {
+      await storage.remove(AppConstants.transferHistoryKey);
+      return;
+    }
+
+    restored.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    state = restored.take(100).toList();
+    await _persist();
+  }
+
+  TransferTask _normalizeRestoredTask(TransferTask task) {
+    if (task.status == TransferTaskStatus.queued || task.status == TransferTaskStatus.running) {
+      return task.copyWith(
+        status: TransferTaskStatus.failed,
+        progress: 1,
+        errorMessage: '应用重启或任务中断，传输未完成',
+      );
+    }
+    return task;
+  }
+
+  Future<void> _persist() async {
+    final storage = _ref.read(localStorageProvider);
+    final trimmed = state.take(100).toList();
+    if (trimmed.length != state.length) {
+      state = trimmed;
+    }
+    await storage.writeStringList(
+      AppConstants.transferHistoryKey,
+      trimmed.map((task) => jsonEncode(task.toJson())).toList(),
+    );
+  }
 
   Future<void> enqueueUpload({
     required String parentPath,
@@ -33,6 +88,7 @@ class TransferController extends StateNotifier<List<TransferTask>> {
       createdAt: DateTime.now(),
     );
     state = [task, ...state];
+    await _persist();
     await _runUpload(task.id, parentPath: parentPath, fileName: fileName, bytes: bytes);
   }
 
@@ -54,6 +110,7 @@ class TransferController extends StateNotifier<List<TransferTask>> {
       createdAt: DateTime.now(),
     );
     state = [task, ...state];
+    await _persist();
     await _runDownload(task.id, remotePath: remotePath, targetFile: targetFile);
   }
 
@@ -76,6 +133,7 @@ class TransferController extends StateNotifier<List<TransferTask>> {
       createdAt: DateTime.now(),
     );
     state = [retryTask, ...state];
+    await _persist();
 
     if (task.type == TransferTaskType.download) {
       final targetFile = File(task.targetPath);
@@ -93,16 +151,19 @@ class TransferController extends StateNotifier<List<TransferTask>> {
     }).toList();
   }
 
-  void removeTask(String id) {
+  Future<void> removeTask(String id) async {
     state = state.where((task) => task.id != id).toList();
+    await _persist();
   }
 
-  void clearCompleted() {
+  Future<void> clearCompleted() async {
     state = state.where((task) => task.status != TransferTaskStatus.success).toList();
+    await _persist();
   }
 
-  void clearFailed() {
+  Future<void> clearFailed() async {
     state = state.where((task) => task.status != TransferTaskStatus.failed).toList();
+    await _persist();
   }
 
   Future<void> _runUpload(
@@ -202,12 +263,12 @@ class TransferController extends StateNotifier<List<TransferTask>> {
     return '$baseName ($index)$ext';
   }
 
-  void _update(
+  Future<void> _update(
     String id, {
     TransferTaskStatus? status,
     double? progress,
     String? errorMessage,
-  }) {
+  }) async {
     state = [
       for (final task in state)
         if (task.id == id)
@@ -219,6 +280,7 @@ class TransferController extends StateNotifier<List<TransferTask>> {
         else
           task,
     ];
+    await _persist();
   }
 }
 

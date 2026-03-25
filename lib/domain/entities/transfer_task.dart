@@ -25,6 +25,43 @@ class TransferTask {
     this.errorMessage,
   });
 
+  factory TransferTask.fromJson(Map<String, dynamic> json) {
+    final typeName = json['type']?.toString() ?? '';
+    final statusName = json['status']?.toString() ?? '';
+
+    return TransferTask(
+      id: json['id']?.toString() ?? '',
+      type: TransferTaskType.values.firstWhere(
+        (item) => item.name == typeName,
+        orElse: () => TransferTaskType.download,
+      ),
+      status: TransferTaskStatus.values.firstWhere(
+        (item) => item.name == statusName,
+        orElse: () => TransferTaskStatus.failed,
+      ),
+      title: json['title']?.toString() ?? '',
+      sourcePath: json['sourcePath']?.toString() ?? '',
+      targetPath: json['targetPath']?.toString() ?? '',
+      progress: (json['progress'] as num?)?.toDouble() ?? 0,
+      errorMessage: json['errorMessage']?.toString(),
+      createdAt: DateTime.tryParse(json['createdAt']?.toString() ?? '') ?? DateTime.now(),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'type': type.name,
+      'status': status.name,
+      'title': title,
+      'sourcePath': sourcePath,
+      'targetPath': targetPath,
+      'progress': progress,
+      'errorMessage': errorMessage,
+      'createdAt': createdAt.toIso8601String(),
+    };
+  }
+
   TransferTask copyWith({
     TransferTaskType? type,
     TransferTaskStatus? status,
