@@ -25,6 +25,15 @@ class DsmSystemApi implements SystemApi {
   DsmSystemApi({required Dio dio}) : _dio = dio;
 
   final Dio _dio;
+
+  String get _baseUrl {
+    final server = AppDioFactory.connectionStore.server;
+    if (server == null) return '';
+    final scheme = server.https ? 'https' : 'http';
+    final host = server.host.trim().replaceFirst(RegExp(r'^https?://'), '').replaceAll(RegExp(r'/$'), '');
+    final basePath = (server.basePath == null || server.basePath!.trim().isEmpty) ? '' : (server.basePath!.startsWith('/') ? server.basePath! : '/${server.basePath!}');
+    return '$scheme://$host:${server.port}$basePath';
+  }
   @override
   Future<InformationCenterModel> fetchInformationCenter({
     required String serverName,
@@ -49,7 +58,7 @@ class DsmSystemApi implements SystemApi {
       module: 'System',
       action: 'fetchInformationCenter',
       method: 'POST',
-      path: (AppDioFactory.connectionStore.server == null ? '' : ''),
+      path: _baseUrl,
       extra: {
         'apis': [
           'SYNO.Core.System.info',
@@ -190,7 +199,7 @@ class DsmSystemApi implements SystemApi {
       DsmLogger.success(
         module: 'System',
         action: 'fetchInformationCenter',
-        path: (AppDioFactory.connectionStore.server == null ? '' : ''),
+        path: _baseUrl,
         response: {
           'serverName': model.serverName,
           'lanCount': model.lanNetworks.length,
@@ -204,7 +213,7 @@ class DsmSystemApi implements SystemApi {
       DsmLogger.failure(
         module: 'System',
         action: 'fetchInformationCenter',
-        path: (AppDioFactory.connectionStore.server == null ? '' : ''),
+        path: _baseUrl,
         reason: e.toString(),
       );
       rethrow;
@@ -219,7 +228,7 @@ class DsmSystemApi implements SystemApi {
       module: 'System',
       action: 'fetchOverview',
       method: 'GET',
-      path: (AppDioFactory.connectionStore.server == null ? '' : ''),
+      path: _baseUrl,
       extra: {
         'apis': [
           'SYNO.Core.System',
@@ -342,7 +351,7 @@ class DsmSystemApi implements SystemApi {
       DsmLogger.success(
         module: 'System',
         action: 'fetchOverview',
-        path: (AppDioFactory.connectionStore.server == null ? '' : ''),
+        path: _baseUrl,
         response: {
           'serverName': result.serverName,
           'dsmVersion': result.dsmVersion,
@@ -356,7 +365,7 @@ class DsmSystemApi implements SystemApi {
       DsmLogger.failure(
         module: 'System',
         action: 'fetchOverview',
-        path: (AppDioFactory.connectionStore.server == null ? '' : ''),
+        path: _baseUrl,
         reason: e.toString(),
       );
       rethrow;
@@ -370,7 +379,7 @@ class DsmSystemApi implements SystemApi {
     if (synoToken == null || synoToken.isEmpty) {
       throw Exception('Missing SynoToken for realtime utilization');
     }
-    final baseUrl = (AppDioFactory.connectionStore.server == null ? '' : '');
+    final baseUrl = _baseUrl;
     final sid = AppDioFactory.connectionStore.session?.sid ?? '';
     final controller = StreamController<SystemStatusModel>();
 
@@ -378,7 +387,7 @@ class DsmSystemApi implements SystemApi {
       module: 'System',
       action: 'watchUtilization',
       method: 'WS',
-      path: (AppDioFactory.connectionStore.server == null ? '' : ''),
+      path: _baseUrl,
       extra: {
         'api': 'SYNO.Core.System.Utilization',
         'type': 'current',
@@ -452,7 +461,7 @@ class DsmSystemApi implements SystemApi {
         DsmLogger.failure(
           module: 'System',
           action: 'watchUtilization',
-          path: (AppDioFactory.connectionStore.server == null ? '' : ''),
+          path: _baseUrl,
           reason: 'Realtime authentication error: $reason',
           sid: sid,
           synoToken: synoToken,
@@ -471,7 +480,7 @@ class DsmSystemApi implements SystemApi {
         DsmLogger.failure(
           module: 'System',
           action: 'watchUtilization',
-          path: (AppDioFactory.connectionStore.server == null ? '' : ''),
+          path: _baseUrl,
           reason: 'Realtime bootstrap timeout after websocket connect; auth likely expired',
           sid: sid,
           synoToken: synoToken,
@@ -546,7 +555,7 @@ class DsmSystemApi implements SystemApi {
           DsmLogger.success(
             module: 'System',
             action: 'watchUtilization',
-            path: (AppDioFactory.connectionStore.server == null ? '' : ''),
+            path: _baseUrl,
             response: {
               'received': true,
               'spaceKeys': spacePreview is Map ? spacePreview.keys.map((e) => e.toString()).toList() : [],
@@ -584,7 +593,7 @@ class DsmSystemApi implements SystemApi {
           DsmLogger.success(
             module: 'System',
             action: 'watchUtilizationVolumes',
-            path: (AppDioFactory.connectionStore.server == null ? '' : ''),
+            path: _baseUrl,
             response: {
               'count': mappedVolumes.length,
               'names': mappedVolumes.map((e) => e.name).toList(),
