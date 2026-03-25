@@ -3,11 +3,9 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 
+import 'current_connection_store.dart';
 import 'request_log_interceptor.dart';
 import 'session_recovery_bridge.dart';
-
-// ignore: avoid_print
-void _recoveryLog(String message) => print(message);
 
 typedef SessionRecoveryCallback = Future<Map<String, String?>> Function();
 
@@ -18,34 +16,26 @@ class SessionRecoveryInterceptor extends Interceptor {
 
   static const _retriedKey = 'session_recovery_retried';
 
+  // ─────────────────────────────────────────────────────────────
+  //  Private helpers
+  // ─────────────────────────────────────────────────────────────
+
   bool _shouldSkipRecovery(RequestOptions options) {
     final path = options.path.toLowerCase();
-    final queryApi = options.queryParameters['api']?.toString();
-    final queryMethod = options.queryParameters['method']?.toString();
-    final body = options.data;
-    final bodyApi = body is Map ? body['api']?.toString() : null;
-    final bodyMethod = body is Map ? body['method']?.toString() : null;
-    final api = queryApi ?? bodyApi;
-    final method = queryMethod ?? bodyMethod;
+    final api = options.queryParameters['api']?.toString() ??
+        (options.data is Map ? options.data['api']?.toString() : null);
+    final method = options.queryParameters['method']?.toString() ??
+        (options.data is Map ? options.data['method']?.toString() : null);
 
-    if (api == 'SYNO.API.Auth') {
-      return true;
-    }
-    if (path.contains('/webapi/entry.cgi/syno.api.auth')) {
-      return true;
-    }
-    if (path.contains('/webapi/auth.cgi')) {
-      return true;
-    }
-    if (method == 'login' || method == 'token') {
-      return true;
-    }
+    if (api == 'SYNO.API.Auth') return true;
+    if (path.contains('/webapi/entry.cgi/syno.api.auth')) return true;
+    if (path.contains('/webapi/auth.cgi')) return true;
+    if (method == 'login' || method == 'token') return true;
     return false;
   }
 
   bool _isSessionExpiredPayload(dynamic data) {
-    if (data is! Map) return false;
-    if (data['success'] != false) return false;
+    if (data is! Map || data['success'] != false) return false;
     final error = data['error'];
     if (error is! Map) return false;
     final code = int.tryParse(error['code']?.toString() ?? '');
@@ -59,13 +49,19 @@ class SessionRecoveryInterceptor extends Interceptor {
   }
 
   RequestOptions _cloneOptions(RequestOptions options) {
+    final headers = Map<String, dynamic>.from(options.headers);
+    // Do NOT copy Content-Type via headers — it is already set at BaseOptions level
+    // via the contentType param. Copying both triggers Dio assertion:
+    // "You cannot set both contentType param and a content-type header"
+    headers.remove('Content-Type');
+
     return options.copyWith(
       path: options.path,
       method: options.method,
       baseUrl: options.baseUrl,
       data: options.data,
       queryParameters: Map<String, dynamic>.from(options.queryParameters),
-      headers: Map<String, dynamic>.from(options.headers),
+      headers: headers,
       extra: {
         ...options.extra,
         _retriedKey: true,
@@ -104,13 +100,15 @@ class SessionRecoveryInterceptor extends Interceptor {
     );
     dio.interceptors.add(RequestLogInterceptor());
 
-    final adapter = dio.httpClientAdapter;
-    if (ignoreBadCertificate && adapter is IOHttpClientAdapter) {
-      adapter.createHttpClient = () {
-        final client = HttpClient();
-        client.badCertificateCallback = (_, __, ___) => true;
-        return client;
-      };
+    if (ignoreBadCertificate) {
+      final adapter = dio.httpClientAdapter as IOHttpClientAdapter?;
+      if (adapter != null) {
+        adapter.createHttpClient = () {
+          final client = HttpClient();
+          client.badCertificateCallback = (_, __, ___) => true;
+          return client;
+        };
+      }
     }
 
     return dio;
@@ -141,20 +139,15 @@ class SessionRecoveryInterceptor extends Interceptor {
     }
   }
 
+  // ─────────────────────────────────────────────────────────────
+  //  Interceptor hooks
+  // ─────────────────────────────────────────────────────────────
+
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) async {
-        _recoveryLog('[SessionRecovery] in 1');
     final options = response.requestOptions;
-            _recoveryLog('[SessionRecovery]   in 2');
-
-    final api = options.queryParameters['api']?.toString() ?? (options.data is Map ? options.data['api']?.toString() : null) ?? '-';
-            _recoveryLog('[SessionRecovery]  in 3');
-
-    final method = options.queryParameters['method']?.toString() ?? (options.data is Map ? options.data['method']?.toString() : null) ?? '-';
-        _recoveryLog('[SessionRecovery]  in 4');
 
     if (_shouldSkipRecovery(options)) {
-      _recoveryLog('[SessionRecovery] skip api=$api method=$method path=${options.path}');
       handler.next(response);
       return;
     }
@@ -163,28 +156,23 @@ class SessionRecoveryInterceptor extends Interceptor {
       return;
     }
     if (!_canRetry(options)) {
-      _recoveryLog('[SessionRecovery] not retryable api=$api method=$method path=${options.path}');
       handler.next(response);
       return;
     }
 
-    _recoveryLog('[SessionRecovery] detected expired session api=$api method=$method path=${options.path}');
-
     try {
-      final recoveryCallback = SessionRecoveryBridge.callback;
-      if (recoveryCallback == null) {
-        throw StateError('Session recovery callback is not registered');
+      Map<String, String?> recovered = {};
+
+      if (SessionRecoveryBridge.callback != null) {
+        recovered = await SessionRecoveryBridge.callback!();
       }
-      final recovered = await recoveryCallback();
+
       final retryOptions = _cloneOptions(options);
       _applyRecoveredSession(retryOptions, recovered);
       final retryDio = _buildRetryDio(options);
-
-      _recoveryLog('[SessionRecovery] retry request api=$api method=$method');
       final retryResponse = await retryDio.fetch<dynamic>(retryOptions);
       handler.resolve(retryResponse);
-    } catch (error) {
-      _recoveryLog('[SessionRecovery] recover failed api=$api method=$method error=$error');
+    } catch (_) {
       handler.next(response);
     }
   }

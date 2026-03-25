@@ -44,6 +44,8 @@ class InformationCenterData {
   final String? modelName;
   final String? cpuName;
   final int? cpuCores;
+  final int? ramSize;
+  final String? cpuClockSpeedStr;
   final double? memoryBytes;
   final String? dsmVersion;
   final String? systemTime;
@@ -56,6 +58,9 @@ class InformationCenterData {
   final List<InformationCenterExternalDevice> externalDevices;
   final List<InformationCenterLanNetwork> lanNetworks;
   final List<InformationCenterDisk> disks;
+  final String? time;
+  final int? sysTemp;
+  final bool? temperatureWarning;
 
   const InformationCenterData({
     required this.serverName,
@@ -75,5 +80,10 @@ class InformationCenterData {
     this.externalDevices = const [],
     this.lanNetworks = const [],
     this.disks = const [],
+    this.cpuClockSpeedStr,
+    this.ramSize,
+    this.time,
+    this.sysTemp,
+    this.temperatureWarning
   });
 }

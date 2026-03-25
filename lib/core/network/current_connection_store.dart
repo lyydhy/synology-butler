@@ -37,5 +37,34 @@ class CurrentConnectionStore {
   void clearAll() {
     _server = null;
     _session = null;
+    _credentials = null;
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  //  Saved credentials (for session auto-recovery)
+  // ─────────────────────────────────────────────────────────────
+
+  AuthCredentials? _credentials;
+
+  AuthCredentials? get credentials => _credentials;
+
+  void setCredentials({required String username, required String password}) {
+    _credentials = AuthCredentials(username: username, password: password);
+  }
+
+  void clearCredentials() {
+    _credentials = null;
   }
 }
+
+/// Lightweight credential store used only by the session-recovery callback.
+/// Not persisted — kept in-memory so hot-reload does not wipe it.
+class AuthCredentials {
+  const AuthCredentials({required this.username, required this.password});
+
+  final String username;
+  final String password;
+}
+
+/// Back-reference to the singleton instance for use in interceptors.
+final CurrentConnectionStore connectionStore = CurrentConnectionStore.instance;

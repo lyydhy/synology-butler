@@ -1,102 +1,236 @@
-# qunhuimanage / 群晖管家 进展留痕
+# Synology Butler 开发进度
 
-> 目的：记录项目推进到哪里、为什么这样改、当前卡点和下一步，避免只能靠聊天上下文恢复进度。
+## 2026-03-26 网络层重构与性能监控优化
 
-## 2026-03-23
+### 一、网络层架构重构
 
-### 背景
-用户明确要求：**所有操作、项目推进情况都必须留痕**。
+#### 1. `DioClient` 与 `AppDioFactory` 合并
 
-### 回查动作
-- 确认项目目录仍存在：`/home/node/workspace/project/qunhuimanage`
-- 检查了 git 状态、最近提交记录、`PROJECT_STATUS.md`、`README.md`、`RUN.md`
+- **删除** `lib/core/network/dio_client.dart`
+- **合并** 至 `lib/core/network/app_dio.dart`
+- `businessDio()` 改为顶层函数，每次调用创建新实例（避免 `ignoreBadCertificate` 参数被缓存忽略）
+- 导出 `connectionStore` 顶层变量供全局使用
 
-### 当前已确认状态
-- 当前 HEAD：`15a8756`
-- 最近可见提交信息：`tHub Actions Android HTTP 支持 启动页处理 登录页 UI 优化 analyze 清理`
-- 当前工作区有大量未提交修改，涉及：
-  - `lib/` 业务代码
-  - `android/` / `ios/` 工程配置
-  - `.github/workflows/`、`.gitee/workflows/` CI 文件
-  - `README.md`、`RUN.md`、`PROJECT_STATUS.md` 等文档
+```
+之前:
+  DioClient (dio_client.dart) ← 独立文件
+  AppDioFactory.businessDio() ← 静态方法 + 全局缓存
 
-### 从现有文档恢复出的阶段判断
-项目已经不再是纯骨架状态，而是进入了**Flutter 标准工程 + DSM 7 真实联调 + 产品打磨**阶段，核心进展包括：
+之后:
+  DioClient (app_dio.dart) ← 合并
+  businessDio() ← 顶层函数，无缓存
+  connectionStore ← 顶层变量导出
+```
 
-- 登录页：
-  - 快速登录 / 新账号登录双模式
-  - 历史设备快速登录
-  - DSM 版本探测与 DSM 6 拦截提示
-  - 登录页 UI 已做多轮收敛优化
-- 首页：
-  - HTTP 概览 + WS 实时指标合并展示
-  - 存储空间按 volume 展示
-  - 已处理部分 realtime 鉴权失败恢复链路
-- 文件模块：
-  - 文件列表、导航、排序、新建目录、重命名、删除、分享链接
-  - 文件页 UI 与 provider 已开始按可维护方向拆分
-- 下载模块：
-  - 任务列表、筛选、新建、暂停/恢复/删除、详情弹层
-- 套件中心（README 补充信息）：
-  - 列表、筛选、详情、启动/停止/卸载、安装/更新基础流程、卷选择、队列影响确认
-- 工程侧：
-  - Android release 构建优化
-  - GitHub Actions 工作流
-  - analyze 目前设为 non-blocking，以避免遗留 lint 阻塞产物输出
+#### 2. API 类简化 - 去掉 Dio 构造器传参
 
-### 本轮新增推进（登录 / splash / CI / 日志）
+所有 API 类不再从外部接收 `Dio` 实例，改为内部调用 `businessDio()`：
 
-- 已移除登录页中的“基础路径 / 路径输入框”，当前登录按主机 + 端口 + HTTPS 模式处理。
-- 已将 HTTPS 控件方向调整回 switch 风格，避免下拉样式过重且不直观。
-- 已开始打通“忽略 SSL 证书”链路：
-  - 模型层已增加 `ignoreBadCertificate`
-  - 登录页与服务器编辑页已接入该开关
-  - 认证请求层开始读取该配置
-- 已继续检查登录失败问题，当前结论：
-  - 不是 HTTPS 端口被写死为 443 或 5001
-  - 5001 仅是空输入时的默认兜底值
-  - 更可能是 SSL / 认证链路问题，仍待继续验证
-- 已对 splash 做过一轮处理：
-  - Android 12+ 原生启动页样式已补
-  - Flutter splash 跳转延时已调整
-  - 但用户反馈 splash 仍然“未显示完整就进入业务界面”，说明该问题尚未完全闭环
-- 已修正 GitHub Actions：
-  - 当前只构建 / 上传 APK 工件
-  - 已取消 AAB 构建与上传
-- 已落地本地日志第一版：
-  - 新增 `lib/core/utils/local_app_logger.dart`
-  - 当前本地日志为普通 **txt 文本格式**，不再使用 json/jsonl
-  - 当前保存位置逻辑：应用文档目录下 `app_logs/YYYY-MM-DD.txt`
-  - 已开始覆盖 splash / auth / DSM 请求日志
-- 本轮开发过程中多次执行 Flutter 校验；在依赖恢复后，当前 `flutter analyze` 通过。
+| 文件 | 改动 |
+|------|------|
+| `dsm_auth_api.dart` | `Dio get _dio => businessDio()` |
+| `system_api.dart` | `Dio get _dio => businessDio(ignoreBadCertificate: ...)` |
+| `file_station_api.dart` | 同上 |
+| `download_station_api.dart` | 同上 |
+| `package_api.dart` | 同上 |
 
-### 当前仍未闭环/待验证
-- splash 页面显示时机仍需继续真机验证与收口
-- “构建后仍登录不上”还未最终定位根因
-- “忽略 SSL 证书”链路虽然已推进，但仍需结合真机登录继续验证
-- 本地日志功能尚未产品化完成，仍缺：
-  - 日志查看页
-  - 日志导出
-  - 手动清空日志
-  - 总大小限制
-  - 敏感字段脱敏
-  - 更多模块日志覆盖
+**例外**：`DsmSystemApi` 保留 `ignoreBadCertificate` 参数，因为需要支持自签名证书跳过。
 
-### 留痕规则（从本文件开始执行）
-后续凡是对该项目进行操作，都至少记录：
-- 做了什么
-- 为什么做
-- 改了哪些文件/模块
-- 是否验证
-- 当前卡点
-- 下一步
+#### 3. Provider 简化
 
-并同步到：
-- 本文件 `PROGRESS.md`
-- 当天日志 `../../memory/YYYY-MM-DD.md`
+移除冗余的 `xxxApiProvider`，Repository 直接 new API 实例：
 
-### 下一步建议
-1. 继续完善 splash 显示时机与跳转体验
-2. 继续定位“构建后仍登录不上”的真实根因
-3. 继续完善本地日志功能（查看 / 导出 / 清空 / 脱敏）
-4. 在稳定后继续做中文 commit 并推送
+```dart
+// 之前
+final downloadStationApiProvider = Provider((ref) {
+  return DsmDownloadStationApi(dio: ref.read(businessDioProvider));
+});
+final downloadRepositoryProvider = Provider((ref) {
+  return DownloadRepositoryImpl(ref.read(downloadStationApiProvider));
+});
+
+// 之后
+final downloadRepositoryProvider = Provider((ref) {
+  return DownloadRepositoryImpl(DsmDownloadStationApi());
+});
+```
+
+---
+
+### 二、Session 恢复机制重构
+
+#### 1. 问题根因
+
+热重载后：
+- `SessionRecoveryBridge.callback` 被清空
+- `savedUsernameProvider` / `savedPasswordProvider`（Riverpod StateProvider）重置为 null
+- 恢复时读不到凭证 → 报错
+
+#### 2. 解决方案
+
+**凭证存到 `connectionStore`（内存单例，热重载不丢失）**
+
+```dart
+// current_connection_store.dart
+class AuthCredentials {
+  final String username;
+  final String password;
+}
+
+void setCredentials({required String username, required String password});
+AuthCredentials? get credentials;
+```
+
+**登录时保存凭证**：
+
+```dart
+// auth_providers.dart - persistLoginProvider
+if (rememberPassword) {
+  connectionStore.setCredentials(username: username, password: password);
+}
+```
+
+**恢复时优先读 `connectionStore`**：
+
+```dart
+// auth_providers.dart - recoverSessionProvider
+final stored = connectionStore.credentials;
+final username = stored?.username ?? ref.read(savedUsernameProvider);
+final password = stored?.password ?? ref.read(savedPasswordProvider);
+```
+
+#### 3. SessionRecoveryInterceptor 修复
+
+- 移除对 `SessionRecoveryBridge.callback` 的强制依赖
+- callback 为 null 时，直接从 `connectionStore.credentials` 读凭证
+- 修复 `_cloneOptions` 中 `Content-Type` header 与 `contentType` 参数冲突
+
+---
+
+### 三、性能监控页面重构
+
+#### 1. 文件拆分
+
+原 1500+ 行单文件拆分为 5 个模块：
+
+```
+performance/presentation/
+├── pages/
+│   └── performance_page.dart      ← 主逻辑 + history provider
+└── widgets/
+    ├── chart_painters.dart        ← 图表绘制 (MultiLineChart, MiniLineChart)
+    ├── metric_cards.dart          ← 指标卡片组件
+    ├── overview_cards.dart        ← 概览卡片组件
+    └── tab_content.dart           ← 各 Tab 内容
+```
+
+#### 2. 数据流重构
+
+```dart
+// 之前: listenManual + fireImmediately (首次可能漏掉)
+_overviewSubscription = ref.listenManual(..., fireImmediately: true);
+
+// 之后: ref.watch 驱动 rebuild + history notifier 推送数据
+final overview = ref.watch(dashboardOverviewSafeProvider);
+overview.whenData((data) {
+  if (data != null) {
+    ref.read(perfHistoryProvider.notifier).push(data);
+  }
+});
+```
+
+#### 3. WebSocket 实时数据轮询
+
+`system_api.dart` - `watchUtilization()` 增加定时器：
+
+```dart
+// 首次数据到达后，每 5 秒请求一次
+Timer? periodicTimer;
+void startPeriodicTimer() {
+  periodicTimer = Timer.periodic(const Duration(seconds: 5), (_) => requestCurrent());
+}
+```
+
+---
+
+### 四、UI 组件优化
+
+#### 1. 新增 `SlidingTabBar` 组件
+
+位置：`lib/core/widgets/sliding_tab_bar.dart`
+
+特性：
+- 胶囊形背景 + 滑动指示器
+- 图标 + 文字标签
+- 220ms 切换动画
+- 纯 `AnimationController` 实现，不依赖 Material `TabBar`
+
+#### 2. 登录页面历史设备入口
+
+- 移除 `DropdownButtonFormField`
+- 改为底部文字按钮 → 弹出 `ModalBottomSheet` 列表
+- 点击列表项自动填入服务器/用户名
+
+#### 3. 信息中心页面 Tab 组件升级
+
+- 使用 `SlidingTabBar` 替代 Material `TabBar`
+- 统一性能监控/信息中心两页面的 Tab 样式
+
+---
+
+### 五、日志系统完善
+
+#### 1. `system_api.dart` 日志改进
+
+新增 getter 统一获取认证信息：
+
+```dart
+String get _baseUrl { ... }
+String get _sid => connectionStore.session?.sid ?? '';
+String? get _synoToken => connectionStore.session?.synoToken;
+String? get _cookieHeader => connectionStore.session?.cookieHeader;
+```
+
+所有 `DsmLogger` 调用现在携带真实 `sid` / `synoToken` / `cookieHeader`。
+
+#### 2. SessionRecoveryInterceptor 日志清理
+
+移除所有 `debugPrint` 调试语句，统一使用 `DsmLogger`。
+
+---
+
+### 六、Bug 修复
+
+| 问题 | 文件 | 修复 |
+|------|------|------|
+| 中文乱码 | 多个文件 | PowerShell 编码问题，改用直接 `write` 工具写入 UTF-8 |
+| `static` 顶层变量 | `app_dio.dart` | 移除 `static` 关键字 |
+| RenderFlex overflow | `login_page.dart` | `DropdownMenuItem` 内 `Column` 改为单行 `Text` |
+| Content-Type 冲突 | `session_recovery_interceptor.dart` | `_cloneOptions` 移除 headers 中的 Content-Type |
+| 图表单点偏移 | `chart_painters.dart` | 单点居中显示 |
+
+---
+
+### 七、文件变更清单
+
+```
+M  lib/core/network/app_dio.dart          # DioClient 合并，businessDio 顶层函数
+M  lib/core/network/current_connection_store.dart  # 新增 AuthCredentials
+D  lib/core/network/dio_client.dart       # 已删除
+M  lib/core/network/session_recovery_interceptor.dart  # 热重载安全恢复
+M  lib/data/api/*.dart                    # API 类简化
+M  lib/features/*/providers/*.dart        # Provider 简化
+M  lib/features/performance/presentation/ # 页面重构 + 组件拆分
+M  lib/features/auth/presentation/        # 登录页历史设备入口
+?? lib/core/widgets/                      # 新增 SlidingTabBar
+?? lib/features/performance/presentation/widgets/  # 拆分的组件
+```
+
+---
+
+### 八、待办事项
+
+- [ ] 考虑将 `AuthCredentials` 持久化到 secure storage（当前仅内存）
+- [ ] WebSocket 断线重连逻辑优化
+- [ ] 更多性能监控指标（进程列表、服务状态）
+- [ ] 国际化支持完善

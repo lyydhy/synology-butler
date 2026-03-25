@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/utils/server_url_helper.dart';
+import '../../../../core/utils/time_util.dart';
 import '../../../../domain/entities/system_status.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../auth/presentation/providers/current_connection_readers.dart';
@@ -664,22 +665,6 @@ class _UptimeCardState extends State<_UptimeCard> {
     return null;
   }
 
-  String _formatDuration(Duration duration) {
-    final days = duration.inDays;
-    final hours = duration.inHours % 24;
-    final minutes = duration.inMinutes % 60;
-    final seconds = duration.inSeconds % 60;
-
-    final hh = hours.toString().padLeft(2, '0');
-    final mm = minutes.toString().padLeft(2, '0');
-    final ss = seconds.toString().padLeft(2, '0');
-
-    if (days > 0) {
-      return '$days天 $hh:$mm:$ss';
-    }
-
-    return '$hh:$mm:$ss';
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -687,7 +672,7 @@ class _UptimeCardState extends State<_UptimeCard> {
 
     if (_baseDuration != null && _baseTime != null) {
       final current = _baseDuration! + DateTime.now().difference(_baseTime!);
-      subtitle = _formatDuration(current);
+      subtitle = parseTimeStr(current);
     } else if (widget.uptimeText != null && widget.uptimeText!.trim().isNotEmpty) {
       subtitle = widget.uptimeText!.trim();
     }

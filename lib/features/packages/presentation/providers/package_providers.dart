@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../data/api/package_api.dart';
@@ -7,16 +5,13 @@ import '../../../../data/repositories/package_repository_impl.dart';
 import '../../../../domain/entities/package_item.dart';
 import '../../../../domain/entities/package_volume.dart';
 import '../../../../domain/repositories/package_repository.dart';
-import '../../../../core/network/app_dio.dart';
 
 final packageApiProvider = Provider<PackageApi>((ref) {
-  return DsmPackageApi(dio: AppDioFactory.businessDio());
+  return DsmPackageApi();
 });
 
 final packageRepositoryProvider = Provider<PackageRepository>((ref) {
-  return PackageRepositoryImpl(
-    ref.read(packageApiProvider),
-  );
+  return PackageRepositoryImpl(ref.read(packageApiProvider));
 });
 
 final packageTabProvider = StateProvider<String>((ref) => 'all');
@@ -40,9 +35,7 @@ final mergedPackagesProvider = FutureProvider<List<PackageItem>>((ref) async {
   final store = await ref.watch(storePackagesProvider.future);
   final installed = await ref.watch(installedPackagesProvider.future);
 
-  final installedMap = {
-    for (final item in installed) item.id: item,
-  };
+  final installedMap = {for (final item in installed) item.id: item};
 
   final merged = store.map((item) {
     final installedItem = installedMap[item.id];
@@ -98,11 +91,7 @@ final visiblePackagesProvider = FutureProvider<List<PackageItem>>((ref) async {
 
 final packageStartProvider = Provider<Future<void> Function(PackageItem)>((ref) {
   return (item) async {
-    await ref.read(packageRepositoryProvider).startPackage(
-          packageId: item.id,
-          dsmAppName: item.dsmAppName,
-        );
-
+    await ref.read(packageRepositoryProvider).startPackage(packageId: item.id, dsmAppName: item.dsmAppName);
     ref.invalidate(installedPackagesProvider);
     ref.invalidate(mergedPackagesProvider);
     ref.invalidate(visiblePackagesProvider);
@@ -111,10 +100,7 @@ final packageStartProvider = Provider<Future<void> Function(PackageItem)>((ref) 
 
 final packageStopProvider = Provider<Future<void> Function(PackageItem)>((ref) {
   return (item) async {
-    await ref.read(packageRepositoryProvider).stopPackage(
-          packageId: item.id,
-        );
-
+    await ref.read(packageRepositoryProvider).stopPackage(packageId: item.id);
     ref.invalidate(installedPackagesProvider);
     ref.invalidate(mergedPackagesProvider);
     ref.invalidate(visiblePackagesProvider);
@@ -123,10 +109,7 @@ final packageStopProvider = Provider<Future<void> Function(PackageItem)>((ref) {
 
 final packageUninstallProvider = Provider<Future<void> Function(PackageItem)>((ref) {
   return (item) async {
-    await ref.read(packageRepositoryProvider).uninstallPackage(
-          packageId: item.id,
-        );
-
+    await ref.read(packageRepositoryProvider).uninstallPackage(packageId: item.id);
     ref.invalidate(storePackagesProvider);
     ref.invalidate(installedPackagesProvider);
     ref.invalidate(mergedPackagesProvider);
@@ -141,7 +124,6 @@ final packagePrepareInstallProvider = Provider<Future<PackageQueueCheckResult> F
           version: item.version,
           beta: item.isBeta,
         );
-
     ref.read(packagePendingQueueImpactProvider.notifier).state = queue;
     return queue;
   };
@@ -150,7 +132,7 @@ final packagePrepareInstallProvider = Provider<Future<PackageQueueCheckResult> F
 final packageInstallProvider = Provider<Future<void> Function(PackageItem, String)>((ref) {
   return (item, volumePath) async {
     ref.read(packageInstallingProvider.notifier).state = item.id;
-    ref.read(packageInstallStatusProvider.notifier).state = '准备安装…';
+    ref.read(packageInstallStatusProvider.notifier).state = '准备安装...';
 
     try {
       final taskId = await ref.read(packageRepositoryProvider).installPackage(
@@ -163,13 +145,11 @@ final packageInstallProvider = Provider<Future<void> Function(PackageItem, Strin
       }
 
       for (var i = 0; i < 90; i++) {
-        final status = await ref.read(packageRepositoryProvider).getInstallStatus(
-              taskId: taskId,
-            );
+        final status = await ref.read(packageRepositoryProvider).getInstallStatus(taskId: taskId);
 
         final progressText = status.progress != null
             ? '${status.progress!.toStringAsFixed(1)}%'
-            : (status.status ?? '安装中…');
+            : (status.status ?? '安装中...');
         ref.read(packageInstallStatusProvider.notifier).state = progressText;
 
         if (status.finished) {

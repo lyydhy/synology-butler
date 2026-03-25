@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 
+import '../../core/network/app_dio.dart';
 import '../../core/utils/dsm_logger.dart';
 import '../models/package_item_model.dart';
 import '../models/package_volume_model.dart';
@@ -48,9 +49,7 @@ abstract class PackageApi {
 }
 
 class DsmPackageApi implements PackageApi {
-  DsmPackageApi({required Dio dio}) : _dio = dio;
-
-  final Dio _dio;
+  Dio get _dio => businessDio();
   Options _buildOptions() {
     return Options(
       contentType: Headers.formUrlEncodedContentType,

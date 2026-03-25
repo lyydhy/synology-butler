@@ -22,7 +22,8 @@ class SectionCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: 0.14)),
+        border: Border.all(
+            color: Theme.of(context).dividerColor.withValues(alpha: 0.14)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -33,7 +34,10 @@ class SectionCard extends StatelessWidget {
               const SizedBox(width: 10),
               Text(
                 title,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+                style: Theme.of(context)
+                    .textTheme
+                    .titleMedium
+                    ?.copyWith(fontWeight: FontWeight.w800),
               ),
             ],
           ),
@@ -48,8 +52,10 @@ class SectionCard extends StatelessWidget {
 class InfoRow extends StatelessWidget {
   final String label;
   final String? value;
+  final Color? color;
 
-  const InfoRow({super.key, required this.label, required this.value});
+  const InfoRow(
+      {super.key, required this.label, required this.value, this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -69,7 +75,7 @@ class InfoRow extends StatelessWidget {
           Expanded(
             child: Text(
               value == null || value!.trim().isEmpty ? '--' : value!,
-              style: const TextStyle(fontWeight: FontWeight.w600),
+              style: TextStyle(fontWeight: FontWeight.w600, color: color),
             ),
           ),
         ],
@@ -141,7 +147,13 @@ class InfoBadge extends StatelessWidget {
         children: [
           Icon(icon, size: 16),
           const SizedBox(width: 6),
-          Text(text),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 200),
+            child: Text(
+              text,
+              overflow: TextOverflow.ellipsis,
+            ),
+          )
         ],
       ),
     );
@@ -211,7 +223,11 @@ class VolumeUsageTile extends StatelessWidget {
       children: [
         Row(
           children: [
-            Text(volume.name, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+            Text(volume.name,
+                style: Theme.of(context)
+                    .textTheme
+                    .titleMedium
+                    ?.copyWith(fontWeight: FontWeight.w700)),
             const Spacer(),
             Text('${usage.toStringAsFixed(0)}%'),
           ],
@@ -222,7 +238,8 @@ class VolumeUsageTile extends StatelessWidget {
           child: LinearProgressIndicator(value: usage / 100, minHeight: 10),
         ),
         const SizedBox(height: 8),
-        Text('${_formatBytes(volume.usedBytes)} / ${_formatBytes(volume.totalBytes)}'),
+        Text(
+            '${_formatBytes(volume.usedBytes)} / ${_formatBytes(volume.totalBytes)}'),
       ],
     );
   }

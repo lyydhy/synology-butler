@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 
+import '../../core/network/app_dio.dart';
 import '../models/download_task_model.dart';
 
 abstract class DownloadStationApi {
@@ -23,9 +24,7 @@ abstract class DownloadStationApi {
 }
 
 class DsmDownloadStationApi implements DownloadStationApi {
-  DsmDownloadStationApi({required Dio dio}) : _dio = dio;
-
-  final Dio _dio;
+  Dio get _dio => businessDio();
 
   @override
   Future<List<DownloadTaskModel>> listTasks() async {

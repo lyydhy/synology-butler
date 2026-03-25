@@ -4,18 +4,16 @@ import '../../../../data/api/download_station_api.dart';
 import '../../../../data/repositories/download_repository_impl.dart';
 import '../../../../domain/entities/download_task.dart';
 import '../../../../domain/repositories/download_repository.dart';
-import '../../../../core/network/app_dio.dart';
 
 final downloadStationApiProvider = Provider<DownloadStationApi>((ref) {
-  return DsmDownloadStationApi(dio: AppDioFactory.businessDio());
+  return DsmDownloadStationApi();
 });
-final downloadFilterProvider = StateProvider<String>((ref) => 'all');
 
 final downloadRepositoryProvider = Provider<DownloadRepository>((ref) {
-  return DownloadRepositoryImpl(
-    ref.read(downloadStationApiProvider),
-  );
+  return DownloadRepositoryImpl(ref.read(downloadStationApiProvider));
 });
+
+final downloadFilterProvider = StateProvider<String>((ref) => 'all');
 
 final downloadListProvider = FutureProvider<List<DownloadTask>>((ref) async {
   final tasks = await ref.read(downloadRepositoryProvider).listTasks();
@@ -27,10 +25,7 @@ final downloadListProvider = FutureProvider<List<DownloadTask>>((ref) async {
 
 final downloadActionProvider = Provider<Future<void> Function(String)>((ref) {
   return (uri) async {
-    await ref.read(downloadRepositoryProvider).createTask(
-          uri: uri,
-        );
-
+    await ref.read(downloadRepositoryProvider).createTask(uri: uri);
     ref.invalidate(downloadListProvider);
   };
 });

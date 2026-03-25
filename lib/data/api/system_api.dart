@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -6,7 +6,6 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../core/network/app_dio.dart';
-import '../../core/network/dio_client.dart';
 import '../../core/utils/dsm_logger.dart';
 import '../models/information_center_model.dart';
 import '../models/system_status_model.dart';
@@ -22,18 +21,41 @@ abstract class SystemApi {
 }
 
 class DsmSystemApi implements SystemApi {
-  DsmSystemApi({required Dio dio}) : _dio = dio;
+  DsmSystemApi({bool ignoreBadCertificate = false})
+      : _ignoreBadCertificate = ignoreBadCertificate;
 
-  final Dio _dio;
+  final bool _ignoreBadCertificate;
+
+  Dio get _dio {
+    final server = connectionStore.server;
+    return businessDio(
+        ignoreBadCertificate:
+            server?.ignoreBadCertificate ?? _ignoreBadCertificate);
+  }
 
   String get _baseUrl {
-    final server = AppDioFactory.connectionStore.server;
+    final server = connectionStore.server;
     if (server == null) return '';
     final scheme = server.https ? 'https' : 'http';
-    final host = server.host.trim().replaceFirst(RegExp(r'^https?://'), '').replaceAll(RegExp(r'/$'), '');
-    final basePath = (server.basePath == null || server.basePath!.trim().isEmpty) ? '' : (server.basePath!.startsWith('/') ? server.basePath! : '/${server.basePath!}');
+    final host = server.host
+        .trim()
+        .replaceFirst(RegExp(r'^https?://'), '')
+        .replaceAll(RegExp(r'/$'), '');
+    final basePath =
+        (server.basePath == null || server.basePath!.trim().isEmpty)
+            ? ''
+            : (server.basePath!.startsWith('/')
+                ? server.basePath!
+                : '/${server.basePath!}');
     return '$scheme://$host:${server.port}$basePath';
   }
+
+  String get _sid => connectionStore.session?.sid ?? '';
+
+  String? get _synoToken => connectionStore.session?.synoToken;
+
+  String? get _cookieHeader => connectionStore.session?.cookieHeader;
+
   @override
   Future<InformationCenterModel> fetchInformationCenter({
     required String serverName,
@@ -59,6 +81,9 @@ class DsmSystemApi implements SystemApi {
       action: 'fetchInformationCenter',
       method: 'POST',
       path: _baseUrl,
+      sid: _sid,
+      synoToken: _synoToken,
+      cookieHeader: _cookieHeader,
       extra: {
         'apis': [
           'SYNO.Core.System.info',
@@ -77,26 +102,22 @@ class DsmSystemApi implements SystemApi {
         'api': 'SYNO.Core.System',
         'method': 'info',
         'version': '1',
-        
       });
       final utilizationData = await postEntry({
         'api': 'SYNO.Core.System.Utilization',
         'method': 'get',
         'version': '1',
         'type': 'current',
-        
       });
       final systemHealthData = await postEntry({
         'api': 'SYNO.Core.System.SystemHealth',
         'method': 'get',
         'version': '1',
-        
       });
       final timeData = await postEntry({
         'api': 'SYNO.Core.System.Time',
         'method': 'get',
         'version': '1',
-        
       });
       final networkCompoundData = await postEntry({
         'api': 'SYNO.Entry.Request',
@@ -128,7 +149,6 @@ class DsmSystemApi implements SystemApi {
             'type': 'wan',
           },
         ]),
-        
       });
       final externalDeviceCompoundData = await postEntry({
         'api': 'SYNO.Entry.Request',
@@ -149,51 +169,70 @@ class DsmSystemApi implements SystemApi {
             'additional': ['all'],
           },
         ]),
-        
       });
       final diskData = await postEntry({
         'api': 'SYNO.Core.Storage.Disk',
         'method': 'list',
         'version': '1',
         'additional': jsonEncode(['size_total', 'temp', 'serial']),
-        
       });
 
       final memory = utilizationData['memory'] as Map? ?? const {};
       final cpu = utilizationData['cpu'] as Map? ?? const {};
-      final networkData = _extractCompoundApiData(networkCompoundData, 'SYNO.Core.Network');
-      final ethernetData = _extractCompoundApiData(networkCompoundData, 'SYNO.Core.Network.Ethernet');
-      final gatewayListData = _extractCompoundApiData(networkCompoundData, 'SYNO.Core.Network.Router.Gateway.List');
-      final usbData = _extractCompoundApiData(externalDeviceCompoundData, 'SYNO.Core.ExternalDevice.Storage.USB');
-      final esataData = _extractCompoundApiData(externalDeviceCompoundData, 'SYNO.Core.ExternalDevice.Storage.eSATA');
-      final networks = _extractLanNetworks(networkData, ethernetData, gatewayListData);
+      final networkData =
+          _extractCompoundApiData(networkCompoundData, 'SYNO.Core.Network');
+      final ethernetData = _extractCompoundApiData(
+          networkCompoundData, 'SYNO.Core.Network.Ethernet');
+      final gatewayListData = _extractCompoundApiData(
+          networkCompoundData, 'SYNO.Core.Network.Router.Gateway.List');
+      final usbData = _extractCompoundApiData(
+          externalDeviceCompoundData, 'SYNO.Core.ExternalDevice.Storage.USB');
+      final esataData = _extractCompoundApiData(
+          externalDeviceCompoundData, 'SYNO.Core.ExternalDevice.Storage.eSATA');
+      final networks =
+          _extractLanNetworks(networkData, ethernetData, gatewayListData);
       final externalDevices = _extractExternalDevices(usbData, esataData);
       final disks = _extractDisks(diskData);
       final versionText = await _fetchUpgradeVersion(
             client: client,
-            sid: AppDioFactory.connectionStore.session?.sid ?? '',
-            synoToken: AppDioFactory.connectionStore.session?.synoToken,
+            sid: connectionStore.session?.sid ?? '',
+            synoToken: connectionStore.session?.synoToken,
           ) ??
           _buildVersionText(infoData);
 
+      int cpuCores = int.tryParse(infoData['cpu_cores']) ?? 0;
+      double cpuClockSpeed = (_toInt(infoData['cpu_clock_speed']) ?? 0) / 1000;
+      String cpuClockSpeedStr = (cpuClockSpeed / 1000).toStringAsFixed(2);
       final model = InformationCenterModel(
-        serverName: (infoData['hostname'] ?? infoData['server_name'] ?? serverName).toString(),
-        serialNumber: (infoData['serial'] ?? infoData['serial_number'])?.toString(),
-        modelName: (infoData['model'] ?? infoData['modelname'])?.toString(),
-        cpuName: (infoData['cpu_family'] ?? cpu['model'] ?? cpu['name'])?.toString(),
-        cpuCores: _toInt(infoData['cpu_cores'] ?? cpu['cores'] ?? cpu['core']),
-        memoryBytes: _toDouble(infoData['physical_memory'] ?? memory['real_total'] ?? memory['avail_real']),
-        dsmVersion: versionText,
-        systemTime: _resolveSystemTime(timeData),
-        uptimeText: systemHealthData['uptime']?.toString() ?? _formatUptime(infoData['uptime'] ?? infoData['uptime_seconds']),
-        thermalStatus: _resolveThermalStatus(systemHealthData),
-        timezone: _resolveTimezone(timeData),
-        dnsServer: _resolveDns(networkData),
-        gateway: _resolveGateway(networkData, gatewayListData),
-        workgroup: _resolveWorkgroup(networkData),
-        externalDevices: externalDevices,
-        lanNetworks: networks,
-        disks: disks,
+          serverName:
+              (infoData['hostname'] ?? infoData['server_name'] ?? serverName)
+                  .toString(),
+          serialNumber:
+              (infoData['serial'] ?? infoData['serial_number'])?.toString(),
+          modelName: (infoData['model'] ?? infoData['modelname'])?.toString(),
+          cpuName:
+              "${infoData['cpu_vendor']} ${infoData['cpu_family']} ${infoData['cpu_series']}",
+          cpuCores: cpuCores,
+          cpuClockSpeedStr: "$cpuCores核 @ ${cpuClockSpeedStr}GHz",
+          ramSize: _toInt(infoData['ram_size']),
+          memoryBytes: _toDouble(infoData['physical_memory'] ??
+              memory['real_total'] ??
+              memory['avail_real']),
+          dsmVersion: versionText,
+          systemTime: _resolveSystemTime(timeData),
+          uptimeText: systemHealthData['uptime']?.toString() ??
+              _formatUptime(infoData['uptime'] ?? infoData['uptime_seconds']),
+          thermalStatus: _resolveThermalStatus(systemHealthData),
+          timezone: infoData['time_zone_desc'],
+          dnsServer: _resolveDns(networkData),
+          gateway: _resolveGateway(networkData, gatewayListData),
+          workgroup: _resolveWorkgroup(networkData),
+          externalDevices: externalDevices,
+          lanNetworks: networks,
+          disks: disks,
+          sysTemp: _toInt(infoData['sys_temp']),
+          time: infoData['time'],
+          temperatureWarning: infoData['temperature_warning']
       );
 
       DsmLogger.success(
@@ -215,6 +254,9 @@ class DsmSystemApi implements SystemApi {
         action: 'fetchInformationCenter',
         path: _baseUrl,
         reason: e.toString(),
+        sid: _sid,
+        synoToken: _synoToken,
+        cookieHeader: _cookieHeader,
       );
       rethrow;
     }
@@ -229,6 +271,9 @@ class DsmSystemApi implements SystemApi {
       action: 'fetchOverview',
       method: 'GET',
       path: _baseUrl,
+      sid: _sid,
+      synoToken: _synoToken,
+      cookieHeader: _cookieHeader,
       extra: {
         'apis': [
           'SYNO.Core.System',
@@ -246,7 +291,6 @@ class DsmSystemApi implements SystemApi {
           'api': 'SYNO.Core.System',
           'method': 'info',
           'version': '1',
-          
         },
       );
 
@@ -257,14 +301,15 @@ class DsmSystemApi implements SystemApi {
           'method': 'get',
           'version': '1',
           'type': 'current',
-          
         },
       );
 
-      final infoData = infoResponse.data is Map && infoResponse.data['success'] == true
-          ? (infoResponse.data['data'] as Map? ?? const {})
-          : const {};
-      final utilizationData = utilizationResponse.data is Map && utilizationResponse.data['success'] == true
+      final infoData =
+          infoResponse.data is Map && infoResponse.data['success'] == true
+              ? (infoResponse.data['data'] as Map? ?? const {})
+              : const {};
+      final utilizationData = utilizationResponse.data is Map &&
+              utilizationResponse.data['success'] == true
           ? (utilizationResponse.data['data'] as Map? ?? const {})
           : const {};
 
@@ -284,13 +329,23 @@ class DsmSystemApi implements SystemApi {
           .whereType<Map>()
           .map(
             (item) => StorageVolumeStatusModel(
-              name: (item['display_name'] ?? item['device'] ?? item['name'] ?? 'volume').toString(),
+              name: (item['display_name'] ??
+                      item['device'] ??
+                      item['name'] ??
+                      'volume')
+                  .toString(),
               usage: ((item['utilization'] as num?) ?? 0).toDouble(),
               usedBytes: _toDouble(
-                item['used_size'] ?? item['used'] ?? item['volume_status']?['used_size'] ?? item['volume_status']?['used'],
+                item['used_size'] ??
+                    item['used'] ??
+                    item['volume_status']?['used_size'] ??
+                    item['volume_status']?['used'],
               ),
               totalBytes: _toDouble(
-                item['total_size'] ?? item['total'] ?? item['volume_status']?['totalspace'] ?? item['volume_status']?['total'],
+                item['total_size'] ??
+                    item['total'] ??
+                    item['volume_status']?['totalspace'] ??
+                    item['volume_status']?['total'],
               ),
             ),
           )
@@ -298,42 +353,62 @@ class DsmSystemApi implements SystemApi {
 
       final storagePollVolumes = await _fetchStoragePollVolumes(
         client: client,
-        sid: AppDioFactory.connectionStore.session?.sid ?? '',
-        synoToken: AppDioFactory.connectionStore.session?.synoToken,
+        sid: connectionStore.session?.sid ?? '',
+        synoToken: connectionStore.session?.synoToken,
       );
-      final resolvedVolumes = storagePollVolumes.isNotEmpty ? storagePollVolumes : mappedVolumes;
+      final resolvedVolumes =
+          storagePollVolumes.isNotEmpty ? storagePollVolumes : mappedVolumes;
 
       final upgradeVersionText = await _fetchUpgradeVersion(
         client: client,
-        sid: AppDioFactory.connectionStore.session?.sid ?? '',
-        synoToken: AppDioFactory.connectionStore.session?.synoToken,
+        sid: connectionStore.session?.sid ?? '',
+        synoToken: connectionStore.session?.synoToken,
       );
       final systemHealthUptime = await _fetchSystemHealthUptime(
         client: client,
-        sid: AppDioFactory.connectionStore.session?.sid ?? '',
-        synoToken: AppDioFactory.connectionStore.session?.synoToken,
+        sid: connectionStore.session?.sid ?? '',
+        synoToken: connectionStore.session?.synoToken,
       );
       final versionText = upgradeVersionText ?? _buildVersionText(infoData);
-      final resolvedStorageUsage = _resolveStorageUsage(totalSpace, resolvedVolumes);
+      final resolvedStorageUsage =
+          _resolveStorageUsage(totalSpace, resolvedVolumes);
 
       final result = SystemStatusModel(
-        serverName: (infoData['hostname'] ?? infoData['server_name'] ?? '我的 NAS').toString(),
+        serverName:
+            (infoData['hostname'] ?? infoData['server_name'] ?? '我的 NAS')
+                .toString(),
         dsmVersion: versionText,
-        cpuUsage: ((utilizationData['cpu']?['user_load'] as num?) ?? 0).toDouble() +
+        cpuUsage: ((utilizationData['cpu']?['user_load'] as num?) ?? 0)
+                .toDouble() +
             ((utilizationData['cpu']?['system_load'] as num?) ?? 0).toDouble() +
             ((utilizationData['cpu']?['other_load'] as num?) ?? 0).toDouble(),
-        cpuUserUsage: ((utilizationData['cpu']?['user_load'] as num?) ?? 0).toDouble(),
-        cpuSystemUsage: ((utilizationData['cpu']?['system_load'] as num?) ?? 0).toDouble(),
-        cpuIoWaitUsage: ((utilizationData['cpu']?['other_load'] as num?) ?? 0).toDouble(),
-        load1: (((utilizationData['cpu']?['1min_load'] as num?) ?? 0).toDouble()) / 100,
-        load5: (((utilizationData['cpu']?['5min_load'] as num?) ?? 0).toDouble()) / 100,
-        load15: (((utilizationData['cpu']?['15min_load'] as num?) ?? 0).toDouble()) / 100,
+        cpuUserUsage:
+            ((utilizationData['cpu']?['user_load'] as num?) ?? 0).toDouble(),
+        cpuSystemUsage:
+            ((utilizationData['cpu']?['system_load'] as num?) ?? 0).toDouble(),
+        cpuIoWaitUsage:
+            ((utilizationData['cpu']?['other_load'] as num?) ?? 0).toDouble(),
+        load1:
+            (((utilizationData['cpu']?['1min_load'] as num?) ?? 0).toDouble()) /
+                100,
+        load5:
+            (((utilizationData['cpu']?['5min_load'] as num?) ?? 0).toDouble()) /
+                100,
+        load15: (((utilizationData['cpu']?['15min_load'] as num?) ?? 0)
+                .toDouble()) /
+            100,
         memoryUsage: ((memory['real_usage'] as num?) ?? 0).toDouble(),
-        memoryTotalBytes: (((memory['memory_size'] as num?) ?? 0).toDouble()) * 1024,
-        memoryUsedBytes: ((((memory['real_usage'] as num?) ?? 0).toDouble()) * (((memory['memory_size'] as num?) ?? 0).toDouble()) * 10.24),
-        memoryBufferBytes: (((memory['buffer'] as num?) ?? 0).toDouble()) * 1024,
-        memoryCachedBytes: (((memory['cached'] as num?) ?? 0).toDouble()) * 1024,
-        memoryAvailableBytes: (((memory['avail_real'] as num?) ?? 0).toDouble()) * 1024,
+        memoryTotalBytes:
+            (((memory['memory_size'] as num?) ?? 0).toDouble()) * 1024,
+        memoryUsedBytes: ((((memory['real_usage'] as num?) ?? 0).toDouble()) *
+            (((memory['memory_size'] as num?) ?? 0).toDouble()) *
+            10.24),
+        memoryBufferBytes:
+            (((memory['buffer'] as num?) ?? 0).toDouble()) * 1024,
+        memoryCachedBytes:
+            (((memory['cached'] as num?) ?? 0).toDouble()) * 1024,
+        memoryAvailableBytes:
+            (((memory['avail_real'] as num?) ?? 0).toDouble()) * 1024,
         storageUsage: resolvedStorageUsage,
         networkUploadBytesPerSecond: networkTotals.$1,
         networkDownloadBytesPerSecond: networkTotals.$2,
@@ -344,8 +419,10 @@ class DsmSystemApi implements SystemApi {
         volumePerformances: volumePerformances,
         volumes: resolvedVolumes,
         modelName: (infoData['model'] ?? infoData['modelname'])?.toString(),
-        serialNumber: (infoData['serial'] ?? infoData['serial_number'])?.toString(),
-        uptimeText: systemHealthUptime ?? _formatUptime(infoData['uptime'] ?? infoData['uptime_seconds']),
+        serialNumber:
+            (infoData['serial'] ?? infoData['serial_number'])?.toString(),
+        uptimeText: systemHealthUptime ??
+            _formatUptime(infoData['uptime'] ?? infoData['uptime_seconds']),
       );
 
       DsmLogger.success(
@@ -367,6 +444,9 @@ class DsmSystemApi implements SystemApi {
         action: 'fetchOverview',
         path: _baseUrl,
         reason: e.toString(),
+        sid: _sid,
+        synoToken: _synoToken,
+        cookieHeader: _cookieHeader,
       );
       rethrow;
     }
@@ -374,13 +454,12 @@ class DsmSystemApi implements SystemApi {
 
   @override
   Stream<SystemStatusModel> watchUtilization() {
-    final synoToken = AppDioFactory.connectionStore.session?.synoToken;
-    final cookieHeader = AppDioFactory.connectionStore.session?.cookieHeader;
+    final synoToken = _synoToken;
+    final cookieHeader = _cookieHeader;
     if (synoToken == null || synoToken.isEmpty) {
       throw Exception('Missing SynoToken for realtime utilization');
     }
     final baseUrl = _baseUrl;
-    final sid = AppDioFactory.connectionStore.session?.sid ?? '';
     final controller = StreamController<SystemStatusModel>();
 
     DsmLogger.request(
@@ -388,6 +467,9 @@ class DsmSystemApi implements SystemApi {
       action: 'watchUtilization',
       method: 'WS',
       path: _baseUrl,
+      sid: _sid,
+      synoToken: synoToken,
+      cookieHeader: cookieHeader,
       extra: {
         'api': 'SYNO.Core.System.Utilization',
         'type': 'current',
@@ -412,13 +494,15 @@ class DsmSystemApi implements SystemApi {
       final headers = <String, dynamic>{
         'Origin': origin,
       };
-      final combinedCookie = _mergeCookieHeaders(cookieHeader, pollingState.cookieHeader);
+      final combinedCookie =
+          _mergeCookieHeaders(cookieHeader, pollingState.cookieHeader);
       if (combinedCookie != null && combinedCookie.isNotEmpty) {
         headers['Cookie'] = combinedCookie;
       }
 
       debugPrint('[WS][Connect] url=$wsUri');
-      debugPrint('[WS][Connect] origin=$origin cookie=${combinedCookie == null || combinedCookie.isEmpty ? 'missing' : 'present'} engineSid=${pollingState.engineSid}');
+      debugPrint(
+          '[WS][Connect] origin=$origin cookie=${combinedCookie == null || combinedCookie.isEmpty ? 'missing' : 'present'} engineSid=${pollingState.engineSid}');
 
       final socket = await WebSocket.connect(
         wsUri.toString(),
@@ -437,16 +521,22 @@ class DsmSystemApi implements SystemApi {
         debugPrint('[WS][Send] $frame');
       }
 
-      void sendRequestWebApi(String api, int version, String method, Map<String, dynamic> payload) {
+      void sendRequestWebApi(String api, int version, String method,
+          Map<String, dynamic> payload) {
         final index = requestIndex++;
-        final frame = '42$index${jsonEncode(["request_webapi", api, version, method, payload])}';
+        final frame = '42$index${jsonEncode([
+              "request_webapi",
+              api,
+              version,
+              method,
+              payload
+            ])}';
         sendFrame(frame);
       }
 
       void requestCurrent() {
         sendRequestWebApi('SYNO.Core.System.Utilization', 1, 'get', {
           'type': 'current',
-          
           'SynoToken': synoToken,
         });
         requested = true;
@@ -463,11 +553,12 @@ class DsmSystemApi implements SystemApi {
           action: 'watchUtilization',
           path: _baseUrl,
           reason: 'Realtime authentication error: $reason',
-          sid: sid,
+          sid: _sid,
           synoToken: synoToken,
           cookieHeader: cookieHeader,
         );
-        controller.addError(Exception('Realtime authentication error: $reason'));
+        controller
+            .addError(Exception('Realtime authentication error: $reason'));
         socket.close();
       }
 
@@ -481,12 +572,14 @@ class DsmSystemApi implements SystemApi {
           module: 'System',
           action: 'watchUtilization',
           path: _baseUrl,
-          reason: 'Realtime bootstrap timeout after websocket connect; auth likely expired',
-          sid: sid,
+          reason:
+              'Realtime bootstrap timeout after websocket connect; auth likely expired',
+          sid: _sid,
           synoToken: synoToken,
           cookieHeader: cookieHeader,
         );
-        controller.addError(Exception('Realtime bootstrap timeout after websocket connect; auth likely expired'));
+        controller.addError(Exception(
+            'Realtime bootstrap timeout after websocket connect; auth likely expired'));
         socket.close();
       }
 
@@ -496,10 +589,18 @@ class DsmSystemApi implements SystemApi {
       requestCurrent();
 
       bootstrapTimer = Timer(const Duration(seconds: 2), failBootstrapTimeout);
+      Timer? periodicTimer;
+
+      void startPeriodicTimer() {
+        periodicTimer?.cancel();
+        periodicTimer =
+            Timer.periodic(const Duration(seconds: 5), (_) => requestCurrent());
+      }
 
       controller.onCancel = () async {
         debugPrint('[WS][Closed by client]');
         bootstrapTimer?.cancel();
+        periodicTimer?.cancel();
         await socket.close();
       };
 
@@ -549,6 +650,7 @@ class DsmSystemApi implements SystemApi {
 
           terminalStateReached = true;
           bootstrapTimer?.cancel();
+          startPeriodicTimer();
 
           final data = payload['data'] as Map? ?? const {};
           final spacePreview = data['space'];
@@ -558,7 +660,9 @@ class DsmSystemApi implements SystemApi {
             path: _baseUrl,
             response: {
               'received': true,
-              'spaceKeys': spacePreview is Map ? spacePreview.keys.map((e) => e.toString()).toList() : [],
+              'spaceKeys': spacePreview is Map
+                  ? spacePreview.keys.map((e) => e.toString()).toList()
+                  : [],
             },
           );
 
@@ -578,13 +682,23 @@ class DsmSystemApi implements SystemApi {
               .whereType<Map>()
               .map(
                 (item) => StorageVolumeStatusModel(
-                  name: (item['display_name'] ?? item['device'] ?? item['name'] ?? 'volume').toString(),
+                  name: (item['display_name'] ??
+                          item['device'] ??
+                          item['name'] ??
+                          'volume')
+                      .toString(),
                   usage: ((item['utilization'] as num?) ?? 0).toDouble(),
                   usedBytes: _toDouble(
-                    item['used_size'] ?? item['used'] ?? item['volume_status']?['used_size'] ?? item['volume_status']?['used'],
+                    item['used_size'] ??
+                        item['used'] ??
+                        item['volume_status']?['used_size'] ??
+                        item['volume_status']?['used'],
                   ),
                   totalBytes: _toDouble(
-                    item['total_size'] ?? item['total'] ?? item['volume_status']?['totalspace'] ?? item['volume_status']?['total'],
+                    item['total_size'] ??
+                        item['total'] ??
+                        item['volume_status']?['totalspace'] ??
+                        item['volume_status']?['total'],
                   ),
                 ),
               )
@@ -614,12 +728,20 @@ class DsmSystemApi implements SystemApi {
               load5: (((cpu['5min_load'] as num?) ?? 0).toDouble()) / 100,
               load15: (((cpu['15min_load'] as num?) ?? 0).toDouble()) / 100,
               memoryUsage: ((memory['real_usage'] as num?) ?? 0).toDouble(),
-              memoryTotalBytes: (((memory['memory_size'] as num?) ?? 0).toDouble()) * 1024,
-              memoryUsedBytes: ((((memory['real_usage'] as num?) ?? 0).toDouble()) * (((memory['memory_size'] as num?) ?? 0).toDouble()) * 10.24),
-              memoryBufferBytes: (((memory['buffer'] as num?) ?? 0).toDouble()) * 1024,
-              memoryCachedBytes: (((memory['cached'] as num?) ?? 0).toDouble()) * 1024,
-              memoryAvailableBytes: (((memory['avail_real'] as num?) ?? 0).toDouble()) * 1024,
-              storageUsage: ((totalSpace['utilization'] as num?) ?? 0).toDouble(),
+              memoryTotalBytes:
+                  (((memory['memory_size'] as num?) ?? 0).toDouble()) * 1024,
+              memoryUsedBytes:
+                  ((((memory['real_usage'] as num?) ?? 0).toDouble()) *
+                      (((memory['memory_size'] as num?) ?? 0).toDouble()) *
+                      10.24),
+              memoryBufferBytes:
+                  (((memory['buffer'] as num?) ?? 0).toDouble()) * 1024,
+              memoryCachedBytes:
+                  (((memory['cached'] as num?) ?? 0).toDouble()) * 1024,
+              memoryAvailableBytes:
+                  (((memory['avail_real'] as num?) ?? 0).toDouble()) * 1024,
+              storageUsage:
+                  ((totalSpace['utilization'] as num?) ?? 0).toDouble(),
               networkUploadBytesPerSecond: networkTotals.$1,
               networkDownloadBytesPerSecond: networkTotals.$2,
               diskReadBytesPerSecond: diskTotals.$1,
@@ -635,11 +757,13 @@ class DsmSystemApi implements SystemApi {
         onError: (error) {
           debugPrint('[WS][Error] $error');
           bootstrapTimer?.cancel();
+          periodicTimer?.cancel();
           controller.addError(error);
         },
         onDone: () {
           debugPrint('[WS][Done]');
           bootstrapTimer?.cancel();
+          periodicTimer?.cancel();
           controller.close();
         },
         cancelOnError: false,
@@ -679,7 +803,8 @@ class DsmSystemApi implements SystemApi {
 
     final engineSid = _extractEngineSid(raw);
     if (engineSid == null || engineSid.isEmpty) {
-      throw Exception('Failed to extract engine sid from polling response: $raw');
+      throw Exception(
+          'Failed to extract engine sid from polling response: $raw');
     }
 
     final setCookies = response.headers.map['set-cookie'] ?? const <String>[];
@@ -799,8 +924,12 @@ class DsmSystemApi implements SystemApi {
 
   String? _mergeCookieHeaders(String? a, String? b) {
     final parts = <String>[];
-    if (a != null && a.isNotEmpty) parts.addAll(a.split(';').map((e) => e.trim()).where((e) => e.isNotEmpty));
-    if (b != null && b.isNotEmpty) parts.addAll(b.split(';').map((e) => e.trim()).where((e) => e.isNotEmpty));
+    if (a != null && a.isNotEmpty)
+      parts
+          .addAll(a.split(';').map((e) => e.trim()).where((e) => e.isNotEmpty));
+    if (b != null && b.isNotEmpty)
+      parts
+          .addAll(b.split(';').map((e) => e.trim()).where((e) => e.isNotEmpty));
     if (parts.isEmpty) return null;
 
     final cookieMap = <String, String>{};
@@ -856,7 +985,6 @@ class DsmSystemApi implements SystemApi {
           'method': 'poll',
           'version': '1',
           'type': jsonEncode('storage'),
-          
         },
         options: Options(
           contentType: Headers.formUrlEncodedContentType,
@@ -871,7 +999,9 @@ class DsmSystemApi implements SystemApi {
       final result = volInfo.whereType<Map>().map((item) {
         final total = _toDouble(item['total_size']);
         final used = _toDouble(item['used_size']);
-        final usage = total != null && total > 0 && used != null ? (used / total) * 100 : 0.0;
+        final usage = total != null && total > 0 && used != null
+            ? (used / total) * 100
+            : 0.0;
         return StorageVolumeStatusModel(
           name: (item['name'] ?? item['volume'] ?? 'volume').toString(),
           usage: usage,
@@ -903,7 +1033,8 @@ class DsmSystemApi implements SystemApi {
     }
   }
 
-  double _resolveStorageUsage(Map totalSpace, List<StorageVolumeStatusModel> volumes) {
+  double _resolveStorageUsage(
+      Map totalSpace, List<StorageVolumeStatusModel> volumes) {
     final direct = (totalSpace['utilization'] as num?)?.toDouble();
     if (direct != null && direct > 0) {
       return direct;
@@ -950,7 +1081,6 @@ class DsmSystemApi implements SystemApi {
               'need_auto_smallupdate': true,
             },
           ]),
-          
         },
         options: Options(headers: headers),
       );
@@ -984,7 +1114,8 @@ class DsmSystemApi implements SystemApi {
           var versionNumber = major;
           if (minor != null && minor.isNotEmpty) versionNumber += '.$minor';
           if (micro != null && micro.isNotEmpty) versionNumber += '.$micro';
-          if (nano != null && nano.isNotEmpty && nano != '0') versionNumber += ' Update $nano';
+          if (nano != null && nano.isNotEmpty && nano != '0')
+            versionNumber += ' Update $nano';
           parts.add('$osName $versionNumber');
         }
         if (build != null && build.isNotEmpty) {
@@ -1032,7 +1163,6 @@ class DsmSystemApi implements SystemApi {
           'api': 'SYNO.Core.System.SystemHealth',
           'method': 'get',
           'version': '1',
-          
         },
         options: Options(headers: headers),
       );
@@ -1074,10 +1204,12 @@ class DsmSystemApi implements SystemApi {
     final major = infoData['productmajor']?.toString();
     final minor = infoData['productminor']?.toString();
     if (major != null && major.isNotEmpty) {
-      return minor != null && minor.isNotEmpty ? 'DSM $major.$minor' : 'DSM $major';
+      return minor != null && minor.isNotEmpty
+          ? 'DSM $major.$minor'
+          : 'DSM $major';
     }
 
-    return 'DSM 版本未知';
+    return 'DSM 鐗堟湰鏈煡';
   }
 
   List<Map> _extractVolumeList(Map space) {
@@ -1094,7 +1226,10 @@ class DsmSystemApi implements SystemApi {
     final items = space['items'];
     if (items is List) {
       return items.whereType<Map>().where((item) {
-        final name = (item['display_name'] ?? item['device'] ?? item['name'] ?? '').toString().toLowerCase();
+        final name =
+            (item['display_name'] ?? item['device'] ?? item['name'] ?? '')
+                .toString()
+                .toLowerCase();
         return name.startsWith('volume');
       }).toList();
     }
@@ -1130,9 +1265,11 @@ class DsmSystemApi implements SystemApi {
     return network.whereType<Map>().toList().asMap().entries.map((entry) {
       final item = entry.value;
       final index = entry.key;
-      final name = (item['display_name'] ?? item['name'] ?? item['id'] ?? '').toString().trim();
+      final name = (item['display_name'] ?? item['name'] ?? item['id'] ?? '')
+          .toString()
+          .trim();
       return NetworkInterfaceStatusModel(
-        name: name.isEmpty ? (index == 0 ? '总计' : '局域网 $index') : name,
+        name: name.isEmpty ? (index == 0 ? '鎬昏' : '灞€鍩熺綉 $index') : name,
         uploadBytesPerSecond: _toDouble(item['tx']) ?? 0,
         downloadBytesPerSecond: _toDouble(item['rx']) ?? 0,
       );
@@ -1145,7 +1282,8 @@ class DsmSystemApi implements SystemApi {
 
     return items.whereType<Map>().map((item) {
       return DiskStatusModel(
-        name: (item['display_name'] ?? item['name'] ?? item['device'] ?? '磁盘').toString(),
+        name: (item['display_name'] ?? item['name'] ?? item['device'] ?? '纾佺洏')
+            .toString(),
         utilization: _toDouble(item['utilization']) ?? 0,
         readBytesPerSecond: _toDouble(item['read_byte']) ?? 0,
         writeBytesPerSecond: _toDouble(item['write_byte']) ?? 0,
@@ -1155,11 +1293,14 @@ class DsmSystemApi implements SystemApi {
     }).toList();
   }
 
-  List<VolumePerformanceStatusModel> _extractVolumePerformanceStatuses(Map space) {
+  List<VolumePerformanceStatusModel> _extractVolumePerformanceStatuses(
+      Map space) {
     final items = _extractVolumeList(space);
     return items.whereType<Map>().map((item) {
       return VolumePerformanceStatusModel(
-        name: (item['display_name'] ?? item['name'] ?? item['device'] ?? '存储空间').toString(),
+        name:
+            (item['display_name'] ?? item['name'] ?? item['device'] ?? '瀛樺偍绌洪棿')
+                .toString(),
         utilization: _toDouble(item['utilization']) ?? 0,
         readBytesPerSecond: _toDouble(item['read_byte']) ?? 0,
         writeBytesPerSecond: _toDouble(item['write_byte']) ?? 0,
@@ -1190,7 +1331,8 @@ class DsmSystemApi implements SystemApi {
     return const {};
   }
 
-  List<InformationCenterLanNetworkModel> _extractLanNetworks(Map networkData, Map ethernetData, Map gatewayListData) {
+  List<InformationCenterLanNetworkModel> _extractLanNetworks(
+      Map networkData, Map ethernetData, Map gatewayListData) {
     final candidateLists = [
       ethernetData['eth'],
       ethernetData['interfaces'],
@@ -1206,15 +1348,21 @@ class DsmSystemApi implements SystemApi {
       if (candidate is! List) continue;
       final result = candidate.whereType<Map>().map((item) {
         final ipv4 = _extractIpv4Map(item);
-        final ipAddr = (ipv4?['address'] ?? item['ip'] ?? item['ipaddr'])?.toString();
+        final ipAddr =
+            (ipv4?['address'] ?? item['ip'] ?? item['ipaddr'])?.toString();
         return InformationCenterLanNetworkModel(
-          name: (item['name'] ?? item['id'] ?? item['service'] ?? 'LAN').toString(),
-          macAddress: (item['mac'] ?? item['mac_address'] ?? item['hwaddr'])?.toString(),
+          name: (item['name'] ?? item['id'] ?? item['service'] ?? 'LAN')
+              .toString(),
+          macAddress: (item['mac'] ?? item['mac_address'] ?? item['hwaddr'])
+              ?.toString(),
           ipAddress: ipAddr == '0.0.0.0' ? '-' : ipAddr,
-          subnetMask: (ipv4?['netmask'] ?? item['mask'] ?? item['subnet_mask'])?.toString(),
+          subnetMask: (ipv4?['netmask'] ?? item['mask'] ?? item['subnet_mask'])
+              ?.toString(),
         );
       }).where((item) {
-        return item.macAddress != null || item.ipAddress != null || item.subnetMask != null;
+        return item.macAddress != null ||
+            item.ipAddress != null ||
+            item.subnetMask != null;
       }).toList();
       if (result.isNotEmpty) {
         return result;
@@ -1237,14 +1385,16 @@ class DsmSystemApi implements SystemApi {
     return null;
   }
 
-  List<InformationCenterExternalDeviceModel> _extractExternalDevices(Map usbData, Map esataData) {
+  List<InformationCenterExternalDeviceModel> _extractExternalDevices(
+      Map usbData, Map esataData) {
     final usbDevices = _extractExternalDevicesFromMap(usbData);
     final esataDevices = _extractExternalDevicesFromMap(esataData);
-    
+
     return [...usbDevices, ...esataDevices];
   }
 
-  List<InformationCenterExternalDeviceModel> _extractExternalDevicesFromMap(Map externalDeviceData) {
+  List<InformationCenterExternalDeviceModel> _extractExternalDevicesFromMap(
+      Map externalDeviceData) {
     final lists = [
       externalDeviceData['devices'],
       externalDeviceData['esata'],
@@ -1256,7 +1406,11 @@ class DsmSystemApi implements SystemApi {
       if (candidate is! List) continue;
       final result = candidate.whereType<Map>().map((item) {
         return InformationCenterExternalDeviceModel(
-          name: (item['name'] ?? item['display_name'] ?? item['dev_name'] ?? '外接设备').toString(),
+          name: (item['name'] ??
+                  item['display_name'] ??
+                  item['dev_name'] ??
+                  '澶栨帴璁惧')
+              .toString(),
           type: (item['type'] ?? item['device_type'])?.toString(),
           status: (item['status'] ?? item['state'])?.toString(),
         );
@@ -1279,11 +1433,14 @@ class DsmSystemApi implements SystemApi {
     for (final candidate in candidateLists) {
       if (candidate is! List) continue;
       final result = candidate.whereType<Map>().map((item) {
-        final tempValue = item['temp'] ?? item['temperature'] ?? item['smart_temp'];
+        final tempValue =
+            item['temp'] ?? item['temperature'] ?? item['smart_temp'];
         return InformationCenterDiskModel(
-          name: (item['name'] ?? item['device'] ?? item['diskno'] ?? '硬盘').toString(),
+          name: (item['name'] ?? item['device'] ?? item['diskno'] ?? '纭洏')
+              .toString(),
           serialNumber: (item['serial'] ?? item['serial_number'])?.toString(),
-          capacityBytes: _toDouble(item['size_total'] ?? item['size'] ?? item['total_size']),
+          capacityBytes: _toDouble(
+              item['size_total'] ?? item['size'] ?? item['total_size']),
           temperatureText: _resolveTemperatureText(tempValue),
         );
       }).toList();
@@ -1319,7 +1476,11 @@ class DsmSystemApi implements SystemApi {
       }
     }
 
-    final candidates = [timeData['tz'], timeData['timezone'], timeData['time_zone']];
+    final candidates = [
+      timeData['tz'],
+      timeData['timezone'],
+      timeData['time_zone']
+    ];
     for (final value in candidates) {
       if (value != null && value.toString().trim().isNotEmpty) {
         return value.toString().trim();
@@ -1331,7 +1492,8 @@ class DsmSystemApi implements SystemApi {
   String? _resolveThermalStatus(Map systemHealthData) {
     final thermal = systemHealthData['thermal'];
     if (thermal is Map) {
-      final status = thermal['status'] ?? thermal['message'] ?? thermal['level'];
+      final status =
+          thermal['status'] ?? thermal['message'] ?? thermal['level'];
       if (status != null && status.toString().trim().isNotEmpty) {
         return status.toString().trim();
       }
@@ -1370,7 +1532,10 @@ class DsmSystemApi implements SystemApi {
 
     final dns = networkData['dns'];
     if (dns is List) {
-      final values = dns.map((e) => e.toString()).where((e) => e.trim().isNotEmpty).toList();
+      final values = dns
+          .map((e) => e.toString())
+          .where((e) => e.trim().isNotEmpty)
+          .toList();
       if (values.isNotEmpty) {
         return values.join(' / ');
       }
@@ -1424,7 +1589,7 @@ class DsmSystemApi implements SystemApi {
       final text = value.toString().trim();
       return text.isEmpty ? null : text;
     }
-    return '${number.toStringAsFixed(number % 1 == 0 ? 0 : 1)}°C';
+    return '${number.toStringAsFixed(number % 1 == 0 ? 0 : 1)}掳C';
   }
 
   int? _toInt(dynamic value) {
