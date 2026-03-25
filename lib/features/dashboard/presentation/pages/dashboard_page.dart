@@ -87,23 +87,31 @@ class DashboardPage extends ConsumerWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: _QuickEntryCard(
-                  icon: Icons.apps_rounded,
-                  label: '套件中心',
-                  hint: '查看 / 安装 / 管理套件',
-                  color: Colors.deepPurple,
-                  onTap: () => context.push('/packages'),
+                  icon: Icons.monitor_heart_outlined,
+                  label: '性能监控',
+                  hint: '概览 / CPU / 内存 / 网络',
+                  color: Colors.teal,
+                  onTap: () => context.push('/performance'),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 10),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: _SecondaryQuickEntry(
-              icon: Icons.sync_alt_rounded,
-              label: '传输中心',
-              onTap: () => context.push('/transfers'),
-            ),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              _SecondaryQuickEntry(
+                icon: Icons.apps_rounded,
+                label: '套件中心',
+                onTap: () => context.push('/packages'),
+              ),
+              _SecondaryQuickEntry(
+                icon: Icons.sync_alt_rounded,
+                label: '传输中心',
+                onTap: () => context.push('/transfers'),
+              ),
+            ],
           ),
           const SizedBox(height: 16),
           Row(

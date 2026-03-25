@@ -13,6 +13,7 @@ import '../features/files/presentation/pages/video_preview_page.dart';
 import '../features/information_center/presentation/pages/information_center_page.dart';
 import '../features/packages/presentation/pages/package_detail_page.dart';
 import '../features/packages/presentation/pages/packages_page.dart';
+import '../features/performance/presentation/pages/performance_page.dart';
 import '../features/server-management/presentation/pages/server_management_page.dart';
 import '../features/shell/main_shell_page.dart';
 import '../features/transfers/presentation/pages/transfers_page.dart';
@@ -32,6 +33,7 @@ final GoRouter appRouter = GoRouter(
     GoRoute(path: '/diagnostics', builder: (context, state) => const DiagnosticsPage()),
     GoRoute(path: '/transfers', builder: (context, state) => const TransfersPage()),
     GoRoute(path: '/packages', builder: (context, state) => const PackagesPage()),
+    GoRoute(path: '/performance', builder: (context, state) => const PerformancePage()),
     GoRoute(
       path: '/information-center',
       builder: (context, state) {

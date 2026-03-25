@@ -293,9 +293,16 @@ class DsmSystemApi implements SystemApi {
           : const {};
 
       final memory = utilizationData['memory'] as Map? ?? const {};
+      final network = utilizationData['network'] as List? ?? const [];
+      final disk = utilizationData['disk'] as Map? ?? const {};
+      final networkTotals = _extractNetworkTotals(network);
+      final networkInterfaces = _extractNetworkInterfaces(network);
+      final diskTotals = _extractDiskTotals(disk);
+      final disks = _extractDiskStatuses(disk);
       final space = utilizationData['space'] as Map? ?? const {};
       final totalSpace = space['total'] as Map? ?? const {};
       final volumeList = _extractVolumeList(space);
+      final volumePerformances = _extractVolumePerformanceStatuses(space);
 
       final mappedVolumes = volumeList
           .whereType<Map>()
@@ -339,8 +346,26 @@ class DsmSystemApi implements SystemApi {
         cpuUsage: ((utilizationData['cpu']?['user_load'] as num?) ?? 0).toDouble() +
             ((utilizationData['cpu']?['system_load'] as num?) ?? 0).toDouble() +
             ((utilizationData['cpu']?['other_load'] as num?) ?? 0).toDouble(),
+        cpuUserUsage: ((utilizationData['cpu']?['user_load'] as num?) ?? 0).toDouble(),
+        cpuSystemUsage: ((utilizationData['cpu']?['system_load'] as num?) ?? 0).toDouble(),
+        cpuIoWaitUsage: ((utilizationData['cpu']?['other_load'] as num?) ?? 0).toDouble(),
+        load1: (((utilizationData['cpu']?['1min_load'] as num?) ?? 0).toDouble()) / 100,
+        load5: (((utilizationData['cpu']?['5min_load'] as num?) ?? 0).toDouble()) / 100,
+        load15: (((utilizationData['cpu']?['15min_load'] as num?) ?? 0).toDouble()) / 100,
         memoryUsage: ((memory['real_usage'] as num?) ?? 0).toDouble(),
+        memoryTotalBytes: (((memory['memory_size'] as num?) ?? 0).toDouble()) * 1024,
+        memoryUsedBytes: ((((memory['real_usage'] as num?) ?? 0).toDouble()) * (((memory['memory_size'] as num?) ?? 0).toDouble()) * 10.24),
+        memoryBufferBytes: (((memory['buffer'] as num?) ?? 0).toDouble()) * 1024,
+        memoryCachedBytes: (((memory['cached'] as num?) ?? 0).toDouble()) * 1024,
+        memoryAvailableBytes: (((memory['avail_real'] as num?) ?? 0).toDouble()) * 1024,
         storageUsage: resolvedStorageUsage,
+        networkUploadBytesPerSecond: networkTotals.$1,
+        networkDownloadBytesPerSecond: networkTotals.$2,
+        diskReadBytesPerSecond: diskTotals.$1,
+        diskWriteBytesPerSecond: diskTotals.$2,
+        networkInterfaces: networkInterfaces,
+        disks: disks,
+        volumePerformances: volumePerformances,
         volumes: resolvedVolumes,
         modelName: (infoData['model'] ?? infoData['modelname'])?.toString(),
         serialNumber: (infoData['serial'] ?? infoData['serial_number'])?.toString(),
@@ -566,9 +591,16 @@ class DsmSystemApi implements SystemApi {
 
           final cpu = data['cpu'] as Map? ?? const {};
           final memory = data['memory'] as Map? ?? const {};
+          final network = data['network'] as List? ?? const [];
+          final disk = data['disk'] as Map? ?? const {};
+          final networkTotals = _extractNetworkTotals(network);
+          final networkInterfaces = _extractNetworkInterfaces(network);
+          final diskTotals = _extractDiskTotals(disk);
+          final disks = _extractDiskStatuses(disk);
           final space = data['space'] as Map? ?? const {};
           final totalSpace = space['total'] as Map? ?? const {};
           final volumeList = _extractVolumeList(space);
+          final volumePerformances = _extractVolumePerformanceStatuses(space);
           final mappedVolumes = volumeList
               .whereType<Map>()
               .map(
@@ -602,8 +634,26 @@ class DsmSystemApi implements SystemApi {
               cpuUsage: ((cpu['user_load'] as num?) ?? 0).toDouble() +
                   ((cpu['system_load'] as num?) ?? 0).toDouble() +
                   ((cpu['other_load'] as num?) ?? 0).toDouble(),
+              cpuUserUsage: ((cpu['user_load'] as num?) ?? 0).toDouble(),
+              cpuSystemUsage: ((cpu['system_load'] as num?) ?? 0).toDouble(),
+              cpuIoWaitUsage: ((cpu['other_load'] as num?) ?? 0).toDouble(),
+              load1: (((cpu['1min_load'] as num?) ?? 0).toDouble()) / 100,
+              load5: (((cpu['5min_load'] as num?) ?? 0).toDouble()) / 100,
+              load15: (((cpu['15min_load'] as num?) ?? 0).toDouble()) / 100,
               memoryUsage: ((memory['real_usage'] as num?) ?? 0).toDouble(),
+              memoryTotalBytes: (((memory['memory_size'] as num?) ?? 0).toDouble()) * 1024,
+              memoryUsedBytes: ((((memory['real_usage'] as num?) ?? 0).toDouble()) * (((memory['memory_size'] as num?) ?? 0).toDouble()) * 10.24),
+              memoryBufferBytes: (((memory['buffer'] as num?) ?? 0).toDouble()) * 1024,
+              memoryCachedBytes: (((memory['cached'] as num?) ?? 0).toDouble()) * 1024,
+              memoryAvailableBytes: (((memory['avail_real'] as num?) ?? 0).toDouble()) * 1024,
               storageUsage: ((totalSpace['utilization'] as num?) ?? 0).toDouble(),
+              networkUploadBytesPerSecond: networkTotals.$1,
+              networkDownloadBytesPerSecond: networkTotals.$2,
+              diskReadBytesPerSecond: diskTotals.$1,
+              diskWriteBytesPerSecond: diskTotals.$2,
+              networkInterfaces: networkInterfaces,
+              disks: disks,
+              volumePerformances: volumePerformances,
               volumes: mappedVolumes,
               uptimeText: null,
             ),
@@ -1078,6 +1128,73 @@ class DsmSystemApi implements SystemApi {
     }
 
     return const [];
+  }
+
+  (double, double) _extractNetworkTotals(List network) {
+    if (network.isEmpty) return (0, 0);
+
+    final first = network.first;
+    if (first is! Map) return (0, 0);
+
+    return (
+      _toDouble(first['tx']) ?? 0,
+      _toDouble(first['rx']) ?? 0,
+    );
+  }
+
+  (double, double) _extractDiskTotals(Map disk) {
+    final total = disk['total'];
+    if (total is! Map) return (0, 0);
+
+    return (
+      _toDouble(total['read_byte']) ?? 0,
+      _toDouble(total['write_byte']) ?? 0,
+    );
+  }
+
+  List<NetworkInterfaceStatusModel> _extractNetworkInterfaces(List network) {
+    if (network.isEmpty) return const [];
+
+    return network.whereType<Map>().toList().asMap().entries.map((entry) {
+      final item = entry.value;
+      final index = entry.key;
+      final name = (item['display_name'] ?? item['name'] ?? item['id'] ?? '').toString().trim();
+      return NetworkInterfaceStatusModel(
+        name: name.isEmpty ? (index == 0 ? '总计' : '局域网 $index') : name,
+        uploadBytesPerSecond: _toDouble(item['tx']) ?? 0,
+        downloadBytesPerSecond: _toDouble(item['rx']) ?? 0,
+      );
+    }).toList();
+  }
+
+  List<DiskStatusModel> _extractDiskStatuses(Map disk) {
+    final items = disk['disk'];
+    if (items is! List) return const [];
+
+    return items.whereType<Map>().map((item) {
+      return DiskStatusModel(
+        name: (item['display_name'] ?? item['name'] ?? item['device'] ?? '磁盘').toString(),
+        utilization: _toDouble(item['utilization']) ?? 0,
+        readBytesPerSecond: _toDouble(item['read_byte']) ?? 0,
+        writeBytesPerSecond: _toDouble(item['write_byte']) ?? 0,
+        readIops: _toDouble(item['read_access']) ?? 0,
+        writeIops: _toDouble(item['write_access']) ?? 0,
+      );
+    }).toList();
+  }
+
+  List<VolumePerformanceStatusModel> _extractVolumePerformanceStatuses(Map space) {
+    final items = _extractVolumeList(space);
+    return items.whereType<Map>().map((item) {
+      return VolumePerformanceStatusModel(
+        name: (item['display_name'] ?? item['name'] ?? item['device'] ?? '存储空间').toString(),
+        utilization: _toDouble(item['utilization']) ?? 0,
+        readBytesPerSecond: _toDouble(item['read_byte']) ?? 0,
+        writeBytesPerSecond: _toDouble(item['write_byte']) ?? 0,
+        readIops: _toDouble(item['read_access']) ?? 0,
+        writeIops: _toDouble(item['write_access']) ?? 0,
+      );
+    }).toList();
   }
 
   Map _extractCompoundApiData(Map compoundResult, String targetApi) {
