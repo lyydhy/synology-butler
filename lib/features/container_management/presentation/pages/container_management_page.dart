@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/widgets/sliding_tab_bar.dart';
+import '../../../../data/api/docker_api.dart';
 import '../../../preferences/providers/preferences_providers.dart';
 
 /// 容器管理首页。
@@ -21,11 +22,20 @@ class ContainerManagementPage extends ConsumerStatefulWidget {
 class _ContainerManagementPageState extends ConsumerState<ContainerManagementPage>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
+  late Future<DockerOverviewData> _overviewFuture;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _overviewFuture = DsmDockerApi().fetchOverview();
+  }
+
+  /// 统一刷新容器与镜像数据。
+  void _refreshOverview() {
+    setState(() {
+      _overviewFuture = DsmDockerApi().fetchOverview();
+    });
   }
 
   @override
@@ -46,11 +56,7 @@ class _ContainerManagementPageState extends ConsumerState<ContainerManagementPag
         actions: [
           IconButton(
             tooltip: '刷新',
-            onPressed: () {
-              ScaffoldMessenger.of(context)
-                ..hideCurrentSnackBar()
-                ..showSnackBar(const SnackBar(content: Text('第一版骨架已就绪，后续接入真实数据刷新')));
-            },
+            onPressed: _refreshOverview,
             icon: const Icon(Icons.refresh_rounded),
           ),
           IconButton(
@@ -78,13 +84,38 @@ class _ContainerManagementPageState extends ConsumerState<ContainerManagementPag
             ),
           ),
           Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                _ContainerListTab(isUnavailable: isDpanel),
-                _ComposeListTab(isUnavailable: isDpanel),
-                _ImageListTab(isUnavailable: isDpanel),
-              ],
+            child: FutureBuilder<DockerOverviewData>(
+              future: _overviewFuture,
+              builder: (context, snapshot) {
+                if (isDpanel) {
+                  return TabBarView(
+                    controller: _tabController,
+                    children: const [
+                      _ContainerListTab(isUnavailable: true, items: []),
+                      _ComposeListTab(isUnavailable: true),
+                      _ImageListTab(isUnavailable: true, items: []),
+                    ],
+                  );
+                }
+
+                if (snapshot.connectionState != ConnectionState.done) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (snapshot.hasError) {
+                  return _DockerErrorState(onRetry: _refreshOverview);
+                }
+
+                final data = snapshot.data ?? const DockerOverviewData(containers: [], images: []);
+                return TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _ContainerListTab(isUnavailable: false, items: data.containers),
+                    const _ComposeListTab(isUnavailable: false),
+                    _ImageListTab(isUnavailable: false, items: data.images),
+                  ],
+                );
+              },
             ),
           ),
         ],
@@ -146,9 +177,10 @@ class _SourceBanner extends StatelessWidget {
 }
 
 class _ContainerListTab extends StatefulWidget {
-  const _ContainerListTab({required this.isUnavailable});
+  const _ContainerListTab({required this.isUnavailable, required this.items});
 
   final bool isUnavailable;
+  final List<DockerContainerSummary> items;
 
   @override
   State<_ContainerListTab> createState() => _ContainerListTabState();
@@ -159,9 +191,9 @@ class _ContainerListTabState extends State<_ContainerListTab> {
 
   @override
   Widget build(BuildContext context) {
-    final items = _mockContainers.where((item) {
-      if (_selectedFilter == 'running') return item.status == '运行中';
-      if (_selectedFilter == 'stopped') return item.status == '已停止';
+    final items = widget.items.where((item) {
+      if (_selectedFilter == 'running') return item.status == 'running';
+      if (_selectedFilter == 'stopped') return item.status == 'stopped';
       return true;
     }).toList();
 
@@ -182,12 +214,14 @@ class _ContainerListTabState extends State<_ContainerListTab> {
         Expanded(
           child: widget.isUnavailable
               ? const _UnavailablePlaceholder()
-              : ListView.separated(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                  itemBuilder: (context, index) => _ContainerCard(item: items[index]),
-                  separatorBuilder: (_, __) => const SizedBox(height: 12),
-                  itemCount: items.length,
-                ),
+              : items.isEmpty
+                  ? const _EmptyState(label: '暂无容器数据')
+                  : ListView.separated(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                      itemBuilder: (context, index) => _ContainerCard(item: items[index]),
+                      separatorBuilder: (_, __) => const SizedBox(height: 12),
+                      itemCount: items.length,
+                    ),
         ),
       ],
     );
@@ -213,19 +247,22 @@ class _ComposeListTab extends StatelessWidget {
 }
 
 class _ImageListTab extends StatelessWidget {
-  const _ImageListTab({required this.isUnavailable});
+  const _ImageListTab({required this.isUnavailable, required this.items});
 
   final bool isUnavailable;
+  final List<DockerImageSummary> items;
 
   @override
   Widget build(BuildContext context) {
     if (isUnavailable) return const _UnavailablePlaceholder();
 
+    if (items.isEmpty) return const _EmptyState(label: '暂无镜像数据');
+
     return ListView.separated(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-      itemBuilder: (context, index) => _ImageCard(item: _mockImages[index]),
+      itemBuilder: (context, index) => _ImageCard(item: items[index]),
       separatorBuilder: (_, __) => const SizedBox(height: 12),
-      itemCount: _mockImages.length,
+      itemCount: items.length,
     );
   }
 }
@@ -233,12 +270,13 @@ class _ImageListTab extends StatelessWidget {
 class _ContainerCard extends StatelessWidget {
   const _ContainerCard({required this.item});
 
-  final _ContainerUiItem item;
+  final DockerContainerSummary item;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isRunning = item.status == '运行中';
+    final isRunning = item.status == 'running';
+    final statusText = isRunning ? '运行中' : item.status == 'stopped' ? '已停止' : item.status;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -272,11 +310,11 @@ class _ContainerCard extends StatelessWidget {
                   ],
                 ),
               ),
-              _StatusChip(label: item.status, running: isRunning),
+              _StatusChip(label: statusText, running: isRunning),
             ],
           ),
           const SizedBox(height: 12),
-          Text('端口：${item.ports}', style: theme.textTheme.bodyMedium),
+          Text('端口：${item.portsSummary}', style: theme.textTheme.bodyMedium),
           const SizedBox(height: 14),
           Align(
             alignment: Alignment.centerRight,
@@ -352,7 +390,7 @@ class _ComposeCard extends StatelessWidget {
 class _ImageCard extends StatelessWidget {
   const _ImageCard({required this.item});
 
-  final _ImageUiItem item;
+  final DockerImageSummary item;
 
   @override
   Widget build(BuildContext context) {
@@ -386,7 +424,7 @@ class _ImageCard extends StatelessWidget {
               ],
             ),
           ),
-          Text(item.size, style: theme.textTheme.bodyMedium),
+          Text(item.sizeText, style: theme.textTheme.bodyMedium),
         ],
       ),
     );
@@ -437,18 +475,40 @@ class _UnavailablePlaceholder extends StatelessWidget {
   }
 }
 
-class _ContainerUiItem {
-  const _ContainerUiItem({
-    required this.name,
-    required this.image,
-    required this.status,
-    required this.ports,
-  });
+class _DockerErrorState extends StatelessWidget {
+  const _DockerErrorState({required this.onRetry});
 
-  final String name;
-  final String image;
-  final String status;
-  final String ports;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.cloud_off_rounded, size: 42),
+            const SizedBox(height: 12),
+            const Text('容器数据加载失败，请稍后重试。', textAlign: TextAlign.center),
+            const SizedBox(height: 12),
+            FilledButton.tonal(onPressed: onRetry, child: const Text('重试')),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _EmptyState extends StatelessWidget {
+  const _EmptyState({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(child: Text(label));
+  }
 }
 
 class _ComposeUiItem {
@@ -463,31 +523,7 @@ class _ComposeUiItem {
   final int containerCount;
 }
 
-class _ImageUiItem {
-  const _ImageUiItem({
-    required this.name,
-    required this.tag,
-    required this.size,
-  });
-
-  final String name;
-  final String tag;
-  final String size;
-}
-
-const _mockContainers = [
-  _ContainerUiItem(name: 'nginx-proxy', image: 'nginx:1.27', status: '运行中', ports: '8080 → 80'),
-  _ContainerUiItem(name: 'qbittorrent', image: 'lscr.io/linuxserver/qbittorrent', status: '已停止', ports: '8081 → 8080'),
-  _ContainerUiItem(name: 'homeassistant', image: 'ghcr.io/home-assistant/home-assistant', status: '运行中', ports: '8123 → 8123'),
-];
-
 const _mockComposeProjects = [
   _ComposeUiItem(name: 'media-stack', status: '运行中', containerCount: 4),
   _ComposeUiItem(name: 'download-stack', status: '已停止', containerCount: 2),
-];
-
-const _mockImages = [
-  _ImageUiItem(name: 'nginx', tag: '1.27', size: '188 MB'),
-  _ImageUiItem(name: 'postgres', tag: '16', size: '412 MB'),
-  _ImageUiItem(name: 'redis', tag: '7', size: '93 MB'),
 ];
