@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
+import '../../core/constants/app_constants.dart';
 import '../../core/network/app_dio.dart';
 import '../../core/utils/dsm_logger.dart';
 import '../models/information_center_model.dart';
@@ -592,8 +593,10 @@ class DsmSystemApi implements SystemApi {
 
       void startPeriodicTimer() {
         periodicTimer?.cancel();
-        periodicTimer =
-            Timer.periodic(const Duration(seconds: 5), (_) => requestCurrent());
+        periodicTimer = Timer.periodic(
+          const Duration(seconds: AppConstants.realtimeRequestIntervalSeconds),
+          (_) => requestCurrent(),
+        );
       }
 
       controller.onCancel = () async {

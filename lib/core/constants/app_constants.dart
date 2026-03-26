@@ -18,4 +18,7 @@ class AppConstants {
   static const downloadDirectoryKey = 'download_directory';
   static const transferHistoryKey = 'transfer_history';
   static const pendingExternalShareKey = 'pending_external_share';
+
+  /// DSM realtime websocket 主动拉取当前利用率的轮询间隔（秒）。
+  static const realtimeRequestIntervalSeconds = 3;
 }
