@@ -4,99 +4,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/widgets/sliding_tab_bar.dart';
 import '../../../auth/presentation/providers/current_connection_readers.dart';
 import '../../../dashboard/presentation/providers/dashboard_providers.dart';
-import '../../../../domain/entities/system_status.dart';
-
+import 'performance_history.dart';
 import '../widgets/tab_content.dart';
 
-// ─────────────────────────────────────────────────────────────────
-//  History state
-// ─────────────────────────────────────────────────────────────────
-
-class PerfHistory {
-  PerfHistory([int limit = 30]) : _limit = limit;
-
-  final int _limit;
-  final List<double> _values = [];
-
-  List<double> get values => _values;
-
-  void push(double value) {
-    _values.add(value);
-    if (_values.length > _limit) _values.removeAt(0);
-  }
-
-  void clear() => _values.clear();
-}
-
-class PerfHistoryState {
-  PerfHistoryState() {
-    cpu = PerfHistory();
-    cpuUser = PerfHistory();
-    cpuSystem = PerfHistory();
-    cpuIo = PerfHistory();
-    memory = PerfHistory();
-    storage = PerfHistory();
-    networkUpload = PerfHistory();
-    networkDownload = PerfHistory();
-    diskRead = PerfHistory();
-    diskWrite = PerfHistory();
-  }
-
-  late final PerfHistory cpu;
-  late final PerfHistory cpuUser;
-  late final PerfHistory cpuSystem;
-  late final PerfHistory cpuIo;
-  late final PerfHistory memory;
-  late final PerfHistory storage;
-  late final PerfHistory networkUpload;
-  late final PerfHistory networkDownload;
-  late final PerfHistory diskRead;
-  late final PerfHistory diskWrite;
-
-  void clear() {
-    cpu.clear();
-    cpuUser.clear();
-    cpuSystem.clear();
-    cpuIo.clear();
-    memory.clear();
-    storage.clear();
-    networkUpload.clear();
-    networkDownload.clear();
-    diskRead.clear();
-    diskWrite.clear();
-  }
-}
-
-class PerfHistoryNotifier extends StateNotifier<PerfHistoryState> {
-  PerfHistoryNotifier() : super(PerfHistoryState());
-
-  void push(SystemStatus data) {
-    state.cpu.push(data.cpuUsage);
-    state.cpuUser.push(data.cpuUserUsage);
-    state.cpuSystem.push(data.cpuSystemUsage);
-    state.cpuIo.push(data.cpuIoWaitUsage);
-    state.memory.push(data.memoryUsage);
-    state.storage.push(data.storageUsage);
-    state.networkUpload.push(data.networkUploadBytesPerSecond);
-    state.networkDownload.push(data.networkDownloadBytesPerSecond);
-    state.diskRead.push(data.diskReadBytesPerSecond);
-    state.diskWrite.push(data.diskWriteBytesPerSecond);
-  }
-
-  void clear() => state.clear();
-}
-
-final perfHistoryProvider = StateNotifierProvider<PerfHistoryNotifier, PerfHistoryState>((ref) {
-  return PerfHistoryNotifier();
-});
-
-// ─────────────────────────────────────────────────────────────────
-//  Page
-// ─────────────────────────────────────────────────────────────────
-
+/// 性能监控页。
+///
+/// 页面只依赖全局连接状态和概览数据流；
+/// 历史曲线缓存改回 Flutter 原生 State 管理，避免为局部状态额外引入 Riverpod。
 class PerformancePage extends ConsumerStatefulWidget {
   const PerformancePage({super.key, this.initialTab = 0});
 
+  /// 初始选中的页签下标。
   final int initialTab;
 
   @override
@@ -104,12 +22,24 @@ class PerformancePage extends ConsumerStatefulWidget {
 }
 
 class _PerformancePageState extends ConsumerState<PerformancePage> with SingleTickerProviderStateMixin {
+  static const int _tabCount = 6;
+
   late final TabController _tabController;
+
+  /// 当前页面维护的性能历史缓存。
+  final PerfHistoryState _history = PerfHistoryState();
+
+  /// 用于避免同一帧数据在 rebuild 时被重复写入历史。
+  SystemStatus? _lastRecordedOverview;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 6, vsync: this, initialIndex: widget.initialTab.clamp(0, 5));
+    _tabController = TabController(
+      length: _tabCount,
+      vsync: this,
+      initialIndex: widget.initialTab.clamp(0, _tabCount - 1),
+    );
   }
 
   @override
@@ -118,19 +48,30 @@ class _PerformancePageState extends ConsumerState<PerformancePage> with SingleTi
     super.dispose();
   }
 
+  /// 在拿到新概览数据时写入历史缓存。
+  void _recordOverview(SystemStatus? data) {
+    if (data == null || identical(_lastRecordedOverview, data)) {
+      return;
+    }
+    _history.push(data);
+    _lastRecordedOverview = data;
+  }
+
+  /// 清空页面内的历史曲线。
+  void _clearHistory() {
+    setState(() {
+      _history.clear();
+      _lastRecordedOverview = null;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentSession = ref.watch(activeSessionProvider);
     final overview = ref.watch(dashboardOverviewSafeProvider);
+    final currentOverview = overview.valueOrNull;
 
-    // Push data into history whenever the value is available
-    overview.whenData((data) {
-      if (data != null) {
-        ref.read(perfHistoryProvider.notifier).push(data);
-      }
-    });
-
-    final history = ref.watch(perfHistoryProvider);
+    _recordOverview(currentOverview);
 
     if (currentSession == null) {
       return Scaffold(
@@ -146,7 +87,7 @@ class _PerformancePageState extends ConsumerState<PerformancePage> with SingleTi
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
             tooltip: '清除历史并刷新',
-            onPressed: () => ref.read(perfHistoryProvider.notifier).clear(),
+            onPressed: _clearHistory,
           ),
         ],
         bottom: PreferredSize(
@@ -174,30 +115,34 @@ class _PerformancePageState extends ConsumerState<PerformancePage> with SingleTi
           controller: _tabController,
           children: [
             OverviewTab(
-              data: overview.valueOrNull,
-              cpuHistory: history.cpu.values,
-              memoryHistory: history.memory.values,
-              networkUploadHistory: history.networkUpload.values,
-              networkDownloadHistory: history.networkDownload.values,
-              diskReadHistory: history.diskRead.values,
-              diskWriteHistory: history.diskWrite.values,
-              storageHistory: history.storage.values,
+              data: currentOverview,
+              cpuHistory: _history.cpu.values,
+              memoryHistory: _history.memory.values,
+              networkUploadHistory: _history.networkUpload.values,
+              networkDownloadHistory: _history.networkDownload.values,
+              diskReadHistory: _history.diskRead.values,
+              diskWriteHistory: _history.diskWrite.values,
+              storageHistory: _history.storage.values,
             ),
             CpuTab(
-              data: overview.valueOrNull,
-              totalHistory: history.cpu.values,
-              userHistory: history.cpuUser.values,
-              systemHistory: history.cpuSystem.values,
-              ioHistory: history.cpuIo.values,
+              data: currentOverview,
+              totalHistory: _history.cpu.values,
+              userHistory: _history.cpuUser.values,
+              systemHistory: _history.cpuSystem.values,
+              ioHistory: _history.cpuIo.values,
             ),
-            MemoryTab(data: overview.valueOrNull, memoryHistory: history.memory.values),
+            MemoryTab(data: currentOverview, memoryHistory: _history.memory.values),
             NetworkTab(
-              data: overview.valueOrNull,
-              uploadHistory: history.networkUpload.values,
-              downloadHistory: history.networkDownload.values,
+              data: currentOverview,
+              uploadHistory: _history.networkUpload.values,
+              downloadHistory: _history.networkDownload.values,
             ),
-            DiskTab(data: overview.valueOrNull, readHistory: history.diskRead.values, writeHistory: history.diskWrite.values),
-            VolumeTab(data: overview.valueOrNull, storageHistory: history.storage.values),
+            DiskTab(
+              data: currentOverview,
+              readHistory: _history.diskRead.values,
+              writeHistory: _history.diskWrite.values,
+            ),
+            VolumeTab(data: currentOverview, storageHistory: _history.storage.values),
           ],
         ),
       ),
