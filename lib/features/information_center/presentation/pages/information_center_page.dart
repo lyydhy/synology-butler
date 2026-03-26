@@ -85,7 +85,6 @@ class _InformationCenterPageState extends ConsumerState<InformationCenterPage> w
           final overview = overviewAsync.valueOrNull;
           return TabBarView(
             controller: _tabController,
-            physics: const NeverScrollableScrollPhysics(),
             children: [
               OverviewTab(info: info),
               NetworkTab(info: info),

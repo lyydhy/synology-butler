@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/widgets/sliding_tab_bar.dart';
 import '../../../../domain/entities/package_item.dart';
 import '../../../../domain/entities/package_volume.dart';
 import '../../../auth/presentation/providers/current_connection_readers.dart';
@@ -18,13 +19,27 @@ class PackagesPage extends ConsumerStatefulWidget {
   ConsumerState<PackagesPage> createState() => _PackagesPageState();
 }
 
-class _PackagesPageState extends ConsumerState<PackagesPage> {
+class _PackagesPageState extends ConsumerState<PackagesPage> with SingleTickerProviderStateMixin {
   static const String _allTab = 'all';
   static const String _installedTab = 'installed';
   static const String _updatesTab = 'updates';
 
+  late final TabController _tabController;
+
   /// 当前页面选中的筛选页签。
   String _selectedTab = _allTab;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
 
   /// 根据当前页签过滤展示的套件列表。
   List<PackageItem> _filterItems(List<PackageItem> items) {
@@ -75,18 +90,22 @@ class _PackagesPageState extends ConsumerState<PackagesPage> {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-            child: SegmentedButton<String>(
-              segments: const [
-                ButtonSegment(value: _allTab, label: Text('全部')),
-                ButtonSegment(value: _installedTab, label: Text('已安装')),
-                ButtonSegment(value: _updatesTab, label: Text('可更新')),
-              ],
-              selected: {_selectedTab},
-              onSelectionChanged: (value) {
+            child: SlidingTabBar(
+              tabController: _tabController,
+              onTabSelected: (index) {
                 setState(() {
-                  _selectedTab = value.first;
+                  _selectedTab = switch (index) {
+                    1 => _installedTab,
+                    2 => _updatesTab,
+                    _ => _allTab,
+                  };
                 });
               },
+              tabs: const [
+                SlidingTabItem(icon: Icons.apps_rounded, label: '全部'),
+                SlidingTabItem(icon: Icons.check_circle_outline_rounded, label: '已安装'),
+                SlidingTabItem(icon: Icons.system_update_alt_rounded, label: '可更新'),
+              ],
             ),
           ),
           if (installStatus != null && installStatus.isNotEmpty)
