@@ -5,10 +5,10 @@ import 'package:dio/dio.dart';
 
 import '../../core/network/app_dio.dart';
 import '../../core/utils/dsm_logger.dart';
-import '../models/file_item_model.dart';
+import '../../domain/entities/file_item.dart';
 
 abstract class FileStationApi {
-  Future<List<FileItemModel>> listFiles({
+  Future<List<FileItem>> listFiles({
     required String path,
   });
 
@@ -146,7 +146,7 @@ class DsmFileStationApi implements FileStationApi {
   }
 
   @override
-  Future<List<FileItemModel>> listFiles({
+  Future<List<FileItem>> listFiles({
     required String path,
   }) async {
     final folderPath = _normalizeFolderPath(path);
@@ -232,7 +232,7 @@ class DsmFileStationApi implements FileStationApi {
       );
       return items.whereType<Map>().map((map) {
         final additional = map['additional'] as Map? ?? const {};
-        return FileItemModel(
+        return FileItem(
           name: (map['name'] ?? '').toString(),
           path: (map['path'] ?? additional['real_path'] ?? '').toString(),
           isDirectory: ((map['isdir'] ?? false) == true),
