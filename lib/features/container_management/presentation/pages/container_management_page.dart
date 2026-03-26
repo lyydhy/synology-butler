@@ -131,9 +131,12 @@ class _ContainerManagementPageState extends ConsumerState<ContainerManagementPag
             child: _SourceBanner(source: dataSource),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
             child: SlidingTabBar(
               tabController: _tabController,
+              height: 54,
+              iconSize: 18,
+              fontSize: 13,
               tabs: const [
                 SlidingTabItem(icon: Icons.view_list_rounded, label: '容器'),
                 SlidingTabItem(icon: Icons.account_tree_outlined, label: 'Compose'),

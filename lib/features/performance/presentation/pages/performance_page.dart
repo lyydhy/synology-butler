@@ -97,6 +97,9 @@ class _PerformancePageState extends ConsumerState<PerformancePage> with SingleTi
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
             child: SlidingTabBar(
               tabController: _tabController,
+              height: 54,
+              iconSize: 18,
+              fontSize: 13,
               tabs: const [
                 SlidingTabItem(icon: Icons.dashboard_outlined, label: '概览'),
                 SlidingTabItem(icon: Icons.memory_outlined, label: 'CPU'),

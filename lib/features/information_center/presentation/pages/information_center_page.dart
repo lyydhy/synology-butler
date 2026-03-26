@@ -69,6 +69,9 @@ class _InformationCenterPageState extends ConsumerState<InformationCenterPage> w
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
             child: SlidingTabBar(
               tabController: _tabController,
+              height: 54,
+              iconSize: 18,
+              fontSize: 13,
               tabs: const [
                 SlidingTabItem(icon: Icons.info_outline_rounded, label: '概括'),
                 SlidingTabItem(icon: Icons.lan_outlined, label: '网络'),

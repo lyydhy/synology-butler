@@ -82,9 +82,12 @@ class _PackagesPageState extends ConsumerState<PackagesPage> with SingleTickerPr
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
             child: SlidingTabBar(
               tabController: _tabController,
+              height: 54,
+              iconSize: 18,
+              fontSize: 13,
               tabs: const [
                 SlidingTabItem(icon: Icons.apps_rounded, label: '全部'),
                 SlidingTabItem(icon: Icons.check_circle_outline_rounded, label: '已安装'),

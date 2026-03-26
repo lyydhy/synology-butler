@@ -62,9 +62,12 @@ class _ContainerDetailPageState extends State<ContainerDetailPage> with SingleTi
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
             child: SlidingTabBar(
               tabController: _tabController,
+              height: 54,
+              iconSize: 18,
+              fontSize: 13,
               tabs: const [
                 SlidingTabItem(icon: Icons.info_outline_rounded, label: '详情'),
                 SlidingTabItem(icon: Icons.receipt_long_outlined, label: '日志'),
