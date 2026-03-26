@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/network/realtime_reconnect_bridge.dart';
 import '../../../../core/utils/server_url_helper.dart';
 import '../../../../core/utils/time_util.dart';
 import '../../../../domain/entities/system_status.dart';
@@ -53,8 +54,12 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with WidgetsBindi
     }
 
     // ignore: avoid_print
-    print('[Dashboard][Lifecycle] app resumed, refresh base overview');
+    print('[Dashboard][Lifecycle] app resumed, refresh base overview + reconnect realtime');
     ref.invalidate(dashboardBaseOverviewProvider);
+    final reconnect = RealtimeReconnectBridge.callback;
+    if (reconnect != null) {
+      unawaited(reconnect());
+    }
   }
 
   @override

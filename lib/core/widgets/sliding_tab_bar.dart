@@ -125,9 +125,9 @@ class _SlidingTabBarState extends State<SlidingTabBar> {
             children: [
               Positioned(
                 left: offset + widget.horizontalPadding,
-                top: 6,
+                top: 5,
                 width: indicatorWidth,
-                height: widget.height - 12,
+                height: widget.height - 10,
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     color: indicatorClr,
@@ -137,9 +137,9 @@ class _SlidingTabBarState extends State<SlidingTabBar> {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: isDark ? 0.18 : 0.06),
-                        blurRadius: isDark ? 14 : 10,
-                        offset: const Offset(0, 3),
+                        color: Colors.black.withValues(alpha: isDark ? 0.12 : 0.035),
+                        blurRadius: isDark ? 10 : 6,
+                        offset: const Offset(0, 1),
                       ),
                     ],
                   ),
@@ -170,11 +170,13 @@ class _SlidingTabBarState extends State<SlidingTabBar> {
                         scale: scale,
                         duration: const Duration(milliseconds: 160),
                         curve: Curves.easeOutCubic,
-                        child: SizedBox(
-                          height: widget.height,
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
+                        child: Transform.translate(
+                          offset: const Offset(0, 1),
+                          child: SizedBox(
+                            height: widget.height,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
                               Stack(
                                 clipBehavior: Clip.none,
                                 children: [
@@ -221,7 +223,8 @@ class _SlidingTabBarState extends State<SlidingTabBar> {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ),
