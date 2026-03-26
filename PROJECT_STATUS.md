@@ -1,130 +1,84 @@
 # PROJECT_STATUS
 
-## 本轮阶段目标
-对项目进行第一阶段精简与收口，重点是：
+更新日期：2026-03-26
+当前阶段：计划整理 / 暂停继续编码
 
-1. 减少 Riverpod / provider 在页面局部状态中的滥用
-2. 尽量把页面局部状态回归 Flutter 原生 State
-3. 将 presentation 层中的状态类/模型类逐步归位
-4. 每一步都保持 `flutter analyze` 全绿
+## 本次记录目标
+先停留在当前步骤，不继续改代码；整理整个功能的阶段计划，明确哪些已经做了、哪些还没有做。
 
----
+## 已完成 / 已具备
 
-## 本轮已完成内容
+### 基础工程与通用能力
+- 标准 Flutter 工程：已完成
+- 真实 DSM 联调阶段：已进入
+- 错误处理：已有基础能力
+- 主题支持：已具备
+- 多语言：已具备基础能力
+- 调试支持：已具备
 
-### 1. performance 模块
-- 去掉 `performance_page.dart` 内部的 Riverpod 局部历史状态
-- 页面历史缓存改回 Flutter 原生 `State`
-- 新增并后续归位：
-  - `lib/features/performance/presentation/state/performance_history.dart`
-- `performance_page.dart` 补充了适度中文注释
+### 业务基础能力
+- 登录：已有一版基础能力
+- 启动恢复：已具备
+- 首页：已有一版
+- 文件：已有一版基础能力
+- 下载：已有一版基础能力
+- 设置/连接管理：已具备
 
-### 2. packages 模块
-- 页面筛选 tab 改回页面本地状态
-- 删除：
-  - `packageTabProvider`
-  - `visiblePackagesProvider`
-- 安装流程状态从多个分散 provider 收敛为：
-  - `packageInstallStateProvider`
-- 抽出状态类：
-  - `lib/features/packages/presentation/state/package_install_state.dart`
-- 列表页与详情页补充了适度中文注释
+### 已确认状态
+- 登录失败问题不应再单纯归因为登录链路本身
+- 已识别过 Android 网络权限因素
+- Android manifest 中已存在 INTERNET 与 ACCESS_NETWORK_STATE 权限声明
+- App 本地日志第一版已开始接入，优先覆盖网络请求与登录诊断链路
 
-### 3. downloads 模块
-- 删除页面局部筛选 provider：
-  - `downloadFilterProvider`
-- `DownloadsPage` 改为本地 State 管理筛选
-- `downloadListProvider` 只负责原始任务列表，不再耦合 UI 筛选逻辑
-- 页面补充了适度中文注释
+## 正在推进 / 待继续验证
 
-### 4. files 模块
-#### 第一刀
-- 删除：
-  - `selectedFilePathsProvider`
-  - `fileSelectionModeProvider`
-- 文件多选状态改回 `FilesPage` 本地 State
-- `file_page_actions.dart` 不再直接持有页面选择状态
+### 联调与稳定性
+- DSM 7 登录链路：继续联调与稳定性验证
+- realtime 鉴权恢复：继续验证与补齐
+- 首页存储/版本信息稳定性：继续修正与验证
+- 文件真实联调：继续推进
+- 下载真实联调：继续推进
+- 国际化收尾：尚未结束
 
-#### 第二刀
-- 删除：
-  - `currentPathProvider`
-  - `fileSortProvider`
-- 路径与排序改回 `FilesPage` 本地 State
-- `fileListProvider` 改为：
-  - `FutureProvider.family<List<FileItem>, FileListQuery>`
-- `diagnostics` 页面已适配新的 `fileListProvider` 调用方式
+### 日志主线
+- App 本地日志第一版：进行中
+- 网络请求日志：进行中
+- 登录诊断链路日志：进行中
 
-### 5. presentation 层收尾整理
-- `performance_history.dart` 从 `presentation/pages` 移到 `presentation/state`
-- `PackageInstallState` 从 provider 文件中抽离到独立状态文件
+## 未完成
 
-### 6. 静态检查收尾
-- 额外修复了项目原有 analyze 遗留项：
-  - 删除无用 import
-  - 删除无用变量
-  - 删除未用私有函数
-  - 补少量 if 花括号
-- 当前状态：
-  - `flutter analyze` -> `No issues found!`
+### 日志产品化能力
+- 日志查看页
+- 日志导出
+- 手动清空日志
+- 日志总大小限制
+- 敏感字段脱敏
+- 更多业务模块日志接入
 
----
+## 建议优先级
 
-## 当前明确结论
+### P0：先做日志闭环
+1. 网络请求日志稳定落地
+2. 登录诊断日志补齐
+3. 基础日志存储策略确认
+4. 敏感字段脱敏
+5. 日志查看页
 
-### 已适合继续保持的原则
-- 页面局部状态：优先 Flutter 原生 `State`
-- provider：主要保留给
-  - repository / service 注入
-  - 跨页面共享业务状态
-  - 按参数取数的数据源 provider
+### P1：再跑通关键联调链路
+1. DSM 7 登录链路稳定性验证
+2. realtime 鉴权恢复
+3. 首页存储/版本信息问题收敛
+4. 文件模块真实联调
+5. 下载模块真实联调
 
-### 当前不建议继续硬改的部分
-- `transfers`
-  - 当前 provider 承担跨页面共享任务队列、持久化、恢复、重试等职责，属于合理使用
-- `auth`
-  - 涉及会话恢复、存储、桥接、连接同步，影响面大
-- `data model / domain entity` 直接合并
-  - 目前没有足够证据证明应该统一收并，贸然处理风险大
+### P2：最后补可交付体验
+1. 日志导出
+2. 手动清空日志
+3. 日志大小限制
+4. 更多业务模块日志接入
+5. 国际化收尾
 
----
-
-## 后续建议顺序
-
-### 优先级高
-1. 继续保持新增页面不要把局部状态挂到 provider
-2. 新增状态类时优先放到 `presentation/state/`，不要塞回页面或 provider 文件
-
-### 优先级中
-3. 后续如果要继续优化，建议先做 `auth / preferences` 的“小范围审计”，不要直接改
-4. 如需处理模型合并，先做审计清单，再决定是否动手
-
-### 暂不建议
-5. 不建议为了“更少 provider”而改动 `transfers` 这类跨页面业务状态模块
-
----
-
-## 当前验证状态
-已使用绝对路径执行：
-
-```bash
-/home/node/.openclaw/projectEnv/flutter-sdk/bin/flutter analyze
-```
-
-结果：
-
-```text
-No issues found!
-```
-
----
-
-## 额外记录
-- 在尝试推进 `FileItemModel -> FileItem` 合并时，曾因错误的整文件覆盖方式导致工作区异常。
-- 之后已停止继续改代码，先执行依赖恢复与环境验证：
-
-```bash
-/home/node/.openclaw/projectEnv/flutter-sdk/bin/flutter pub get
-/home/node/.openclaw/projectEnv/flutter-sdk/bin/flutter analyze
-```
-
-- 当前已恢复到可继续开发的干净基线，`flutter analyze` 结果仍为 `No issues found!`。
+## 当前结论
+- 现阶段不做大范围重构
+- 继续主线应为：日志闭环 → 关键联调 → 体验收尾
+- 本次仅做计划整理与留痕，不进入代码修改
