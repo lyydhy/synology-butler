@@ -10,6 +10,7 @@ import '../../../../domain/entities/system_status.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../auth/presentation/providers/current_connection_readers.dart';
 import '../providers/dashboard_providers.dart';
+import '../providers/dashboard_realtime_global.dart';
 import '../widgets/summary_card.dart';
 
 class DashboardPage extends ConsumerStatefulWidget {
@@ -59,7 +60,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with WidgetsBindi
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final overview = ref.watch(dashboardOverviewSafeProvider);
-    final realtimeState = ref.watch(dashboardRealtimeOverviewProvider);
+    final realtimeState = ref.watch(globalRealtimeOverviewProvider);
     final currentServer = ref.watch(activeServerProvider);
     final currentSession = ref.watch(activeSessionProvider);
 

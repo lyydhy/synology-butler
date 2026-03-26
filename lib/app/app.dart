@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import '../features/auth/presentation/providers/auth_providers.dart';
+import '../features/dashboard/presentation/providers/dashboard_realtime_global.dart';
 import '../features/external_share/models/shared_incoming_file.dart';
 import '../features/external_share/services/external_share_pending_store.dart';
 import '../features/external_share/services/external_share_service.dart';
@@ -78,6 +79,7 @@ class _QunhuiManagerAppState extends ConsumerState<QunhuiManagerApp> {
     final themeColor = ref.watch(themeColorProvider);
     final localeOption = ref.watch(localeProvider);
     final _ = ref.watch(recoverSessionProvider);
+    ref.watch(globalRealtimeOverviewProvider);
     final seedColor = seedColorFor(themeColor);
 
     return MaterialApp.router(
