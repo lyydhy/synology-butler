@@ -10,10 +10,13 @@ enum AppThemeColorOption { blue, green, orange, purple }
 
 enum AppLocaleOption { system, zh, en }
 
+enum ContainerDataSourceOption { synology, dpanel }
+
 final themeModeProvider = StateProvider<AppThemeModeOption>((ref) => AppThemeModeOption.system);
 final themeColorProvider = StateProvider<AppThemeColorOption>((ref) => AppThemeColorOption.blue);
 final localeProvider = StateProvider<AppLocaleOption>((ref) => AppLocaleOption.system);
 final downloadDirectoryProvider = StateProvider<String?>((ref) => null);
+final containerDataSourceProvider = StateProvider<ContainerDataSourceOption>((ref) => ContainerDataSourceOption.synology);
 
 final restorePreferencesProvider = FutureProvider<void>((ref) async {
   final storage = ref.read(localStorageProvider);
@@ -22,6 +25,7 @@ final restorePreferencesProvider = FutureProvider<void>((ref) async {
   final themeColor = await storage.readString(AppConstants.themeColorKey);
   final locale = await storage.readString(AppConstants.localeKey);
   final downloadDirectory = await storage.readString(AppConstants.downloadDirectoryKey);
+  final containerDataSource = await storage.readString(AppConstants.containerDataSourceKey);
 
   ref.read(themeModeProvider.notifier).state = switch (themeMode) {
     'light' => AppThemeModeOption.light,
@@ -43,6 +47,10 @@ final restorePreferencesProvider = FutureProvider<void>((ref) async {
   };
 
   ref.read(downloadDirectoryProvider.notifier).state = downloadDirectory;
+  ref.read(containerDataSourceProvider.notifier).state = switch (containerDataSource) {
+    'dpanel' => ContainerDataSourceOption.dpanel,
+    _ => ContainerDataSourceOption.synology,
+  };
 });
 
 final saveThemeModeProvider = Provider<Future<void> Function(AppThemeModeOption)>((ref) {
@@ -100,6 +108,20 @@ final saveDownloadDirectoryProvider = Provider<Future<void> Function(String?)>((
     } else {
       await storage.writeString(AppConstants.downloadDirectoryKey, path);
     }
+  };
+});
+
+final saveContainerDataSourceProvider = Provider<Future<void> Function(ContainerDataSourceOption)>((ref) {
+  return (source) async {
+    ref.read(containerDataSourceProvider.notifier).state = source;
+    final storage = ref.read(localStorageProvider);
+    await storage.writeString(
+      AppConstants.containerDataSourceKey,
+      switch (source) {
+        ContainerDataSourceOption.synology => 'synology',
+        ContainerDataSourceOption.dpanel => 'dpanel',
+      },
+    );
   };
 });
 

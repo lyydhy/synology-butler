@@ -115,43 +115,35 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with WidgetsBindi
                         : 'Realtime connected',
           ),
           const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: _QuickEntryCard(
-                  icon: Icons.info_outline_rounded,
-                  label: '信息中心',
-                  hint: '系统信息 / 硬件 / 存储',
-                  color: Colors.indigo,
-                  onTap: () => context.push('/information-center'),
-                ),
+          _AppSection(
+            items: [
+              _AppEntryItem(
+                icon: Icons.inventory_2_outlined,
+                label: '容器管理',
+                hint: '容器 / Compose / 镜像',
+                color: Colors.blueGrey,
+                onTap: () => context.push('/container-management'),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _QuickEntryCard(
-                  icon: Icons.monitor_heart_outlined,
-                  label: '性能监控',
-                  hint: '概览 / CPU / 内存 / 网络',
-                  color: Colors.teal,
-                  onTap: () => context.push('/performance'),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: [
-              _SecondaryQuickEntry(
-                icon: Icons.apps_rounded,
-                label: '套件中心',
-                onTap: () => context.push('/packages'),
-              ),
-              _SecondaryQuickEntry(
+              _AppEntryItem(
                 icon: Icons.sync_alt_rounded,
                 label: '传输中心',
+                hint: '下载 / 上传 / 任务',
+                color: Colors.deepOrange,
                 onTap: () => context.push('/transfers'),
+              ),
+              _AppEntryItem(
+                icon: Icons.info_outline_rounded,
+                label: '信息中心',
+                hint: '系统信息 / 硬件 / 存储',
+                color: Colors.indigo,
+                onTap: () => context.push('/information-center'),
+              ),
+              _AppEntryItem(
+                icon: Icons.monitor_heart_outlined,
+                label: '性能监控',
+                hint: '概览 / CPU / 内存 / 网络',
+                color: Colors.teal,
+                onTap: () => context.push('/performance'),
               ),
             ],
           ),
@@ -270,20 +262,58 @@ class _HeroCard extends StatelessWidget {
   }
 }
 
-class _QuickEntryCard extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String hint;
-  final Color color;
-  final VoidCallback onTap;
+class _AppSection extends StatelessWidget {
+  const _AppSection({required this.items});
 
-  const _QuickEntryCard({
+  final List<_AppEntryItem> items;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '应用',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+        ),
+        const SizedBox(height: 12),
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: items.length,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            mainAxisSpacing: 12,
+            crossAxisSpacing: 12,
+            childAspectRatio: 1.38,
+          ),
+          itemBuilder: (context, index) => _AppEntryCard(item: items[index]),
+        ),
+      ],
+    );
+  }
+}
+
+class _AppEntryItem {
+  const _AppEntryItem({
     required this.icon,
     required this.label,
     required this.hint,
     required this.color,
     required this.onTap,
   });
+
+  final IconData icon;
+  final String label;
+  final String hint;
+  final Color color;
+  final VoidCallback onTap;
+}
+
+class _AppEntryCard extends StatelessWidget {
+  const _AppEntryCard({required this.item});
+
+  final _AppEntryItem item;
 
   @override
   Widget build(BuildContext context) {
@@ -294,15 +324,15 @@ class _QuickEntryCard extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: InkWell(
         borderRadius: BorderRadius.circular(20),
-        onTap: onTap,
+        onTap: item.onTap,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: color.withValues(alpha: 0.18)),
+            border: Border.all(color: item.color.withValues(alpha: 0.18)),
             gradient: LinearGradient(
               colors: [
-                color.withValues(alpha: 0.12),
+                item.color.withValues(alpha: 0.12),
                 theme.colorScheme.surface,
               ],
               begin: Alignment.topLeft,
@@ -315,26 +345,26 @@ class _QuickEntryCard extends StatelessWidget {
               Row(
                 children: [
                   Container(
-                    width: 40,
-                    height: 40,
+                    width: 42,
+                    height: 42,
                     decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.14),
+                      color: item.color.withValues(alpha: 0.14),
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    child: Icon(icon, color: color, size: 20),
+                    child: Icon(item.icon, color: item.color, size: 21),
                   ),
                   const Spacer(),
                   Icon(Icons.chevron_right_rounded, color: theme.colorScheme.onSurfaceVariant),
                 ],
               ),
-              const SizedBox(height: 14),
+              const Spacer(),
               Text(
-                label,
+                item.label,
                 style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
               ),
               const SizedBox(height: 4),
               Text(
-                hint,
+                item.hint,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.bodySmall?.copyWith(
@@ -342,52 +372,6 @@ class _QuickEntryCard extends StatelessWidget {
                   height: 1.35,
                 ),
               ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _SecondaryQuickEntry extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  const _SecondaryQuickEntry({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(999),
-        onTap: onTap,
-        child: Ink(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(999),
-            border: Border.all(color: theme.dividerColor.withValues(alpha: 0.18)),
-            color: theme.colorScheme.surface,
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 18, color: theme.colorScheme.primary),
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(width: 4),
-              Icon(Icons.chevron_right_rounded, size: 18, color: theme.colorScheme.onSurfaceVariant),
             ],
           ),
         ),

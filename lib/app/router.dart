@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 
 import '../features/auth/presentation/pages/login_page.dart';
 import '../features/auth/presentation/pages/splash_page.dart';
+import '../features/container_management/presentation/pages/container_management_page.dart';
+import '../features/container_management/presentation/pages/container_management_settings_page.dart';
 import '../features/debug/presentation/pages/app_logs_page.dart';
 import '../features/debug/presentation/pages/debug_info_page.dart';
 import '../features/diagnostics/presentation/pages/diagnostics_page.dart';
@@ -37,6 +39,11 @@ final GoRouter appRouter = GoRouter(
     GoRoute(path: '/transfers', builder: (context, state) => const TransfersPage()),
     GoRoute(path: '/packages', builder: (context, state) => const PackagesPage()),
     GoRoute(path: '/performance', builder: (context, state) => const PerformancePage()),
+    GoRoute(path: '/container-management', builder: (context, state) => const ContainerManagementPage()),
+    GoRoute(
+      path: '/container-management/settings',
+      builder: (context, state) => const ContainerManagementSettingsPage(),
+    ),
     GoRoute(
       path: '/files/pick-directory',
       builder: (context, state) {
