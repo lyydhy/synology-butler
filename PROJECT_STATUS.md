@@ -115,3 +115,16 @@
 ```text
 No issues found!
 ```
+
+---
+
+## 额外记录
+- 在尝试推进 `FileItemModel -> FileItem` 合并时，曾因错误的整文件覆盖方式导致工作区异常。
+- 之后已停止继续改代码，先执行依赖恢复与环境验证：
+
+```bash
+/home/node/.openclaw/projectEnv/flutter-sdk/bin/flutter pub get
+/home/node/.openclaw/projectEnv/flutter-sdk/bin/flutter analyze
+```
+
+- 当前已恢复到可继续开发的干净基线，`flutter analyze` 结果仍为 `No issues found!`。
