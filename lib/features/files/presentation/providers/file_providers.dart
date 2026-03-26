@@ -24,6 +24,15 @@ class FileListQuery {
 
   final String path;
   final String sort;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        other is FileListQuery && other.path == path && other.sort == sort;
+  }
+
+  @override
+  int get hashCode => Object.hash(path, sort);
 }
 
 /// 按路径和排序方式获取文件列表。
