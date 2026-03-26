@@ -178,7 +178,6 @@ class DsmSystemApi implements SystemApi {
       });
 
       final memory = utilizationData['memory'] as Map? ?? const {};
-      final cpu = utilizationData['cpu'] as Map? ?? const {};
       final networkData =
           _extractCompoundApiData(networkCompoundData, 'SYNO.Core.Network');
       final ethernetData = _extractCompoundApiData(
@@ -924,12 +923,12 @@ class DsmSystemApi implements SystemApi {
 
   String? _mergeCookieHeaders(String? a, String? b) {
     final parts = <String>[];
-    if (a != null && a.isNotEmpty)
-      parts
-          .addAll(a.split(';').map((e) => e.trim()).where((e) => e.isNotEmpty));
-    if (b != null && b.isNotEmpty)
-      parts
-          .addAll(b.split(';').map((e) => e.trim()).where((e) => e.isNotEmpty));
+    if (a != null && a.isNotEmpty) {
+      parts.addAll(a.split(';').map((e) => e.trim()).where((e) => e.isNotEmpty));
+    }
+    if (b != null && b.isNotEmpty) {
+      parts.addAll(b.split(';').map((e) => e.trim()).where((e) => e.isNotEmpty));
+    }
     if (parts.isEmpty) return null;
 
     final cookieMap = <String, String>{};
@@ -1114,8 +1113,9 @@ class DsmSystemApi implements SystemApi {
           var versionNumber = major;
           if (minor != null && minor.isNotEmpty) versionNumber += '.$minor';
           if (micro != null && micro.isNotEmpty) versionNumber += '.$micro';
-          if (nano != null && nano.isNotEmpty && nano != '0')
+          if (nano != null && nano.isNotEmpty && nano != '0') {
             versionNumber += ' Update $nano';
+          }
           parts.add('$osName $versionNumber');
         }
         if (build != null && build.isNotEmpty) {
@@ -1458,28 +1458,6 @@ class DsmSystemApi implements SystemApi {
       timeData['system_time'],
       timeData['current_time'],
       timeData['date_time'],
-    ];
-    for (final value in candidates) {
-      if (value != null && value.toString().trim().isNotEmpty) {
-        return value.toString().trim();
-      }
-    }
-    return null;
-  }
-
-  String? _resolveTimezone(Map timeData) {
-    final timezone = timeData['timezone'];
-    if (timezone is Map) {
-      final display = timezone['display'] ?? timezone['name'] ?? timezone['tz'];
-      if (display != null && display.toString().trim().isNotEmpty) {
-        return display.toString().trim();
-      }
-    }
-
-    final candidates = [
-      timeData['tz'],
-      timeData['timezone'],
-      timeData['time_zone']
     ];
     for (final value in candidates) {
       if (value != null && value.toString().trim().isNotEmpty) {

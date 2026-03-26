@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/widgets/sliding_tab_bar.dart';
+import '../../../../domain/entities/system_status.dart';
 import '../../../auth/presentation/providers/current_connection_readers.dart';
 import '../../../dashboard/presentation/providers/dashboard_providers.dart';
 import 'performance_history.dart';

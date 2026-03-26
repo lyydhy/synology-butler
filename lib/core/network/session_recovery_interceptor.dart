@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 
-import 'current_connection_store.dart';
 import 'request_log_interceptor.dart';
 import 'session_recovery_bridge.dart';
 
