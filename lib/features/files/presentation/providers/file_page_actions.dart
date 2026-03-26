@@ -8,11 +8,15 @@ import '../../../../domain/entities/file_item.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../transfers/presentation/providers/transfer_providers.dart';
 import 'file_providers.dart';
-import 'file_selection_providers.dart';
 
+/// 文件页交互动作集合。
+///
+/// 这里保留与仓库、传输队列等 provider 的协作，
+/// 但不再直接持有“已选中文件”这类页面局部状态。
 class FilePageActions {
   const FilePageActions();
 
+  /// 计算当前路径的父级目录。
   String parentPathOf(String path) {
     if (path == '/' || path.isEmpty) return '/';
     final normalized = path.endsWith('/') && path.length > 1 ? path.substring(0, path.length - 1) : path;
@@ -21,22 +25,28 @@ class FilePageActions {
     return normalized.substring(0, index);
   }
 
-  void toggleSelection(WidgetRef ref, FileItem item) {
-    final current = {...ref.read(selectedFilePathsProvider)};
-    if (current.contains(item.path)) {
-      current.remove(item.path);
+  /// 切换某个文件项的选中状态。
+  Set<String> toggleSelection(Set<String> selectedPaths, FileItem item) {
+    final next = {...selectedPaths};
+    if (next.contains(item.path)) {
+      next.remove(item.path);
     } else {
-      current.add(item.path);
+      next.add(item.path);
     }
-    ref.read(selectedFilePathsProvider.notifier).state = current;
+    return next;
   }
 
-  void clearSelection(WidgetRef ref) {
-    ref.read(selectedFilePathsProvider.notifier).state = <String>{};
-  }
+  /// 清空当前页面选择集。
+  Set<String> clearSelection() => <String>{};
 
-  Future<void> downloadSelected(BuildContext context, WidgetRef ref, List<FileItem> files) async {
-    final selectedPaths = ref.read(selectedFilePathsProvider);
+  /// 将当前选中的文件加入下载队列。
+  Future<void> downloadSelected(
+    BuildContext context,
+    WidgetRef ref,
+    List<FileItem> files,
+    Set<String> selectedPaths,
+    VoidCallback onSelectionCleared,
+  ) async {
     final selectedItems = files.where((item) => selectedPaths.contains(item.path) && !item.isDirectory).toList();
     if (selectedItems.isEmpty) {
       if (context.mounted) {
@@ -49,15 +59,21 @@ class FilePageActions {
       for (final item in selectedItems) (item.path, item.name),
     ]);
 
-    clearSelection(ref);
+    onSelectionCleared();
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已加入 ${selectedItems.length} 个下载任务')));
     }
   }
 
-  Future<void> deleteSelected(BuildContext context, WidgetRef ref) async {
+  /// 批量删除当前选中的文件。
+  Future<void> deleteSelected(
+    BuildContext context,
+    WidgetRef ref,
+    Set<String> selectedPaths,
+    VoidCallback onSelectionCleared,
+  ) async {
     final l10n = AppLocalizations.of(context);
-    final paths = ref.read(selectedFilePathsProvider).toList();
+    final paths = selectedPaths.toList();
     if (paths.isEmpty) return;
 
     final confirmed = await showDialog<bool>(
@@ -77,7 +93,7 @@ class FilePageActions {
 
     try {
       await ref.read(fileBatchDeleteProvider)(paths);
-      clearSelection(ref);
+      onSelectionCleared();
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已删除 ${paths.length} 项')));
       }
@@ -88,6 +104,7 @@ class FilePageActions {
     }
   }
 
+  /// 展示新建文件夹对话框。
   Future<void> showCreateFolderDialog(BuildContext context, WidgetRef ref, String currentPath) async {
     final l10n = AppLocalizations.of(context);
     final controller = TextEditingController();
@@ -142,6 +159,7 @@ class FilePageActions {
     );
   }
 
+  /// 展示上传文件对话框。
   Future<void> showUploadDialog(
     BuildContext context,
     WidgetRef ref,
