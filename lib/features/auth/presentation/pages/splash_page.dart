@@ -5,10 +5,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/utils/local_app_logger.dart';
+import '../../../external_share/services/external_share_pending_store.dart';
 import '../providers/auth_providers.dart';
 
 class SplashPage extends ConsumerWidget {
   const SplashPage({super.key});
+
+  Future<String> _resolveTarget(bool restored) async {
+    const pendingStore = ExternalSharePendingStore();
+    final pending = await pendingStore.load();
+    if (pending != null) {
+      return restored ? '/external-upload' : '/login';
+    }
+    return restored ? '/home' : '/login';
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -31,22 +41,35 @@ class SplashPage extends ConsumerWidget {
         child: restoreAsync.when(
           data: (restored) {
             WidgetsBinding.instance.addPostFrameCallback((_) async {
+              final target = await _resolveTarget(restored);
               await LocalAppLogger.log(
                 level: 'info',
                 module: 'splash',
                 event: 'restore_completed',
-                extra: {'restored': restored},
+                extra: {'restored': restored, 'target': target},
               );
               await Future<void>.delayed(const Duration(milliseconds: 1600));
-              if (context.mounted) {
-                unawaited(LocalAppLogger.log(
-                  level: 'info',
-                  module: 'splash',
-                  event: 'navigate',
-                  extra: {'target': restored ? '/home' : '/login'},
-                ));
-                context.go(restored ? '/home' : '/login');
+              if (!context.mounted) return;
+              final router = GoRouter.of(context);
+
+              if (target == '/external-upload') {
+                final pending = await const ExternalSharePendingStore().load();
+                if (!context.mounted) return;
+                if (pending != null) {
+                  await const ExternalSharePendingStore().clear();
+                  if (!context.mounted) return;
+                  router.push('/external-upload', extra: pending);
+                  return;
+                }
               }
+
+              unawaited(LocalAppLogger.log(
+                level: 'info',
+                module: 'splash',
+                event: 'navigate',
+                extra: {'target': target},
+              ));
+              router.go(target);
             });
             return const _SplashContent(
               title: '群晖管家',

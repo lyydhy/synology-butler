@@ -38,7 +38,6 @@ class _QunhuiManagerAppState extends ConsumerState<QunhuiManagerApp> {
       if (mounted && file != null) {
         await _handleIncomingShare(file);
       }
-      await _consumePendingShareIfNeeded();
     });
   }
 
@@ -46,24 +45,9 @@ class _QunhuiManagerAppState extends ConsumerState<QunhuiManagerApp> {
     await ExternalShareService.instance.reset();
     if (!mounted) return;
 
-    final restored = ref.read(restoreSessionProvider).valueOrNull ?? false;
-    if (!restored) {
-      await _pendingStore.save(file);
-      return;
-    }
-
-    appRouter.push('/external-upload', extra: file);
-  }
-
-  Future<void> _consumePendingShareIfNeeded() async {
-    final restored = ref.read(restoreSessionProvider).valueOrNull ?? false;
-    if (!restored) return;
-
-    final pending = await _pendingStore.load();
-    if (!mounted || pending == null) return;
-
-    await _pendingStore.clear();
-    appRouter.push('/external-upload', extra: pending);
+    /// 分享拉起时先只做暂存，真正的跳转统一交给 Splash 恢复完成后决定，
+    /// 避免和启动时的默认导航互相覆盖。
+    await _pendingStore.save(file);
   }
 
   @override
