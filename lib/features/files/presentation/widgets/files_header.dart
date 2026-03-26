@@ -15,6 +15,8 @@ class FilesHeader extends StatelessWidget {
     required this.onGoUp,
     required this.onUpload,
     required this.onCreateFolder,
+    this.title = '文件管理',
+    this.showActionMenu = true,
   });
 
   final String path;
@@ -26,6 +28,8 @@ class FilesHeader extends StatelessWidget {
   final VoidCallback onGoUp;
   final VoidCallback onUpload;
   final VoidCallback onCreateFolder;
+  final String title;
+  final bool showActionMenu;
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +63,7 @@ class FilesHeader extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '文件管理',
+                      title,
                       style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
                     ),
                     const SizedBox(height: 2),
@@ -72,37 +76,38 @@ class FilesHeader extends StatelessWidget {
                   ],
                 ),
               ),
-              PopupMenuButton<String>(
-                icon: const Icon(Icons.more_horiz_rounded),
-                onSelected: (value) {
-                  switch (value) {
-                    case 'upload':
-                      onUpload();
-                      break;
-                    case 'create_folder':
-                      onCreateFolder();
-                      break;
-                    case 'sort_name':
-                      onSortSelected('name');
-                      break;
-                    case 'sort_size':
-                      onSortSelected('size');
-                      break;
-                    case 'refresh':
-                      onRefresh();
-                      break;
-                  }
-                },
-                itemBuilder: (context) => [
-                  PopupMenuItem(value: 'upload', child: Text(l10n.uploadFile)),
-                  PopupMenuItem(value: 'create_folder', child: Text(l10n.createFolder)),
-                  const PopupMenuDivider(),
-                  PopupMenuItem(value: 'sort_name', child: Text(l10n.sortByName)),
-                  PopupMenuItem(value: 'sort_size', child: Text(l10n.sortBySize)),
-                  const PopupMenuDivider(),
-                  PopupMenuItem(value: 'refresh', child: Text(l10n.retry)),
-                ],
-              ),
+              if (showActionMenu)
+                PopupMenuButton<String>(
+                  icon: const Icon(Icons.more_horiz_rounded),
+                  onSelected: (value) {
+                    switch (value) {
+                      case 'upload':
+                        onUpload();
+                        break;
+                      case 'create_folder':
+                        onCreateFolder();
+                        break;
+                      case 'sort_name':
+                        onSortSelected('name');
+                        break;
+                      case 'sort_size':
+                        onSortSelected('size');
+                        break;
+                      case 'refresh':
+                        onRefresh();
+                        break;
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    PopupMenuItem(value: 'upload', child: Text(l10n.uploadFile)),
+                    PopupMenuItem(value: 'create_folder', child: Text(l10n.createFolder)),
+                    const PopupMenuDivider(),
+                    PopupMenuItem(value: 'sort_name', child: Text(l10n.sortByName)),
+                    PopupMenuItem(value: 'sort_size', child: Text(l10n.sortBySize)),
+                    const PopupMenuDivider(),
+                    PopupMenuItem(value: 'refresh', child: Text(l10n.retry)),
+                  ],
+                ),
             ],
           ),
           const SizedBox(height: 14),

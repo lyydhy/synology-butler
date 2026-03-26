@@ -1,18 +1,51 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import '../features/auth/presentation/providers/auth_providers.dart';
+import '../features/external_share/services/external_share_service.dart';
 import '../features/preferences/providers/preferences_providers.dart';
 import '../l10n/app_localizations.dart';
 import 'router.dart';
 import 'theme/app_theme.dart';
 
-class QunhuiManagerApp extends ConsumerWidget {
+class QunhuiManagerApp extends ConsumerStatefulWidget {
   const QunhuiManagerApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<QunhuiManagerApp> createState() => _QunhuiManagerAppState();
+}
+
+class _QunhuiManagerAppState extends ConsumerState<QunhuiManagerApp> {
+  StreamSubscription? _externalShareSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _externalShareSubscription = ExternalShareService.instance.watchIncomingFiles().listen((file) async {
+      await ExternalShareService.instance.reset();
+      if (!mounted) return;
+      appRouter.push('/external-upload', extra: file);
+    }, onError: (_) {});
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final file = await ExternalShareService.instance.getInitialSharedFile();
+      await ExternalShareService.instance.reset();
+      if (!mounted || file == null) return;
+      appRouter.push('/external-upload', extra: file);
+    });
+  }
+
+  @override
+  void dispose() {
+    _externalShareSubscription?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     ref.watch(restorePreferencesProvider);
     final themeMode = ref.watch(themeModeProvider);
     final themeColor = ref.watch(themeColorProvider);

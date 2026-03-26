@@ -6,6 +6,9 @@ import '../features/auth/presentation/pages/splash_page.dart';
 import '../features/debug/presentation/pages/app_logs_page.dart';
 import '../features/debug/presentation/pages/debug_info_page.dart';
 import '../features/diagnostics/presentation/pages/diagnostics_page.dart';
+import '../features/external_share/models/shared_incoming_file.dart';
+import '../features/external_share/pages/external_file_upload_page.dart';
+import '../features/files/presentation/pages/files_page.dart';
 import '../features/files/presentation/pages/image_preview_page.dart';
 import '../features/files/presentation/pages/text_editor_page.dart';
 import '../features/files/presentation/pages/text_preview_page.dart';
@@ -34,6 +37,26 @@ final GoRouter appRouter = GoRouter(
     GoRoute(path: '/transfers', builder: (context, state) => const TransfersPage()),
     GoRoute(path: '/packages', builder: (context, state) => const PackagesPage()),
     GoRoute(path: '/performance', builder: (context, state) => const PerformancePage()),
+    GoRoute(
+      path: '/files/pick-directory',
+      builder: (context, state) {
+        final extra = state.extra as Map<String, dynamic>? ?? const {};
+        return FilesPage(
+          directoryPickerMode: true,
+          initialPath: extra['initialPath']?.toString() ?? '/',
+        );
+      },
+    ),
+    GoRoute(
+      path: '/external-upload',
+      builder: (context, state) {
+        final file = state.extra as SharedIncomingFile?;
+        if (file == null) {
+          return const Scaffold(body: Center(child: Text('外部上传参数缺失')));
+        }
+        return ExternalFileUploadPage(file: file);
+      },
+    ),
     GoRoute(
       path: '/information-center',
       builder: (context, state) {

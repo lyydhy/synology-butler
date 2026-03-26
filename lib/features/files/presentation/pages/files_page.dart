@@ -27,7 +27,17 @@ import '../widgets/files_selection_bar.dart';
 /// 当前第二刀继续把“当前路径 / 排序方式”回归页面本地状态，
 /// 再通过 family provider 按参数取数，减少全局状态依赖。
 class FilesPage extends ConsumerStatefulWidget {
-  const FilesPage({super.key});
+  const FilesPage({
+    super.key,
+    this.directoryPickerMode = false,
+    this.initialPath = _FilesPageState._rootPath,
+  });
+
+  /// 目录选择模式下只允许浏览和确认目录，不展示普通文件管理操作。
+  final bool directoryPickerMode;
+
+  /// 进入页面时默认展示的目录。
+  final String initialPath;
 
   @override
   ConsumerState<FilesPage> createState() => _FilesPageState();
@@ -58,6 +68,7 @@ class _FilesPageState extends ConsumerState<FilesPage> {
   @override
   void initState() {
     super.initState();
+    _currentPath = widget.initialPath;
     _pollTimer = Timer.periodic(const Duration(seconds: 10), (_) {
       if (!mounted) return;
       final currentServer = ref.read(activeServerProvider);
@@ -407,6 +418,7 @@ class _FilesPageState extends ConsumerState<FilesPage> {
     final filesAsync = ref.watch(fileListProvider(_fileQuery));
     final canGoUp = _currentPath != _rootPath;
     final activeTransferCount = ref.watch(activeTransferCountProvider);
+    final isDirectoryPickerMode = widget.directoryPickerMode;
 
     return PopScope(
       canPop: !canGoUp,
@@ -417,53 +429,55 @@ class _FilesPageState extends ConsumerState<FilesPage> {
         }
       },
       child: Scaffold(
-        appBar: _selectionMode
-            ? FilesSelectionBar(
-                selectedCount: _selectedPaths.length,
-                onCancel: _clearSelection,
-                onDownload: () {
-                  final currentFiles = filesAsync.valueOrNull ?? const <FileItem>[];
-                  actions.downloadSelected(context, ref, currentFiles, _selectedPaths, _clearSelection);
-                },
-                onDelete: () => actions.deleteSelected(context, ref, _selectedPaths, _clearSelection),
-              )
-            : AppBar(
-                title: Text(l10n.filesTitle),
-                actions: [
-                  Stack(
-                    alignment: Alignment.topRight,
-                    children: [
-                      IconButton(
-                        tooltip: '传输',
-                        onPressed: () => GoRouter.of(context).push('/transfers'),
-                        icon: AnimatedRotation(
-                          turns: activeTransferCount > 0 ? 0.125 : 0,
-                          duration: const Duration(milliseconds: 300),
-                          child: Icon(activeTransferCount > 0 ? Icons.sync_rounded : Icons.swap_horiz_rounded),
-                        ),
-                      ),
-                      if (activeTransferCount > 0)
-                        Positioned(
-                          right: 8,
-                          top: 8,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                            decoration: BoxDecoration(
-                              color: Colors.redAccent,
-                              borderRadius: BorderRadius.circular(999),
-                            ),
-                            constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
-                            child: Text(
-                              activeTransferCount > 99 ? '99+' : '$activeTransferCount',
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w700),
+        appBar: isDirectoryPickerMode
+            ? AppBar(title: const Text('选择上传目录'))
+            : _selectionMode
+                ? FilesSelectionBar(
+                    selectedCount: _selectedPaths.length,
+                    onCancel: _clearSelection,
+                    onDownload: () {
+                      final currentFiles = filesAsync.valueOrNull ?? const <FileItem>[];
+                      actions.downloadSelected(context, ref, currentFiles, _selectedPaths, _clearSelection);
+                    },
+                    onDelete: () => actions.deleteSelected(context, ref, _selectedPaths, _clearSelection),
+                  )
+                : AppBar(
+                    title: Text(l10n.filesTitle),
+                    actions: [
+                      Stack(
+                        alignment: Alignment.topRight,
+                        children: [
+                          IconButton(
+                            tooltip: '传输',
+                            onPressed: () => GoRouter.of(context).push('/transfers'),
+                            icon: AnimatedRotation(
+                              turns: activeTransferCount > 0 ? 0.125 : 0,
+                              duration: const Duration(milliseconds: 300),
+                              child: Icon(activeTransferCount > 0 ? Icons.sync_rounded : Icons.swap_horiz_rounded),
                             ),
                           ),
-                        ),
+                          if (activeTransferCount > 0)
+                            Positioned(
+                              right: 8,
+                              top: 8,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                                decoration: BoxDecoration(
+                                  color: Colors.redAccent,
+                                  borderRadius: BorderRadius.circular(999),
+                                ),
+                                constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+                                child: Text(
+                                  activeTransferCount > 99 ? '99+' : '$activeTransferCount',
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w700),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
                     ],
                   ),
-                ],
-              ),
         body: Column(
           children: [
             FilesHeader(
@@ -476,6 +490,8 @@ class _FilesPageState extends ConsumerState<FilesPage> {
               onGoUp: () => _setCurrentPath(actions.parentPathOf(_currentPath)),
               onUpload: () => actions.showUploadDialog(context, ref, _currentPath, _pickSingleFile),
               onCreateFolder: () => actions.showCreateFolderDialog(context, ref, _currentPath),
+              title: isDirectoryPickerMode ? '选择上传目录' : '文件管理',
+              showActionMenu: !isDirectoryPickerMode,
             ),
             Expanded(
               child: filesAsync.when(
@@ -495,8 +511,14 @@ class _FilesPageState extends ConsumerState<FilesPage> {
                         item: item,
                         selected: selected,
                         selectionMode: _selectionMode,
-                        onLongPress: () => _toggleSelection(item),
+                        onLongPress: isDirectoryPickerMode ? () {} : () => _toggleSelection(item),
                         onTap: () {
+                          if (isDirectoryPickerMode) {
+                            if (item.isDirectory) {
+                              _setCurrentPath(item.path);
+                            }
+                            return;
+                          }
                           if (_selectionMode) {
                             _toggleSelection(item);
                             return;
@@ -530,7 +552,7 @@ class _FilesPageState extends ConsumerState<FilesPage> {
                           }
                           _showFileDetail(context, item);
                         },
-                        onMore: () => _showItemMenu(context, ref, item),
+                        onMore: isDirectoryPickerMode ? () {} : () => _showItemMenu(context, ref, item),
                       );
                     },
                   );
@@ -553,6 +575,19 @@ class _FilesPageState extends ConsumerState<FilesPage> {
             ),
           ],
         ),
+        bottomNavigationBar: isDirectoryPickerMode
+            ? SafeArea(
+                top: false,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                  child: FilledButton.icon(
+                    onPressed: () => context.pop(_currentPath),
+                    icon: const Icon(Icons.check_circle_outline),
+                    label: Text('选择当前目录：$_currentPath'),
+                  ),
+                ),
+              )
+            : null,
       ),
     );
   }
