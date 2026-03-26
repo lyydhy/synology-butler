@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/widgets/app_status_chip.dart';
 import '../../../../core/widgets/app_surface_card.dart';
 import '../../../../core/widgets/sliding_tab_bar.dart';
 import '../../../../data/api/docker_api.dart';
@@ -408,7 +409,11 @@ class _ContainerCard extends StatelessWidget {
                   ],
                 ),
               ),
-              _StatusChip(label: statusText, running: isRunning),
+              AppStatusChip(
+                label: statusText,
+                color: isRunning ? Colors.green.shade700 : Colors.grey.shade700,
+                fontWeight: FontWeight.w600,
+              ),
               const SizedBox(width: 8),
               PopupMenuButton<String>(
                 tooltip: '更多操作',
@@ -488,7 +493,11 @@ class _ComposeCard extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              _StatusChip(label: item.status, running: isRunning),
+              AppStatusChip(
+                label: item.status,
+                color: isRunning ? Colors.green.shade700 : Colors.grey.shade700,
+                fontWeight: FontWeight.w600,
+              ),
               const SizedBox(height: 10),
               OutlinedButton.icon(
                 onPressed: () {},
@@ -541,28 +550,6 @@ class _ImageCard extends StatelessWidget {
   }
 }
 
-class _StatusChip extends StatelessWidget {
-  const _StatusChip({required this.label, required this.running});
-
-  final String label;
-  final bool running;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = running ? Colors.green : Colors.grey;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(color: color.shade700, fontWeight: FontWeight.w600),
-      ),
-    );
-  }
-}
 
 class _UnavailablePlaceholder extends StatelessWidget {
   const _UnavailablePlaceholder();

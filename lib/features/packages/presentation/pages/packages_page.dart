@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/widgets/app_status_chip.dart';
 import '../../../../core/widgets/app_surface_card.dart';
 import '../../../../core/widgets/sliding_tab_bar.dart';
 import '../../../../domain/entities/package_item.dart';
@@ -267,10 +268,10 @@ class _PackageCard extends ConsumerWidget {
                           spacing: 8,
                           runSpacing: 8,
                           children: [
-                            _TagChip(text: _statusText(), color: _statusColor(context)),
-                            _TagChip(text: '商店版本 ${item.version}', color: Colors.blue),
+                            AppStatusChip(label: _statusText(), color: _statusColor(context)),
+                            AppStatusChip(label: '商店版本 ${item.version}', color: Colors.blue),
                             if (item.installedVersion != null && item.installedVersion!.isNotEmpty)
-                              _TagChip(text: '已装 ${item.installedVersion}', color: Colors.teal),
+                              AppStatusChip(label: '已装 ${item.installedVersion}', color: Colors.teal),
                           ],
                         ),
                       ],
@@ -420,24 +421,3 @@ class _VolumeTile extends StatelessWidget {
   }
 }
 
-class _TagChip extends StatelessWidget {
-  const _TagChip({required this.text, required this.color});
-
-  final String text;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(color: color, fontWeight: FontWeight.w700, fontSize: 12),
-      ),
-    );
-  }
-}
