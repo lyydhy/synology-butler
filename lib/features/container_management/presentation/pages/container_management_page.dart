@@ -23,6 +23,7 @@ class _ContainerManagementPageState extends ConsumerState<ContainerManagementPag
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
   late Future<DockerOverviewData> _overviewFuture;
+  final Set<String> _containerActionLoading = <String>{};
 
   @override
   void initState() {
@@ -36,6 +37,39 @@ class _ContainerManagementPageState extends ConsumerState<ContainerManagementPag
     setState(() {
       _overviewFuture = DsmDockerApi().fetchOverview();
     });
+  }
+
+  /// 容器启停操作统一入口。
+  Future<void> _toggleContainer(DockerContainerSummary item) async {
+    final isRunning = item.status == 'running';
+    setState(() {
+      _containerActionLoading.add(item.id);
+    });
+
+    try {
+      final api = DsmDockerApi();
+      if (isRunning) {
+        await api.stopContainer(name: item.name);
+      } else {
+        await api.startContainer(name: item.name);
+      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text('${isRunning ? '停止' : '启动'}容器成功：${item.name}')));
+      _refreshOverview();
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text('${isRunning ? '停止' : '启动'}容器失败：$error')));
+    } finally {
+      if (mounted) {
+        setState(() {
+          _containerActionLoading.remove(item.id);
+        });
+      }
+    }
   }
 
   @override
@@ -90,10 +124,15 @@ class _ContainerManagementPageState extends ConsumerState<ContainerManagementPag
                 if (isDpanel) {
                   return TabBarView(
                     controller: _tabController,
-                    children: const [
-                      _ContainerListTab(isUnavailable: true, items: []),
-                      _ComposeListTab(isUnavailable: true),
-                      _ImageListTab(isUnavailable: true, items: []),
+                    children: [
+                      _ContainerListTab(
+                        isUnavailable: true,
+                        items: const [],
+                        loadingIds: const <String>{},
+                        onToggle: (_) async {},
+                      ),
+                      const _ComposeListTab(isUnavailable: true),
+                      const _ImageListTab(isUnavailable: true, items: []),
                     ],
                   );
                 }
@@ -110,7 +149,12 @@ class _ContainerManagementPageState extends ConsumerState<ContainerManagementPag
                 return TabBarView(
                   controller: _tabController,
                   children: [
-                    _ContainerListTab(isUnavailable: false, items: data.containers),
+                    _ContainerListTab(
+                      isUnavailable: false,
+                      items: data.containers,
+                      loadingIds: _containerActionLoading,
+                      onToggle: _toggleContainer,
+                    ),
                     const _ComposeListTab(isUnavailable: false),
                     _ImageListTab(isUnavailable: false, items: data.images),
                   ],
@@ -177,10 +221,17 @@ class _SourceBanner extends StatelessWidget {
 }
 
 class _ContainerListTab extends StatefulWidget {
-  const _ContainerListTab({required this.isUnavailable, required this.items});
+  const _ContainerListTab({
+    required this.isUnavailable,
+    required this.items,
+    required this.loadingIds,
+    required this.onToggle,
+  });
 
   final bool isUnavailable;
   final List<DockerContainerSummary> items;
+  final Set<String> loadingIds;
+  final Future<void> Function(DockerContainerSummary item) onToggle;
 
   @override
   State<_ContainerListTab> createState() => _ContainerListTabState();
@@ -218,7 +269,11 @@ class _ContainerListTabState extends State<_ContainerListTab> {
                   ? const _EmptyState(label: '暂无容器数据')
                   : ListView.separated(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                      itemBuilder: (context, index) => _ContainerCard(item: items[index]),
+                      itemBuilder: (context, index) => _ContainerCard(
+                        item: items[index],
+                        loading: widget.loadingIds.contains(items[index].id),
+                        onToggle: () => widget.onToggle(items[index]),
+                      ),
                       separatorBuilder: (_, __) => const SizedBox(height: 12),
                       itemCount: items.length,
                     ),
@@ -268,9 +323,15 @@ class _ImageListTab extends StatelessWidget {
 }
 
 class _ContainerCard extends StatelessWidget {
-  const _ContainerCard({required this.item});
+  const _ContainerCard({
+    required this.item,
+    required this.loading,
+    required this.onToggle,
+  });
 
   final DockerContainerSummary item;
+  final bool loading;
+  final VoidCallback onToggle;
 
   @override
   Widget build(BuildContext context) {
@@ -319,9 +380,15 @@ class _ContainerCard extends StatelessWidget {
           Align(
             alignment: Alignment.centerRight,
             child: FilledButton.tonalIcon(
-              onPressed: () {},
-              icon: Icon(isRunning ? Icons.stop_circle_outlined : Icons.play_circle_outline_rounded),
-              label: Text(isRunning ? '停止' : '启动'),
+              onPressed: loading ? null : onToggle,
+              icon: loading
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Icon(isRunning ? Icons.stop_circle_outlined : Icons.play_circle_outline_rounded),
+              label: Text(loading ? '处理中' : (isRunning ? '停止' : '启动')),
             ),
           ),
         ],

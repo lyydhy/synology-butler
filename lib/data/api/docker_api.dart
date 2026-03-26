@@ -56,6 +56,14 @@ class DsmDockerApi {
 
   Options _options() => Options(contentType: Headers.formUrlEncodedContentType);
 
+  String _extractError({required String action, required dynamic data}) {
+    return DsmLogger.buildFailureMessage(
+      module: 'Docker',
+      action: action,
+      response: data,
+    );
+  }
+
   Future<List<dynamic>> _parallelRequest(List<Map<String, dynamic>> compound, {required String action}) async {
     final response = await _dio.post(
       '/webapi/entry.cgi',
@@ -225,6 +233,65 @@ class DsmDockerApi {
     }
 
     return const [];
+  }
+
+  Future<void> startContainer({required String name}) async {
+    await _containerPowerAction(name: name, method: 'start');
+  }
+
+  Future<void> stopContainer({required String name}) async {
+    await _containerPowerAction(name: name, method: 'stop');
+  }
+
+  Future<void> _containerPowerAction({
+    required String name,
+    required String method,
+  }) async {
+    DsmLogger.request(
+      module: 'Docker',
+      action: method,
+      method: 'POST',
+      path: '/webapi/entry.cgi',
+      extra: {
+        'api': 'SYNO.Docker.Container',
+        'name': name,
+      },
+    );
+
+    final response = await _dio.post(
+      '/webapi/entry.cgi',
+      data: {
+        'api': 'SYNO.Docker.Container',
+        'method': method,
+        'version': '1',
+        'name': name,
+      },
+      options: _options(),
+    );
+
+    final payload = response.data;
+    if (payload is Map && payload['success'] == true) {
+      DsmLogger.success(
+        module: 'Docker',
+        action: method,
+        path: '/webapi/entry.cgi',
+        response: {'name': name},
+      );
+      return;
+    }
+
+    DsmLogger.failure(
+      module: 'Docker',
+      action: method,
+      path: '/webapi/entry.cgi',
+      response: payload,
+    );
+
+    throw DioException(
+      requestOptions: response.requestOptions,
+      response: response,
+      error: _extractError(action: method, data: payload),
+    );
   }
 
   Future<DockerOverviewData> fetchOverview() async {
