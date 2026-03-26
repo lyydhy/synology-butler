@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/widgets/app_empty_state.dart';
+import '../../../../core/widgets/app_error_state.dart';
 import '../../../../core/widgets/sliding_tab_bar.dart';
 import '../../../../data/api/docker_api.dart';
 
@@ -181,7 +183,7 @@ class _ContainerDetailPageState extends State<ContainerDetailPage> with SingleTi
                     }
                     final dates = snapshot.data ?? const [];
                     if (dates.isEmpty) {
-                      return const Center(child: Text('暂无日志日期')); 
+                      return const AppEmptyState(message: '暂无日志日期');
                     }
                     final currentDate = _selectedDate ?? dates.first;
                     if (_selectedDate == null) {
@@ -215,7 +217,7 @@ class _ContainerDetailPageState extends State<ContainerDetailPage> with SingleTi
                                 return _DetailErrorState(onRetry: _refresh);
                               }
                               final logs = logSnapshot.data ?? const [];
-                              if (logs.isEmpty) return const Center(child: Text('暂无日志内容'));
+                              if (logs.isEmpty) return const AppEmptyState(message: '暂无日志内容');
                               return ListView.separated(
                                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                                 itemBuilder: (context, index) => SelectableText(logs[index]),
@@ -293,8 +295,10 @@ class _DetailErrorState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: FilledButton.tonal(onPressed: onRetry, child: const Text('加载失败，点我重试')),
+    return AppErrorState(
+      title: '容器详情加载失败',
+      onRetry: onRetry,
+      actionLabel: '重新加载',
     );
   }
 }

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/widgets/app_empty_state.dart';
+import '../../../../core/widgets/app_error_state.dart';
 import '../../../../core/widgets/app_status_chip.dart';
 import '../../../../core/widgets/app_surface_card.dart';
 import '../../../../core/widgets/sliding_tab_bar.dart';
@@ -130,11 +132,10 @@ class _PackagesPageState extends ConsumerState<PackagesPage> with SingleTickerPr
                 ],
               ),
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, _) => Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Text('套件列表加载失败\n$error', textAlign: TextAlign.center),
-                ),
+              error: (error, _) => AppErrorState(
+                title: '套件列表加载失败',
+                message: '$error',
+                onRetry: _refreshPackages,
               ),
             ),
           ),
@@ -152,7 +153,7 @@ class _PackageListView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (items.isEmpty) {
-      return const Center(child: Text('暂无套件数据'));
+      return const AppEmptyState(message: '暂无套件数据');
     }
 
     return ListView.separated(

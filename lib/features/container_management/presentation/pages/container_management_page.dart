@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/widgets/app_empty_state.dart';
+import '../../../../core/widgets/app_error_state.dart';
 import '../../../../core/widgets/app_status_chip.dart';
 import '../../../../core/widgets/app_surface_card.dart';
 import '../../../../core/widgets/sliding_tab_bar.dart';
@@ -556,18 +558,9 @@ class _UnavailablePlaceholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: Padding(
-        padding: EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.construction_rounded, size: 42),
-            SizedBox(height: 12),
-            Text('dpanel 数据源开发中，当前先使用群晖数据源。', textAlign: TextAlign.center),
-          ],
-        ),
-      ),
+    return const AppEmptyState(
+      icon: Icons.construction_rounded,
+      message: 'dpanel 数据源开发中，当前先使用群晖数据源。',
     );
   }
 }
@@ -579,20 +572,11 @@ class _DockerErrorState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.cloud_off_rounded, size: 42),
-            const SizedBox(height: 12),
-            const Text('容器数据加载失败，请稍后重试。', textAlign: TextAlign.center),
-            const SizedBox(height: 12),
-            FilledButton.tonal(onPressed: onRetry, child: const Text('重试')),
-          ],
-        ),
-      ),
+    return AppErrorState(
+      title: '容器数据加载失败',
+      message: '请稍后重试。',
+      icon: Icons.cloud_off_rounded,
+      onRetry: onRetry,
     );
   }
 }
@@ -604,7 +588,7 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(child: Text(label));
+    return AppEmptyState(message: label);
   }
 }
 

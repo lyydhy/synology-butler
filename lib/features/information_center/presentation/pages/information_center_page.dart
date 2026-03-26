@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/widgets/app_error_state.dart';
 import '../../../../core/widgets/sliding_tab_bar.dart';
 import '../../../dashboard/presentation/providers/dashboard_providers.dart';
 import '../providers/information_center_providers.dart';
@@ -108,32 +109,11 @@ class _InformationCenterErrorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.error_outline_rounded, size: 40, color: Colors.red),
-            const SizedBox(height: 12),
-            const Text('信息中心加载失败', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-            const SizedBox(height: 8),
-            Text(
-              '$error',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-            ),
-            const SizedBox(height: 16),
-            FilledButton.icon(
-              onPressed: onRetry,
-              icon: const Icon(Icons.refresh_rounded),
-              label: const Text('重新加载'),
-            ),
-          ],
-        ),
-      ),
+    return AppErrorState(
+      title: '信息中心加载失败',
+      message: '$error',
+      onRetry: onRetry,
+      actionLabel: '重新加载',
     );
   }
 }
