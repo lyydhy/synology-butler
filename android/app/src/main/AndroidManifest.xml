@@ -3,6 +3,8 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- 可选：允许访问网络状态（帮助排查网络问题） -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- 兼容部分文件管理器通过外部存储 Uri 分享文件的场景。 -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <application
         android:label="群晖管家"
         android:name="${applicationName}"
@@ -12,7 +14,7 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:launchMode="singleTop"
+            android:launchMode="singleTask"
             android:taskAffinity=""
             android:theme="@style/LaunchTheme"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
@@ -29,6 +31,29 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+
+            <!-- 支持文件管理器通过“打开方式”把任意文件交给本应用。 -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data
+                    android:mimeType="*/*"
+                    android:scheme="content" />
+            </intent-filter>
+
+            <!-- 支持系统分享单个文件。 -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="*/*" />
+            </intent-filter>
+
+            <!-- 支持系统分享多个文件，当前 Flutter 侧先只消费第一个文件。 -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="*/*" />
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.
