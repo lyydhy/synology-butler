@@ -10,7 +10,7 @@ import '../providers/package_providers.dart';
 
 /// 套件中心首页。
 ///
-/// 这里把列表筛选页签收回页面本地状态；
+/// 使用通用 SlidingTabBar + TabBarView 统一页签交互，
 /// 安装流程状态仍通过 provider 在列表页和详情页之间共享。
 class PackagesPage extends ConsumerStatefulWidget {
   const PackagesPage({super.key});
@@ -20,14 +20,7 @@ class PackagesPage extends ConsumerStatefulWidget {
 }
 
 class _PackagesPageState extends ConsumerState<PackagesPage> with SingleTickerProviderStateMixin {
-  static const String _allTab = 'all';
-  static const String _installedTab = 'installed';
-  static const String _updatesTab = 'updates';
-
   late final TabController _tabController;
-
-  /// 当前页面选中的筛选页签。
-  String _selectedTab = _allTab;
 
   @override
   void initState() {
@@ -41,12 +34,12 @@ class _PackagesPageState extends ConsumerState<PackagesPage> with SingleTickerPr
     super.dispose();
   }
 
-  /// 根据当前页签过滤展示的套件列表。
-  List<PackageItem> _filterItems(List<PackageItem> items) {
-    switch (_selectedTab) {
-      case _installedTab:
+  /// 根据页签下标过滤展示的套件列表。
+  List<PackageItem> _filterItems(List<PackageItem> items, int tabIndex) {
+    switch (tabIndex) {
+      case 1:
         return items.where((item) => item.isInstalled).toList();
-      case _updatesTab:
+      case 2:
         return items.where((item) => item.canUpdate).toList();
       default:
         return items;
@@ -92,15 +85,6 @@ class _PackagesPageState extends ConsumerState<PackagesPage> with SingleTickerPr
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
             child: SlidingTabBar(
               tabController: _tabController,
-              onTabSelected: (index) {
-                setState(() {
-                  _selectedTab = switch (index) {
-                    1 => _installedTab,
-                    2 => _updatesTab,
-                    _ => _allTab,
-                  };
-                });
-              },
               tabs: const [
                 SlidingTabItem(icon: Icons.apps_rounded, label: '全部'),
                 SlidingTabItem(icon: Icons.check_circle_outline_rounded, label: '已安装'),
@@ -132,18 +116,14 @@ class _PackagesPageState extends ConsumerState<PackagesPage> with SingleTickerPr
             ),
           Expanded(
             child: packagesAsync.when(
-              data: (items) {
-                final visibleItems = _filterItems(items);
-                if (visibleItems.isEmpty) {
-                  return const Center(child: Text('暂无套件数据'));
-                }
-                return ListView.separated(
-                  padding: const EdgeInsets.all(16),
-                  itemBuilder: (context, index) => _PackageCard(item: visibleItems[index]),
-                  separatorBuilder: (_, __) => const SizedBox(height: 12),
-                  itemCount: visibleItems.length,
-                );
-              },
+              data: (items) => TabBarView(
+                controller: _tabController,
+                children: [
+                  _PackageListView(items: _filterItems(items, 0)),
+                  _PackageListView(items: _filterItems(items, 1)),
+                  _PackageListView(items: _filterItems(items, 2)),
+                ],
+              ),
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (error, _) => Center(
                 child: Padding(
@@ -155,6 +135,26 @@ class _PackagesPageState extends ConsumerState<PackagesPage> with SingleTickerPr
           ),
         ],
       ),
+    );
+  }
+}
+
+class _PackageListView extends StatelessWidget {
+  const _PackageListView({required this.items});
+
+  final List<PackageItem> items;
+
+  @override
+  Widget build(BuildContext context) {
+    if (items.isEmpty) {
+      return const Center(child: Text('暂无套件数据'));
+    }
+
+    return ListView.separated(
+      padding: const EdgeInsets.all(16),
+      itemBuilder: (context, index) => _PackageCard(item: items[index]),
+      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      itemCount: items.length,
     );
   }
 }

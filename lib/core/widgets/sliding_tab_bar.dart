@@ -1,18 +1,8 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 
-/// A modern sliding-tab bar with animated indicator and icon + label support.
-///
-/// Usage:
-/// ```dart
-/// SlidingTabBar(
-///   tabController: tabController,
-///   tabs: [
-///     SlidingTabItem(icon: Icons.dashboard, label: '概览'),
-///     SlidingTabItem(icon: Icons.memory, label: 'CPU'),
-///     SlidingTabItem(icon: Icons.storage, label: '存储'),
-///   ],
-/// )
-/// ```
+/// A polished sliding-tab bar with animated indicator and icon + label support.
 class SlidingTabBar extends StatefulWidget {
   const SlidingTabBar({
     super.key,
@@ -22,12 +12,12 @@ class SlidingTabBar extends StatefulWidget {
     this.selectedColor,
     this.unselectedColor,
     this.indicatorColor,
-    this.height = 52,
+    this.height = 56,
     this.iconSize = 18,
     this.fontSize = 13,
     this.fontWeight = FontWeight.w600,
-    this.indicatorBorderRadius = 10,
-    this.horizontalPadding = 4,
+    this.indicatorBorderRadius = 16,
+    this.horizontalPadding = 6,
     this.onTabSelected,
   });
 
@@ -100,111 +90,137 @@ class _SlidingTabBarState extends State<SlidingTabBar> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final bgColor = widget.backgroundColor ?? theme.colorScheme.surfaceContainerLow;
-    final selectedClr = widget.selectedColor ?? theme.colorScheme.primary;
-    final unselectedClr = widget.unselectedColor ?? theme.colorScheme.onSurfaceVariant;
+    final scheme = theme.colorScheme;
+    final bgColor = widget.backgroundColor ?? scheme.surfaceContainerHighest.withValues(alpha: 0.72);
+    final selectedClr = widget.selectedColor ?? scheme.primary;
+    final unselectedClr = widget.unselectedColor ?? scheme.onSurfaceVariant;
+    final indicatorClr = widget.indicatorColor ?? scheme.surface.withValues(alpha: 0.92);
 
-    return Container(
-      height: widget.height,
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(widget.height / 2),
-        border: Border.all(
-          color: theme.dividerColor.withValues(alpha: 0.12),
-        ),
-      ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final totalWidth = constraints.maxWidth;
-          final tabWidth = totalWidth / widget.tabs.length;
-          final indicatorWidth = tabWidth - widget.horizontalPadding * 2;
-
-          final currentPage = _currentPageValue();
-          final normalizedProgress = widget.tabs.length > 1 ? currentPage / (widget.tabs.length - 1) : 0.0;
-          final offset = normalizedProgress * (totalWidth - tabWidth);
-
-          return Stack(
-            children: [
-              // Sliding indicator
-              Positioned(
-                left: offset + widget.horizontalPadding,
-                top: 4,
-                width: indicatorWidth,
-                height: widget.height - 8,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: selectedClr.withValues(alpha: 0.14),
-                    borderRadius: BorderRadius.circular(widget.indicatorBorderRadius),
-                    border: Border.all(
-                      color: selectedClr.withValues(alpha: 0.22),
-                      width: 1,
-                    ),
-                  ),
-                ),
-              ),
-              // Tabs row
-              Row(
-                children: List.generate(widget.tabs.length, (index) {
-                  final tab = widget.tabs[index];
-                  final distance = (currentPage - index).abs();
-                  final selection = (1 - distance).clamp(0.0, 1.0);
-                  final iconColor = Color.lerp(
-                    unselectedClr.withValues(alpha: 0.6),
-                    selectedClr,
-                    selection,
-                  )!;
-                  final textColor = Color.lerp(
-                    unselectedClr.withValues(alpha: 0.6),
-                    selectedClr,
-                    selection,
-                  )!;
-                  final fontWeight = selection > 0.5 ? FontWeight.w700 : widget.fontWeight;
-
-                  return Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        widget.tabController.animateTo(index);
-                        widget.onTabSelected?.call(index);
-                      },
-                      behavior: HitTestBehavior.opaque,
-                      child: SizedBox(
-                        height: widget.height,
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              tab.icon,
-                              size: widget.iconSize,
-                              color: iconColor,
-                            ),
-                            const SizedBox(height: 3),
-                            Text(
-                              tab.label,
-                              style: TextStyle(
-                                fontSize: widget.fontSize,
-                                fontWeight: fontWeight,
-                                color: textColor,
-                                letterSpacing: 0.2,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                }),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(widget.height / 2),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          height: widget.height,
+          decoration: BoxDecoration(
+            color: bgColor,
+            borderRadius: BorderRadius.circular(widget.height / 2),
+            border: Border.all(
+              color: scheme.outlineVariant.withValues(alpha: 0.45),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.03),
+                blurRadius: 18,
+                offset: const Offset(0, 8),
               ),
             ],
-          );
-        },
+          ),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final totalWidth = constraints.maxWidth;
+              final tabWidth = totalWidth / widget.tabs.length;
+              final indicatorWidth = tabWidth - widget.horizontalPadding * 2;
+
+              final currentPage = _currentPageValue();
+              final normalizedProgress = widget.tabs.length > 1 ? currentPage / (widget.tabs.length - 1) : 0.0;
+              final offset = normalizedProgress * (totalWidth - tabWidth);
+
+              return Stack(
+                children: [
+                  Positioned(
+                    left: offset + widget.horizontalPadding,
+                    top: 6,
+                    width: indicatorWidth,
+                    height: widget.height - 12,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: indicatorClr,
+                        borderRadius: BorderRadius.circular(widget.indicatorBorderRadius),
+                        border: Border.all(
+                          color: selectedClr.withValues(alpha: 0.10),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: selectedClr.withValues(alpha: 0.10),
+                            blurRadius: 14,
+                            offset: const Offset(0, 4),
+                          ),
+                          BoxShadow(
+                            color: Colors.white.withValues(alpha: 0.30),
+                            blurRadius: 1,
+                            spreadRadius: 0,
+                            offset: const Offset(0, 1),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Row(
+                    children: List.generate(widget.tabs.length, (index) {
+                      final tab = widget.tabs[index];
+                      final distance = (currentPage - index).abs();
+                      final selection = (1 - distance).clamp(0.0, 1.0);
+                      final contentColor = Color.lerp(
+                        unselectedClr.withValues(alpha: 0.72),
+                        selectedClr,
+                        Curves.easeOut.transform(selection),
+                      )!;
+                      final labelWeight = selection > 0.55 ? FontWeight.w700 : widget.fontWeight;
+                      final scale = lerpDouble(0.98, 1.0, selection) ?? 1.0;
+
+                      return Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            widget.tabController.animateTo(index);
+                            widget.onTabSelected?.call(index);
+                          },
+                          behavior: HitTestBehavior.opaque,
+                          child: AnimatedScale(
+                            scale: scale,
+                            duration: const Duration(milliseconds: 140),
+                            curve: Curves.easeOut,
+                            child: SizedBox(
+                              height: widget.height,
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    tab.icon,
+                                    size: widget.iconSize,
+                                    color: contentColor,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    tab.label,
+                                    style: TextStyle(
+                                      fontSize: widget.fontSize,
+                                      fontWeight: labelWeight,
+                                      color: contentColor,
+                                      letterSpacing: 0.15,
+                                      height: 1,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
       ),
     );
   }
 }
 
-/// Configuration for a single tab in [SlidingTabBar].
 class SlidingTabItem {
   const SlidingTabItem({
     required this.icon,
