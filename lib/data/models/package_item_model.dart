@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 class PackageItemModel {
   final String id;
   final String name;
@@ -41,6 +43,52 @@ class PackageItemModel {
     required this.dsmAppName,
   });
 
+  /// 兼容 DSM 套件接口里 `dsm_apps` 的多种返回形式：
+  /// - 直接 List<String>
+  /// - List<Map>，其中带有 className / app 等字段
+  /// - JSON 字符串
+  /// - 单个字符串
+  static String? _extractDsmAppName(dynamic raw) {
+    List<dynamic> values = const [];
+
+    if (raw is List) {
+      values = raw;
+    } else if (raw is String && raw.trim().isNotEmpty) {
+      final trimmed = raw.trim();
+      if ((trimmed.startsWith('[') && trimmed.endsWith(']')) ||
+          (trimmed.startsWith('{') && trimmed.endsWith('}'))) {
+        try {
+          final decoded = jsonDecode(trimmed);
+          if (decoded is List) {
+            values = decoded;
+          } else {
+            values = [decoded];
+          }
+        } catch (_) {
+          values = [trimmed];
+        }
+      } else {
+        values = [trimmed];
+      }
+    } else if (raw is Map) {
+      values = [raw];
+    }
+
+    for (final item in values) {
+      if (item is String && item.trim().isNotEmpty) {
+        return item.trim();
+      }
+      if (item is Map) {
+        final candidate = (item['className'] ?? item['class_name'] ?? item['app'] ?? item['name'])?.toString();
+        if (candidate != null && candidate.trim().isNotEmpty) {
+          return candidate.trim();
+        }
+      }
+    }
+
+    return null;
+  }
+
   factory PackageItemModel.fromStorePayload(Map map) {
     final thumbnails = (map['thumbnail'] as List?)?.map((e) => e.toString()).where((e) => e.isNotEmpty).toList() ?? const <String>[];
     final snapshots = (map['snapshot'] as List?)?.map((e) => e.toString()).where((e) => e.isNotEmpty).toList() ?? const <String>[];
@@ -66,13 +114,12 @@ class PackageItemModel {
       installPath: map['additional'] is Map && map['additional']['installed_info'] is Map
           ? map['additional']['installed_info']['path']?.toString()
           : null,
-      dsmAppName: map['dsm_apps'] is List && (map['dsm_apps'] as List).isNotEmpty ? map['dsm_apps'].first.toString() : null,
+      dsmAppName: _extractDsmAppName(map['dsm_apps']),
     );
   }
 
   factory PackageItemModel.fromInstalledPayload(Map map) {
     final additional = map['additional'] as Map? ?? const {};
-    final dsmApps = additional['dsm_apps'] as List? ?? map['dsm_apps'] as List? ?? const [];
     final installedInfo = additional['installed_info'] as Map? ?? const {};
 
     return PackageItemModel(
@@ -94,7 +141,7 @@ class PackageItemModel {
       maintainerUrl: additional['maintainer_url']?.toString(),
       status: additional['status']?.toString() ?? map['status']?.toString(),
       installPath: installedInfo['path']?.toString(),
-      dsmAppName: dsmApps.isNotEmpty ? dsmApps.first.toString() : null,
+      dsmAppName: _extractDsmAppName(additional['dsm_apps'] ?? map['dsm_apps']),
     );
   }
 }
