@@ -377,14 +377,17 @@ class _ContainerCard extends StatelessWidget {
     final isRunning = item.status == 'running';
     final statusText = isRunning ? '运行中' : item.status == 'stopped' ? '已停止' : item.status;
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.12)),
-      ),
-      child: Column(
+    return InkWell(
+      borderRadius: BorderRadius.circular(20),
+      onTap: () => context.push('/container-management/detail', extra: {'name': item.name}),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: theme.dividerColor.withValues(alpha: 0.12)),
+        ),
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -449,7 +452,7 @@ class _ContainerCard extends StatelessWidget {
           ),
         ],
       ),
-    );
+    ));
   }
 }
 

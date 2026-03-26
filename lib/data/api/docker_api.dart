@@ -45,6 +45,22 @@ class DockerOverviewData {
   final List<DockerImageSummary> images;
 }
 
+class DockerContainerDetail {
+  const DockerContainerDetail({
+    required this.status,
+    required this.command,
+    required this.ports,
+    required this.volumes,
+    required this.envs,
+  });
+
+  final String status;
+  final String command;
+  final List<Map<String, dynamic>> ports;
+  final List<Map<String, dynamic>> volumes;
+  final List<Map<String, dynamic>> envs;
+}
+
 /// 轻量版群晖 Docker 数据源。
 ///
 /// 第一阶段先接入两个最直接的列表：
@@ -301,6 +317,96 @@ class DsmDockerApi {
       requestOptions: response.requestOptions,
       response: response,
       error: _extractError(action: method, data: payload),
+    );
+  }
+
+  Future<DockerContainerDetail> fetchContainerDetail({required String name}) async {
+    final response = await _dio.post(
+      '/webapi/entry.cgi',
+      data: {
+        'api': 'SYNO.Docker.Container',
+        'method': 'get',
+        'version': '1',
+        'name': name,
+      },
+      options: _options(),
+    );
+
+    final payload = response.data;
+    if (payload is Map && payload['success'] == true) {
+      final data = payload['data'] as Map? ?? const {};
+      final profile = data['profile'] as Map? ?? const {};
+      final details = data['details'] as Map? ?? const {};
+      return DockerContainerDetail(
+        status: (details['status'] ?? '').toString(),
+        command: (details['exe_cmd'] ?? '').toString(),
+        ports: ((profile['port_bindings'] as List?) ?? const []).whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList(),
+        volumes: ((profile['volume_bindings'] as List?) ?? const []).whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList(),
+        envs: ((profile['env_variables'] as List?) ?? const []).whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList(),
+      );
+    }
+
+    throw DioException(
+      requestOptions: response.requestOptions,
+      response: response,
+      error: _extractError(action: 'fetchContainerDetail', data: payload),
+    );
+  }
+
+  Future<List<String>> fetchContainerLogDates({required String name}) async {
+    final response = await _dio.post(
+      '/webapi/entry.cgi',
+      data: {
+        'api': 'SYNO.Docker.Container.Log',
+        'method': 'get_date_list',
+        'version': '1',
+        'name': name,
+      },
+      options: _options(),
+    );
+
+    final payload = response.data;
+    if (payload is Map && payload['success'] == true) {
+      final data = payload['data'] as Map? ?? const {};
+      return ((data['dates'] as List?) ?? const []).map((e) => e.toString()).toList();
+    }
+
+    throw DioException(
+      requestOptions: response.requestOptions,
+      response: response,
+      error: _extractError(action: 'fetchContainerLogDates', data: payload),
+    );
+  }
+
+  Future<List<String>> fetchContainerLogs({
+    required String name,
+    required String date,
+  }) async {
+    final response = await _dio.post(
+      '/webapi/entry.cgi',
+      data: {
+        'api': 'SYNO.Docker.Container.Log',
+        'method': 'get',
+        'version': '1',
+        'name': name,
+        'sort_dir': 'ASC',
+        'date': date,
+        'limit': '1000',
+        'offset': '0',
+      },
+      options: _options(),
+    );
+
+    final payload = response.data;
+    if (payload is Map && payload['success'] == true) {
+      final data = payload['data'] as Map? ?? const {};
+      return ((data['logs'] as List?) ?? const []).map((e) => e.toString()).toList();
+    }
+
+    throw DioException(
+      requestOptions: response.requestOptions,
+      response: response,
+      error: _extractError(action: 'fetchContainerLogs', data: payload),
     );
   }
 

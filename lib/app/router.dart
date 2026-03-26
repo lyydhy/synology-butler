@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../features/auth/presentation/pages/login_page.dart';
 import '../features/auth/presentation/pages/splash_page.dart';
+import '../features/container_management/presentation/pages/container_detail_page.dart';
 import '../features/container_management/presentation/pages/container_management_page.dart';
 import '../features/container_management/presentation/pages/container_management_settings_page.dart';
 import '../features/debug/presentation/pages/app_logs_page.dart';
@@ -43,6 +44,17 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/container-management/settings',
       builder: (context, state) => const ContainerManagementSettingsPage(),
+    ),
+    GoRoute(
+      path: '/container-management/detail',
+      builder: (context, state) {
+        final extra = state.extra as Map<String, dynamic>? ?? const {};
+        final name = extra['name']?.toString() ?? '';
+        if (name.isEmpty) {
+          return const Scaffold(body: Center(child: Text('容器详情参数缺失')));
+        }
+        return ContainerDetailPage(name: name);
+      },
     ),
     GoRoute(
       path: '/files/pick-directory',
