@@ -149,6 +149,20 @@ class _ContainerDetailPageState extends State<ContainerDetailPage> with SingleTi
                                       .toList(),
                                 ),
                         ),
+                        const SizedBox(height: 12),
+                        _SectionCard(
+                          title: '进程列表',
+                          child: detail.processes.isEmpty
+                              ? const Text('暂无进程信息')
+                              : Column(
+                                  children: detail.processes
+                                      .map((row) => Padding(
+                                            padding: const EdgeInsets.only(bottom: 8),
+                                            child: Text(row.join('    ')),
+                                          ))
+                                      .toList(),
+                                ),
+                        ),
                       ],
                     );
                   },

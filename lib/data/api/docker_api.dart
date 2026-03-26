@@ -52,6 +52,7 @@ class DockerContainerDetail {
     required this.ports,
     required this.volumes,
     required this.envs,
+    required this.processes,
   });
 
   final String status;
@@ -59,6 +60,7 @@ class DockerContainerDetail {
   final List<Map<String, dynamic>> ports;
   final List<Map<String, dynamic>> volumes;
   final List<Map<String, dynamic>> envs;
+  final List<List<String>> processes;
 }
 
 /// 轻量版群晖 Docker 数据源。
@@ -321,7 +323,7 @@ class DsmDockerApi {
   }
 
   Future<DockerContainerDetail> fetchContainerDetail({required String name}) async {
-    final response = await _dio.post(
+    final detailResponse = await _dio.post(
       '/webapi/entry.cgi',
       data: {
         'api': 'SYNO.Docker.Container',
@@ -332,24 +334,42 @@ class DsmDockerApi {
       options: _options(),
     );
 
-    final payload = response.data;
-    if (payload is Map && payload['success'] == true) {
-      final data = payload['data'] as Map? ?? const {};
-      final profile = data['profile'] as Map? ?? const {};
-      final details = data['details'] as Map? ?? const {};
-      return DockerContainerDetail(
-        status: (details['status'] ?? '').toString(),
-        command: (details['exe_cmd'] ?? '').toString(),
-        ports: ((profile['port_bindings'] as List?) ?? const []).whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList(),
-        volumes: ((profile['volume_bindings'] as List?) ?? const []).whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList(),
-        envs: ((profile['env_variables'] as List?) ?? const []).whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList(),
+    final detailPayload = detailResponse.data;
+    if (!(detailPayload is Map && detailPayload['success'] == true)) {
+      throw DioException(
+        requestOptions: detailResponse.requestOptions,
+        response: detailResponse,
+        error: _extractError(action: 'fetchContainerDetail', data: detailPayload),
       );
     }
 
-    throw DioException(
-      requestOptions: response.requestOptions,
-      response: response,
-      error: _extractError(action: 'fetchContainerDetail', data: payload),
+    final processResponse = await _dio.post(
+      '/webapi/entry.cgi',
+      data: {
+        'api': 'SYNO.Docker.Container',
+        'method': 'get_process',
+        'version': '1',
+        'name': name,
+      },
+      options: _options(),
+    );
+
+    final processPayload = processResponse.data;
+    final detailData = detailPayload['data'] as Map? ?? const {};
+    final profile = detailData['profile'] as Map? ?? const {};
+    final details = detailData['details'] as Map? ?? const {};
+    final processData = processPayload is Map && processPayload['success'] == true ? (processPayload['data'] as Map? ?? const {}) : const {};
+
+    return DockerContainerDetail(
+      status: (details['status'] ?? '').toString(),
+      command: (details['exe_cmd'] ?? '').toString(),
+      ports: ((profile['port_bindings'] as List?) ?? const []).whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList(),
+      volumes: ((profile['volume_bindings'] as List?) ?? const []).whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList(),
+      envs: ((profile['env_variables'] as List?) ?? const []).whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList(),
+      processes: ((processData['processes'] as List?) ?? const [])
+          .whereType<List>()
+          .map((row) => row.map((item) => item.toString()).toList())
+          .toList(),
     );
   }
 
