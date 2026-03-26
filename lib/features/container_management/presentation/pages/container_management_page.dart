@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/widgets/app_surface_card.dart';
 import '../../../../core/widgets/sliding_tab_bar.dart';
 import '../../../../data/api/docker_api.dart';
 import '../../../preferences/providers/preferences_providers.dart';
@@ -380,17 +381,9 @@ class _ContainerCard extends StatelessWidget {
     final isRunning = item.status == 'running';
     final statusText = isRunning ? '运行中' : item.status == 'stopped' ? '已停止' : item.status;
 
-    return InkWell(
-      borderRadius: BorderRadius.circular(20),
+    return AppSurfaceCard(
       onTap: () => context.push('/container-management/detail', extra: {'name': item.name}),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: theme.dividerColor.withValues(alpha: 0.12)),
-        ),
-        child: Column(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -455,7 +448,7 @@ class _ContainerCard extends StatelessWidget {
           ),
         ],
       ),
-    ));
+    );
   }
 }
 
@@ -469,13 +462,7 @@ class _ComposeCard extends StatelessWidget {
     final theme = Theme.of(context);
     final isRunning = item.status == '运行中';
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.12)),
-      ),
+    return AppSurfaceCard(
       child: Row(
         children: [
           Container(
@@ -524,13 +511,7 @@ class _ImageCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.12)),
-      ),
+    return AppSurfaceCard(
       child: Row(
         children: [
           Container(

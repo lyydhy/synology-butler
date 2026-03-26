@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/widgets/app_surface_card.dart';
 import '../../../../core/widgets/sliding_tab_bar.dart';
 import '../../../../domain/entities/package_item.dart';
 import '../../../../domain/entities/package_volume.dart';
@@ -213,21 +214,11 @@ class _PackageCard extends ConsumerWidget {
     final installState = ref.watch(packageInstallStateProvider);
     final isInstallingThis = installState.isInstalling(item.id);
 
-    return InkWell(
-      borderRadius: BorderRadius.circular(20),
+    return AppSurfaceCard(
       onTap: () => context.push('/packages/detail', extra: item),
-      child: Card(
-        elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: 0.15)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -403,8 +394,6 @@ class _PackageCard extends ConsumerWidget {
               ),
             ],
           ),
-        ),
-      ),
     );
   }
 }
