@@ -38,7 +38,9 @@ class _DiagnosticsPageState extends ConsumerState<DiagnosticsPage> {
   Future<void> testFiles() async {
     setState(() => loadingFile = true);
     try {
-      final files = await ref.read(fileListProvider.future);
+      final files = await ref.read(
+        fileListProvider(const FileListQuery(path: '/', sort: 'type')).future,
+      );
       setState(() => fileResult = '成功：读取到 ${files.length} 个文件项');
     } catch (e) {
       setState(() => fileResult = '失败：${ErrorMapper.map(e).message}');

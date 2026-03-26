@@ -8,9 +8,6 @@ import '../../../../domain/entities/file_item.dart';
 import '../../../../domain/repositories/file_repository.dart';
 import '../widgets/file_type_helper.dart';
 
-final currentPathProvider = StateProvider<String>((ref) => '/');
-final fileSortProvider = StateProvider<String>((ref) => 'type');
-
 final fileStationApiProvider = Provider<FileStationApi>((ref) {
   return DsmFileStationApi();
 });
@@ -19,15 +16,24 @@ final fileRepositoryProvider = Provider<FileRepository>((ref) {
   return FileRepositoryImpl(ref.read(fileStationApiProvider));
 });
 
-final fileListProvider = FutureProvider<List<FileItem>>((ref) async {
-  final path = ref.watch(currentPathProvider);
-  final files = await ref.read(fileRepositoryProvider).listFiles(path: path);
-  final sort = ref.watch(fileSortProvider);
+/// 文件列表查询参数。
+///
+/// 路径和排序都属于页面局部状态，因此由页面传入 provider family。
+class FileListQuery {
+  const FileListQuery({required this.path, required this.sort});
+
+  final String path;
+  final String sort;
+}
+
+/// 按路径和排序方式获取文件列表。
+final fileListProvider = FutureProvider.family<List<FileItem>, FileListQuery>((ref, query) async {
+  final files = await ref.read(fileRepositoryProvider).listFiles(path: query.path);
   final sorted = [...files];
 
-  if (sort == 'size') {
+  if (query.sort == 'size') {
     sorted.sort((a, b) => b.size.compareTo(a.size));
-  } else if (sort == 'name') {
+  } else if (query.sort == 'name') {
     sorted.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
   } else {
     sorted.sort((a, b) {
@@ -43,21 +49,18 @@ final fileListProvider = FutureProvider<List<FileItem>>((ref) async {
 final fileActionProvider = Provider<Future<void> Function(String, String)>((ref) {
   return (parentPath, name) async {
     await ref.read(fileRepositoryProvider).createFolder(parentPath: parentPath, name: name);
-    ref.invalidate(fileListProvider);
   };
 });
 
 final fileRenameProvider = Provider<Future<void> Function(String, String)>((ref) {
   return (path, newName) async {
     await ref.read(fileRepositoryProvider).rename(path: path, newName: newName);
-    ref.invalidate(fileListProvider);
   };
 });
 
 final fileDeleteProvider = Provider<Future<void> Function(String)>((ref) {
   return (path) async {
     await ref.read(fileRepositoryProvider).delete(path: path);
-    ref.invalidate(fileListProvider);
   };
 });
 
@@ -66,7 +69,6 @@ final fileBatchDeleteProvider = Provider<Future<void> Function(List<String>)>((r
     for (final path in paths) {
       await ref.read(fileRepositoryProvider).delete(path: path);
     }
-    ref.invalidate(fileListProvider);
   };
 });
 
@@ -83,6 +85,5 @@ final fileUploadProvider = Provider<Future<void> Function(String, String, Uint8L
           fileName: fileName,
           bytes: bytes,
         );
-    ref.invalidate(fileListProvider);
   };
 });

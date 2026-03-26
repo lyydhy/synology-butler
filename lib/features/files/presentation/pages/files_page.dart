@@ -24,8 +24,8 @@ import '../widgets/files_selection_bar.dart';
 
 /// 文件管理页面。
 ///
-/// 当前第一刀先把“已选中文件集合”回归页面本地状态；
-/// 路径与排序仍保持现有 provider 方案，避免一次改动过大。
+/// 当前第二刀继续把“当前路径 / 排序方式”回归页面本地状态，
+/// 再通过 family provider 按参数取数，减少全局状态依赖。
 class FilesPage extends ConsumerStatefulWidget {
   const FilesPage({super.key});
 
@@ -34,14 +34,26 @@ class FilesPage extends ConsumerStatefulWidget {
 }
 
 class _FilesPageState extends ConsumerState<FilesPage> {
+  static const String _rootPath = '/';
+  static const String _defaultSort = 'type';
+
   Timer? _pollTimer;
   String? _lastFinishedDownloadId;
+
+  /// 当前页面所在目录。
+  String _currentPath = _rootPath;
+
+  /// 当前页面文件排序方式。
+  String _sort = _defaultSort;
 
   /// 当前页面已选择的文件路径集合。
   Set<String> _selectedPaths = <String>{};
 
   /// 是否处于多选模式。
   bool get _selectionMode => _selectedPaths.isNotEmpty;
+
+  /// 当前文件列表查询条件。
+  FileListQuery get _fileQuery => FileListQuery(path: _currentPath, sort: _sort);
 
   @override
   void initState() {
@@ -51,7 +63,7 @@ class _FilesPageState extends ConsumerState<FilesPage> {
       final currentServer = ref.read(activeServerProvider);
       final currentSession = ref.read(activeSessionProvider);
       if (currentServer == null || currentSession == null || _selectionMode) return;
-      ref.invalidate(fileListProvider);
+      ref.invalidate(fileListProvider(_fileQuery));
     });
 
     ref.listenManual(latestFinishedDownloadProvider, (previous, next) {
@@ -84,6 +96,28 @@ class _FilesPageState extends ConsumerState<FilesPage> {
   void dispose() {
     _pollTimer?.cancel();
     super.dispose();
+  }
+
+  /// 刷新当前目录文件列表。
+  void _refreshCurrentPath() {
+    ref.invalidate(fileListProvider(_fileQuery));
+  }
+
+  /// 进入指定目录并清空多选状态。
+  void _setCurrentPath(String path) {
+    setState(() {
+      _currentPath = path;
+      _selectedPaths = <String>{};
+    });
+    _refreshCurrentPath();
+  }
+
+  /// 更新排序方式并刷新当前列表。
+  void _setSort(String sort) {
+    setState(() {
+      _sort = sort;
+    });
+    _refreshCurrentPath();
   }
 
   /// 进入或切换多选状态。
@@ -159,7 +193,7 @@ class _FilesPageState extends ConsumerState<FilesPage> {
                       });
                       try {
                         await ref.read(fileRenameProvider)(item.path, newName);
-                        ref.invalidate(fileListProvider);
+                        _refreshCurrentPath();
                         if (context.mounted) Navigator.of(context).pop();
                       } catch (e) {
                         setState(() {
@@ -196,7 +230,7 @@ class _FilesPageState extends ConsumerState<FilesPage> {
 
     try {
       await ref.read(fileDeleteProvider)(item.path);
-      ref.invalidate(fileListProvider);
+      _refreshCurrentPath();
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.deleteSuccess)));
       }
@@ -370,10 +404,8 @@ class _FilesPageState extends ConsumerState<FilesPage> {
     }
 
     final actions = ref.read(filePageActionsProvider);
-    final path = ref.watch(currentPathProvider);
-    final sort = ref.watch(fileSortProvider);
-    final filesAsync = ref.watch(fileListProvider);
-    final canGoUp = path != '/';
+    final filesAsync = ref.watch(fileListProvider(_fileQuery));
+    final canGoUp = _currentPath != _rootPath;
     final activeTransferCount = ref.watch(activeTransferCountProvider);
 
     return PopScope(
@@ -381,10 +413,7 @@ class _FilesPageState extends ConsumerState<FilesPage> {
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
         if (canGoUp) {
-          final parentPath = actions.parentPathOf(path);
-          ref.read(currentPathProvider.notifier).state = parentPath;
-          ref.invalidate(fileListProvider);
-          _clearSelection();
+          _setCurrentPath(actions.parentPathOf(_currentPath));
         }
       },
       child: Scaffold(
@@ -438,23 +467,15 @@ class _FilesPageState extends ConsumerState<FilesPage> {
         body: Column(
           children: [
             FilesHeader(
-              path: path,
-              sort: sort,
+              path: _currentPath,
+              sort: _sort,
               canGoUp: canGoUp,
-              onRefresh: () => ref.invalidate(fileListProvider),
-              onSortSelected: (value) => ref.read(fileSortProvider.notifier).state = value,
-              onTapSegment: (selectedPath) {
-                ref.read(currentPathProvider.notifier).state = selectedPath;
-                _clearSelection();
-                ref.invalidate(fileListProvider);
-              },
-              onGoUp: () {
-                ref.read(currentPathProvider.notifier).state = actions.parentPathOf(path);
-                _clearSelection();
-                ref.invalidate(fileListProvider);
-              },
-              onUpload: () => actions.showUploadDialog(context, ref, path, _pickSingleFile),
-              onCreateFolder: () => actions.showCreateFolderDialog(context, ref, path),
+              onRefresh: _refreshCurrentPath,
+              onSortSelected: _setSort,
+              onTapSegment: _setCurrentPath,
+              onGoUp: () => _setCurrentPath(actions.parentPathOf(_currentPath)),
+              onUpload: () => actions.showUploadDialog(context, ref, _currentPath, _pickSingleFile),
+              onCreateFolder: () => actions.showCreateFolderDialog(context, ref, _currentPath),
             ),
             Expanded(
               child: filesAsync.when(
@@ -481,9 +502,7 @@ class _FilesPageState extends ConsumerState<FilesPage> {
                             return;
                           }
                           if (item.isDirectory) {
-                            ref.read(currentPathProvider.notifier).state = item.path;
-                            _clearSelection();
-                            ref.invalidate(fileListProvider);
+                            _setCurrentPath(item.path);
                             return;
                           }
                           if (FileTypeHelper.isTextPreviewable(item)) {
@@ -524,7 +543,7 @@ class _FilesPageState extends ConsumerState<FilesPage> {
                       children: [
                         Text('加载文件失败：${ErrorMapper.map(error).message}', style: const TextStyle(color: Colors.red)),
                         const SizedBox(height: 12),
-                        FilledButton(onPressed: () => ref.invalidate(fileListProvider), child: Text(l10n.retry)),
+                        FilledButton(onPressed: _refreshCurrentPath, child: Text(l10n.retry)),
                       ],
                     ),
                   ),
