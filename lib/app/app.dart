@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import '../features/auth/presentation/providers/auth_providers.dart';
+import '../features/external_share/models/shared_incoming_file.dart';
+import '../features/external_share/services/external_share_pending_store.dart';
 import '../features/external_share/services/external_share_service.dart';
 import '../features/preferences/providers/preferences_providers.dart';
 import '../l10n/app_localizations.dart';
@@ -20,22 +22,47 @@ class QunhuiManagerApp extends ConsumerStatefulWidget {
 
 class _QunhuiManagerAppState extends ConsumerState<QunhuiManagerApp> {
   StreamSubscription? _externalShareSubscription;
+  final ExternalSharePendingStore _pendingStore = const ExternalSharePendingStore();
 
   @override
   void initState() {
     super.initState();
     _externalShareSubscription = ExternalShareService.instance.watchIncomingFiles().listen((file) async {
-      await ExternalShareService.instance.reset();
-      if (!mounted) return;
-      appRouter.push('/external-upload', extra: file);
+      await _handleIncomingShare(file);
     }, onError: (_) {});
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final file = await ExternalShareService.instance.getInitialSharedFile();
       await ExternalShareService.instance.reset();
-      if (!mounted || file == null) return;
-      appRouter.push('/external-upload', extra: file);
+      if (mounted && file != null) {
+        await _handleIncomingShare(file);
+      }
+      await _consumePendingShareIfNeeded();
     });
+  }
+
+  Future<void> _handleIncomingShare(SharedIncomingFile file) async {
+    await ExternalShareService.instance.reset();
+    if (!mounted) return;
+
+    final restored = ref.read(restoreSessionProvider).valueOrNull ?? false;
+    if (!restored) {
+      await _pendingStore.save(file);
+      return;
+    }
+
+    appRouter.push('/external-upload', extra: file);
+  }
+
+  Future<void> _consumePendingShareIfNeeded() async {
+    final restored = ref.read(restoreSessionProvider).valueOrNull ?? false;
+    if (!restored) return;
+
+    final pending = await _pendingStore.load();
+    if (!mounted || pending == null) return;
+
+    await _pendingStore.clear();
+    appRouter.push('/external-upload', extra: pending);
   }
 
   @override

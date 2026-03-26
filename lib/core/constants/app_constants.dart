@@ -17,4 +17,5 @@ class AppConstants {
   static const localeKey = 'locale';
   static const downloadDirectoryKey = 'download_directory';
   static const transferHistoryKey = 'transfer_history';
+  static const pendingExternalShareKey = 'pending_external_share';
 }
