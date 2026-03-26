@@ -9,6 +9,7 @@ import '../../../../core/utils/time_util.dart';
 import '../../../../domain/entities/system_status.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../auth/presentation/providers/current_connection_readers.dart';
+import '../../../packages/presentation/providers/package_providers.dart';
 import '../providers/dashboard_providers.dart';
 import '../providers/dashboard_realtime_global.dart';
 import '../widgets/summary_card.dart';
@@ -63,6 +64,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with WidgetsBindi
     final realtimeState = ref.watch(globalRealtimeOverviewProvider);
     final currentServer = ref.watch(activeServerProvider);
     final currentSession = ref.watch(activeSessionProvider);
+    final dockerInstalledAsync = ref.watch(dockerFeatureInstalledProvider);
 
     if (currentServer == null || currentSession == null) {
       return Scaffold(
@@ -117,13 +119,14 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with WidgetsBindi
           const SizedBox(height: 16),
           _AppSection(
             items: [
-              _AppEntryItem(
-                icon: Icons.inventory_2_outlined,
-                label: '容器管理',
-                hint: '容器 / Compose / 镜像',
-                color: Colors.blueGrey,
-                onTap: () => context.push('/container-management'),
-              ),
+              if (dockerInstalledAsync.valueOrNull == true)
+                _AppEntryItem(
+                  icon: Icons.inventory_2_outlined,
+                  label: '容器管理',
+                  hint: '容器 / Compose / 镜像',
+                  color: Colors.blueGrey,
+                  onTap: () => context.push('/container-management'),
+                ),
               _AppEntryItem(
                 icon: Icons.sync_alt_rounded,
                 label: '传输中心',

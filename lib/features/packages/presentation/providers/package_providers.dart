@@ -32,6 +32,31 @@ final packageVolumesProvider = FutureProvider<List<PackageVolume>>((ref) async {
   return ref.read(packageRepositoryProvider).fetchVolumes();
 });
 
+/// 判断当前 NAS 是否已安装 Docker / Container Manager。
+///
+/// 这里复用套件列表数据做能力判断，避免额外新增一套探测链路。
+/// dsm_helper 里也是基于 DSM 应用标识来识别 Docker 入口：
+/// - `SYNO.SDS.Docker.Application`
+/// - `SYNO.SDS.ContainerManager.Application`
+final dockerFeatureInstalledProvider = FutureProvider<bool>((ref) async {
+  final installed = await ref.watch(installedPackagesProvider.future);
+
+  bool matches(PackageItem item) {
+    final appName = item.dsmAppName?.trim() ?? '';
+    final name = item.name.trim().toLowerCase();
+    final displayName = item.displayName.trim().toLowerCase();
+
+    return appName == 'SYNO.SDS.Docker.Application' ||
+        appName == 'SYNO.SDS.ContainerManager.Application' ||
+        name == 'docker' ||
+        name == 'container manager' ||
+        displayName == 'docker' ||
+        displayName == 'container manager';
+  }
+
+  return installed.any(matches);
+});
+
 final mergedPackagesProvider = FutureProvider<List<PackageItem>>((ref) async {
   final store = await ref.watch(storePackagesProvider.future);
   final installed = await ref.watch(installedPackagesProvider.future);
