@@ -5,7 +5,7 @@ import '../../../../core/widgets/sliding_tab_bar.dart';
 import '../../../../domain/entities/system_status.dart';
 import '../../../auth/presentation/providers/current_connection_readers.dart';
 import '../../../dashboard/presentation/providers/dashboard_providers.dart';
-import 'performance_history.dart';
+import '../state/performance_history.dart';
 import '../widgets/tab_content.dart';
 
 /// 性能监控页。
