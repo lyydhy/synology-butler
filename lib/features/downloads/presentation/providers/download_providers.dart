@@ -13,14 +13,11 @@ final downloadRepositoryProvider = Provider<DownloadRepository>((ref) {
   return DownloadRepositoryImpl(ref.read(downloadStationApiProvider));
 });
 
-final downloadFilterProvider = StateProvider<String>((ref) => 'all');
-
+/// 下载任务原始列表。
+///
+/// 筛选状态属于页面局部状态，因此不再在 provider 内耦合过滤逻辑。
 final downloadListProvider = FutureProvider<List<DownloadTask>>((ref) async {
-  final tasks = await ref.read(downloadRepositoryProvider).listTasks();
-
-  final filter = ref.watch(downloadFilterProvider);
-  if (filter == 'all') return tasks;
-  return tasks.where((task) => task.status == filter).toList();
+  return ref.read(downloadRepositoryProvider).listTasks();
 });
 
 final downloadActionProvider = Provider<Future<void> Function(String)>((ref) {

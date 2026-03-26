@@ -3,16 +3,33 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/error/error_mapper.dart';
 import '../../../../core/utils/download_status_helper.dart';
+import '../../../../domain/entities/download_task.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../auth/presentation/providers/current_connection_readers.dart';
-import '../../../../domain/entities/download_task.dart';
 import '../providers/download_providers.dart';
 import '../widgets/download_task_detail_sheet.dart';
 
-class DownloadsPage extends ConsumerWidget {
+/// 下载任务页面。
+///
+/// 筛选条件只影响当前页面展示，因此回归 Flutter 原生 State。
+class DownloadsPage extends ConsumerStatefulWidget {
   const DownloadsPage({super.key});
 
-  Future<void> _showAddTaskDialog(BuildContext context, WidgetRef ref) async {
+  @override
+  ConsumerState<DownloadsPage> createState() => _DownloadsPageState();
+}
+
+class _DownloadsPageState extends ConsumerState<DownloadsPage> {
+  static const String _allFilter = 'all';
+  static const String _downloadingFilter = 'downloading';
+  static const String _pausedFilter = 'paused';
+  static const String _finishedFilter = 'finished';
+
+  /// 当前页面使用的下载任务筛选条件。
+  String _selectedFilter = _allFilter;
+
+  /// 弹出新建下载任务对话框。
+  Future<void> _showAddTaskDialog(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
     final controller = TextEditingController();
     String? errorText;
@@ -70,6 +87,7 @@ class DownloadsPage extends ConsumerWidget {
     );
   }
 
+  /// 展示下载任务详情面板。
   void _showTaskDetail(BuildContext context, DownloadTask task) {
     showModalBottomSheet<void>(
       context: context,
@@ -78,7 +96,8 @@ class DownloadsPage extends ConsumerWidget {
     );
   }
 
-  Future<void> _handleTaskAction(BuildContext context, WidgetRef ref, DownloadTask task, String action) async {
+  /// 执行下载任务操作，例如暂停、恢复、删除。
+  Future<void> _handleTaskAction(BuildContext context, DownloadTask task, String action) async {
     final l10n = AppLocalizations.of(context);
     try {
       if (action == 'detail') {
@@ -117,8 +136,21 @@ class DownloadsPage extends ConsumerWidget {
     }
   }
 
+  /// 根据页面当前筛选条件过滤下载任务。
+  List<DownloadTask> _filterTasks(List<DownloadTask> tasks) {
+    if (_selectedFilter == _allFilter) {
+      return tasks;
+    }
+    return tasks.where((task) => task.status == _selectedFilter).toList();
+  }
+
+  /// 刷新下载任务列表。
+  Future<void> _refreshTasks() async {
+    ref.invalidate(downloadListProvider);
+  }
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final currentServer = ref.watch(activeServerProvider);
     final currentSession = ref.watch(activeSessionProvider);
@@ -127,7 +159,6 @@ class DownloadsPage extends ConsumerWidget {
       return Scaffold(appBar: AppBar(title: Text(l10n.downloadsTitle)), body: Center(child: Text(l10n.noSessionPleaseLogin)));
     }
 
-    final filter = ref.watch(downloadFilterProvider);
     final tasksAsync = ref.watch(downloadListProvider);
 
     return Scaffold(
@@ -139,25 +170,42 @@ class DownloadsPage extends ConsumerWidget {
             child: Wrap(
               spacing: 8,
               children: [
-                ChoiceChip(label: Text(l10n.downloadFilterAll), selected: filter == 'all', onSelected: (_) => ref.read(downloadFilterProvider.notifier).state = 'all'),
-                ChoiceChip(label: Text(l10n.downloadFilterDownloading), selected: filter == 'downloading', onSelected: (_) => ref.read(downloadFilterProvider.notifier).state = 'downloading'),
-                ChoiceChip(label: Text(l10n.downloadFilterPaused), selected: filter == 'paused', onSelected: (_) => ref.read(downloadFilterProvider.notifier).state = 'paused'),
-                ChoiceChip(label: Text(l10n.downloadFilterFinished), selected: filter == 'finished', onSelected: (_) => ref.read(downloadFilterProvider.notifier).state = 'finished'),
+                ChoiceChip(
+                  label: Text(l10n.downloadFilterAll),
+                  selected: _selectedFilter == _allFilter,
+                  onSelected: (_) => setState(() => _selectedFilter = _allFilter),
+                ),
+                ChoiceChip(
+                  label: Text(l10n.downloadFilterDownloading),
+                  selected: _selectedFilter == _downloadingFilter,
+                  onSelected: (_) => setState(() => _selectedFilter = _downloadingFilter),
+                ),
+                ChoiceChip(
+                  label: Text(l10n.downloadFilterPaused),
+                  selected: _selectedFilter == _pausedFilter,
+                  onSelected: (_) => setState(() => _selectedFilter = _pausedFilter),
+                ),
+                ChoiceChip(
+                  label: Text(l10n.downloadFilterFinished),
+                  selected: _selectedFilter == _finishedFilter,
+                  onSelected: (_) => setState(() => _selectedFilter = _finishedFilter),
+                ),
               ],
             ),
           ),
           Expanded(
             child: tasksAsync.when(
               data: (tasks) {
-                if (tasks.isEmpty) {
+                final visibleTasks = _filterTasks(tasks);
+                if (visibleTasks.isEmpty) {
                   return Center(child: Text(l10n.noTasksForFilter));
                 }
                 return RefreshIndicator(
-                  onRefresh: () async => ref.invalidate(downloadListProvider),
+                  onRefresh: _refreshTasks,
                   child: ListView.builder(
-                    itemCount: tasks.length,
+                    itemCount: visibleTasks.length,
                     itemBuilder: (context, index) {
-                      final task = tasks[index];
+                      final task = visibleTasks[index];
                       final isPaused = task.status == 'paused';
                       return Card(
                         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -172,7 +220,7 @@ class DownloadsPage extends ConsumerWidget {
                             ],
                           ),
                           trailing: PopupMenuButton<String>(
-                            onSelected: (value) => _handleTaskAction(context, ref, task, value),
+                            onSelected: (value) => _handleTaskAction(context, task, value),
                             itemBuilder: (context) => [
                               PopupMenuItem(value: 'detail', child: Text(l10n.detail)),
                               PopupMenuItem(value: isPaused ? 'resume' : 'pause', child: Text(isPaused ? l10n.resume : l10n.pause)),
@@ -198,7 +246,7 @@ class DownloadsPage extends ConsumerWidget {
                     children: [
                       Text('加载下载任务失败：${ErrorMapper.map(error).message}', style: const TextStyle(color: Colors.red)),
                       const SizedBox(height: 12),
-                      FilledButton(onPressed: () => ref.invalidate(downloadListProvider), child: Text(l10n.retry)),
+                      FilledButton(onPressed: _refreshTasks, child: Text(l10n.retry)),
                     ],
                   ),
                 ),
@@ -208,7 +256,7 @@ class DownloadsPage extends ConsumerWidget {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(onPressed: () => _showAddTaskDialog(context, ref), child: const Icon(Icons.add)),
+      floatingActionButton: FloatingActionButton(onPressed: () => _showAddTaskDialog(context), child: const Icon(Icons.add)),
     );
   }
 }
