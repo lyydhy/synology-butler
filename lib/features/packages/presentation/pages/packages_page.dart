@@ -7,16 +7,51 @@ import '../../../../domain/entities/package_volume.dart';
 import '../../../auth/presentation/providers/current_connection_readers.dart';
 import '../providers/package_providers.dart';
 
-class PackagesPage extends ConsumerWidget {
+/// 套件中心首页。
+///
+/// 这里把列表筛选页签收回页面本地状态；
+/// 安装流程状态仍通过 provider 在列表页和详情页之间共享。
+class PackagesPage extends ConsumerStatefulWidget {
   const PackagesPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<PackagesPage> createState() => _PackagesPageState();
+}
+
+class _PackagesPageState extends ConsumerState<PackagesPage> {
+  static const String _allTab = 'all';
+  static const String _installedTab = 'installed';
+  static const String _updatesTab = 'updates';
+
+  /// 当前页面选中的筛选页签。
+  String _selectedTab = _allTab;
+
+  /// 根据当前页签过滤展示的套件列表。
+  List<PackageItem> _filterItems(List<PackageItem> items) {
+    switch (_selectedTab) {
+      case _installedTab:
+        return items.where((item) => item.isInstalled).toList();
+      case _updatesTab:
+        return items.where((item) => item.canUpdate).toList();
+      default:
+        return items;
+    }
+  }
+
+  /// 刷新套件列表相关数据。
+  void _refreshPackages() {
+    ref.invalidate(storePackagesProvider);
+    ref.invalidate(installedPackagesProvider);
+    ref.invalidate(mergedPackagesProvider);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final server = ref.watch(activeServerProvider);
     final session = ref.watch(activeSessionProvider);
-    final selectedTab = ref.watch(packageTabProvider);
-    final packagesAsync = ref.watch(visiblePackagesProvider);
-    final installStatus = ref.watch(packageInstallStatusProvider);
+    final packagesAsync = ref.watch(mergedPackagesProvider);
+    final installState = ref.watch(packageInstallStateProvider);
+    final installStatus = installState.statusText;
 
     if (server == null || session == null) {
       return Scaffold(
@@ -31,12 +66,7 @@ class PackagesPage extends ConsumerWidget {
         actions: [
           IconButton(
             tooltip: '刷新',
-            onPressed: () {
-              ref.invalidate(storePackagesProvider);
-              ref.invalidate(installedPackagesProvider);
-              ref.invalidate(mergedPackagesProvider);
-              ref.invalidate(visiblePackagesProvider);
-            },
+            onPressed: _refreshPackages,
             icon: const Icon(Icons.refresh),
           ),
         ],
@@ -47,13 +77,15 @@ class PackagesPage extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
             child: SegmentedButton<String>(
               segments: const [
-                ButtonSegment(value: 'all', label: Text('全部')),
-                ButtonSegment(value: 'installed', label: Text('已安装')),
-                ButtonSegment(value: 'updates', label: Text('可更新')),
+                ButtonSegment(value: _allTab, label: Text('全部')),
+                ButtonSegment(value: _installedTab, label: Text('已安装')),
+                ButtonSegment(value: _updatesTab, label: Text('可更新')),
               ],
-              selected: {selectedTab},
+              selected: {_selectedTab},
               onSelectionChanged: (value) {
-                ref.read(packageTabProvider.notifier).state = value.first;
+                setState(() {
+                  _selectedTab = value.first;
+                });
               },
             ),
           ),
@@ -82,14 +114,15 @@ class PackagesPage extends ConsumerWidget {
           Expanded(
             child: packagesAsync.when(
               data: (items) {
-                if (items.isEmpty) {
+                final visibleItems = _filterItems(items);
+                if (visibleItems.isEmpty) {
                   return const Center(child: Text('暂无套件数据'));
                 }
                 return ListView.separated(
                   padding: const EdgeInsets.all(16),
-                  itemBuilder: (context, index) => _PackageCard(item: items[index]),
+                  itemBuilder: (context, index) => _PackageCard(item: visibleItems[index]),
                   separatorBuilder: (_, __) => const SizedBox(height: 12),
-                  itemCount: items.length,
+                  itemCount: visibleItems.length,
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
@@ -108,10 +141,11 @@ class PackagesPage extends ConsumerWidget {
 }
 
 class _PackageCard extends ConsumerWidget {
-  final PackageItem item;
-
   const _PackageCard({required this.item});
 
+  final PackageItem item;
+
+  /// 弹出底部面板，让用户选择安装卷。
   Future<String?> _pickVolume(BuildContext context, WidgetRef ref) async {
     final volumes = await ref.read(packageVolumesProvider.future);
     if (volumes.isEmpty || !context.mounted) return null;
@@ -136,6 +170,7 @@ class _PackageCard extends ConsumerWidget {
     );
   }
 
+  /// 当前套件状态对应的标签颜色。
   Color _statusColor(BuildContext context) {
     if (item.canUpdate) return Colors.orange;
     if (item.isRunning) return Colors.green;
@@ -143,6 +178,7 @@ class _PackageCard extends ConsumerWidget {
     return Colors.grey;
   }
 
+  /// 当前套件状态对应的标签文案。
   String _statusText() {
     if (item.canUpdate) return '可更新';
     if (item.isRunning) return '运行中';
@@ -152,8 +188,8 @@ class _PackageCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final installingId = ref.watch(packageInstallingProvider);
-    final isInstallingThis = installingId == item.id;
+    final installState = ref.watch(packageInstallStateProvider);
+    final isInstallingThis = installState.isInstalling(item.id);
 
     return InkWell(
       borderRadius: BorderRadius.circular(20),
@@ -297,7 +333,7 @@ class _PackageCard extends ConsumerWidget {
                             await ref.read(packagePrepareInstallProvider)(item);
                             if (!context.mounted) return;
 
-                            final impact = ref.read(packagePendingQueueImpactProvider);
+                            final impact = ref.read(packageInstallStateProvider).pendingQueueImpact;
                             if (impact != null && impact.pausedPackages.isNotEmpty) {
                               final confirmed = await showDialog<bool>(
                                     context: context,
@@ -352,9 +388,9 @@ class _PackageCard extends ConsumerWidget {
 }
 
 class _VolumeTile extends StatelessWidget {
-  final PackageVolume volume;
-
   const _VolumeTile({required this.volume});
+
+  final PackageVolume volume;
 
   @override
   Widget build(BuildContext context) {
@@ -374,10 +410,10 @@ class _VolumeTile extends StatelessWidget {
 }
 
 class _TagChip extends StatelessWidget {
+  const _TagChip({required this.text, required this.color});
+
   final String text;
   final Color color;
-
-  const _TagChip({required this.text, required this.color});
 
   @override
   Widget build(BuildContext context) {

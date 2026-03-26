@@ -6,11 +6,15 @@ import '../../../../domain/entities/package_item.dart';
 import '../../../../domain/entities/package_volume.dart';
 import '../providers/package_providers.dart';
 
+/// 套件详情页。
+///
+/// 详情页与列表页共享安装任务状态，因此只监听精简后的安装状态 provider。
 class PackageDetailPage extends ConsumerWidget {
-  final PackageItem item;
-
   const PackageDetailPage({super.key, required this.item});
 
+  final PackageItem item;
+
+  /// 选择套件安装所在的存储卷。
   Future<String?> _pickVolume(BuildContext context, WidgetRef ref) async {
     final volumes = await ref.read(packageVolumesProvider.future);
     if (volumes.isEmpty || !context.mounted) return null;
@@ -35,8 +39,9 @@ class PackageDetailPage extends ConsumerWidget {
     );
   }
 
+  /// 安装前提示可能被暂停的套件。
   Future<bool> _confirmQueueImpact(BuildContext context, WidgetRef ref) async {
-    final impact = ref.read(packagePendingQueueImpactProvider);
+    final impact = ref.read(packageInstallStateProvider).pendingQueueImpact;
     if (impact == null || impact.pausedPackages.isEmpty) {
       return true;
     }
@@ -65,9 +70,9 @@ class PackageDetailPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final installStatus = ref.watch(packageInstallStatusProvider);
-    final installingId = ref.watch(packageInstallingProvider);
-    final isInstallingThis = installingId == item.id;
+    final installState = ref.watch(packageInstallStateProvider);
+    final installStatus = installState.statusText;
+    final isInstallingThis = installState.isInstalling(item.id);
 
     return Scaffold(
       appBar: AppBar(title: Text(item.displayName)),
@@ -304,9 +309,9 @@ class PackageDetailPage extends ConsumerWidget {
 }
 
 class _ScreenshotFallback extends StatelessWidget {
-  final String url;
-
   const _ScreenshotFallback({required this.url});
+
+  final String url;
 
   @override
   Widget build(BuildContext context) {
@@ -332,10 +337,10 @@ class _ScreenshotFallback extends StatelessWidget {
 }
 
 class _InfoRow extends StatelessWidget {
+  const _InfoRow({required this.label, required this.value});
+
   final String label;
   final String value;
-
-  const _InfoRow({required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {
@@ -357,10 +362,10 @@ class _InfoRow extends StatelessWidget {
 }
 
 class _DetailChip extends StatelessWidget {
+  const _DetailChip({required this.text, required this.color});
+
   final String text;
   final Color color;
-
-  const _DetailChip({required this.text, required this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -379,9 +384,9 @@ class _DetailChip extends StatelessWidget {
 }
 
 class _DetailVolumeTile extends StatelessWidget {
-  final PackageVolume volume;
-
   const _DetailVolumeTile({required this.volume});
+
+  final PackageVolume volume;
 
   @override
   Widget build(BuildContext context) {
