@@ -42,27 +42,51 @@ class _ContainerManagementPageState extends ConsumerState<ContainerManagementPag
   /// 容器启停操作统一入口。
   Future<void> _toggleContainer(DockerContainerSummary item) async {
     final isRunning = item.status == 'running';
+    await _runContainerAction(
+      item: item,
+      successVerb: isRunning ? '停止' : '启动',
+      action: (api) => isRunning ? api.stopContainer(name: item.name) : api.startContainer(name: item.name),
+    );
+  }
+
+  Future<void> _restartContainer(DockerContainerSummary item) async {
+    await _runContainerAction(
+      item: item,
+      successVerb: '重启',
+      action: (api) => api.restartContainer(name: item.name),
+    );
+  }
+
+  Future<void> _forceStopContainer(DockerContainerSummary item) async {
+    await _runContainerAction(
+      item: item,
+      successVerb: '强制停止',
+      action: (api) => api.forceStopContainer(name: item.name),
+    );
+  }
+
+  Future<void> _runContainerAction({
+    required DockerContainerSummary item,
+    required String successVerb,
+    required Future<void> Function(DsmDockerApi api) action,
+  }) async {
     setState(() {
       _containerActionLoading.add(item.id);
     });
 
     try {
       final api = DsmDockerApi();
-      if (isRunning) {
-        await api.stopContainer(name: item.name);
-      } else {
-        await api.startContainer(name: item.name);
-      }
+      await action(api);
       if (!mounted) return;
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text('${isRunning ? '停止' : '启动'}容器成功：${item.name}')));
+        ..showSnackBar(SnackBar(content: Text('$successVerb容器成功：${item.name}')));
       _refreshOverview();
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text('${isRunning ? '停止' : '启动'}容器失败：$error')));
+        ..showSnackBar(SnackBar(content: Text('$successVerb容器失败：$error')));
     } finally {
       if (mounted) {
         setState(() {
@@ -130,6 +154,8 @@ class _ContainerManagementPageState extends ConsumerState<ContainerManagementPag
                         items: const [],
                         loadingIds: const <String>{},
                         onToggle: (_) async {},
+                        onRestart: (_) async {},
+                        onForceStop: (_) async {},
                       ),
                       const _ComposeListTab(isUnavailable: true),
                       const _ImageListTab(isUnavailable: true, items: []),
@@ -154,6 +180,8 @@ class _ContainerManagementPageState extends ConsumerState<ContainerManagementPag
                       items: data.containers,
                       loadingIds: _containerActionLoading,
                       onToggle: _toggleContainer,
+                      onRestart: _restartContainer,
+                      onForceStop: _forceStopContainer,
                     ),
                     const _ComposeListTab(isUnavailable: false),
                     _ImageListTab(isUnavailable: false, items: data.images),
@@ -226,12 +254,16 @@ class _ContainerListTab extends StatefulWidget {
     required this.items,
     required this.loadingIds,
     required this.onToggle,
+    required this.onRestart,
+    required this.onForceStop,
   });
 
   final bool isUnavailable;
   final List<DockerContainerSummary> items;
   final Set<String> loadingIds;
   final Future<void> Function(DockerContainerSummary item) onToggle;
+  final Future<void> Function(DockerContainerSummary item) onRestart;
+  final Future<void> Function(DockerContainerSummary item) onForceStop;
 
   @override
   State<_ContainerListTab> createState() => _ContainerListTabState();
@@ -273,6 +305,8 @@ class _ContainerListTabState extends State<_ContainerListTab> {
                         item: items[index],
                         loading: widget.loadingIds.contains(items[index].id),
                         onToggle: () => widget.onToggle(items[index]),
+                        onRestart: () => widget.onRestart(items[index]),
+                        onForceStop: () => widget.onForceStop(items[index]),
                       ),
                       separatorBuilder: (_, __) => const SizedBox(height: 12),
                       itemCount: items.length,
@@ -327,11 +361,15 @@ class _ContainerCard extends StatelessWidget {
     required this.item,
     required this.loading,
     required this.onToggle,
+    required this.onRestart,
+    required this.onForceStop,
   });
 
   final DockerContainerSummary item;
   final bool loading;
   final VoidCallback onToggle;
+  final VoidCallback onRestart;
+  final VoidCallback onForceStop;
 
   @override
   Widget build(BuildContext context) {
@@ -372,6 +410,24 @@ class _ContainerCard extends StatelessWidget {
                 ),
               ),
               _StatusChip(label: statusText, running: isRunning),
+              const SizedBox(width: 8),
+              PopupMenuButton<String>(
+                tooltip: '更多操作',
+                onSelected: (value) {
+                  switch (value) {
+                    case 'restart':
+                      onRestart();
+                      break;
+                    case 'forceStop':
+                      onForceStop();
+                      break;
+                  }
+                },
+                itemBuilder: (context) => const [
+                  PopupMenuItem(value: 'restart', child: Text('重启')),
+                  PopupMenuItem(value: 'forceStop', child: Text('强制停止')),
+                ],
+              ),
             ],
           ),
           const SizedBox(height: 12),

@@ -243,9 +243,18 @@ class DsmDockerApi {
     await _containerPowerAction(name: name, method: 'stop');
   }
 
+  Future<void> restartContainer({required String name}) async {
+    await _containerPowerAction(name: name, method: 'restart');
+  }
+
+  Future<void> forceStopContainer({required String name}) async {
+    await _containerPowerAction(name: name, method: 'signal', extraData: {'signal': '9'});
+  }
+
   Future<void> _containerPowerAction({
     required String name,
     required String method,
+    Map<String, String>? extraData,
   }) async {
     DsmLogger.request(
       module: 'Docker',
@@ -265,6 +274,7 @@ class DsmDockerApi {
         'method': method,
         'version': '1',
         'name': name,
+        ...?extraData,
       },
       options: _options(),
     );
