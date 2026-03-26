@@ -94,206 +94,144 @@ class _SlidingTabBarState extends State<SlidingTabBar> {
     final isDark = theme.brightness == Brightness.dark;
 
     final bgColor = widget.backgroundColor ??
-        (isDark
-            ? scheme.surfaceContainerHighest.withValues(alpha: 0.78)
-            : scheme.surfaceContainer.withValues(alpha: 0.90));
+        (isDark ? scheme.surfaceContainerHigh : scheme.surfaceContainerLow);
     final selectedClr = widget.selectedColor ?? scheme.primary;
     final unselectedClr = widget.unselectedColor ?? scheme.onSurfaceVariant;
     final indicatorClr = widget.indicatorColor ??
-        (isDark ? scheme.surfaceBright.withValues(alpha: 0.94) : scheme.surface.withValues(alpha: 0.96));
+        (isDark ? scheme.surfaceContainerHighest : scheme.surface);
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(widget.height / 2),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-        child: Container(
-          height: widget.height,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(widget.height / 2),
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                bgColor,
-                bgColor.withValues(alpha: isDark ? 0.88 : 0.96),
-              ],
-            ),
-            border: Border.all(
-              color: isDark
-                  ? scheme.outlineVariant.withValues(alpha: 0.35)
-                  : scheme.outlineVariant.withValues(alpha: 0.55),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: isDark ? 0.16 : 0.05),
-                blurRadius: isDark ? 20 : 16,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final totalWidth = constraints.maxWidth;
-              final tabWidth = totalWidth / widget.tabs.length;
-              final indicatorWidth = tabWidth - widget.horizontalPadding * 2;
+    return Container(
+      height: widget.height,
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(widget.height / 2),
+        border: Border.all(
+          color: isDark
+              ? scheme.outlineVariant.withValues(alpha: 0.32)
+              : scheme.outlineVariant.withValues(alpha: 0.65),
+        ),
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final totalWidth = constraints.maxWidth;
+          final tabWidth = totalWidth / widget.tabs.length;
+          final indicatorWidth = tabWidth - widget.horizontalPadding * 2;
 
-              final currentPage = _currentPageValue();
-              final normalizedProgress = widget.tabs.length > 1 ? currentPage / (widget.tabs.length - 1) : 0.0;
-              final offset = normalizedProgress * (totalWidth - tabWidth);
+          final currentPage = _currentPageValue();
+          final normalizedProgress = widget.tabs.length > 1 ? currentPage / (widget.tabs.length - 1) : 0.0;
+          final offset = normalizedProgress * (totalWidth - tabWidth);
 
-              return Stack(
-                children: [
-                  Positioned(
-                    left: offset + widget.horizontalPadding,
-                    top: 6,
-                    width: indicatorWidth,
-                    height: widget.height - 12,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(widget.indicatorBorderRadius),
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            indicatorClr,
-                            indicatorClr.withValues(alpha: isDark ? 0.90 : 0.98),
-                          ],
-                        ),
-                        border: Border.all(
-                          color: selectedClr.withValues(alpha: isDark ? 0.16 : 0.12),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: selectedClr.withValues(alpha: isDark ? 0.16 : 0.10),
-                            blurRadius: 18,
-                            offset: const Offset(0, 6),
-                          ),
-                          BoxShadow(
-                            color: Colors.white.withValues(alpha: isDark ? 0.04 : 0.42),
-                            blurRadius: 1,
-                            offset: const Offset(0, 1),
-                          ),
-                        ],
-                      ),
+          return Stack(
+            children: [
+              Positioned(
+                left: offset + widget.horizontalPadding,
+                top: 6,
+                width: indicatorWidth,
+                height: widget.height - 12,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: indicatorClr,
+                    borderRadius: BorderRadius.circular(widget.indicatorBorderRadius),
+                    border: Border.all(
+                      color: selectedClr.withValues(alpha: isDark ? 0.14 : 0.10),
                     ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: isDark ? 0.18 : 0.06),
+                        blurRadius: isDark ? 14 : 10,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
                   ),
-                  Positioned.fill(
-                    child: IgnorePointer(
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(widget.height / 2),
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              Colors.white.withValues(alpha: isDark ? 0.02 : 0.18),
-                              Colors.transparent,
+                ),
+              ),
+              Row(
+                children: List.generate(widget.tabs.length, (index) {
+                  final tab = widget.tabs[index];
+                  final distance = (currentPage - index).abs();
+                  final selection = (1 - distance).clamp(0.0, 1.0);
+                  final easedSelection = Curves.easeOutCubic.transform(selection);
+                  final contentColor = Color.lerp(
+                    unselectedClr.withValues(alpha: isDark ? 0.82 : 0.78),
+                    selectedClr,
+                    easedSelection,
+                  )!;
+                  final labelWeight = selection > 0.55 ? FontWeight.w700 : widget.fontWeight;
+                  final scale = lerpDouble(0.985, 1.0, easedSelection) ?? 1.0;
+
+                  return Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        widget.tabController.animateTo(index);
+                        widget.onTabSelected?.call(index);
+                      },
+                      behavior: HitTestBehavior.opaque,
+                      child: AnimatedScale(
+                        scale: scale,
+                        duration: const Duration(milliseconds: 160),
+                        curve: Curves.easeOutCubic,
+                        child: SizedBox(
+                          height: widget.height,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Stack(
+                                clipBehavior: Clip.none,
+                                children: [
+                                  Icon(
+                                    tab.icon,
+                                    size: widget.iconSize,
+                                    color: contentColor,
+                                  ),
+                                  if (tab.badge != null && tab.badge!.isNotEmpty)
+                                    Positioned(
+                                      top: -6,
+                                      right: -10,
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                                        constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                                        decoration: BoxDecoration(
+                                          color: selectedClr,
+                                          borderRadius: BorderRadius.circular(999),
+                                        ),
+                                        child: Text(
+                                          tab.badge!,
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            height: 1,
+                                            fontWeight: FontWeight.w800,
+                                            color: scheme.onPrimary,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              const SizedBox(height: 5),
+                              Text(
+                                tab.label,
+                                style: TextStyle(
+                                  fontSize: widget.fontSize,
+                                  fontWeight: labelWeight,
+                                  color: contentColor,
+                                  letterSpacing: 0.1,
+                                  height: 1,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ],
                           ),
                         ),
                       ),
                     ),
-                  ),
-                  Row(
-                    children: List.generate(widget.tabs.length, (index) {
-                      final tab = widget.tabs[index];
-                      final distance = (currentPage - index).abs();
-                      final selection = (1 - distance).clamp(0.0, 1.0);
-                      final easedSelection = Curves.easeOutCubic.transform(selection);
-                      final contentColor = Color.lerp(
-                        unselectedClr.withValues(alpha: isDark ? 0.78 : 0.72),
-                        selectedClr,
-                        easedSelection,
-                      )!;
-                      final labelWeight = selection > 0.55 ? FontWeight.w700 : widget.fontWeight;
-                      final scale = lerpDouble(0.975, 1.0, easedSelection) ?? 1.0;
-                      final verticalOffset = lerpDouble(1.5, 0, easedSelection) ?? 0;
-
-                      return Expanded(
-                        child: GestureDetector(
-                          onTap: () {
-                            widget.tabController.animateTo(index);
-                            widget.onTabSelected?.call(index);
-                          },
-                          behavior: HitTestBehavior.opaque,
-                          child: AnimatedScale(
-                            scale: scale,
-                            duration: const Duration(milliseconds: 160),
-                            curve: Curves.easeOutCubic,
-                            child: Transform.translate(
-                              offset: Offset(0, verticalOffset),
-                              child: SizedBox(
-                                height: widget.height,
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Stack(
-                                      clipBehavior: Clip.none,
-                                      children: [
-                                        Icon(
-                                          tab.icon,
-                                          size: widget.iconSize,
-                                          color: contentColor,
-                                        ),
-                                        if (tab.badge != null && tab.badge!.isNotEmpty)
-                                          Positioned(
-                                            top: -6,
-                                            right: -10,
-                                            child: Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                                              constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-                                              decoration: BoxDecoration(
-                                                color: selectedClr,
-                                                borderRadius: BorderRadius.circular(999),
-                                                boxShadow: [
-                                                  BoxShadow(
-                                                    color: selectedClr.withValues(alpha: 0.28),
-                                                    blurRadius: 8,
-                                                    offset: const Offset(0, 3),
-                                                  ),
-                                                ],
-                                              ),
-                                              child: Text(
-                                                tab.badge!,
-                                                textAlign: TextAlign.center,
-                                                style: TextStyle(
-                                                  fontSize: 10,
-                                                  height: 1,
-                                                  fontWeight: FontWeight.w800,
-                                                  color: scheme.onPrimary,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 5),
-                                    Text(
-                                      tab.label,
-                                      style: TextStyle(
-                                        fontSize: widget.fontSize,
-                                        fontWeight: labelWeight,
-                                        color: contentColor,
-                                        letterSpacing: 0.1,
-                                        height: 1,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    }),
-                  ),
-                ],
-              );
-            },
-          ),
-        ),
+                  );
+                }),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
