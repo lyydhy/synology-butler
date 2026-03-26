@@ -69,162 +69,183 @@ class DsmPackageApi implements PackageApi {
 
   @override
   Future<List<PackageItemModel>> fetchStorePackages({
-        bool others = false,
+    bool others = false,
     int version = 2,
   }) async {
-    final client = _dio;
     final action = others ? 'fetchThirdPartyStorePackages' : 'fetchStorePackages';
 
-    DsmLogger.request(
-      module: 'Package',
-      action: action,
-      method: 'POST',
-      path: '/webapi/entry.cgi',
-                        extra: {
-        'api': 'SYNO.Core.Package.Server',
-        'method': 'list',
-        'version': version,
-        'others': others,
-      },
-    );
+    Future<List<PackageItemModel>> requestWithVersion(int currentVersion) async {
+      final client = _dio;
 
-    final response = await client.post(
-      '/webapi/entry.cgi',
-      data: {
-        'api': 'SYNO.Core.Package.Server',
-        'version': version.toString(),
-        'method': 'list',
-        'updateSprite': 'true',
-        'blforcereload': 'false',
-        'blloadothers': others.toString(),
-              },
-      options: _buildOptions(),
-    );
-
-    final payload = response.data;
-    if (payload is Map && payload['success'] == true) {
-      final data = payload['data'] as Map? ?? const {};
-      final packages = (data['packages'] as List?) ?? (data['data'] as List?) ?? const [];
-      final betaPackages = (data['beta_packages'] as List?) ?? const [];
-      final merged = [...packages, ...betaPackages]
-          .whereType<Map>()
-          .map((item) => PackageItemModel.fromStorePayload(item))
-          .toList();
-
-      DsmLogger.success(
+      DsmLogger.request(
         module: 'Package',
         action: action,
+        method: 'POST',
         path: '/webapi/entry.cgi',
-        response: {
-          'count': merged.length,
-          'betaCount': betaPackages.length,
+        extra: {
+          'api': 'SYNO.Core.Package.Server',
+          'method': 'list',
+          'version': currentVersion,
+          'others': others,
         },
       );
 
-      return merged;
+      final response = await client.post(
+        '/webapi/entry.cgi',
+        data: {
+          'api': 'SYNO.Core.Package.Server',
+          'version': currentVersion.toString(),
+          'method': 'list',
+          'updateSprite': 'true',
+          'blforcereload': 'false',
+          'blloadothers': others.toString(),
+        },
+        options: _buildOptions(),
+      );
+
+      final payload = response.data;
+      if (payload is Map && payload['success'] == true) {
+        final data = payload['data'] as Map? ?? const {};
+        final packages = (data['packages'] as List?) ?? (data['data'] as List?) ?? const [];
+        final betaPackages = (data['beta_packages'] as List?) ?? const [];
+        final merged = [...packages, ...betaPackages]
+            .whereType<Map>()
+            .map((item) => PackageItemModel.fromStorePayload(item))
+            .toList();
+
+        DsmLogger.success(
+          module: 'Package',
+          action: action,
+          path: '/webapi/entry.cgi',
+          response: {
+            'count': merged.length,
+            'betaCount': betaPackages.length,
+            'version': currentVersion,
+          },
+        );
+
+        return merged;
+      }
+
+      DsmLogger.failure(
+        module: 'Package',
+        action: action,
+        path: '/webapi/entry.cgi',
+        response: payload,
+      );
+
+      throw DioException(
+        requestOptions: response.requestOptions,
+        error: _extractError(action: action, data: payload),
+        response: response,
+      );
     }
 
-    DsmLogger.failure(
-      module: 'Package',
-      action: action,
-      path: '/webapi/entry.cgi',
-      response: payload,
-                      );
-
-    throw DioException(
-      requestOptions: response.requestOptions,
-      error: _extractError(action: action, data: payload),
-      response: response,
-    );
+    try {
+      return await requestWithVersion(version);
+    } on DioException {
+      if (version != 2) rethrow;
+      return requestWithVersion(1);
+    }
   }
 
   @override
   Future<List<PackageItemModel>> fetchInstalledPackages({
-        int version = 2,
+    int version = 2,
   }) async {
-    final client = _dio;
-    final additional = [
-      'description',
-      'description_enu',
-      'beta',
-      'distributor',
-      'distributor_url',
-      'maintainer',
-      'maintainer_url',
-      'dsm_apps',
-      'report_beta_url',
-      'support_center',
-      'startable',
-      'installed_info',
-      'support_url',
-      'is_uninstall_pages',
-      'install_type',
-      'autoupdate',
-      'silent_upgrade',
-      'installing_progress',
-      'ctl_uninstall',
-      'status',
-      'url',
-      if (version >= 2) 'updated_at',
-    ];
+    Future<List<PackageItemModel>> requestWithVersion(int currentVersion) async {
+      final client = _dio;
+      final additional = [
+        'description',
+        'description_enu',
+        'beta',
+        'distributor',
+        'distributor_url',
+        'maintainer',
+        'maintainer_url',
+        'dsm_apps',
+        'report_beta_url',
+        'support_center',
+        'startable',
+        'installed_info',
+        'support_url',
+        'is_uninstall_pages',
+        'install_type',
+        'autoupdate',
+        'silent_upgrade',
+        'installing_progress',
+        'ctl_uninstall',
+        'status',
+        'url',
+        if (currentVersion >= 2) 'updated_at',
+      ];
 
-    DsmLogger.request(
-      module: 'Package',
-      action: 'fetchInstalledPackages',
-      method: 'POST',
-      path: '/webapi/entry.cgi',
-                        extra: {
-        'api': 'SYNO.Core.Package',
-        'method': 'list',
-        'version': version,
-      },
-    );
-
-    final response = await client.post(
-      '/webapi/entry.cgi',
-      data: {
-        'api': 'SYNO.Core.Package',
-        'version': version.toString(),
-        'method': 'list',
-        'polling_interval': '15',
-        'additional': jsonEncode(additional),
-              },
-      options: _buildOptions(),
-    );
-
-    final payload = response.data;
-    if (payload is Map && payload['success'] == true) {
-      final data = payload['data'] as Map? ?? const {};
-      final packages = (data['packages'] as List?) ?? const [];
-      final result = packages
-          .whereType<Map>()
-          .map((item) => PackageItemModel.fromInstalledPayload(item))
-          .toList();
-
-      DsmLogger.success(
+      DsmLogger.request(
         module: 'Package',
         action: 'fetchInstalledPackages',
+        method: 'POST',
         path: '/webapi/entry.cgi',
-        response: {
-          'count': result.length,
+        extra: {
+          'api': 'SYNO.Core.Package',
+          'method': 'list',
+          'version': currentVersion,
         },
       );
 
-      return result;
+      final response = await client.post(
+        '/webapi/entry.cgi',
+        data: {
+          'api': 'SYNO.Core.Package',
+          'version': currentVersion.toString(),
+          'method': 'list',
+          'polling_interval': '15',
+          'additional': jsonEncode(additional),
+        },
+        options: _buildOptions(),
+      );
+
+      final payload = response.data;
+      if (payload is Map && payload['success'] == true) {
+        final data = payload['data'] as Map? ?? const {};
+        final packages = (data['packages'] as List?) ?? const [];
+        final result = packages
+            .whereType<Map>()
+            .map((item) => PackageItemModel.fromInstalledPayload(item))
+            .toList();
+
+        DsmLogger.success(
+          module: 'Package',
+          action: 'fetchInstalledPackages',
+          path: '/webapi/entry.cgi',
+          response: {
+            'count': result.length,
+            'version': currentVersion,
+          },
+        );
+
+        return result;
+      }
+
+      DsmLogger.failure(
+        module: 'Package',
+        action: 'fetchInstalledPackages',
+        path: '/webapi/entry.cgi',
+        response: payload,
+      );
+
+      throw DioException(
+        requestOptions: response.requestOptions,
+        error: _extractError(action: 'fetchInstalledPackages', data: payload),
+        response: response,
+      );
     }
 
-    DsmLogger.failure(
-      module: 'Package',
-      action: 'fetchInstalledPackages',
-      path: '/webapi/entry.cgi',
-      response: payload,
-                      );
-
-    throw DioException(
-      requestOptions: response.requestOptions,
-      error: _extractError(action: 'fetchInstalledPackages', data: payload),
-      response: response,
-    );
+    try {
+      return await requestWithVersion(version);
+    } on DioException {
+      if (version != 2) rethrow;
+      return requestWithVersion(1);
+    }
   }
 
   @override
