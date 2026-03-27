@@ -94,58 +94,54 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with WidgetsBindi
     final realtimeFailed = realtimeState.hasError;
     final realtimeLoading = realtimeState.isLoading;
 
-    if (realtimeFailed) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        final messenger = ScaffoldMessenger.maybeOf(context);
-        messenger?.hideCurrentSnackBar();
-        messenger?.showSnackBar(
-          const SnackBar(content: Text('实时监控连接失败，已自动尝试刷新 token；页面已降级显示')),
-        );
-      });
-    }
-
     return Scaffold(
       appBar: AppBar(title: Text(l10n.dashboardTitle)),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
         children: [
           _HeroCard(
             title: data?.serverName ?? currentServer.name,
             subtitle: _buildSystemVersionText(data),
             connection: ServerUrlHelper.buildBaseUrl(currentServer),
             realtimeText: currentSession.synoToken == null || currentSession.synoToken!.isEmpty
-                ? 'SynoToken missing'
-                : realtimeFailed
-                    ? 'Realtime retry failed'
-                    : realtimeLoading
-                        ? 'Realtime connecting'
-                        : 'Realtime connected',
+                ? '实时服务准备中'
+                : realtimeLoading
+                    ? '实时连接中'
+                    : realtimeFailed
+                        ? '实时重连中'
+                        : '实时已连接',
           ),
           const SizedBox(height: 16),
           _AppSection(
+            title: '应用',
+            subtitle: '常用功能快捷入口',
             items: [
               if (dockerInstalledAsync.valueOrNull == true)
                 _AppEntryItem(
                   icon: Icons.inventory_2_outlined,
                   label: '容器管理',
-                    color: Colors.blueGrey,
+                  description: '查看容器与 Compose 项目',
+                  color: Colors.blueGrey,
                   onTap: () => context.push('/container-management'),
                 ),
               _AppEntryItem(
                 icon: Icons.sync_alt_rounded,
                 label: '传输中心',
+                description: '管理最近上传下载任务',
                 color: Colors.deepOrange,
                 onTap: () => context.push('/transfers'),
               ),
               _AppEntryItem(
                 icon: Icons.info_outline_rounded,
                 label: '信息中心',
+                description: '查看系统与存储详情',
                 color: Colors.indigo,
                 onTap: () => context.push('/information-center'),
               ),
               _AppEntryItem(
                 icon: Icons.monitor_heart_outlined,
                 label: '性能监控',
+                description: '查看 CPU 与内存状态',
                 color: Colors.teal,
                 onTap: () => context.push('/performance'),
               ),
@@ -177,13 +173,6 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with WidgetsBindi
           _VolumeSection(volumes: data?.volumes ?? const []),
           const SizedBox(height: 12),
           _UptimeCard(uptimeText: data?.uptimeText),
-          if (realtimeFailed) ...[
-            const SizedBox(height: 12),
-            const Text(
-              '实时资源监控当前连接失败，系统会尝试自动重新登录并重建会话；若仍失败，请重新登录并查看控制台日志。',
-              style: TextStyle(color: Colors.orange),
-            ),
-          ],
         ],
       ),
     );
@@ -220,46 +209,78 @@ class _HeroCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            theme.colorScheme.primaryContainer,
-            theme.colorScheme.secondaryContainer,
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(24),
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.7),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.search_rounded, color: theme.colorScheme.onSurfaceVariant),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    '搜索设备、功能或页面',
+                    style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                _StatusChip(label: realtimeText),
+              ],
+            ),
+          ),
+          const SizedBox(height: 18),
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                padding: const EdgeInsets.all(12),
+                width: 52,
+                height: 52,
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.surface.withValues(alpha: 0.7),
-                  borderRadius: BorderRadius.circular(16),
+                  color: theme.colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(18),
                 ),
-                child: const Icon(Icons.dns_outlined),
+                child: Icon(Icons.dns_outlined, color: theme.colorScheme.onPrimaryContainer),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
-                    const SizedBox(height: 4),
-                    Text(subtitle, style: theme.textTheme.bodyLarge),
+                    Text(
+                      title,
+                      style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      subtitle,
+                      style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      connection,
+                      style: theme.textTheme.labelLarge?.copyWith(color: theme.colorScheme.primary),
+                    ),
                   ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          Text(connection, style: theme.textTheme.bodyMedium),
-          const SizedBox(height: 8),
-          Text(realtimeText, style: theme.textTheme.labelLarge),
         ],
       ),
     );
@@ -267,23 +288,54 @@ class _HeroCard extends StatelessWidget {
 }
 
 class _AppSection extends StatelessWidget {
-  const _AppSection({required this.items});
+  const _AppSection({
+    required this.title,
+    required this.subtitle,
+    required this.items,
+  });
 
+  final String title;
+  final String subtitle;
   final List<_AppEntryItem> items;
 
   @override
   Widget build(BuildContext context) {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: items.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        mainAxisSpacing: 10,
-        crossAxisSpacing: 10,
-        childAspectRatio: 1.05,
+    final theme = Theme.of(context);
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.45)),
       ),
-      itemBuilder: (context, index) => _AppEntryCard(item: items[index]),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            subtitle,
+            style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+          ),
+          const SizedBox(height: 14),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: items.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              mainAxisSpacing: 10,
+              crossAxisSpacing: 10,
+              childAspectRatio: 1.18,
+            ),
+            itemBuilder: (context, index) => _AppEntryCard(item: items[index]),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -292,12 +344,14 @@ class _AppEntryItem {
   const _AppEntryItem({
     required this.icon,
     required this.label,
+    required this.description,
     required this.color,
     required this.onTap,
   });
 
   final IconData icon;
   final String label;
+  final String description;
   final Color color;
   final VoidCallback onTap;
 }
@@ -314,33 +368,32 @@ class _AppEntryCard extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(20),
         onTap: item.onTap,
         child: Ink(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
-            color: theme.colorScheme.surface,
-            border: Border.all(color: item.color.withValues(alpha: 0.10)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.02),
-                blurRadius: 8,
-                offset: const Offset(0, 3),
-              ),
-            ],
+            borderRadius: BorderRadius.circular(20),
+            color: item.color.withValues(alpha: 0.08),
+            border: Border.all(color: item.color.withValues(alpha: 0.14)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: item.color.withValues(alpha: 0.13),
-                  borderRadius: BorderRadius.circular(13),
-                ),
-                child: Icon(item.icon, color: item.color, size: 20),
+              Row(
+                children: [
+                  Container(
+                    width: 42,
+                    height: 42,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surface.withValues(alpha: 0.9),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Icon(item.icon, color: item.color, size: 20),
+                  ),
+                  const Spacer(),
+                  Icon(Icons.chevron_right_rounded, color: theme.colorScheme.onSurfaceVariant, size: 20),
+                ],
               ),
               const Spacer(),
               Text(
@@ -349,8 +402,43 @@ class _AppEntryCard extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
               ),
+              const SizedBox(height: 4),
+              Text(
+                item.description,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  height: 1.35,
+                ),
+              ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _StatusChip extends StatelessWidget {
+  const _StatusChip({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primary.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: theme.textTheme.labelMedium?.copyWith(
+          color: theme.colorScheme.primary,
+          fontWeight: FontWeight.w700,
         ),
       ),
     );
