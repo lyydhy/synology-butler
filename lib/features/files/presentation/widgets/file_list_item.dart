@@ -97,23 +97,23 @@ class FileListItem extends ConsumerWidget {
 
   String _buildSubtitle() {
     final modified = item.modifiedAt;
-    if (modified == null) {
-      return item.isDirectory ? '修改时间 --' : '修改时间 -- · ${FileSizeFormatter.format(item.size)}';
+    final timeText = modified == null ? '--' : _formatModifiedTime(modified);
+
+    if (item.isDirectory) {
+      return timeText;
     }
 
+    final size = FileSizeFormatter.format(item.size);
+    return '$timeText · $size';
+  }
+
+  String _formatModifiedTime(DateTime modified) {
     final local = modified.toLocal();
     final mm = local.month.toString().padLeft(2, '0');
     final dd = local.day.toString().padLeft(2, '0');
     final hh = local.hour.toString().padLeft(2, '0');
     final mi = local.minute.toString().padLeft(2, '0');
-    final timeText = '${local.year}-$mm-$dd $hh:$mi';
-
-    if (item.isDirectory) {
-      return '修改时间 $timeText';
-    }
-
-    final size = FileSizeFormatter.format(item.size);
-    return '修改时间 $timeText · $size';
+    return '${local.year}-$mm-$dd $hh:$mi';
   }
 }
 
