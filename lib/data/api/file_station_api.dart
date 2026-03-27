@@ -232,11 +232,14 @@ class DsmFileStationApi implements FileStationApi {
       );
       return items.whereType<Map>().map((map) {
         final additional = map['additional'] as Map? ?? const {};
+        final time = additional['time'] as Map? ?? const {};
+        final modifiedSeconds = (time['mtime'] as num?)?.toInt();
         return FileItem(
           name: (map['name'] ?? '').toString(),
           path: (map['path'] ?? additional['real_path'] ?? '').toString(),
           isDirectory: ((map['isdir'] ?? false) == true),
           size: (additional['size'] as num?)?.toInt() ?? 0,
+          modifiedAt: modifiedSeconds == null ? null : DateTime.fromMillisecondsSinceEpoch(modifiedSeconds * 1000),
         );
       }).toList();
     }
