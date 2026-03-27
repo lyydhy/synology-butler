@@ -15,7 +15,9 @@ import 'router.dart';
 import 'theme/app_theme.dart';
 
 class QunhuiManagerApp extends ConsumerStatefulWidget {
-  const QunhuiManagerApp({super.key});
+  const QunhuiManagerApp({super.key, required this.initialLocation});
+
+  final String initialLocation;
 
   @override
   ConsumerState<QunhuiManagerApp> createState() => _QunhuiManagerAppState();
@@ -24,6 +26,7 @@ class QunhuiManagerApp extends ConsumerStatefulWidget {
 class _QunhuiManagerAppState extends ConsumerState<QunhuiManagerApp> {
   StreamSubscription? _externalShareSubscription;
   final ExternalSharePendingStore _pendingStore = const ExternalSharePendingStore();
+  late final _router = createAppRouter(initialLocation: widget.initialLocation);
 
   @override
   void initState() {
@@ -82,7 +85,7 @@ class _QunhuiManagerAppState extends ConsumerState<QunhuiManagerApp> {
         Locale('zh'),
         Locale('en'),
       ],
-      routerConfig: appRouter,
+      routerConfig: _router,
       debugShowCheckedModeBanner: false,
     );
   }

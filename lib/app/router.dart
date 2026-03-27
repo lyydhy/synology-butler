@@ -29,10 +29,11 @@ import '../features/transfers/presentation/pages/transfers_page.dart';
 
 final GlobalKey<NavigatorState> appNavigatorKey = GlobalKey<NavigatorState>();
 
-final GoRouter appRouter = GoRouter(
-  navigatorKey: appNavigatorKey,
-  initialLocation: '/splash',
-  routes: [
+GoRouter createAppRouter({required String initialLocation}) {
+  return GoRouter(
+    navigatorKey: appNavigatorKey,
+    initialLocation: initialLocation,
+    routes: [
     GoRoute(path: '/splash', builder: (context, state) => const SplashPage()),
     GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
     GoRoute(path: '/home', builder: (context, state) => const MainShellPage()),
@@ -168,5 +169,6 @@ final GoRouter appRouter = GoRouter(
         );
       },
     ),
-  ],
-);
+    ],
+  );
+}
