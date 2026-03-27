@@ -164,7 +164,7 @@ class _ContainerManagementPageState extends ConsumerState<ContainerManagementPag
                         onRestart: (_) async {},
                         onForceStop: (_) async {},
                       ),
-                      const _ComposeListTab(isUnavailable: true, containers: []),
+                      const _ComposeListTab(isUnavailable: true, containers: [], projects: []),
                       const _ImageListTab(isUnavailable: true, items: []),
                     ],
                   );
@@ -178,7 +178,7 @@ class _ContainerManagementPageState extends ConsumerState<ContainerManagementPag
                   return _DockerErrorState(onRetry: _refreshOverview);
                 }
 
-                final data = snapshot.data ?? const DockerOverviewData(containers: [], images: []);
+                final data = snapshot.data ?? const DockerOverviewData(containers: [], images: [], projects: []);
                 return TabBarView(
                   controller: _tabController,
                   children: [
@@ -190,7 +190,11 @@ class _ContainerManagementPageState extends ConsumerState<ContainerManagementPag
                       onRestart: _restartContainer,
                       onForceStop: _forceStopContainer,
                     ),
-                    _ComposeListTab(isUnavailable: false, containers: data.containers),
+                    _ComposeListTab(
+                      isUnavailable: false,
+                      containers: data.containers,
+                      projects: data.projects,
+                    ),
                     _ImageListTab(isUnavailable: false, items: data.images),
                   ],
                 );
@@ -325,10 +329,15 @@ class _ContainerListTabState extends State<_ContainerListTab> {
 }
 
 class _ComposeListTab extends StatefulWidget {
-  const _ComposeListTab({required this.isUnavailable, required this.containers});
+  const _ComposeListTab({
+    required this.isUnavailable,
+    required this.containers,
+    required this.projects,
+  });
 
   final bool isUnavailable;
   final List<DockerContainerSummary> containers;
+  final List<DockerComposeProjectSummary> projects;
 
   @override
   State<_ComposeListTab> createState() => _ComposeListTabState();
@@ -341,12 +350,12 @@ class _ComposeListTabState extends State<_ComposeListTab> {
   Widget build(BuildContext context) {
     if (widget.isUnavailable) return const _UnavailablePlaceholder();
 
-    final groups = _buildComposeGroups(widget.containers);
+    final items = _buildComposeProjects(
+      projects: widget.projects,
+      containers: widget.containers,
+      searchQuery: _searchQuery,
+    );
     final normalizedQuery = _searchQuery.trim().toLowerCase();
-    final items = groups.where((item) {
-      if (normalizedQuery.isEmpty) return true;
-      return item.name.toLowerCase().contains(normalizedQuery);
-    }).toList();
 
     return Column(
       children: [
@@ -367,7 +376,7 @@ class _ComposeListTabState extends State<_ComposeListTab> {
           child: Align(
             alignment: Alignment.centerLeft,
             child: Text(
-              '当前基于容器名称自动聚合项目视图，后续可替换为 DSM Compose 原生接口。',
+              widget.projects.isEmpty ? '当前未获取到 DSM Compose 项目。' : '当前使用 DSM / Container Manager 原生 Compose 项目数据。',
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ),
@@ -632,7 +641,12 @@ class _ComposeCard extends StatelessWidget {
               children: [
                 Text(item.name, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
                 const SizedBox(height: 4),
-                Text('容器数：${item.containerCount}', style: theme.textTheme.bodySmall),
+                Text(
+                  item.path.isEmpty ? '容器数：${item.containerCount}' : '容器数：${item.containerCount} · ${item.path}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodySmall,
+                ),
               ],
             ),
           ),
@@ -715,6 +729,26 @@ class _ComposeProjectSheet extends StatelessWidget {
                   ),
                 ],
               ),
+              const SizedBox(height: 12),
+              if (item.path.isNotEmpty)
+                Text(
+                  '路径：${item.path}',
+                  style: theme.textTheme.bodyMedium,
+                ),
+              if (item.updatedAt.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                Text(
+                  '更新时间：${item.updatedAt}',
+                  style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                ),
+              ],
+              if (item.rawState.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                Text(
+                  '状态细节：${item.rawState}',
+                  style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                ),
+              ],
               const SizedBox(height: 16),
               Text(
                 '项目内容器',
@@ -905,56 +939,69 @@ class _ComposeUiItem {
     required this.status,
     required this.containerCount,
     required this.containers,
+    required this.path,
+    required this.updatedAt,
+    required this.rawStatus,
+    required this.rawState,
   });
 
   final String name;
   final String status;
   final int containerCount;
   final List<DockerContainerSummary> containers;
+  final String path;
+  final String updatedAt;
+  final String rawStatus;
+  final String rawState;
 }
 
-List<_ComposeUiItem> _buildComposeGroups(List<DockerContainerSummary> containers) {
-  final grouped = <String, List<DockerContainerSummary>>{};
+List<_ComposeUiItem> _buildComposeProjects({
+  required List<DockerComposeProjectSummary> projects,
+  required List<DockerContainerSummary> containers,
+  required String searchQuery,
+}) {
+  final containerById = <String, DockerContainerSummary>{for (final item in containers) item.id: item};
+  final normalizedQuery = searchQuery.trim().toLowerCase();
 
-  for (final item in containers) {
-    final projectName = _guessComposeProjectName(item.name);
-    grouped.putIfAbsent(projectName, () => <DockerContainerSummary>[]).add(item);
-  }
-
-  final projects = grouped.entries.map((entry) {
-    final values = entry.value;
-    final runningCount = values.where((item) => item.status == 'running').length;
-    final status = runningCount == values.length
-        ? '运行中'
-        : runningCount == 0
-            ? '已停止'
-            : '部分运行';
+  final mapped = projects.map((project) {
+    final matchedContainers = project.containerIds
+        .map((id) => containerById[id])
+        .whereType<DockerContainerSummary>()
+        .toList();
 
     return _ComposeUiItem(
-      name: entry.key,
-      status: status,
-      containerCount: values.length,
-      containers: values,
+      name: project.name,
+      status: _composeStatusText(project.status),
+      containerCount: project.containerIds.length,
+      containers: matchedContainers,
+      path: project.path,
+      updatedAt: project.updatedAt,
+      rawStatus: project.status,
+      rawState: project.state,
     );
+  }).where((item) {
+    if (normalizedQuery.isEmpty) return true;
+    return item.name.toLowerCase().contains(normalizedQuery) ||
+        item.path.toLowerCase().contains(normalizedQuery) ||
+        item.rawStatus.toLowerCase().contains(normalizedQuery) ||
+        item.rawState.toLowerCase().contains(normalizedQuery);
   }).toList()
     ..sort((a, b) => a.name.compareTo(b.name));
 
-  return projects;
+  return mapped;
 }
 
-String _guessComposeProjectName(String containerName) {
-  final normalized = containerName.trim();
-  if (normalized.isEmpty) return '未命名项目';
-
-  if (normalized.contains('-')) {
-    final parts = normalized.split('-');
-    if (parts.length >= 2) return parts.first;
+String _composeStatusText(String status) {
+  switch (status.toUpperCase()) {
+    case 'RUNNING':
+      return '运行中';
+    case 'STOPPED':
+      return '已停止';
+    case 'BUILD_FAILED':
+      return '构建失败';
+    case 'FAILED':
+      return '失败';
+    default:
+      return status.isEmpty ? '未知' : status;
   }
-
-  if (normalized.contains('_')) {
-    final parts = normalized.split('_');
-    if (parts.length >= 2) return parts.first;
-  }
-
-  return normalized;
 }

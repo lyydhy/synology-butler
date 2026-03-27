@@ -35,14 +35,36 @@ class DockerImageSummary {
   final String sizeText;
 }
 
+class DockerComposeProjectSummary {
+  const DockerComposeProjectSummary({
+    required this.id,
+    required this.name,
+    required this.status,
+    required this.state,
+    required this.path,
+    required this.containerIds,
+    required this.updatedAt,
+  });
+
+  final String id;
+  final String name;
+  final String status;
+  final String state;
+  final String path;
+  final List<String> containerIds;
+  final String updatedAt;
+}
+
 class DockerOverviewData {
   const DockerOverviewData({
     required this.containers,
     required this.images,
+    required this.projects,
   });
 
   final List<DockerContainerSummary> containers;
   final List<DockerImageSummary> images;
+  final List<DockerComposeProjectSummary> projects;
 }
 
 class DockerContainerDetail {
@@ -253,6 +275,58 @@ class DsmDockerApi {
     return const [];
   }
 
+  Future<List<DockerComposeProjectSummary>> fetchProjects() async {
+    DsmLogger.request(
+      module: 'Docker',
+      action: 'fetchProjects',
+      method: 'POST',
+      path: '/webapi/entry.cgi',
+      extra: {'api': 'SYNO.Docker.Project'},
+    );
+
+    final response = await _dio.post(
+      '/webapi/entry.cgi',
+      data: {
+        'api': 'SYNO.Docker.Project',
+        'method': 'list',
+        'version': '1',
+      },
+      options: _options(),
+    );
+
+    final payload = response.data;
+    if (payload is Map && payload['success'] == true) {
+      final data = payload['data'] as Map? ?? const {};
+      final projects = data.values.whereType<Map>().map((item) {
+        return DockerComposeProjectSummary(
+          id: (item['id'] ?? '').toString(),
+          name: (item['name'] ?? '').toString(),
+          status: (item['status'] ?? '').toString(),
+          state: (item['state'] ?? '').toString(),
+          path: (item['path'] ?? item['share_path'] ?? '').toString(),
+          containerIds: ((item['containerIds'] as List?) ?? const []).map((e) => e.toString()).toList(),
+          updatedAt: (item['updated_at'] ?? '').toString(),
+        );
+      }).toList()
+        ..sort((a, b) => a.name.compareTo(b.name));
+
+      DsmLogger.success(
+        module: 'Docker',
+        action: 'fetchProjects',
+        path: '/webapi/entry.cgi',
+        response: {'count': projects.length},
+      );
+
+      return projects;
+    }
+
+    throw DioException(
+      requestOptions: response.requestOptions,
+      response: response,
+      error: _extractError(action: 'fetchProjects', data: payload),
+    );
+  }
+
   Future<void> startContainer({required String name}) async {
     await _containerPowerAction(name: name, method: 'start');
   }
@@ -433,6 +507,11 @@ class DsmDockerApi {
   Future<DockerOverviewData> fetchOverview() async {
     final containers = await fetchContainers();
     final images = await fetchImages();
-    return DockerOverviewData(containers: containers, images: images);
+    final projects = await fetchProjects();
+    return DockerOverviewData(
+      containers: containers,
+      images: images,
+      projects: projects,
+    );
   }
 }
