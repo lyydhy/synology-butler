@@ -33,17 +33,46 @@ class _ComposeProjectBuildLogsPageState extends State<ComposeProjectBuildLogsPag
     _start();
   }
 
-  String get _title => widget.mode == 'stop' ? '${widget.name} 停止日志' : '${widget.name} 构建日志';
+  String get _title {
+    switch (widget.mode) {
+      case 'start':
+        return '${widget.name} 启动日志';
+      case 'stop':
+        return '${widget.name} 停止日志';
+      default:
+        return '${widget.name} 构建日志';
+    }
+  }
 
-  String get _runningText => widget.mode == 'stop' ? '正在停止 Compose 项目…' : '正在构建并启动 Compose 项目…';
+  String get _runningText {
+    switch (widget.mode) {
+      case 'start':
+        return '正在启动 Compose 项目…';
+      case 'stop':
+        return '正在停止 Compose 项目…';
+      default:
+        return '正在构建并启动 Compose 项目…';
+    }
+  }
 
-  String get _successText => widget.mode == 'stop' ? '停止完成' : '构建并启动完成';
+  String get _successText {
+    switch (widget.mode) {
+      case 'start':
+        return '启动完成';
+      case 'stop':
+        return '停止完成';
+      default:
+        return '构建并启动完成';
+    }
+  }
 
   Future<void> _start() async {
     try {
-      final stream = widget.mode == 'stop'
-          ? DsmDockerApi().stopProjectStream(id: widget.id)
-          : DsmDockerApi().buildProjectStream(id: widget.id);
+      final stream = switch (widget.mode) {
+        'start' => DsmDockerApi().startProjectStream(id: widget.id),
+        'stop' => DsmDockerApi().stopProjectStream(id: widget.id),
+        _ => DsmDockerApi().buildProjectStream(id: widget.id),
+      };
       _subscription = stream.listen(
         (chunk) {
           if (!mounted) return;

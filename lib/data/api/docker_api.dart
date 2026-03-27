@@ -485,6 +485,10 @@ class DsmDockerApi {
     return _projectActionStream(id: id, method: 'build_stream', action: 'buildProjectStream', errorLabel: '构建日志');
   }
 
+  Stream<String> startProjectStream({required String id}) {
+    return _projectActionStream(id: id, method: 'start_stream', action: 'startProjectStream', errorLabel: '启动日志');
+  }
+
   Stream<String> stopProjectStream({required String id}) {
     return _projectActionStream(id: id, method: 'stop_stream', action: 'stopProjectStream', errorLabel: '停止日志');
   }
