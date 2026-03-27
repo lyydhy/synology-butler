@@ -39,6 +39,8 @@ class _ComposeProjectBuildLogsPageState extends State<ComposeProjectBuildLogsPag
         return '${widget.name} 启动日志';
       case 'stop':
         return '${widget.name} 停止日志';
+      case 'restart':
+        return '${widget.name} 重启日志';
       default:
         return '${widget.name} 构建日志';
     }
@@ -50,6 +52,8 @@ class _ComposeProjectBuildLogsPageState extends State<ComposeProjectBuildLogsPag
         return '正在启动 Compose 项目…';
       case 'stop':
         return '正在停止 Compose 项目…';
+      case 'restart':
+        return '正在重启 Compose 项目…';
       default:
         return '正在构建并启动 Compose 项目…';
     }
@@ -61,6 +65,8 @@ class _ComposeProjectBuildLogsPageState extends State<ComposeProjectBuildLogsPag
         return '启动完成';
       case 'stop':
         return '停止完成';
+      case 'restart':
+        return '重启完成';
       default:
         return '构建并启动完成';
     }
@@ -71,6 +77,7 @@ class _ComposeProjectBuildLogsPageState extends State<ComposeProjectBuildLogsPag
       final stream = switch (widget.mode) {
         'start' => DsmDockerApi().startProjectStream(id: widget.id),
         'stop' => DsmDockerApi().stopProjectStream(id: widget.id),
+        'restart' => DsmDockerApi().restartProjectStream(id: widget.id),
         _ => DsmDockerApi().buildProjectStream(id: widget.id),
       };
       _subscription = stream.listen(

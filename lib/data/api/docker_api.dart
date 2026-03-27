@@ -493,6 +493,10 @@ class DsmDockerApi {
     return _projectActionStream(id: id, method: 'stop_stream', action: 'stopProjectStream', errorLabel: '停止日志');
   }
 
+  Stream<String> restartProjectStream({required String id}) {
+    return _projectActionStream(id: id, method: 'restart_stream', action: 'restartProjectStream', errorLabel: '重启日志');
+  }
+
   Stream<String> _projectActionStream({
     required String id,
     required String method,

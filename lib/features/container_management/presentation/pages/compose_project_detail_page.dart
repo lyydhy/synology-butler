@@ -71,6 +71,14 @@ class _ComposeProjectDetailPageState extends State<ComposeProjectDetailPage>
             ),
             icon: const Icon(Icons.stop_circle_outlined),
           ),
+          IconButton(
+            tooltip: '重启项目',
+            onPressed: () => context.push(
+              '/container-management/compose-build-logs',
+              extra: {'id': widget.id, 'name': widget.name, 'mode': 'restart'},
+            ),
+            icon: const Icon(Icons.restart_alt_rounded),
+          ),
           IconButton(onPressed: _refresh, icon: const Icon(Icons.refresh_rounded)),
         ],
       ),
