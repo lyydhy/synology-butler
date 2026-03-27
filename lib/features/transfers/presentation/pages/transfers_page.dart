@@ -55,59 +55,72 @@ class _TransfersPageState extends ConsumerState<TransfersPage> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-            child: _OverviewCard(
-              totalCount: tasks.length,
-              activeCount: activeTasks.length,
-              successCount: successTasks.length,
-              failedCount: failedTasks.length,
-              onClearSuccess: controller.clearCompleted,
-              onClearFailed: controller.clearFailed,
+      body: CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              child: _OverviewCard(
+                totalCount: tasks.length,
+                activeCount: activeTasks.length,
+                successCount: successTasks.length,
+                failedCount: failedTasks.length,
+                onClearSuccess: controller.clearCompleted,
+                onClearFailed: controller.clearFailed,
+              ),
             ),
           ),
-          SizedBox(
-            height: 44,
-            child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              scrollDirection: Axis.horizontal,
-              children: [
-                _FilterChip(
-                  label: '全部',
-                  count: tasks.length,
-                  selected: _filter == _TransferFilter.all,
-                  onTap: () => setState(() => _filter = _TransferFilter.all),
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: _TransferFilterHeaderDelegate(
+              minExtent: 52,
+              maxExtent: 52,
+              child: Container(
+                color: Theme.of(context).scaffoldBackgroundColor,
+                alignment: Alignment.center,
+                child: SizedBox(
+                  height: 44,
+                  child: ListView(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    scrollDirection: Axis.horizontal,
+                    children: [
+                      _FilterChip(
+                        label: '全部',
+                        count: tasks.length,
+                        selected: _filter == _TransferFilter.all,
+                        onTap: () => setState(() => _filter = _TransferFilter.all),
+                      ),
+                      const SizedBox(width: 8),
+                      _FilterChip(
+                        label: '进行中',
+                        count: activeTasks.length,
+                        selected: _filter == _TransferFilter.active,
+                        onTap: () => setState(() => _filter = _TransferFilter.active),
+                      ),
+                      const SizedBox(width: 8),
+                      _FilterChip(
+                        label: '已完成',
+                        count: successTasks.length,
+                        selected: _filter == _TransferFilter.success,
+                        onTap: () => setState(() => _filter = _TransferFilter.success),
+                      ),
+                      const SizedBox(width: 8),
+                      _FilterChip(
+                        label: '失败',
+                        count: failedTasks.length,
+                        selected: _filter == _TransferFilter.failed,
+                        onTap: () => setState(() => _filter = _TransferFilter.failed),
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(width: 8),
-                _FilterChip(
-                  label: '进行中',
-                  count: activeTasks.length,
-                  selected: _filter == _TransferFilter.active,
-                  onTap: () => setState(() => _filter = _TransferFilter.active),
-                ),
-                const SizedBox(width: 8),
-                _FilterChip(
-                  label: '已完成',
-                  count: successTasks.length,
-                  selected: _filter == _TransferFilter.success,
-                  onTap: () => setState(() => _filter = _TransferFilter.success),
-                ),
-                const SizedBox(width: 8),
-                _FilterChip(
-                  label: '失败',
-                  count: failedTasks.length,
-                  selected: _filter == _TransferFilter.failed,
-                  onTap: () => setState(() => _filter = _TransferFilter.failed),
-                ),
-              ],
+              ),
             ),
           ),
-          const SizedBox(height: 8),
-          Expanded(
-            child: _TransferSectionList(tasks: filteredTasks),
+          const SliverToBoxAdapter(
+            child: SizedBox(height: 8),
           ),
+          _TransferSectionList(tasks: filteredTasks),
         ],
       ),
     );
@@ -321,26 +334,29 @@ class _TransferSectionList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (tasks.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.inbox_outlined, size: 42, color: Theme.of(context).colorScheme.outline),
-              const SizedBox(height: 12),
-              Text(
-                '这个筛选下暂时没有传输任务',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 6),
-              Text(
-                '新的上传、下载、失败重试都会出现在这里。',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
-                textAlign: TextAlign.center,
-              ),
-            ],
+      return SliverFillRemaining(
+        hasScrollBody: false,
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.inbox_outlined, size: 42, color: Theme.of(context).colorScheme.outline),
+                const SizedBox(height: 12),
+                Text(
+                  '这个筛选下暂时没有传输任务',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  '新的上传、下载、失败重试都会出现在这里。',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
           ),
         ),
       );
@@ -349,38 +365,67 @@ class _TransferSectionList extends StatelessWidget {
     final active = tasks.where((t) => t.status == TransferTaskStatus.running || t.status == TransferTaskStatus.queued).toList();
     final success = tasks.where((t) => t.status == TransferTaskStatus.success).toList();
     final failed = tasks.where((t) => t.status == TransferTaskStatus.failed).toList();
-
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 28),
-      children: [
-        if (active.isNotEmpty) ...[
-          _SectionHeader(title: '进行中', count: active.length),
-          const SizedBox(height: 10),
-          ...active.map((task) => Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: _TransferTaskCard(task: task),
-              )),
-        ],
-        if (success.isNotEmpty) ...[
-          if (active.isNotEmpty) const SizedBox(height: 8),
-          _SectionHeader(title: '已完成', count: success.length),
-          const SizedBox(height: 10),
-          ...success.map((task) => Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: _TransferTaskCard(task: task),
-              )),
-        ],
-        if (failed.isNotEmpty) ...[
-          if (active.isNotEmpty || success.isNotEmpty) const SizedBox(height: 8),
-          _SectionHeader(title: '失败', count: failed.length),
-          const SizedBox(height: 10),
-          ...failed.map((task) => Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: _TransferTaskCard(task: task),
-              )),
-        ],
+    final children = <Widget>[
+      if (active.isNotEmpty) ...[
+        _SectionHeader(title: '进行中', count: active.length),
+        const SizedBox(height: 10),
+        ...active.map((task) => Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: _TransferTaskCard(task: task),
+            )),
       ],
+      if (success.isNotEmpty) ...[
+        if (active.isNotEmpty) const SizedBox(height: 8),
+        _SectionHeader(title: '已完成', count: success.length),
+        const SizedBox(height: 10),
+        ...success.map((task) => Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: _TransferTaskCard(task: task),
+            )),
+      ],
+      if (failed.isNotEmpty) ...[
+        if (active.isNotEmpty || success.isNotEmpty) const SizedBox(height: 8),
+        _SectionHeader(title: '失败', count: failed.length),
+        const SizedBox(height: 10),
+        ...failed.map((task) => Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: _TransferTaskCard(task: task),
+            )),
+      ],
+    ];
+
+    return SliverPadding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 28),
+      sliver: SliverList.list(children: children),
     );
+  }
+}
+
+class _TransferFilterHeaderDelegate extends SliverPersistentHeaderDelegate {
+  _TransferFilterHeaderDelegate({
+    required this.minExtent,
+    required this.maxExtent,
+    required this.child,
+  });
+
+  @override
+  final double minExtent;
+
+  @override
+  final double maxExtent;
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return child;
+  }
+
+  @override
+  bool shouldRebuild(covariant _TransferFilterHeaderDelegate oldDelegate) {
+    return minExtent != oldDelegate.minExtent ||
+        maxExtent != oldDelegate.maxExtent ||
+        child != oldDelegate.child;
   }
 }
 
