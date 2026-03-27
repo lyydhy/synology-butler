@@ -50,6 +50,7 @@ class _FilesPageState extends ConsumerState<FilesPage> {
 
   Timer? _pollTimer;
   String? _lastFinishedDownloadId;
+  Set<String> _lastBackgroundTaskIds = <String>{};
 
   /// 当前页面所在目录。
   String _currentPath = _rootPath;
@@ -101,6 +102,38 @@ class _FilesPageState extends ConsumerState<FilesPage> {
           ),
         ),
       );
+    });
+
+    ref.listenManual(fileBackgroundTasksProvider, (previous, next) {
+      if (!mounted) return;
+
+      final tasks = next.valueOrNull ?? const <FileBackgroundTask>[];
+      final currentIds = tasks.map((task) => task.taskId).toSet();
+      final finishedIds = _lastBackgroundTaskIds.difference(currentIds);
+      if (finishedIds.isEmpty) {
+        _lastBackgroundTaskIds = currentIds;
+        return;
+      }
+
+      final previousTasks = previous?.valueOrNull ?? const <FileBackgroundTask>[];
+      final finishedTasks = previousTasks.where((task) => finishedIds.contains(task.taskId)).toList();
+      final shouldRefresh = finishedTasks.any(_taskAffectsCurrentPath);
+
+      _lastBackgroundTaskIds = currentIds;
+
+      if (shouldRefresh) {
+        _refreshCurrentPath();
+      }
+
+      if (finishedTasks.isNotEmpty) {
+        final first = finishedTasks.first;
+        final count = finishedTasks.length;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(count > 1 ? '${first.displayName}等$count 个后台任务已完成' : '${first.displayName}任务已完成'),
+          ),
+        );
+      }
     });
   }
 
