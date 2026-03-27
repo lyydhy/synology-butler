@@ -78,10 +78,15 @@ final GoRouter appRouter = GoRouter(
         final extra = state.extra as Map<String, dynamic>? ?? const {};
         final id = extra['id']?.toString() ?? '';
         final name = extra['name']?.toString() ?? '';
+        final mode = extra['mode']?.toString() ?? 'build';
         if (id.isEmpty) {
           return const Scaffold(body: Center(child: Text('Compose 构建日志参数缺失')));
         }
-        return ComposeProjectBuildLogsPage(id: id, name: name.isEmpty ? 'Compose 项目' : name);
+        return ComposeProjectBuildLogsPage(
+          id: id,
+          name: name.isEmpty ? 'Compose 项目' : name,
+          mode: mode,
+        );
       },
     ),
     GoRoute(

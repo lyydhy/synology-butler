@@ -481,15 +481,29 @@ class DsmDockerApi {
     );
   }
 
-  Stream<String> buildProjectStream({required String id}) async* {
+  Stream<String> buildProjectStream({required String id}) {
+    return _projectActionStream(id: id, method: 'build_stream', action: 'buildProjectStream', errorLabel: '构建日志');
+  }
+
+  Stream<String> stopProjectStream({required String id}) {
+    return _projectActionStream(id: id, method: 'stop_stream', action: 'stopProjectStream', errorLabel: '停止日志');
+  }
+
+  Stream<String> _projectActionStream({
+    required String id,
+    required String method,
+    required String action,
+    required String errorLabel,
+  }) async* {
     DsmLogger.request(
       module: 'Docker',
-      action: 'buildProjectStream',
+      action: action,
       method: 'POST',
       path: '/webapi/entry.cgi/SYNO.Docker.Project',
       extra: {
         'api': 'SYNO.Docker.Project',
         'id': id,
+        'method': method,
       },
     );
 
@@ -497,7 +511,7 @@ class DsmDockerApi {
       '/webapi/entry.cgi/SYNO.Docker.Project',
       data: {
         'api': 'SYNO.Docker.Project',
-        'method': 'build_stream',
+        'method': method,
         'version': '1',
         'id': id,
       },
@@ -509,7 +523,7 @@ class DsmDockerApi {
       throw DioException(
         requestOptions: response.requestOptions,
         response: response,
-        error: '未收到构建日志流',
+        error: '未收到$errorLabel',
       );
     }
 

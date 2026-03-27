@@ -51,9 +51,17 @@ class _ComposeProjectDetailPageState extends State<ComposeProjectDetailPage>
             tooltip: '构建并启动',
             onPressed: () => context.push(
               '/container-management/compose-build-logs',
-              extra: {'id': widget.id, 'name': widget.name},
+              extra: {'id': widget.id, 'name': widget.name, 'mode': 'build'},
             ),
             icon: const Icon(Icons.play_circle_outline_rounded),
+          ),
+          IconButton(
+            tooltip: '停止项目',
+            onPressed: () => context.push(
+              '/container-management/compose-build-logs',
+              extra: {'id': widget.id, 'name': widget.name, 'mode': 'stop'},
+            ),
+            icon: const Icon(Icons.stop_circle_outlined),
           ),
           IconButton(onPressed: _refresh, icon: const Icon(Icons.refresh_rounded)),
         ],

@@ -5,10 +5,16 @@ import 'package:flutter/material.dart';
 import '../../../../data/api/docker_api.dart';
 
 class ComposeProjectBuildLogsPage extends StatefulWidget {
-  const ComposeProjectBuildLogsPage({super.key, required this.id, required this.name});
+  const ComposeProjectBuildLogsPage({
+    super.key,
+    required this.id,
+    required this.name,
+    required this.mode,
+  });
 
   final String id;
   final String name;
+  final String mode;
 
   @override
   State<ComposeProjectBuildLogsPage> createState() => _ComposeProjectBuildLogsPageState();
@@ -27,9 +33,17 @@ class _ComposeProjectBuildLogsPageState extends State<ComposeProjectBuildLogsPag
     _start();
   }
 
+  String get _title => widget.mode == 'stop' ? '${widget.name} 停止日志' : '${widget.name} 构建日志';
+
+  String get _runningText => widget.mode == 'stop' ? '正在停止 Compose 项目…' : '正在构建并启动 Compose 项目…';
+
+  String get _successText => widget.mode == 'stop' ? '停止完成' : '构建并启动完成';
+
   Future<void> _start() async {
     try {
-      final stream = DsmDockerApi().buildProjectStream(id: widget.id);
+      final stream = widget.mode == 'stop'
+          ? DsmDockerApi().stopProjectStream(id: widget.id)
+          : DsmDockerApi().buildProjectStream(id: widget.id);
       _subscription = stream.listen(
         (chunk) {
           if (!mounted) return;
@@ -79,7 +93,7 @@ class _ComposeProjectBuildLogsPageState extends State<ComposeProjectBuildLogsPag
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: Text('${widget.name} 构建日志')),
+      appBar: AppBar(title: Text(_title)),
       body: Column(
         children: [
           Container(
@@ -88,10 +102,10 @@ class _ComposeProjectBuildLogsPageState extends State<ComposeProjectBuildLogsPag
             color: theme.colorScheme.surfaceContainerLow,
             child: Text(
               _error != null
-                  ? '构建失败：$_error'
+                  ? '操作失败：$_error'
                   : _finished
-                      ? (_success ? '构建并启动完成' : '构建结束，请检查日志')
-                      : '正在构建并启动 Compose 项目…',
+                      ? (_success ? _successText : '操作结束，请检查日志')
+                      : _runningText,
             ),
           ),
           Expanded(
