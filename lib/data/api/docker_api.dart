@@ -733,21 +733,24 @@ class DsmDockerApi {
     );
   }
 
-  Future<List<String>> fetchContainerLogs({
+  Future<String> fetchContainerLogs({
     required String name,
     required String date,
   }) async {
     final response = await _dio.post(
-      '/webapi/entry.cgi',
+      '/webapi/entry.cgi/SYNO.Docker.Container.Log',
       data: {
         'api': 'SYNO.Docker.Container.Log',
         'method': 'get',
         'version': '1',
         'name': name,
-        'sort_dir': 'ASC',
-        'date': date,
-        'limit': '1000',
+        'from': '',
+        'to': '',
+        'level': '',
+        'keyword': '',
+        'sort_dir': 'DESC',
         'offset': '0',
+        'limit': '1000',
       },
       options: _options(),
     );
@@ -755,7 +758,22 @@ class DsmDockerApi {
     final payload = response.data;
     if (payload is Map && payload['success'] == true) {
       final data = payload['data'] as Map? ?? const {};
-      return ((data['logs'] as List?) ?? const []).map((e) => e.toString()).toList();
+      final logs = ((data['logs'] as List?) ?? const []).whereType<Map>().map((item) {
+        final created = (item['created'] ?? '').toString();
+        final stream = (item['stream'] ?? '').toString();
+        final text = _stripAnsi((item['text'] ?? '').toString()).trimRight();
+
+        final prefix = [
+          if (created.isNotEmpty) created,
+          if (stream.isNotEmpty) stream,
+        ].join(' | ');
+
+        if (prefix.isEmpty) return text;
+        if (text.isEmpty) return prefix;
+        return '[$prefix] $text';
+      }).where((line) => line.trim().isNotEmpty).toList();
+
+      return logs.join('\n');
     }
 
     throw DioException(
@@ -763,6 +781,11 @@ class DsmDockerApi {
       response: response,
       error: _extractError(action: 'fetchContainerLogs', data: payload),
     );
+  }
+
+  String _stripAnsi(String input) {
+    final ansiRegex = RegExp(r'\x1B\[[0-9;]*[A-Za-z]');
+    return input.replaceAll(ansiRegex, '');
   }
 
   Future<DockerOverviewData> fetchOverview() async {

@@ -19,7 +19,7 @@ class _ContainerDetailPageState extends State<ContainerDetailPage> with SingleTi
   late Future<DockerContainerDetail> _detailFuture;
   late Future<List<String>> _logDatesFuture;
   String? _selectedDate;
-  Future<List<String>>? _logsFuture;
+  Future<String>? _logsFuture;
 
   @override
   void initState() {
@@ -207,7 +207,7 @@ class _ContainerDetailPageState extends State<ContainerDetailPage> with SingleTi
                           ),
                         ),
                         Expanded(
-                          child: FutureBuilder<List<String>>(
+                          child: FutureBuilder<String>(
                             future: _logsFuture,
                             builder: (context, logSnapshot) {
                               if (logSnapshot.connectionState != ConnectionState.done) {
@@ -216,13 +216,13 @@ class _ContainerDetailPageState extends State<ContainerDetailPage> with SingleTi
                               if (logSnapshot.hasError) {
                                 return _DetailErrorState(onRetry: _refresh);
                               }
-                              final logs = logSnapshot.data ?? const [];
-                              if (logs.isEmpty) return const AppEmptyState(message: '暂无日志内容');
-                              return ListView.separated(
+                              final logsText = (logSnapshot.data ?? '').trim();
+                              if (logsText.isEmpty) return const AppEmptyState(message: '暂无日志内容');
+                              return ListView(
                                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                                itemBuilder: (context, index) => SelectableText(logs[index]),
-                                separatorBuilder: (_, __) => const Divider(height: 20),
-                                itemCount: logs.length,
+                                children: [
+                                  SelectableText(logsText),
+                                ],
                               );
                             },
                           ),
