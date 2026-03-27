@@ -342,23 +342,54 @@ class _ComposeListTab extends StatelessWidget {
   }
 }
 
-class _ImageListTab extends StatelessWidget {
+class _ImageListTab extends StatefulWidget {
   const _ImageListTab({required this.isUnavailable, required this.items});
 
   final bool isUnavailable;
   final List<DockerImageSummary> items;
 
   @override
+  State<_ImageListTab> createState() => _ImageListTabState();
+}
+
+class _ImageListTabState extends State<_ImageListTab> {
+  String _selectedFilter = 'all';
+
+  @override
   Widget build(BuildContext context) {
-    if (isUnavailable) return const _UnavailablePlaceholder();
+    if (widget.isUnavailable) return const _UnavailablePlaceholder();
 
-    if (items.isEmpty) return const _EmptyState(label: '暂无镜像数据');
+    final items = widget.items.where((item) {
+      if (_selectedFilter == 'latest') return item.tag.toLowerCase() == 'latest';
+      if (_selectedFilter == 'tagged') return item.tag.toLowerCase() != 'latest';
+      return true;
+    }).toList();
 
-    return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-      itemBuilder: (context, index) => _ImageCard(item: items[index]),
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
-      itemCount: items.length,
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+          child: SegmentedButton<String>(
+            segments: const [
+              ButtonSegment(value: 'all', label: Text('全部')),
+              ButtonSegment(value: 'latest', label: Text('latest')),
+              ButtonSegment(value: 'tagged', label: Text('其他标签')),
+            ],
+            selected: {_selectedFilter},
+            onSelectionChanged: (value) => setState(() => _selectedFilter = value.first),
+          ),
+        ),
+        Expanded(
+          child: items.isEmpty
+              ? const _EmptyState(label: '暂无镜像数据')
+              : ListView.separated(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                  itemBuilder: (context, index) => _ImageCard(item: items[index]),
+                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  itemCount: items.length,
+                ),
+        ),
+      ],
     );
   }
 }
@@ -519,11 +550,20 @@ class _ImageCard extends StatelessWidget {
 
   final DockerImageSummary item;
 
+  String _shortImageId() {
+    final id = item.id.trim();
+    if (id.isEmpty) return '--';
+    return id.length > 12 ? id.substring(0, 12) : id;
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isLatest = item.tag.toLowerCase() == 'latest';
+
     return AppSurfaceCard(
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             width: 46,
@@ -539,13 +579,39 @@ class _ImageCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(item.name, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
-                const SizedBox(height: 4),
-                Text('Tag：${item.tag}', style: theme.textTheme.bodySmall),
+                Text(
+                  item.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    AppStatusChip(
+                      label: isLatest ? 'latest' : item.tag,
+                      color: isLatest ? Colors.blue.shade700 : Colors.deepPurple.shade700,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    AppStatusChip(
+                      label: item.sizeText,
+                      color: Colors.teal.shade700,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '镜像 ID：${_shortImageId()}',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
               ],
             ),
           ),
-          Text(item.sizeText, style: theme.textTheme.bodyMedium),
         ],
       ),
     );
