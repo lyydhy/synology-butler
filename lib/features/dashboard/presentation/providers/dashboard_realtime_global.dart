@@ -45,31 +45,83 @@ bool isSessionExpiredError(Object error) {
 final globalRealtimeOverviewProvider = StreamProvider<SystemStatus>((ref) {
   late final StreamController<SystemStatus> controller;
   StreamSubscription<SystemStatus>? subscription;
+  late final Future<void> Function() startStream;
 
-  Future<void> startStream() async {
+  int consecutiveFailures = 0;
+  Timer? retryTimer;
+  var retryAttempt = 0;
+
+  bool isReadyForRealtime() {
+    final server = connectionStore.server;
+    final session = connectionStore.session;
+    final token = session?.synoToken;
+    return server != null &&
+        session != null &&
+        session.sid.isNotEmpty &&
+        token != null &&
+        token.isNotEmpty;
+  }
+
+  Duration computeBackoff(int attempt) {
+    const seconds = [1, 2, 4, 8, 15];
+    final index = attempt.clamp(0, seconds.length - 1);
+    return Duration(seconds: seconds[index]);
+  }
+
+  void scheduleRetry() {
+    if (controller.isClosed || retryTimer != null) return;
+    final delay = computeBackoff(retryAttempt);
+    retryAttempt += 1;
+    retryTimer = Timer(delay, () {
+      retryTimer = null;
+      unawaited(startStream());
+    });
+  }
+
+  startStream = () async {
+    if (controller.isClosed) return;
+
+    if (!isReadyForRealtime()) {
+      scheduleRetry();
+      return;
+    }
+
     try {
       final source = ref.read(globalSystemRepositoryProvider).watchOverview();
 
       await subscription?.cancel();
       subscription = source.listen(
-        controller.add,
+        (value) {
+          consecutiveFailures = 0;
+          retryAttempt = 0;
+          controller.add(value);
+        },
         onError: (error, stackTrace) async {
-          controller.addError(error, stackTrace);
+          consecutiveFailures += 1;
+          final shouldSurfaceError = consecutiveFailures >= 3;
+          if (shouldSurfaceError) {
+            controller.addError(error, stackTrace);
+          }
           if (isSessionExpiredError(error)) {
             await ref.read(clearSessionProvider)(markExpired: true);
           }
+          scheduleRetry();
         },
         onDone: () {
           if (!controller.isClosed) {
-            controller.close();
+            scheduleRetry();
           }
         },
         cancelOnError: false,
       );
     } catch (error, stackTrace) {
-      controller.addError(error, stackTrace);
+      consecutiveFailures += 1;
+      if (consecutiveFailures >= 3) {
+        controller.addError(error, stackTrace);
+      }
+      scheduleRetry();
     }
-  }
+  };
 
   controller = StreamController<SystemStatus>(
     onListen: () {
@@ -99,6 +151,7 @@ final globalRealtimeOverviewProvider = StreamProvider<SystemStatus>((ref) {
     if (identical(RealtimeReconnectBridge.callback, reconnectCallback)) {
       RealtimeReconnectBridge.callback = null;
     }
+    retryTimer?.cancel();
     await subscription?.cancel();
     if (!controller.isClosed) {
       await controller.close();

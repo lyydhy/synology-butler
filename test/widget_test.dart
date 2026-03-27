@@ -5,7 +5,11 @@ import 'package:syno_keeper/app/app.dart';
 
 void main() {
   testWidgets('app boots', (WidgetTester tester) async {
-    await tester.pumpWidget(const ProviderScope(child: QunhuiManagerApp()));
+    await tester.pumpWidget(
+      const ProviderScope(
+        child: QunhuiManagerApp(initialLocation: '/splash'),
+      ),
+    );
     expect(find.byType(QunhuiManagerApp), findsOneWidget);
   });
 }
