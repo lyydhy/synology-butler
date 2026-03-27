@@ -47,6 +47,14 @@ class _ComposeProjectDetailPageState extends State<ComposeProjectDetailPage>
       appBar: AppBar(
         title: Text(widget.name),
         actions: [
+          IconButton(
+            tooltip: '构建并启动',
+            onPressed: () => context.push(
+              '/container-management/compose-build-logs',
+              extra: {'id': widget.id, 'name': widget.name},
+            ),
+            icon: const Icon(Icons.play_circle_outline_rounded),
+          ),
           IconButton(onPressed: _refresh, icon: const Icon(Icons.refresh_rounded)),
         ],
       ),

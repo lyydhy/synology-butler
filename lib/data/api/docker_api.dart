@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
@@ -109,6 +110,26 @@ class DockerComposeProjectDetail {
   final String content;
   final List<Map<String, dynamic>> containers;
   final List<String> containerIds;
+}
+
+class DockerComposeCreateRequest {
+  const DockerComposeCreateRequest({
+    required this.name,
+    required this.sharePath,
+    required this.content,
+    this.enableServicePortal = false,
+    this.servicePortalName = '',
+    this.servicePortalPort = 0,
+    this.servicePortalProtocol = '',
+  });
+
+  final String name;
+  final String sharePath;
+  final String content;
+  final bool enableServicePortal;
+  final String servicePortalName;
+  final int servicePortalPort;
+  final String servicePortalProtocol;
 }
 
 /// 轻量版群晖 Docker 数据源。
@@ -401,6 +422,103 @@ class DsmDockerApi {
       response: response,
       error: _extractError(action: 'fetchProjectDetail', data: payload),
     );
+  }
+
+  Future<DockerComposeProjectDetail> createProject(DockerComposeCreateRequest request) async {
+    DsmLogger.request(
+      module: 'Docker',
+      action: 'createProject',
+      method: 'POST',
+      path: '/webapi/entry.cgi/SYNO.Docker.Project',
+      extra: {
+        'api': 'SYNO.Docker.Project',
+        'name': request.name,
+        'share_path': request.sharePath,
+      },
+    );
+
+    final response = await _dio.post(
+      '/webapi/entry.cgi/SYNO.Docker.Project',
+      data: {
+        'api': 'SYNO.Docker.Project',
+        'method': 'create',
+        'version': '1',
+        'name': request.name,
+        'content': request.content,
+        'share_path': request.sharePath,
+        'enable_service_portal': request.enableServicePortal,
+        'service_portal_name': request.servicePortalName,
+        'service_portal_port': request.servicePortalPort,
+        'service_portal_protocol': request.servicePortalProtocol,
+      },
+      options: _options(),
+    );
+
+    final payload = response.data;
+    if (payload is Map && payload['success'] == true) {
+      final data = payload['data'] as Map? ?? const {};
+      return DockerComposeProjectDetail(
+        id: (data['id'] ?? '').toString(),
+        name: (data['name'] ?? '').toString(),
+        path: (data['path'] ?? '').toString(),
+        sharePath: (data['share_path'] ?? '').toString(),
+        status: (data['status'] ?? '').toString(),
+        state: (data['state'] ?? '').toString(),
+        updatedAt: (data['updated_at'] ?? '').toString(),
+        content: (data['content'] ?? '').toString(),
+        containers: ((data['containers'] as List?) ?? const [])
+            .whereType<Map>()
+            .map((e) => Map<String, dynamic>.from(e))
+            .toList(),
+        containerIds: ((data['containerIds'] as List?) ?? const []).map((e) => e.toString()).toList(),
+      );
+    }
+
+    throw DioException(
+      requestOptions: response.requestOptions,
+      response: response,
+      error: _extractError(action: 'createProject', data: payload),
+    );
+  }
+
+  Stream<String> buildProjectStream({required String id}) async* {
+    DsmLogger.request(
+      module: 'Docker',
+      action: 'buildProjectStream',
+      method: 'POST',
+      path: '/webapi/entry.cgi/SYNO.Docker.Project',
+      extra: {
+        'api': 'SYNO.Docker.Project',
+        'id': id,
+      },
+    );
+
+    final response = await _dio.post<ResponseBody>(
+      '/webapi/entry.cgi/SYNO.Docker.Project',
+      data: {
+        'api': 'SYNO.Docker.Project',
+        'method': 'build_stream',
+        'version': '1',
+        'id': id,
+      },
+      options: _options().copyWith(responseType: ResponseType.stream),
+    );
+
+    final body = response.data;
+    if (body == null) {
+      throw DioException(
+        requestOptions: response.requestOptions,
+        response: response,
+        error: '未收到构建日志流',
+      );
+    }
+
+    final stream = body.stream.map((chunk) => utf8.decode(chunk)).asBroadcastStream();
+    await for (final chunk in stream) {
+      if (chunk.isNotEmpty) {
+        yield chunk;
+      }
+    }
   }
 
   Future<void> startContainer({required String name}) async {

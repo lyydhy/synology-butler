@@ -373,12 +373,21 @@ class _ComposeListTabState extends State<_ComposeListTab> {
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              widget.projects.isEmpty ? '当前未获取到 DSM Compose 项目。' : '当前使用 DSM / Container Manager 原生 Compose 项目数据。',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  widget.projects.isEmpty ? '当前未获取到 DSM Compose 项目。' : '当前使用 DSM / Container Manager 原生 Compose 项目数据。',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ),
+              const SizedBox(width: 12),
+              FilledButton.tonalIcon(
+                onPressed: () => context.push('/container-management/compose-create'),
+                icon: const Icon(Icons.add_rounded),
+                label: const Text('新建'),
+              ),
+            ],
           ),
         ),
         Expanded(
