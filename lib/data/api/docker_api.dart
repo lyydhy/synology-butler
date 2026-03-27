@@ -497,6 +497,10 @@ class DsmDockerApi {
     return _projectActionStream(id: id, method: 'restart_stream', action: 'restartProjectStream', errorLabel: '重启日志');
   }
 
+  Stream<String> cleanProjectStream({required String id}) {
+    return _projectActionStream(id: id, method: 'clean_stream', action: 'cleanProjectStream', errorLabel: '清除日志');
+  }
+
   Stream<String> _projectActionStream({
     required String id,
     required String method,

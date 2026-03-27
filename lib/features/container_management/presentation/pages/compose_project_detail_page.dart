@@ -22,6 +22,26 @@ class _ComposeProjectDetailPageState extends State<ComposeProjectDetailPage>
   late final TabController _tabController;
   late Future<DockerComposeProjectDetail> _detailFuture;
 
+  Future<void> _confirmAndClean() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('确认清除项目？'),
+        content: const Text('这会停止并移除该 Compose 项目创建的容器与网络。YAML 项目本身仍会保留。'),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('取消')),
+          FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('确认清除')),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+    context.push(
+      '/container-management/compose-build-logs',
+      extra: {'id': widget.id, 'name': widget.name, 'mode': 'clean'},
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -78,6 +98,11 @@ class _ComposeProjectDetailPageState extends State<ComposeProjectDetailPage>
               extra: {'id': widget.id, 'name': widget.name, 'mode': 'restart'},
             ),
             icon: const Icon(Icons.restart_alt_rounded),
+          ),
+          IconButton(
+            tooltip: '清除项目',
+            onPressed: _confirmAndClean,
+            icon: const Icon(Icons.cleaning_services_outlined),
           ),
           IconButton(onPressed: _refresh, icon: const Icon(Icons.refresh_rounded)),
         ],
