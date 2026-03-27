@@ -40,7 +40,7 @@ class _ComposeProjectCreatePageState extends State<ComposeProjectCreatePage> {
         ),
       );
       if (!mounted) return;
-      context.pop();
+      context.pop(true);
       context.push(
         '/container-management/compose-detail',
         extra: {'id': result.id, 'name': result.name},

@@ -26,6 +26,7 @@ class _ComposeProjectBuildLogsPageState extends State<ComposeProjectBuildLogsPag
   bool _finished = false;
   bool _success = false;
   String? _error;
+  bool _popped = false;
 
   @override
   void initState() {
@@ -78,6 +79,12 @@ class _ComposeProjectBuildLogsPageState extends State<ComposeProjectBuildLogsPag
     }
   }
 
+  void _popWithRefresh() {
+    if (_popped || !mounted) return;
+    _popped = true;
+    Navigator.of(context).pop(true);
+  }
+
   Future<void> _start() async {
     try {
       final stream = switch (widget.mode) {
@@ -97,6 +104,9 @@ class _ComposeProjectBuildLogsPageState extends State<ComposeProjectBuildLogsPag
               _success = true;
             }
           });
+          if (chunk.contains('Exit Code: 0')) {
+            Future.delayed(const Duration(milliseconds: 600), _popWithRefresh);
+          }
         },
         onError: (error) {
           if (!mounted) return;

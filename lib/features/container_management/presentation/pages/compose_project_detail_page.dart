@@ -65,10 +65,13 @@ class _ComposeProjectDetailPageState extends State<ComposeProjectDetailPage>
     );
 
     if (confirmed != true || !mounted) return;
-    context.push(
+    final refreshed = await context.push<bool>(
       '/container-management/compose-build-logs',
       extra: {'id': widget.id, 'name': widget.name, 'mode': 'clean'},
     );
+    if (refreshed == true && mounted) {
+      _refresh();
+    }
   }
 
   Future<void> _confirmAndDelete() async {
@@ -96,7 +99,7 @@ class _ComposeProjectDetailPageState extends State<ComposeProjectDetailPage>
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(const SnackBar(content: Text('删除 Compose 项目成功')));
-      context.pop();
+      context.pop(true);
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
@@ -172,40 +175,52 @@ class _ComposeProjectDetailPageState extends State<ComposeProjectDetailPage>
                         children: [
                           FilledButton.tonalIcon(
                             onPressed: _canBuild(detail)
-                                ? () => context.push(
+                                ? () async {
+                                    final refreshed = await context.push<bool>(
                                       '/container-management/compose-build-logs',
                                       extra: {'id': widget.id, 'name': widget.name, 'mode': 'build'},
-                                    )
+                                    );
+                                    if (refreshed == true && mounted) _refresh();
+                                  }
                                 : null,
                             icon: const Icon(Icons.play_circle_outline_rounded),
                             label: const Text('构建'),
                           ),
                           FilledButton.tonalIcon(
                             onPressed: _canStart(detail)
-                                ? () => context.push(
+                                ? () async {
+                                    final refreshed = await context.push<bool>(
                                       '/container-management/compose-build-logs',
                                       extra: {'id': widget.id, 'name': widget.name, 'mode': 'start'},
-                                    )
+                                    );
+                                    if (refreshed == true && mounted) _refresh();
+                                  }
                                 : null,
                             icon: const Icon(Icons.play_arrow_rounded),
                             label: const Text('启动'),
                           ),
                           FilledButton.tonalIcon(
                             onPressed: _canStop(detail)
-                                ? () => context.push(
+                                ? () async {
+                                    final refreshed = await context.push<bool>(
                                       '/container-management/compose-build-logs',
                                       extra: {'id': widget.id, 'name': widget.name, 'mode': 'stop'},
-                                    )
+                                    );
+                                    if (refreshed == true && mounted) _refresh();
+                                  }
                                 : null,
                             icon: const Icon(Icons.stop_circle_outlined),
                             label: const Text('停止'),
                           ),
                           FilledButton.tonalIcon(
                             onPressed: _canRestart(detail)
-                                ? () => context.push(
+                                ? () async {
+                                    final refreshed = await context.push<bool>(
                                       '/container-management/compose-build-logs',
                                       extra: {'id': widget.id, 'name': widget.name, 'mode': 'restart'},
-                                    )
+                                    );
+                                    if (refreshed == true && mounted) _refresh();
+                                  }
                                 : null,
                             icon: const Icon(Icons.restart_alt_rounded),
                             label: const Text('重启'),

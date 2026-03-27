@@ -383,7 +383,13 @@ class _ComposeListTabState extends State<_ComposeListTab> {
               ),
               const SizedBox(width: 12),
               FilledButton.tonalIcon(
-                onPressed: () => context.push('/container-management/compose-create'),
+                onPressed: () async {
+                  final refreshed = await context.push<bool>('/container-management/compose-create');
+                  if (refreshed == true && context.mounted) {
+                    final pageState = context.findAncestorStateOfType<_ContainerManagementPageState>();
+                    pageState?._refreshOverview();
+                  }
+                },
                 icon: const Icon(Icons.add_rounded),
                 label: const Text('新建'),
               ),
@@ -627,10 +633,16 @@ class _ComposeCard extends StatelessWidget {
     final isRunning = item.status == '运行中';
 
     return AppSurfaceCard(
-      onTap: () => context.push(
-        '/container-management/compose-detail',
-        extra: {'id': item.id, 'name': item.name},
-      ),
+      onTap: () async {
+        final refreshed = await context.push<bool>(
+          '/container-management/compose-detail',
+          extra: {'id': item.id, 'name': item.name},
+        );
+        if (refreshed == true && context.mounted) {
+          final pageState = context.findAncestorStateOfType<_ContainerManagementPageState>();
+          pageState?._refreshOverview();
+        }
+      },
       child: Row(
         children: [
           Container(
@@ -668,10 +680,16 @@ class _ComposeCard extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               OutlinedButton.icon(
-                onPressed: () => context.push(
-                  '/container-management/compose-detail',
-                  extra: {'id': item.id, 'name': item.name},
-                ),
+                onPressed: () async {
+                  final refreshed = await context.push<bool>(
+                    '/container-management/compose-detail',
+                    extra: {'id': item.id, 'name': item.name},
+                  );
+                  if (refreshed == true && context.mounted) {
+                    final pageState = context.findAncestorStateOfType<_ContainerManagementPageState>();
+                    pageState?._refreshOverview();
+                  }
+                },
                 icon: const Icon(Icons.visibility_outlined),
                 label: const Text('查看'),
               ),
