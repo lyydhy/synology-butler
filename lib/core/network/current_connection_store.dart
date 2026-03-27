@@ -1,7 +1,9 @@
+import 'package:flutter/foundation.dart';
+
 import '../../domain/entities/nas_server.dart';
 import '../../domain/entities/nas_session.dart';
 
-class CurrentConnectionStore {
+class CurrentConnectionStore extends ChangeNotifier {
   CurrentConnectionStore._();
 
   static final CurrentConnectionStore instance = CurrentConnectionStore._();
@@ -16,10 +18,12 @@ class CurrentConnectionStore {
 
   void setServer(NasServer? server) {
     _server = server;
+    notifyListeners();
   }
 
   void setSession(NasSession? session) {
     _session = session;
+    notifyListeners();
   }
 
   void setConnection({
@@ -28,16 +32,19 @@ class CurrentConnectionStore {
   }) {
     _server = server;
     _session = session;
+    notifyListeners();
   }
 
   void clearSession() {
     _session = null;
+    notifyListeners();
   }
 
   void clearAll() {
     _server = null;
     _session = null;
     _credentials = null;
+    notifyListeners();
   }
 
   // ─────────────────────────────────────────────────────────────

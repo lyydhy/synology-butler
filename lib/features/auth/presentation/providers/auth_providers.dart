@@ -1,4 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'current_connection_readers.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../../../../core/constants/app_constants.dart';
@@ -76,6 +78,8 @@ final restoreSessionProvider = FutureProvider<bool>((ref) async {
 
   final servers = savedServers.map(NasServerModel.decode).map(ServerMapper.toEntity).toList();
   ref.read(savedServersProvider.notifier).state = servers;
+
+  ref.read(currentConnectionStoreProvider);
 
   if (currentServerId == null || savedSid == null || savedSid.isEmpty) {
     return false;
