@@ -101,7 +101,16 @@ final fileUploadProvider = Provider<Future<void> Function(String, String, Uint8L
 final fileBackgroundTasksProvider = StreamProvider.autoDispose<List<FileBackgroundTask>>((ref) async* {
   while (true) {
     final tasks = await ref.read(fileStationApiProvider).listBackgroundTasks();
-    yield tasks;
+    final details = <FileBackgroundTask>[];
+
+    for (final task in tasks) {
+      final detailed = await ref.read(fileStationApiProvider).getBackgroundTaskStatus(task: task);
+      if (detailed != null && !detailed.finished) {
+        details.add(detailed);
+      }
+    }
+
+    yield details;
     await Future<void>.delayed(const Duration(seconds: 5));
   }
 });

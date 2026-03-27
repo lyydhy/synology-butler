@@ -52,6 +52,10 @@ abstract class FileStationApi {
   });
 
   Future<List<FileBackgroundTask>> listBackgroundTasks();
+
+  Future<FileBackgroundTask?> getBackgroundTaskStatus({
+    required FileBackgroundTask task,
+  });
 }
 
 class DsmFileStationApi implements FileStationApi {
@@ -454,6 +458,46 @@ class DsmFileStationApi implements FileStationApi {
     );
   }
 
+  double? _readProgress(Map<String, dynamic> data) {
+    final candidates = [
+      data['progress'],
+      data['processed'],
+      data['percent'],
+    ];
+
+    for (final candidate in candidates) {
+      if (candidate is num) {
+        final value = candidate.toDouble();
+        if (value <= 1) return (value * 100).clamp(0, 100);
+        return value.clamp(0, 100);
+      }
+      final parsed = double.tryParse(candidate?.toString() ?? '');
+      if (parsed != null) {
+        if (parsed <= 1) return (parsed * 100).clamp(0, 100);
+        return parsed.clamp(0, 100);
+      }
+    }
+    return null;
+  }
+
+  FileBackgroundTask _mergeTaskStatus({
+    required FileBackgroundTask task,
+    required Map<String, dynamic> data,
+  }) {
+    final finished = data['finished'] == true;
+    final progress = _readProgress(data);
+    final path = (data['path'] ?? task.path).toString();
+
+    return FileBackgroundTask(
+      taskId: task.taskId,
+      type: task.type,
+      path: path,
+      finished: finished,
+      progress: progress,
+      raw: data,
+    );
+  }
+
   @override
   Future<List<FileBackgroundTask>> listBackgroundTasks() async {
     DsmLogger.request(
@@ -523,6 +567,39 @@ class DsmFileStationApi implements FileStationApi {
       error: _extractError(action: 'backgroundTask', data: response.data),
       response: response,
     );
+  }
+
+  @override
+  Future<FileBackgroundTask?> getBackgroundTaskStatus({
+    required FileBackgroundTask task,
+  }) async {
+    final config = switch (task.type) {
+      'copy' || 'move' => ('SYNO.FileStation.CopyMove', '3'),
+      'delete' => ('SYNO.FileStation.Delete', '2'),
+      'compress' => ('SYNO.FileStation.Compress', '2'),
+      'extract' => ('SYNO.FileStation.Extract', '1'),
+      _ => ('', ''),
+    };
+
+    if (config.$1.isEmpty) return task;
+
+    final response = await _dio.post(
+      '/webapi/entry.cgi',
+      data: {
+        'taskid': task.taskId,
+        'api': config.$1,
+        'method': 'status',
+        'version': config.$2,
+      },
+      options: Options(contentType: Headers.formUrlEncodedContentType),
+    );
+
+    if (response.data is Map && response.data['success'] == true) {
+      final data = response.data['data'] as Map? ?? const {};
+      return _mergeTaskStatus(task: task, data: Map<String, dynamic>.from(data));
+    }
+
+    return task;
   }
 
   @override

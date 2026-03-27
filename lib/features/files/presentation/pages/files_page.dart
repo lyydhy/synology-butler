@@ -657,7 +657,7 @@ class _BackgroundTaskBanner extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${first.displayName} · ${first.path.isEmpty ? '处理中' : first.path}',
+                  '${first.displayName} · ${first.path.isEmpty ? '处理中' : first.path}${first.progress == null ? '' : ' · ${first.progress!.toStringAsFixed(0)}%'}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
