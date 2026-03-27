@@ -164,7 +164,7 @@ class _ContainerManagementPageState extends ConsumerState<ContainerManagementPag
                         onRestart: (_) async {},
                         onForceStop: (_) async {},
                       ),
-                      const _ComposeListTab(isUnavailable: true),
+                      const _ComposeListTab(isUnavailable: true, containers: []),
                       const _ImageListTab(isUnavailable: true, items: []),
                     ],
                   );
@@ -190,7 +190,7 @@ class _ContainerManagementPageState extends ConsumerState<ContainerManagementPag
                       onRestart: _restartContainer,
                       onForceStop: _forceStopContainer,
                     ),
-                    const _ComposeListTab(isUnavailable: false),
+                    _ComposeListTab(isUnavailable: false, containers: data.containers),
                     _ImageListTab(isUnavailable: false, items: data.images),
                   ],
                 );
@@ -324,20 +324,65 @@ class _ContainerListTabState extends State<_ContainerListTab> {
   }
 }
 
-class _ComposeListTab extends StatelessWidget {
-  const _ComposeListTab({required this.isUnavailable});
+class _ComposeListTab extends StatefulWidget {
+  const _ComposeListTab({required this.isUnavailable, required this.containers});
 
   final bool isUnavailable;
+  final List<DockerContainerSummary> containers;
+
+  @override
+  State<_ComposeListTab> createState() => _ComposeListTabState();
+}
+
+class _ComposeListTabState extends State<_ComposeListTab> {
+  String _searchQuery = '';
 
   @override
   Widget build(BuildContext context) {
-    if (isUnavailable) return const _UnavailablePlaceholder();
+    if (widget.isUnavailable) return const _UnavailablePlaceholder();
 
-    return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-      itemBuilder: (context, index) => _ComposeCard(item: _mockComposeProjects[index]),
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
-      itemCount: _mockComposeProjects.length,
+    final groups = _buildComposeGroups(widget.containers);
+    final normalizedQuery = _searchQuery.trim().toLowerCase();
+    final items = groups.where((item) {
+      if (normalizedQuery.isEmpty) return true;
+      return item.name.toLowerCase().contains(normalizedQuery);
+    }).toList();
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+          child: TextField(
+            decoration: const InputDecoration(
+              hintText: '搜索项目名',
+              prefixIcon: Icon(Icons.search_rounded),
+              border: OutlineInputBorder(),
+              isDense: true,
+            ),
+            onChanged: (value) => setState(() => _searchQuery = value),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              '当前基于容器名称自动聚合项目视图，后续可替换为 DSM Compose 原生接口。',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ),
+        ),
+        Expanded(
+          child: items.isEmpty
+              ? _EmptyState(label: normalizedQuery.isEmpty ? '暂无 Compose 项目' : '没有匹配的项目')
+              : ListView.separated(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                  itemBuilder: (context, index) => _ComposeCard(item: items[index]),
+                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  itemCount: items.length,
+                ),
+        ),
+      ],
     );
   }
 }
@@ -733,7 +778,47 @@ class _ComposeUiItem {
   final int containerCount;
 }
 
-const _mockComposeProjects = [
-  _ComposeUiItem(name: 'media-stack', status: '运行中', containerCount: 4),
-  _ComposeUiItem(name: 'download-stack', status: '已停止', containerCount: 2),
-];
+List<_ComposeUiItem> _buildComposeGroups(List<DockerContainerSummary> containers) {
+  final grouped = <String, List<DockerContainerSummary>>{};
+
+  for (final item in containers) {
+    final projectName = _guessComposeProjectName(item.name);
+    grouped.putIfAbsent(projectName, () => <DockerContainerSummary>[]).add(item);
+  }
+
+  final projects = grouped.entries.map((entry) {
+    final values = entry.value;
+    final runningCount = values.where((item) => item.status == 'running').length;
+    final status = runningCount == values.length
+        ? '运行中'
+        : runningCount == 0
+            ? '已停止'
+            : '部分运行';
+
+    return _ComposeUiItem(
+      name: entry.key,
+      status: status,
+      containerCount: values.length,
+    );
+  }).toList()
+    ..sort((a, b) => a.name.compareTo(b.name));
+
+  return projects;
+}
+
+String _guessComposeProjectName(String containerName) {
+  final normalized = containerName.trim();
+  if (normalized.isEmpty) return '未命名项目';
+
+  if (normalized.contains('-')) {
+    final parts = normalized.split('-');
+    if (parts.length >= 2) return parts.first;
+  }
+
+  if (normalized.contains('_')) {
+    final parts = normalized.split('_');
+    if (parts.length >= 2) return parts.first;
+  }
+
+  return normalized;
+}
