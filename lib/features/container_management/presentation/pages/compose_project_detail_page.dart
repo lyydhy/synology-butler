@@ -21,6 +21,35 @@ class _ComposeProjectDetailPageState extends State<ComposeProjectDetailPage>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
   late Future<DockerComposeProjectDetail> _detailFuture;
+  bool _deleting = false;
+
+  bool _canBuild(DockerComposeProjectDetail detail) {
+    final status = detail.status.toUpperCase();
+    return status == 'STOPPED' || status == 'CREATED' || status == 'BUILD_FAILED';
+  }
+
+  bool _canStart(DockerComposeProjectDetail detail) {
+    final status = detail.status.toUpperCase();
+    return status == 'STOPPED';
+  }
+
+  bool _canStop(DockerComposeProjectDetail detail) {
+    return detail.status.toUpperCase() == 'RUNNING';
+  }
+
+  bool _canRestart(DockerComposeProjectDetail detail) {
+    return detail.status.toUpperCase() == 'RUNNING';
+  }
+
+  bool _canClean(DockerComposeProjectDetail detail) {
+    final status = detail.status.toUpperCase();
+    return status == 'RUNNING';
+  }
+
+  bool _canDelete(DockerComposeProjectDetail detail) {
+    final status = detail.status.toUpperCase();
+    return status == 'STOPPED' || status == 'CREATED' || status == 'BUILD_FAILED';
+  }
 
   Future<void> _confirmAndClean() async {
     final confirmed = await showDialog<bool>(
@@ -40,6 +69,42 @@ class _ComposeProjectDetailPageState extends State<ComposeProjectDetailPage>
       '/container-management/compose-build-logs',
       extra: {'id': widget.id, 'name': widget.name, 'mode': 'clean'},
     );
+  }
+
+  Future<void> _confirmAndDelete() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('确认删除项目？'),
+        content: const Text('这会删除该 Compose 项目记录。请先确保项目已停止。'),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('取消')),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('确认删除'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _deleting = true);
+    try {
+      await DsmDockerApi().deleteProject(id: widget.id);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(const SnackBar(content: Text('删除 Compose 项目成功')));
+      context.pop();
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text('删除 Compose 项目失败：$error')));
+    } finally {
+      if (mounted) setState(() => _deleting = false);
+    }
   }
 
   @override
@@ -67,43 +132,6 @@ class _ComposeProjectDetailPageState extends State<ComposeProjectDetailPage>
       appBar: AppBar(
         title: Text(widget.name),
         actions: [
-          IconButton(
-            tooltip: '构建并启动',
-            onPressed: () => context.push(
-              '/container-management/compose-build-logs',
-              extra: {'id': widget.id, 'name': widget.name, 'mode': 'build'},
-            ),
-            icon: const Icon(Icons.play_circle_outline_rounded),
-          ),
-          IconButton(
-            tooltip: '启动项目',
-            onPressed: () => context.push(
-              '/container-management/compose-build-logs',
-              extra: {'id': widget.id, 'name': widget.name, 'mode': 'start'},
-            ),
-            icon: const Icon(Icons.play_arrow_rounded),
-          ),
-          IconButton(
-            tooltip: '停止项目',
-            onPressed: () => context.push(
-              '/container-management/compose-build-logs',
-              extra: {'id': widget.id, 'name': widget.name, 'mode': 'stop'},
-            ),
-            icon: const Icon(Icons.stop_circle_outlined),
-          ),
-          IconButton(
-            tooltip: '重启项目',
-            onPressed: () => context.push(
-              '/container-management/compose-build-logs',
-              extra: {'id': widget.id, 'name': widget.name, 'mode': 'restart'},
-            ),
-            icon: const Icon(Icons.restart_alt_rounded),
-          ),
-          IconButton(
-            tooltip: '清除项目',
-            onPressed: _confirmAndClean,
-            icon: const Icon(Icons.cleaning_services_outlined),
-          ),
           IconButton(onPressed: _refresh, icon: const Icon(Icons.refresh_rounded)),
         ],
       ),
@@ -134,15 +162,86 @@ class _ComposeProjectDetailPageState extends State<ComposeProjectDetailPage>
                   return _ComposeProjectErrorState(onRetry: _refresh);
                 }
                 final detail = snapshot.data!;
-                return TabBarView(
-                  controller: _tabController,
+                return Column(
                   children: [
-                    _ComposeContainersTab(detail: detail),
-                    const AppEmptyState(
-                      icon: Icons.construction_rounded,
-                      message: '统计数据待开发',
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                      child: Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          FilledButton.tonalIcon(
+                            onPressed: _canBuild(detail)
+                                ? () => context.push(
+                                      '/container-management/compose-build-logs',
+                                      extra: {'id': widget.id, 'name': widget.name, 'mode': 'build'},
+                                    )
+                                : null,
+                            icon: const Icon(Icons.play_circle_outline_rounded),
+                            label: const Text('构建'),
+                          ),
+                          FilledButton.tonalIcon(
+                            onPressed: _canStart(detail)
+                                ? () => context.push(
+                                      '/container-management/compose-build-logs',
+                                      extra: {'id': widget.id, 'name': widget.name, 'mode': 'start'},
+                                    )
+                                : null,
+                            icon: const Icon(Icons.play_arrow_rounded),
+                            label: const Text('启动'),
+                          ),
+                          FilledButton.tonalIcon(
+                            onPressed: _canStop(detail)
+                                ? () => context.push(
+                                      '/container-management/compose-build-logs',
+                                      extra: {'id': widget.id, 'name': widget.name, 'mode': 'stop'},
+                                    )
+                                : null,
+                            icon: const Icon(Icons.stop_circle_outlined),
+                            label: const Text('停止'),
+                          ),
+                          FilledButton.tonalIcon(
+                            onPressed: _canRestart(detail)
+                                ? () => context.push(
+                                      '/container-management/compose-build-logs',
+                                      extra: {'id': widget.id, 'name': widget.name, 'mode': 'restart'},
+                                    )
+                                : null,
+                            icon: const Icon(Icons.restart_alt_rounded),
+                            label: const Text('重启'),
+                          ),
+                          FilledButton.tonalIcon(
+                            onPressed: _canClean(detail) ? _confirmAndClean : null,
+                            icon: const Icon(Icons.cleaning_services_outlined),
+                            label: const Text('清除'),
+                          ),
+                          FilledButton.tonalIcon(
+                            onPressed: (_deleting || !_canDelete(detail)) ? null : _confirmAndDelete,
+                            icon: _deleting
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                  )
+                                : const Icon(Icons.delete_outline_rounded),
+                            label: Text(_deleting ? '删除中' : '删除'),
+                          ),
+                        ],
+                      ),
                     ),
-                    _ComposeYamlTab(detail: detail),
+                    Expanded(
+                      child: TabBarView(
+                        controller: _tabController,
+                        children: [
+                          _ComposeContainersTab(detail: detail),
+                          const AppEmptyState(
+                            icon: Icons.construction_rounded,
+                            message: '统计数据待开发',
+                          ),
+                          _ComposeYamlTab(detail: detail),
+                        ],
+                      ),
+                    ),
                   ],
                 );
               },

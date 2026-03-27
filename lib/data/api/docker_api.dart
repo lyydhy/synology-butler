@@ -501,6 +501,47 @@ class DsmDockerApi {
     return _projectActionStream(id: id, method: 'clean_stream', action: 'cleanProjectStream', errorLabel: '清除日志');
   }
 
+  Future<void> deleteProject({required String id}) async {
+    DsmLogger.request(
+      module: 'Docker',
+      action: 'deleteProject',
+      method: 'POST',
+      path: '/webapi/entry.cgi/SYNO.Docker.Project',
+      extra: {
+        'api': 'SYNO.Docker.Project',
+        'id': id,
+      },
+    );
+
+    final response = await _dio.post(
+      '/webapi/entry.cgi/SYNO.Docker.Project',
+      data: {
+        'api': 'SYNO.Docker.Project',
+        'method': 'delete',
+        'version': '1',
+        'id': id,
+      },
+      options: _options(),
+    );
+
+    final payload = response.data;
+    if (payload is Map && payload['success'] == true) {
+      DsmLogger.success(
+        module: 'Docker',
+        action: 'deleteProject',
+        path: '/webapi/entry.cgi/SYNO.Docker.Project',
+        response: {'id': id},
+      );
+      return;
+    }
+
+    throw DioException(
+      requestOptions: response.requestOptions,
+      response: response,
+      error: _extractError(action: 'deleteProject', data: payload),
+    );
+  }
+
   Stream<String> _projectActionStream({
     required String id,
     required String method,
