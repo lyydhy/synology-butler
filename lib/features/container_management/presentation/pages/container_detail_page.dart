@@ -1,5 +1,9 @@
-import 'package:flutter/material.dart';
+import 'dart:io';
 
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+import '../../../../core/utils/local_app_log_store.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../core/widgets/app_error_state.dart';
 import '../../../../core/widgets/sliding_tab_bar.dart';
@@ -20,6 +24,27 @@ class _ContainerDetailPageState extends State<ContainerDetailPage> with SingleTi
   late Future<List<String>> _logDatesFuture;
   String? _selectedDate;
   Future<String>? _logsFuture;
+
+  Future<void> _copyLogs(String text) async {
+    await Clipboard.setData(ClipboardData(text: text));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(const SnackBar(content: Text('日志已复制')));
+  }
+
+  Future<void> _exportLogs(String text) async {
+    final logsDir = await LocalAppLogStore.resolveLogsDir();
+    final safeName = widget.name.replaceAll(RegExp(r'[^a-zA-Z0-9_-]'), '_');
+    final datePart = (_selectedDate ?? DateTime.now().toIso8601String().split('T').first).replaceAll(':', '-');
+    final file = File('${logsDir.path}/${safeName}_container_$datePart.log');
+    await file.writeAsString(text, flush: true);
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text('日志已导出：${file.path}')));
+  }
 
   @override
   void initState() {
@@ -221,6 +246,23 @@ class _ContainerDetailPageState extends State<ContainerDetailPage> with SingleTi
                               return ListView(
                                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                                 children: [
+                                  Wrap(
+                                    spacing: 8,
+                                    runSpacing: 8,
+                                    children: [
+                                      FilledButton.tonalIcon(
+                                        onPressed: () => _copyLogs(logsText),
+                                        icon: const Icon(Icons.copy_all_outlined),
+                                        label: const Text('复制'),
+                                      ),
+                                      FilledButton.tonalIcon(
+                                        onPressed: () => _exportLogs(logsText),
+                                        icon: const Icon(Icons.save_alt_outlined),
+                                        label: const Text('导出'),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
                                   SelectableText(logsText),
                                 ],
                               );
