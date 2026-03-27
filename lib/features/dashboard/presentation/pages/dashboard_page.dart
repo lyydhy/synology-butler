@@ -128,28 +128,24 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with WidgetsBindi
                 _AppEntryItem(
                   icon: Icons.inventory_2_outlined,
                   label: '容器管理',
-                  hint: '容器 / Compose / 镜像',
-                  color: Colors.blueGrey,
+                    color: Colors.blueGrey,
                   onTap: () => context.push('/container-management'),
                 ),
               _AppEntryItem(
                 icon: Icons.sync_alt_rounded,
                 label: '传输中心',
-                hint: '下载 / 上传 / 任务',
                 color: Colors.deepOrange,
                 onTap: () => context.push('/transfers'),
               ),
               _AppEntryItem(
                 icon: Icons.info_outline_rounded,
                 label: '信息中心',
-                hint: '系统信息 / 硬件 / 存储',
                 color: Colors.indigo,
                 onTap: () => context.push('/information-center'),
               ),
               _AppEntryItem(
                 icon: Icons.monitor_heart_outlined,
                 label: '性能监控',
-                hint: '概览 / CPU / 内存 / 网络',
                 color: Colors.teal,
                 onTap: () => context.push('/performance'),
               ),
@@ -283,9 +279,9 @@ class _AppSection extends StatelessWidget {
       itemCount: items.length,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        mainAxisSpacing: 12,
-        crossAxisSpacing: 12,
-        childAspectRatio: 1.38,
+        mainAxisSpacing: 10,
+        crossAxisSpacing: 10,
+        childAspectRatio: 1.05,
       ),
       itemBuilder: (context, index) => _AppEntryCard(item: items[index]),
     );
@@ -296,14 +292,12 @@ class _AppEntryItem {
   const _AppEntryItem({
     required this.icon,
     required this.label,
-    required this.hint,
     required this.color,
     required this.onTap,
   });
 
   final IconData icon;
   final String label;
-  final String hint;
   final Color color;
   final VoidCallback onTap;
 }
@@ -320,54 +314,40 @@ class _AppEntryCard extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(18),
         onTap: item.onTap,
         child: Ink(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(18),
             color: theme.colorScheme.surface,
-            border: Border.all(color: item.color.withValues(alpha: 0.12)),
+            border: Border.all(color: item.color.withValues(alpha: 0.10)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.03),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
+                color: Colors.black.withValues(alpha: 0.02),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
               ),
             ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Container(
-                    width: 42,
-                    height: 42,
-                    decoration: BoxDecoration(
-                      color: item.color.withValues(alpha: 0.14),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Icon(item.icon, color: item.color, size: 21),
-                  ),
-                  const Spacer(),
-                  Icon(Icons.chevron_right_rounded, color: theme.colorScheme.onSurfaceVariant),
-                ],
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: item.color.withValues(alpha: 0.13),
+                  borderRadius: BorderRadius.circular(13),
+                ),
+                child: Icon(item.icon, color: item.color, size: 20),
               ),
               const Spacer(),
               Text(
                 item.label,
-                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                item.hint,
-                maxLines: 2,
+                maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                  height: 1.35,
-                ),
+                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
               ),
             ],
           ),
