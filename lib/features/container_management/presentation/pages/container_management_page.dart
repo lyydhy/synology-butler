@@ -609,6 +609,11 @@ class _ComposeCard extends StatelessWidget {
     final isRunning = item.status == '运行中';
 
     return AppSurfaceCard(
+      onTap: () => showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        builder: (context) => _ComposeProjectSheet(item: item),
+      ),
       child: Row(
         children: [
           Container(
@@ -641,13 +646,141 @@ class _ComposeCard extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               OutlinedButton.icon(
-                onPressed: () {},
-                icon: Icon(isRunning ? Icons.stop_rounded : Icons.play_arrow_rounded),
-                label: Text(isRunning ? '停止' : '启动'),
+                onPressed: () => showModalBottomSheet<void>(
+                  context: context,
+                  isScrollControlled: true,
+                  builder: (context) => _ComposeProjectSheet(item: item),
+                ),
+                icon: const Icon(Icons.visibility_outlined),
+                label: const Text('查看'),
               ),
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ComposeProjectSheet extends StatelessWidget {
+  const _ComposeProjectSheet({required this.item});
+
+  final _ComposeUiItem item;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return SafeArea(
+      child: DraggableScrollableSheet(
+        expand: false,
+        initialChildSize: 0.72,
+        minChildSize: 0.45,
+        maxChildSize: 0.92,
+        builder: (context, scrollController) => Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 42,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.outlineVariant,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(item.name, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  AppStatusChip(
+                    label: item.status,
+                    color: item.status == '运行中'
+                        ? Colors.green.shade700
+                        : item.status == '部分运行'
+                            ? Colors.orange.shade700
+                            : Colors.grey.shade700,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  AppStatusChip(
+                    label: '${item.containerCount} 个容器',
+                    color: Colors.blueGrey.shade700,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Text(
+                '项目内容器',
+                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 12),
+              Expanded(
+                child: ListView.separated(
+                  controller: scrollController,
+                  itemCount: item.containers.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 10),
+                  itemBuilder: (context, index) {
+                    final container = item.containers[index];
+                    final isRunning = container.status == 'running';
+                    return AppSurfaceCard(
+                      onTap: () {
+                        Navigator.of(context).pop();
+                        context.push('/container-management/detail', extra: {'name': container.name});
+                      },
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 42,
+                            height: 42,
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.primaryContainer,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(Icons.inventory_2_outlined),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  container.name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  container.image,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.textTheme.bodySmall,
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          AppStatusChip(
+                            label: isRunning ? '运行中' : '已停止',
+                            color: isRunning ? Colors.green.shade700 : Colors.grey.shade700,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -771,11 +904,13 @@ class _ComposeUiItem {
     required this.name,
     required this.status,
     required this.containerCount,
+    required this.containers,
   });
 
   final String name;
   final String status;
   final int containerCount;
+  final List<DockerContainerSummary> containers;
 }
 
 List<_ComposeUiItem> _buildComposeGroups(List<DockerContainerSummary> containers) {
@@ -799,6 +934,7 @@ List<_ComposeUiItem> _buildComposeGroups(List<DockerContainerSummary> containers
       name: entry.key,
       status: status,
       containerCount: values.length,
+      containers: values,
     );
   }).toList()
     ..sort((a, b) => a.name.compareTo(b.name));
