@@ -1,6 +1,7 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/utils/local_app_log_store.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -98,6 +99,11 @@ class _AppLogsPageState extends State<AppLogsPage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(l10n.appLogsExported(exportedPath))),
     );
+  }
+
+  Future<void> _shareSanitizedLog(LocalAppLogFileSummary file) async {
+    final exportedPath = await LocalAppLogStore.exportSanitizedLogFile(file.path);
+    await Share.shareXFiles([XFile(exportedPath)], text: '应用日志：${file.name}');
   }
 
   Future<void> openLog(LocalAppLogFileSummary file) async {
@@ -222,6 +228,13 @@ class _AppLogsPageState extends State<AppLogsPage> {
                         },
                         icon: const Icon(Icons.folder_open_outlined),
                         label: Text(l10n.appLogsExportToDirectory),
+                      ),
+                      OutlinedButton.icon(
+                        onPressed: () async {
+                          await _shareSanitizedLog(file);
+                        },
+                        icon: const Icon(Icons.share_outlined),
+                        label: const Text('分享'),
                       ),
                       OutlinedButton.icon(
                         onPressed: () async {

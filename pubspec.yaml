@@ -25,6 +25,7 @@ dependencies:
   cryptography: ^2.7.0
   open_filex: ^4.7.0
   flutter_sharing_intent: ^2.0.4
+  share_plus: ^10.1.2
 
 dev_dependencies:
   flutter_test:

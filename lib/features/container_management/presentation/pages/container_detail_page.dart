@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/utils/local_app_log_store.dart';
 import '../../../../core/widgets/app_empty_state.dart';
@@ -33,17 +34,27 @@ class _ContainerDetailPageState extends State<ContainerDetailPage> with SingleTi
       ..showSnackBar(const SnackBar(content: Text('日志已复制')));
   }
 
-  Future<void> _exportLogs(String text) async {
+  Future<File> _writeLogsToTxtFile(String text) async {
     final logsDir = await LocalAppLogStore.resolveLogsDir();
     final safeName = widget.name.replaceAll(RegExp(r'[^a-zA-Z0-9_-]'), '_');
     final datePart = (_selectedDate ?? DateTime.now().toIso8601String().split('T').first).replaceAll(':', '-');
-    final file = File('${logsDir.path}/${safeName}_container_$datePart.log');
+    final file = File('${logsDir.path}/${safeName}_container_$datePart.txt');
     await file.writeAsString(text, flush: true);
+    return file;
+  }
+
+  Future<void> _exportLogs(String text) async {
+    final file = await _writeLogsToTxtFile(text);
 
     if (!mounted) return;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(content: Text('日志已导出：${file.path}')));
+  }
+
+  Future<void> _shareLogs(String text) async {
+    final file = await _writeLogsToTxtFile(text);
+    await Share.shareXFiles([XFile(file.path)], text: '容器日志：${widget.name}');
   }
 
   @override
@@ -259,6 +270,11 @@ class _ContainerDetailPageState extends State<ContainerDetailPage> with SingleTi
                                         onPressed: () => _exportLogs(logsText),
                                         icon: const Icon(Icons.save_alt_outlined),
                                         label: const Text('导出'),
+                                      ),
+                                      FilledButton.tonalIcon(
+                                        onPressed: () => _shareLogs(logsText),
+                                        icon: const Icon(Icons.share_outlined),
+                                        label: const Text('分享'),
                                       ),
                                     ],
                                   ),
