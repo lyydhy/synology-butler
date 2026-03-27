@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../data/api/file_station_api.dart';
 import '../../../../data/repositories/file_repository_impl.dart';
+import '../../../../domain/entities/file_background_task.dart';
 import '../../../../domain/entities/file_item.dart';
 import '../../../../domain/repositories/file_repository.dart';
 import '../widgets/file_type_helper.dart';
@@ -95,4 +96,12 @@ final fileUploadProvider = Provider<Future<void> Function(String, String, Uint8L
           bytes: bytes,
         );
   };
+});
+
+final fileBackgroundTasksProvider = StreamProvider.autoDispose<List<FileBackgroundTask>>((ref) async* {
+  while (true) {
+    final tasks = await ref.read(fileStationApiProvider).listBackgroundTasks();
+    yield tasks;
+    await Future<void>.delayed(const Duration(seconds: 5));
+  }
 });

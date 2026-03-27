@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 
 import '../../core/network/app_dio.dart';
 import '../../core/utils/dsm_logger.dart';
+import '../../domain/entities/file_background_task.dart';
 import '../../domain/entities/file_item.dart';
 
 abstract class FileStationApi {
@@ -49,6 +50,8 @@ abstract class FileStationApi {
     required String fileName,
     required Uint8List bytes,
   });
+
+  Future<List<FileBackgroundTask>> listBackgroundTasks();
 }
 
 class DsmFileStationApi implements FileStationApi {
@@ -447,6 +450,77 @@ class DsmFileStationApi implements FileStationApi {
     throw DioException(
       requestOptions: response.requestOptions,
       error: _extractError(action: 'createShareLink', data: response.data),
+      response: response,
+    );
+  }
+
+  @override
+  Future<List<FileBackgroundTask>> listBackgroundTasks() async {
+    DsmLogger.request(
+      module: 'FileStation',
+      action: 'backgroundTask',
+      method: 'GET',
+      path: '/',
+      extra: const {
+        'api': 'SYNO.FileStation.BackgroundTask',
+        'method': 'list',
+        'version': '3',
+      },
+    );
+
+    final response = await _dio.get(
+      '/webapi/entry.cgi',
+      queryParameters: {
+        'api': 'SYNO.FileStation.BackgroundTask',
+        'version': '3',
+        'method': 'list',
+      },
+    );
+
+    if (response.data is Map && response.data['success'] == true) {
+      final data = response.data['data'] as Map? ?? const {};
+      final tasks = (data['tasks'] as List?) ?? const [];
+      final result = tasks.whereType<Map>().map((task) {
+        final api = (task['api'] ?? '').toString();
+        final params = task['params'] as Map? ?? const {};
+        final taskId = (task['taskid'] ?? '').toString();
+        final type = switch (api) {
+          'SYNO.FileStation.CopyMove' => (params['remove_src'] == true) ? 'move' : 'copy',
+          'SYNO.FileStation.Delete' => 'delete',
+          'SYNO.FileStation.Compress' => 'compress',
+          'SYNO.FileStation.Extract' => 'extract',
+          _ => '',
+        };
+        final pathValue = (params['path'] ?? params['dest_folder_path'] ?? '').toString();
+
+        return FileBackgroundTask(
+          taskId: taskId,
+          type: type,
+          path: pathValue,
+          finished: false,
+          raw: Map<String, dynamic>.from(task),
+        );
+      }).where((task) => task.taskId.isNotEmpty && task.type.isNotEmpty).toList();
+
+      DsmLogger.success(
+        module: 'FileStation',
+        action: 'backgroundTask',
+        path: '/',
+        extra: {'count': result.length},
+      );
+      return result;
+    }
+
+    DsmLogger.failure(
+      module: 'FileStation',
+      action: 'backgroundTask',
+      path: '/',
+      response: response.data,
+    );
+
+    throw DioException(
+      requestOptions: response.requestOptions,
+      error: _extractError(action: 'backgroundTask', data: response.data),
       response: response,
     );
   }

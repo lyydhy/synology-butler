@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/error/error_mapper.dart';
 import '../../../../core/utils/file_launcher.dart';
 import '../../../../core/utils/server_url_helper.dart';
+import '../../../../domain/entities/file_background_task.dart';
 import '../../../../domain/entities/file_item.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../auth/presentation/providers/current_connection_readers.dart';
@@ -112,6 +113,13 @@ class _FilesPageState extends ConsumerState<FilesPage> {
   /// 刷新当前目录文件列表。
   void _refreshCurrentPath() {
     ref.invalidate(fileListProvider(_fileQuery));
+  }
+
+  bool _taskAffectsCurrentPath(FileBackgroundTask task) {
+    final taskPath = task.path.trim();
+    if (taskPath.isEmpty) return true;
+    if (_currentPath == _rootPath) return true;
+    return taskPath == _currentPath || taskPath.startsWith('$_currentPath/');
   }
 
   /// 进入指定目录并清空多选状态。
@@ -418,6 +426,8 @@ class _FilesPageState extends ConsumerState<FilesPage> {
     final filesAsync = ref.watch(fileListProvider(_fileQuery));
     final canGoUp = _currentPath != _rootPath;
     final activeTransferCount = ref.watch(activeTransferCountProvider);
+    final backgroundTasksAsync = ref.watch(fileBackgroundTasksProvider);
+    final backgroundTasks = backgroundTasksAsync.valueOrNull ?? const <FileBackgroundTask>[];
     final isDirectoryPickerMode = widget.directoryPickerMode;
 
     return PopScope(
@@ -480,6 +490,16 @@ class _FilesPageState extends ConsumerState<FilesPage> {
                   ),
         body: Column(
           children: [
+            if (!isDirectoryPickerMode && backgroundTasks.isNotEmpty)
+              _BackgroundTaskBanner(
+                tasks: backgroundTasks,
+                onRefresh: () {
+                  final matched = backgroundTasks.any(_taskAffectsCurrentPath);
+                  if (matched) {
+                    _refreshCurrentPath();
+                  }
+                },
+              ),
             FilesHeader(
               path: _currentPath,
               sort: _sort,
@@ -588,6 +608,68 @@ class _FilesPageState extends ConsumerState<FilesPage> {
                 ),
               )
             : null,
+      ),
+    );
+  }
+}
+
+class _BackgroundTaskBanner extends StatelessWidget {
+  const _BackgroundTaskBanner({
+    required this.tasks,
+    required this.onRefresh,
+  });
+
+  final List<FileBackgroundTask> tasks;
+  final VoidCallback onRefresh;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final first = tasks.first;
+    final extraCount = tasks.length - 1;
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primaryContainer.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surface.withValues(alpha: 0.9),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(Icons.sync_rounded, color: theme.colorScheme.primary),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  extraCount > 0 ? '后台任务进行中（${tasks.length}）' : '后台任务进行中',
+                  style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${first.displayName} · ${first.path.isEmpty ? '处理中' : first.path}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                ),
+              ],
+            ),
+          ),
+          TextButton(
+            onPressed: onRefresh,
+            child: const Text('刷新'),
+          ),
+        ],
       ),
     );
   }
