@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../features/auth/presentation/pages/login_page.dart';
 import '../features/auth/presentation/pages/splash_page.dart';
+import '../features/container_management/presentation/pages/compose_project_detail_page.dart';
 import '../features/container_management/presentation/pages/container_detail_page.dart';
 import '../features/container_management/presentation/pages/container_management_page.dart';
 import '../features/container_management/presentation/pages/container_management_settings_page.dart';
@@ -54,6 +55,18 @@ final GoRouter appRouter = GoRouter(
           return const Scaffold(body: Center(child: Text('容器详情参数缺失')));
         }
         return ContainerDetailPage(name: name);
+      },
+    ),
+    GoRoute(
+      path: '/container-management/compose-detail',
+      builder: (context, state) {
+        final extra = state.extra as Map<String, dynamic>? ?? const {};
+        final id = extra['id']?.toString() ?? '';
+        final name = extra['name']?.toString() ?? '';
+        if (id.isEmpty) {
+          return const Scaffold(body: Center(child: Text('Compose 项目详情参数缺失')));
+        }
+        return ComposeProjectDetailPage(id: id, name: name.isEmpty ? 'Compose 项目' : name);
       },
     ),
     GoRoute(

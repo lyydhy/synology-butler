@@ -85,6 +85,32 @@ class DockerContainerDetail {
   final List<List<String>> processes;
 }
 
+class DockerComposeProjectDetail {
+  const DockerComposeProjectDetail({
+    required this.id,
+    required this.name,
+    required this.path,
+    required this.sharePath,
+    required this.status,
+    required this.state,
+    required this.updatedAt,
+    required this.content,
+    required this.containers,
+    required this.containerIds,
+  });
+
+  final String id;
+  final String name;
+  final String path;
+  final String sharePath;
+  final String status;
+  final String state;
+  final String updatedAt;
+  final String content;
+  final List<Map<String, dynamic>> containers;
+  final List<String> containerIds;
+}
+
 /// 轻量版群晖 Docker 数据源。
 ///
 /// 第一阶段先接入两个最直接的列表：
@@ -324,6 +350,56 @@ class DsmDockerApi {
       requestOptions: response.requestOptions,
       response: response,
       error: _extractError(action: 'fetchProjects', data: payload),
+    );
+  }
+
+  Future<DockerComposeProjectDetail> fetchProjectDetail({required String id}) async {
+    DsmLogger.request(
+      module: 'Docker',
+      action: 'fetchProjectDetail',
+      method: 'POST',
+      path: '/webapi/entry.cgi',
+      extra: {
+        'api': 'SYNO.Docker.Project',
+        'id': id,
+      },
+    );
+
+    final response = await _dio.post(
+      '/webapi/entry.cgi',
+      data: {
+        'api': 'SYNO.Docker.Project',
+        'method': 'get',
+        'version': '1',
+        'id': id,
+      },
+      options: _options(),
+    );
+
+    final payload = response.data;
+    if (payload is Map && payload['success'] == true) {
+      final data = payload['data'] as Map? ?? const {};
+      return DockerComposeProjectDetail(
+        id: (data['id'] ?? '').toString(),
+        name: (data['name'] ?? '').toString(),
+        path: (data['path'] ?? '').toString(),
+        sharePath: (data['share_path'] ?? '').toString(),
+        status: (data['status'] ?? '').toString(),
+        state: (data['state'] ?? '').toString(),
+        updatedAt: (data['updated_at'] ?? '').toString(),
+        content: (data['content'] ?? '').toString(),
+        containers: ((data['containers'] as List?) ?? const [])
+            .whereType<Map>()
+            .map((e) => Map<String, dynamic>.from(e))
+            .toList(),
+        containerIds: ((data['containerIds'] as List?) ?? const []).map((e) => e.toString()).toList(),
+      );
+    }
+
+    throw DioException(
+      requestOptions: response.requestOptions,
+      response: response,
+      error: _extractError(action: 'fetchProjectDetail', data: payload),
     );
   }
 
