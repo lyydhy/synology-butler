@@ -136,6 +136,7 @@ class _FilesPageState extends ConsumerState<FilesPage> {
       final previousTasks = previous?.valueOrNull ?? const <FileBackgroundTask>[];
       final finishedTasks = previousTasks.where((task) => finishedIds.contains(task.taskId)).toList();
       final shouldRefresh = finishedTasks.any(_taskAffectsCurrentPath);
+      final notifyTasks = finishedTasks.where((task) => !_isDownloadBackgroundTask(task)).toList();
 
       _lastBackgroundTaskIds = currentIds;
 
@@ -143,9 +144,9 @@ class _FilesPageState extends ConsumerState<FilesPage> {
         _refreshCurrentPath();
       }
 
-      if (finishedTasks.isNotEmpty) {
-        final first = finishedTasks.first;
-        final count = finishedTasks.length;
+      if (notifyTasks.isNotEmpty) {
+        final first = notifyTasks.first;
+        final count = notifyTasks.length;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(count > 1 ? '${first.displayName}等$count 个后台任务已完成' : '${first.displayName}任务已完成'),
@@ -171,6 +172,10 @@ class _FilesPageState extends ConsumerState<FilesPage> {
     if (taskPath.isEmpty) return true;
     if (_currentPath == _rootPath) return true;
     return taskPath == _currentPath || taskPath.startsWith('$_currentPath/');
+  }
+
+  bool _isDownloadBackgroundTask(FileBackgroundTask task) {
+    return task.type.toLowerCase() == 'download';
   }
 
   /// 进入指定目录并清空多选状态。
