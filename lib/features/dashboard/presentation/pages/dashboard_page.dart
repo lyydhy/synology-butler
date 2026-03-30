@@ -132,6 +132,13 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with WidgetsBindi
                 onTap: () => context.push('/transfers'),
               ),
               _AppEntryItem(
+                icon: Icons.tune_rounded,
+                label: '控制面板',
+                description: '按优先级进入系统功能配置',
+                color: Colors.deepPurple,
+                onTap: () => context.push('/control-panel'),
+              ),
+              _AppEntryItem(
                 icon: Icons.info_outline_rounded,
                 label: '信息中心',
                 description: '查看系统与存储详情',
