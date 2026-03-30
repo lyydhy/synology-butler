@@ -28,6 +28,7 @@ import '../features/packages/presentation/pages/packages_page.dart';
 import '../features/performance/presentation/pages/performance_page.dart';
 import '../features/server-management/presentation/pages/server_management_page.dart';
 import '../features/shell/main_shell_page.dart';
+import '../features/task_scheduler/presentation/pages/task_scheduler_page.dart';
 import '../features/transfers/presentation/pages/transfers_page.dart';
 
 final GlobalKey<NavigatorState> appNavigatorKey = GlobalKey<NavigatorState>();
@@ -47,6 +48,7 @@ GoRouter createAppRouter({required String initialLocation}) {
     GoRoute(path: '/transfers', builder: (context, state) => const TransfersPage()),
     GoRoute(path: '/external-access', builder: (context, state) => const ExternalAccessPage()),
     GoRoute(path: '/index-service', builder: (context, state) => const IndexServicePage()),
+    GoRoute(path: '/task-scheduler', builder: (context, state) => const TaskSchedulerPage()),
     GoRoute(path: '/packages', builder: (context, state) => const PackagesPage()),
     GoRoute(path: '/performance', builder: (context, state) => const PerformancePage()),
     GoRoute(path: '/container-management', builder: (context, state) => const ContainerManagementPage()),

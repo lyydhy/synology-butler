@@ -12,6 +12,7 @@ import '../models/external_access_model.dart';
 import '../models/index_service_model.dart';
 import '../models/information_center_model.dart';
 import '../models/system_status_model.dart';
+import '../models/task_scheduler_model.dart';
 
 abstract class SystemApi {
   Future<SystemStatusModel> fetchOverview();
@@ -31,6 +32,12 @@ abstract class SystemApi {
   Future<void> setThumbnailQuality({required int quality});
 
   Future<void> rebuildIndex();
+
+  Future<List<ScheduledTaskModel>> fetchScheduledTasks();
+
+  Future<void> runScheduledTask({required int id, required String type, required String name});
+
+  Future<void> setScheduledTaskEnabled({required int id, required bool enabled});
 }
 
 class DsmSystemApi implements SystemApi {
@@ -242,6 +249,98 @@ class DsmSystemApi implements SystemApi {
 
     if (!(response.data is Map && response.data['success'] == true)) {
       throw Exception(response.data is Map ? response.data['error']?.toString() ?? '重建索引失败' : '重建索引失败');
+    }
+  }
+
+  @override
+  Future<List<ScheduledTaskModel>> fetchScheduledTasks() async {
+    final client = _dio;
+    final response = await client.post(
+      '/webapi/entry.cgi',
+      data: {
+        'api': 'SYNO.Core.TaskScheduler',
+        'method': 'list',
+        'version': '1',
+        'offset': '0',
+        'limit': '-1',
+        'sort_by': 'next_trigger_time',
+        'sort_direction': 'DESC',
+      },
+      options: Options(contentType: Headers.formUrlEncodedContentType),
+    );
+
+    if (!(response.data is Map && response.data['success'] == true)) {
+      throw Exception(response.data is Map ? response.data['error']?.toString() ?? '加载任务计划失败' : '加载任务计划失败');
+    }
+
+    final data = response.data['data'] as Map? ?? const {};
+    final tasks = ((data['tasks'] as List?) ?? const [])
+        .whereType<Map>()
+        .map(
+          (item) => ScheduledTaskModel(
+            id: (item['id'] as num?)?.toInt() ?? 0,
+            name: (item['name'] ?? '').toString(),
+            owner: (item['owner'] ?? item['real_owner'] ?? '').toString(),
+            type: (item['type'] ?? '').toString(),
+            enabled: item['enable'] == true,
+            running: item['running'] == true,
+            nextTriggerTime: (item['next_trigger_time'] ?? '').toString(),
+            records: const [],
+          ),
+        )
+        .toList();
+
+    return tasks;
+  }
+
+  @override
+  Future<void> runScheduledTask({required int id, required String type, required String name}) async {
+    final client = _dio;
+    final payload = type == 'event_script'
+        ? {
+            'api': 'SYNO.Core.EventScheduler',
+            'method': 'run',
+            'version': '1',
+            'task_name': jsonEncode([name]),
+          }
+        : {
+            'api': 'SYNO.Core.TaskScheduler',
+            'method': 'run',
+            'version': '1',
+            'task': jsonEncode([id]),
+          };
+    final response = await client.post(
+      '/webapi/entry.cgi',
+      data: payload,
+      options: Options(contentType: Headers.formUrlEncodedContentType),
+    );
+
+    if (!(response.data is Map && response.data['success'] == true)) {
+      throw Exception(response.data is Map ? response.data['error']?.toString() ?? '执行任务计划失败' : '执行任务计划失败');
+    }
+  }
+
+  @override
+  Future<void> setScheduledTaskEnabled({required int id, required bool enabled}) async {
+    final client = _dio;
+    final response = await client.post(
+      '/webapi/entry.cgi',
+      data: {
+        'api': 'SYNO.Core.TaskScheduler',
+        'method': 'set_enable',
+        'version': '1',
+        'status': jsonEncode([
+          {
+            'id': id,
+            'enable': enabled,
+          }
+        ]),
+      },
+      options: Options(contentType: Headers.formUrlEncodedContentType),
+    );
+
+    if (!(response.data is Map && response.data['success'] == true)) {
+      throw Exception(response.data is Map ? response.data['error']?.toString() ?? '更新任务状态失败' : '更新任务状态失败');
     }
   }
 

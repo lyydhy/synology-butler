@@ -2,6 +2,7 @@ import '../entities/external_access.dart';
 import '../entities/index_service.dart';
 import '../entities/information_center.dart';
 import '../entities/system_status.dart';
+import '../entities/task_scheduler.dart';
 
 abstract class SystemRepository {
   Future<SystemStatus> fetchOverview();
@@ -19,4 +20,10 @@ abstract class SystemRepository {
   Future<void> setThumbnailQuality({required int quality});
 
   Future<void> rebuildIndex();
+
+  Future<List<ScheduledTask>> fetchScheduledTasks();
+
+  Future<void> runScheduledTask({required int id, required String type, required String name});
+
+  Future<void> setScheduledTaskEnabled({required int id, required bool enabled});
 }

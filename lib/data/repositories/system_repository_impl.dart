@@ -3,6 +3,7 @@ import '../../domain/entities/external_access.dart';
 import '../../domain/entities/index_service.dart';
 import '../../domain/entities/information_center.dart';
 import '../../domain/entities/system_status.dart';
+import '../../domain/entities/task_scheduler.dart';
 import '../../domain/repositories/system_repository.dart';
 import '../api/system_api.dart';
 
@@ -66,6 +67,42 @@ class SystemRepositoryImpl implements SystemRepository {
   @override
   Future<void> rebuildIndex() {
     return _systemApi.rebuildIndex();
+  }
+
+  @override
+  Future<List<ScheduledTask>> fetchScheduledTasks() async {
+    final models = await _systemApi.fetchScheduledTasks();
+    return models
+        .map(
+          (item) => ScheduledTask(
+            id: item.id,
+            name: item.name,
+            owner: item.owner,
+            type: item.type,
+            enabled: item.enabled,
+            running: item.running,
+            nextTriggerTime: item.nextTriggerTime,
+            records: item.records
+                .map(
+                  (record) => ScheduledTaskRecord(
+                    startTime: record.startTime,
+                    result: record.result,
+                  ),
+                )
+                .toList(),
+          ),
+        )
+        .toList();
+  }
+
+  @override
+  Future<void> runScheduledTask({required int id, required String type, required String name}) {
+    return _systemApi.runScheduledTask(id: id, type: type, name: name);
+  }
+
+  @override
+  Future<void> setScheduledTaskEnabled({required int id, required bool enabled}) {
+    return _systemApi.setScheduledTaskEnabled(id: id, enabled: enabled);
   }
 
   @override
