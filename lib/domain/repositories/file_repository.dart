@@ -36,6 +36,12 @@ abstract class FileRepository {
     void Function(int received, int total)? onReceiveProgress,
   });
 
+  Future<void> downloadFileToPath({
+    required String path,
+    required String localPath,
+    void Function(int received, int total)? onReceiveProgress,
+  });
+
   Future<String> readTextFile({
     required String path,
   });

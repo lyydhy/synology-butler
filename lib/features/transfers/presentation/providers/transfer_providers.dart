@@ -208,8 +208,9 @@ class TransferController extends StateNotifier<List<TransferTask>> {
   }) async {
     _update(id, status: TransferTaskStatus.running, progress: 0.1);
     try {
-      final bytes = await _ref.read(fileRepositoryProvider).downloadFile(
+      await _ref.read(fileRepositoryProvider).downloadFileToPath(
             path: remotePath,
+            localPath: targetFile.path,
             onReceiveProgress: (received, total) {
               if (total <= 0) return;
               final progress = received / total;
@@ -218,7 +219,6 @@ class TransferController extends StateNotifier<List<TransferTask>> {
           );
 
       _update(id, progress: 0.99);
-      await targetFile.writeAsBytes(bytes, flush: true);
       _update(id, status: TransferTaskStatus.success, progress: 1, errorMessage: '已保存到 ${targetFile.path}');
     } catch (e) {
       _update(id, status: TransferTaskStatus.failed, progress: 1, errorMessage: e.toString());

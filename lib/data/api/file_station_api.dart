@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dayfl/dayfl.dart';
@@ -16,6 +18,12 @@ abstract class FileStationApi {
 
   Future<Uint8List> downloadFile({
     required String path,
+    void Function(int received, int total)? onReceiveProgress,
+  });
+
+  Future<void> downloadFileToPath({
+    required String path,
+    required String localPath,
     void Function(int received, int total)? onReceiveProgress,
   });
 
@@ -134,6 +142,78 @@ class DsmFileStationApi implements FileStationApi {
       error: 'Failed to download file: $path',
       response: response,
     );
+  }
+
+  @override
+  Future<void> downloadFileToPath({
+    required String path,
+    required String localPath,
+    void Function(int received, int total)? onReceiveProgress,
+  }) async {
+    DsmLogger.request(
+      module: 'FileStation',
+      action: 'downloadToPath',
+      method: 'GET',
+      path: path,
+      extra: {
+        'api': 'SYNO.FileStation.Download',
+        'method': 'download',
+        'localPath': localPath,
+      },
+    );
+
+    final response = await _dio.get<ResponseBody>(
+      '/webapi/entry.cgi',
+      queryParameters: {
+        'api': 'SYNO.FileStation.Download',
+        'version': '2',
+        'method': 'download',
+        'mode': 'download',
+        'path': jsonEncode([path]),
+      },
+      options: Options(responseType: ResponseType.stream),
+    );
+
+    final body = response.data;
+    if (body == null) {
+      throw DioException(
+        requestOptions: response.requestOptions,
+        error: 'Failed to download file stream: $path',
+        response: response,
+      );
+    }
+
+    final file = File(localPath);
+    await file.parent.create(recursive: true);
+    final sink = file.openWrite();
+    final totalHeader = body.headers[Headers.contentLengthHeader]?.first.trim();
+    final totalBytes = int.tryParse(totalHeader ?? '') ?? -1;
+    var received = 0;
+
+    try {
+      await for (final chunk in body.stream) {
+        received += chunk.length;
+        sink.add(chunk);
+        onReceiveProgress?.call(received, totalBytes);
+      }
+      await sink.flush();
+      await sink.close();
+      DsmLogger.success(
+        module: 'FileStation',
+        action: 'downloadToPath',
+        path: path,
+        extra: {
+          'bytes': received,
+          'localPath': localPath,
+        },
+      );
+    } catch (error) {
+      await sink.close();
+      if (await file.exists()) {
+        await file.delete();
+      }
+      rethrow;
+    }
   }
 
   String _normalizeFolderPath(String path) {
