@@ -1,4 +1,6 @@
 ﻿import '../../core/network/app_dio.dart';
+import '../../domain/entities/external_access.dart';
+import '../../domain/entities/index_service.dart';
 import '../../domain/entities/information_center.dart';
 import '../../domain/entities/system_status.dart';
 import '../../domain/repositories/system_repository.dart';
@@ -8,6 +10,63 @@ class SystemRepositoryImpl implements SystemRepository {
   const SystemRepositoryImpl(this._systemApi);
 
   final SystemApi _systemApi;
+
+  @override
+  Future<ExternalAccessData> fetchExternalAccess() async {
+    final model = await _systemApi.fetchExternalAccess();
+
+    return ExternalAccessData(
+      nextUpdateTime: model.nextUpdateTime,
+      records: model.records
+          .map(
+            (item) => DdnsRecord(
+              id: item.id,
+              provider: item.provider,
+              hostname: item.hostname,
+              ip: item.ip,
+              status: item.status,
+              lastUpdated: item.lastUpdated,
+            ),
+          )
+          .toList(),
+    );
+  }
+
+  @override
+  Future<void> refreshDdns({String? recordId}) {
+    return _systemApi.refreshDdns(recordId: recordId);
+  }
+
+  @override
+  Future<IndexServiceData> fetchIndexService() async {
+    final model = await _systemApi.fetchIndexService();
+
+    return IndexServiceData(
+      indexing: model.indexing,
+      statusText: model.statusText,
+      thumbnailQuality: model.thumbnailQuality,
+      tasks: model.tasks
+          .map(
+            (item) => IndexServiceTask(
+              id: item.id,
+              type: item.type,
+              status: item.status,
+              detail: item.detail,
+            ),
+          )
+          .toList(),
+    );
+  }
+
+  @override
+  Future<void> setThumbnailQuality({required int quality}) {
+    return _systemApi.setThumbnailQuality(quality: quality);
+  }
+
+  @override
+  Future<void> rebuildIndex() {
+    return _systemApi.rebuildIndex();
+  }
 
   @override
   Future<InformationCenterData> fetchInformationCenter() async {

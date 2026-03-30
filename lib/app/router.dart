@@ -9,9 +9,11 @@ import '../features/container_management/presentation/pages/compose_project_deta
 import '../features/container_management/presentation/pages/container_detail_page.dart';
 import '../features/container_management/presentation/pages/container_management_page.dart';
 import '../features/container_management/presentation/pages/container_management_settings_page.dart';
+import '../features/control_panel/presentation/pages/control_panel_page.dart';
 import '../features/debug/presentation/pages/app_logs_page.dart';
 import '../features/debug/presentation/pages/debug_info_page.dart';
 import '../features/diagnostics/presentation/pages/diagnostics_page.dart';
+import '../features/external_access/presentation/pages/external_access_page.dart';
 import '../features/external_share/models/shared_incoming_file.dart';
 import '../features/external_share/pages/external_file_upload_page.dart';
 import '../features/files/presentation/pages/files_page.dart';
@@ -19,6 +21,7 @@ import '../features/files/presentation/pages/image_preview_page.dart';
 import '../features/files/presentation/pages/text_editor_page.dart';
 import '../features/files/presentation/pages/text_preview_page.dart';
 import '../features/files/presentation/pages/video_preview_page.dart';
+import '../features/index_service/presentation/pages/index_service_page.dart';
 import '../features/information_center/presentation/pages/information_center_page.dart';
 import '../features/packages/presentation/pages/package_detail_page.dart';
 import '../features/packages/presentation/pages/packages_page.dart';
@@ -42,9 +45,12 @@ GoRouter createAppRouter({required String initialLocation}) {
     GoRoute(path: '/app-logs', builder: (context, state) => const AppLogsPage()),
     GoRoute(path: '/diagnostics', builder: (context, state) => const DiagnosticsPage()),
     GoRoute(path: '/transfers', builder: (context, state) => const TransfersPage()),
+    GoRoute(path: '/external-access', builder: (context, state) => const ExternalAccessPage()),
+    GoRoute(path: '/index-service', builder: (context, state) => const IndexServicePage()),
     GoRoute(path: '/packages', builder: (context, state) => const PackagesPage()),
     GoRoute(path: '/performance', builder: (context, state) => const PerformancePage()),
     GoRoute(path: '/container-management', builder: (context, state) => const ContainerManagementPage()),
+    GoRoute(path: '/control-panel', builder: (context, state) => const ControlPanelPage()),
     GoRoute(
       path: '/container-management/settings',
       builder: (context, state) => const ContainerManagementSettingsPage(),

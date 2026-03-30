@@ -8,6 +8,8 @@ import 'package:flutter/foundation.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/network/app_dio.dart';
 import '../../core/utils/dsm_logger.dart';
+import '../models/external_access_model.dart';
+import '../models/index_service_model.dart';
 import '../models/information_center_model.dart';
 import '../models/system_status_model.dart';
 
@@ -19,6 +21,16 @@ abstract class SystemApi {
   Future<InformationCenterModel> fetchInformationCenter({
     required String serverName,
   });
+
+  Future<ExternalAccessModel> fetchExternalAccess();
+
+  Future<void> refreshDdns({String? recordId});
+
+  Future<IndexServiceModel> fetchIndexService();
+
+  Future<void> setThumbnailQuality({required int quality});
+
+  Future<void> rebuildIndex();
 }
 
 class DsmSystemApi implements SystemApi {
@@ -56,6 +68,182 @@ class DsmSystemApi implements SystemApi {
   String? get _synoToken => connectionStore.session?.synoToken;
 
   String? get _cookieHeader => connectionStore.session?.cookieHeader;
+
+  @override
+  Future<ExternalAccessModel> fetchExternalAccess() async {
+    final client = _dio;
+
+    Future<Map> postEntry(Map<String, dynamic> data) async {
+      final response = await client.post(
+        '/webapi/entry.cgi',
+        data: data,
+        options: Options(contentType: Headers.formUrlEncodedContentType),
+      );
+      if (response.data is Map && response.data['success'] == true) {
+        return response.data['data'] as Map? ?? const {};
+      }
+      throw Exception(response.data is Map ? response.data['error']?.toString() ?? '加载外部访问失败' : '加载外部访问失败');
+    }
+
+    final compound = await postEntry({
+      'api': 'SYNO.Entry.Request',
+      'method': 'request',
+      'version': '1',
+      'stop_when_error': 'false',
+      'mode': 'sequential',
+      'compound': jsonEncode([
+        {
+          'api': 'SYNO.Core.DDNS.Record',
+          'method': 'list',
+          'version': 1,
+        },
+      ]),
+    });
+
+    final recordData = _extractCompoundApiData(compound, 'SYNO.Core.DDNS.Record');
+    final records = ((recordData['records'] as List?) ?? const [])
+        .whereType<Map>()
+        .map(
+          (item) => DdnsRecordModel(
+            id: (item['id'] ?? '').toString(),
+            provider: (item['provider'] ?? '').toString().replaceAll('USER_', '*'),
+            hostname: (item['hostname'] ?? '').toString(),
+            ip: (item['ip'] ?? '').toString(),
+            status: (item['status'] ?? '').toString(),
+            lastUpdated: (item['lastupdated'] ?? '').toString(),
+          ),
+        )
+        .toList();
+
+    return ExternalAccessModel(
+      records: records,
+      nextUpdateTime: recordData['next_update_time']?.toString(),
+    );
+  }
+
+  @override
+  Future<void> refreshDdns({String? recordId}) async {
+    final client = _dio;
+    final response = await client.post(
+      '/webapi/entry.cgi',
+      data: {
+        'api': 'SYNO.Core.DDNS.Record',
+        'method': 'update',
+        'version': '1',
+        if (recordId != null && recordId.isNotEmpty) 'id': recordId,
+      },
+      options: Options(contentType: Headers.formUrlEncodedContentType),
+    );
+
+    if (!(response.data is Map && response.data['success'] == true)) {
+      throw Exception(response.data is Map ? response.data['error']?.toString() ?? '刷新 DDNS 失败' : '刷新 DDNS 失败');
+    }
+  }
+
+  @override
+  Future<IndexServiceModel> fetchIndexService() async {
+    final client = _dio;
+
+    Future<Map> postEntry(Map<String, dynamic> data) async {
+      final response = await client.post(
+        '/webapi/entry.cgi',
+        data: data,
+        options: Options(contentType: Headers.formUrlEncodedContentType),
+      );
+      if (response.data is Map && response.data['success'] == true) {
+        return response.data['data'] as Map? ?? const {};
+      }
+      throw Exception(response.data is Map ? response.data['error']?.toString() ?? '加载索引服务失败' : '加载索引服务失败');
+    }
+
+    final compound = await postEntry({
+      'api': 'SYNO.Entry.Request',
+      'method': 'request',
+      'version': '1',
+      'stop_when_error': 'false',
+      'mode': 'sequential',
+      'compound': jsonEncode([
+        {
+          'api': 'SYNO.Foto.Index',
+          'method': 'get',
+          'version': 1,
+        },
+        {
+          'api': 'SYNO.Foto.Thumbnail',
+          'method': 'get',
+          'version': 1,
+        },
+        {
+          'api': 'SYNO.Foto.Index.Task',
+          'method': 'list',
+          'version': 1,
+        },
+      ]),
+    });
+
+    final indexData = _extractCompoundApiData(compound, 'SYNO.Foto.Index');
+    final thumbnailData = _extractCompoundApiData(compound, 'SYNO.Foto.Thumbnail');
+    final taskData = _extractCompoundApiData(compound, 'SYNO.Foto.Index.Task');
+    final tasks = ((taskData['tasks'] as List?) ?? const [])
+        .whereType<Map>()
+        .map(
+          (item) => IndexServiceTaskModel(
+            id: (item['id'] ?? '').toString(),
+            type: (item['type'] ?? item['action'] ?? '').toString(),
+            status: (item['status'] ?? '').toString(),
+            detail: (item['detail'] ?? item['path'])?.toString(),
+          ),
+        )
+        .toList();
+
+    final indexing = indexData['running'] == true || indexData['indexing'] == true;
+    final statusText = (indexData['status_text'] ?? indexData['status'] ?? (indexing ? '索引进行中' : '空闲')).toString();
+    final thumbnailQuality = int.tryParse((thumbnailData['quality'] ?? thumbnailData['thumb_quality'] ?? 2).toString()) ?? 2;
+
+    return IndexServiceModel(
+      indexing: indexing,
+      statusText: statusText,
+      thumbnailQuality: thumbnailQuality,
+      tasks: tasks,
+    );
+  }
+
+  @override
+  Future<void> setThumbnailQuality({required int quality}) async {
+    final client = _dio;
+    final response = await client.post(
+      '/webapi/entry.cgi',
+      data: {
+        'api': 'SYNO.Foto.Thumbnail',
+        'method': 'set',
+        'version': '1',
+        'quality': quality.toString(),
+      },
+      options: Options(contentType: Headers.formUrlEncodedContentType),
+    );
+
+    if (!(response.data is Map && response.data['success'] == true)) {
+      throw Exception(response.data is Map ? response.data['error']?.toString() ?? '设置缩图质量失败' : '设置缩图质量失败');
+    }
+  }
+
+  @override
+  Future<void> rebuildIndex() async {
+    final client = _dio;
+    final response = await client.post(
+      '/webapi/entry.cgi',
+      data: {
+        'api': 'SYNO.Foto.Index',
+        'method': 'reindex',
+        'version': '1',
+      },
+      options: Options(contentType: Headers.formUrlEncodedContentType),
+    );
+
+    if (!(response.data is Map && response.data['success'] == true)) {
+      throw Exception(response.data is Map ? response.data['error']?.toString() ?? '重建索引失败' : '重建索引失败');
+    }
+  }
 
   @override
   Future<InformationCenterModel> fetchInformationCenter({
