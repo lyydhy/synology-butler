@@ -50,6 +50,8 @@ class _FilesPageState extends ConsumerState<FilesPage> {
   static const String _defaultSort = 'type';
 
   Timer? _pollTimer;
+  ProviderSubscription<List<TransferTask>>? _transferListener;
+  ProviderSubscription<AsyncValue<List<FileBackgroundTask>>>? _backgroundTaskListener;
   Set<String> _lastBackgroundTaskIds = <String>{};
 
   /// 当前页面所在目录。
@@ -79,7 +81,7 @@ class _FilesPageState extends ConsumerState<FilesPage> {
       ref.invalidate(fileListProvider(_fileQuery));
     });
 
-    ref.listenManual<List<TransferTask>>(transferControllerProvider, (previous, next) {
+    _transferListener = ref.listenManual<List<TransferTask>>(transferControllerProvider, (previous, next) {
       if (!mounted) return;
 
       final previousMap = {
@@ -102,8 +104,11 @@ class _FilesPageState extends ConsumerState<FilesPage> {
       final task = finishedDownload;
       if (task == null) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
+      final messenger = ScaffoldMessenger.of(context);
+      messenger.hideCurrentSnackBar();
+      messenger.showSnackBar(
         SnackBar(
+          duration: const Duration(seconds: 5),
           content: Text('${task.title} 下载完成'),
           action: SnackBarAction(
             label: '打开',
@@ -122,7 +127,7 @@ class _FilesPageState extends ConsumerState<FilesPage> {
       );
     });
 
-    ref.listenManual(fileBackgroundTasksProvider, (previous, next) {
+    _backgroundTaskListener = ref.listenManual(fileBackgroundTasksProvider, (previous, next) {
       if (!mounted) return;
 
       final tasks = next.valueOrNull ?? const <FileBackgroundTask>[];
@@ -147,8 +152,11 @@ class _FilesPageState extends ConsumerState<FilesPage> {
       if (notifyTasks.isNotEmpty) {
         final first = notifyTasks.first;
         final count = notifyTasks.length;
-        ScaffoldMessenger.of(context).showSnackBar(
+        final messenger = ScaffoldMessenger.of(context);
+        messenger.hideCurrentSnackBar();
+        messenger.showSnackBar(
           SnackBar(
+            duration: const Duration(seconds: 5),
             content: Text(count > 1 ? '${first.displayName}等$count 个后台任务已完成' : '${first.displayName}任务已完成'),
           ),
         );
@@ -159,6 +167,8 @@ class _FilesPageState extends ConsumerState<FilesPage> {
   @override
   void dispose() {
     _pollTimer?.cancel();
+    _transferListener?.close();
+    _backgroundTaskListener?.close();
     super.dispose();
   }
 
