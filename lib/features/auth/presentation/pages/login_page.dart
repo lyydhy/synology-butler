@@ -770,9 +770,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final currentServer = ref.watch(activeServerProvider);
-    final savedUsername = ref.watch(savedUsernameProvider);
-    final savedPassword = ref.watch(savedPasswordProvider);
+    final connection = ref.watch(currentConnectionProvider);
+    final currentServer = connection.server;
+    final savedUsername = connection.username;
+    final savedPassword = connection.password;
     final savedRememberPassword = ref.watch(savedRememberPasswordProvider);
     final savedServers = ref.watch(savedServersProvider);
     final savedServerUsernames = ref.watch(savedServerUsernamesProvider);

@@ -49,7 +49,7 @@ class SettingsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final server = ref.watch(activeServerProvider);
+    final server = ref.watch(currentConnectionProvider).server;
     final theme = Theme.of(context);
     final themeMode = ref.watch(themeModeProvider);
     final themeColor = ref.watch(themeColorProvider);

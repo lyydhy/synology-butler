@@ -1,7 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-
-import '../../../../app/router.dart';
 import '../../../../core/network/app_dio.dart';
 import '../../../../data/api/system_api.dart';
 import '../../../../data/repositories/system_repository_impl.dart';
@@ -30,12 +27,7 @@ bool _isSessionExpiredError(Object error) {
 }
 
 Future<void> _handleSessionExpired(Ref ref) async {
-  await ref.read(clearSessionProvider)(markExpired: true);
-
-  final context = appNavigatorKey.currentContext;
-  if (context != null && context.mounted) {
-    GoRouter.of(context).go('/login');
-  }
+  await ref.read(recoverSessionProvider)();
 }
 
 final dashboardBaseOverviewProvider = FutureProvider<SystemStatus>((ref) async {

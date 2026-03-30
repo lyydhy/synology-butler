@@ -49,7 +49,7 @@ class ServerManagementPage extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final servers = ref.watch(savedServersProvider);
-    final currentServer = ref.watch(activeServerProvider);
+    final currentServer = ref.watch(currentConnectionProvider).server;
 
     return Scaffold(
       appBar: AppBar(title: const Text('连接管理')),

@@ -75,9 +75,8 @@ class _FilesPageState extends ConsumerState<FilesPage> {
     _currentPath = widget.initialPath;
     _pollTimer = Timer.periodic(const Duration(seconds: 10), (_) {
       if (!mounted) return;
-      final currentServer = ref.read(activeServerProvider);
-      final currentSession = ref.read(activeSessionProvider);
-      if (currentServer == null || currentSession == null || _selectionMode) return;
+      final connection = ref.read(currentConnectionProvider);
+      if (!connection.hasSession || _selectionMode) return;
       ref.invalidate(fileListProvider(_fileQuery));
     });
 
@@ -317,11 +316,15 @@ class _FilesPageState extends ConsumerState<FilesPage> {
       await ref.read(fileDeleteProvider)(item.path);
       _refreshCurrentPath();
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.deleteSuccess)));
+        final messenger = ScaffoldMessenger.of(context);
+        messenger.hideCurrentSnackBar();
+        messenger.showSnackBar(SnackBar(content: Text(l10n.deleteSuccess)));
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(ErrorMapper.map(e).message)));
+        final messenger = ScaffoldMessenger.of(context);
+        messenger.hideCurrentSnackBar();
+        messenger.showSnackBar(SnackBar(content: Text(ErrorMapper.map(e).message)));
       }
     }
   }
@@ -344,7 +347,9 @@ class _FilesPageState extends ConsumerState<FilesPage> {
       );
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(ErrorMapper.map(e).message)));
+        final messenger = ScaffoldMessenger.of(context);
+        messenger.hideCurrentSnackBar();
+        messenger.showSnackBar(SnackBar(content: Text(ErrorMapper.map(e).message)));
       }
     }
   }
@@ -361,7 +366,9 @@ class _FilesPageState extends ConsumerState<FilesPage> {
 
     await ref.read(saveDownloadDirectoryProvider)(selected);
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      final messenger = ScaffoldMessenger.of(context);
+      messenger.hideCurrentSnackBar();
+      messenger.showSnackBar(
         SnackBar(content: Text('下载目录已设置为 $selected')),
       );
     }
@@ -426,7 +433,9 @@ class _FilesPageState extends ConsumerState<FilesPage> {
                 final ready = await _ensureDownloadDirectorySelected(context, ref);
                 if (!ready) return;
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('开始下载 ${item.name}')));
+                  final messenger = ScaffoldMessenger.of(context);
+                  messenger.hideCurrentSnackBar();
+                  messenger.showSnackBar(SnackBar(content: Text('开始下载 ${item.name}')));
                 }
                 await ref.read(transferControllerProvider.notifier).enqueueDownload(
                       remotePath: item.path,
@@ -443,7 +452,9 @@ class _FilesPageState extends ConsumerState<FilesPage> {
                   final ready = await _ensureDownloadDirectorySelected(context, ref);
                   if (!ready) return;
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    final messenger = ScaffoldMessenger.of(context);
+                    messenger.hideCurrentSnackBar();
+                    messenger.showSnackBar(
                       SnackBar(content: Text('开始下载 ${item.name}，完成后可直接打开')),
                     );
                   }
@@ -478,8 +489,9 @@ class _FilesPageState extends ConsumerState<FilesPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final currentServer = ref.watch(activeServerProvider);
-    final currentSession = ref.watch(activeSessionProvider);
+    final connection = ref.watch(currentConnectionProvider);
+    final currentServer = connection.server;
+    final currentSession = connection.session;
 
     if (currentServer == null || currentSession == null) {
       return Scaffold(

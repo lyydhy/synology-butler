@@ -99,11 +99,20 @@ final globalRealtimeOverviewProvider = StreamProvider<SystemStatus>((ref) {
         onError: (error, stackTrace) async {
           consecutiveFailures += 1;
           final shouldSurfaceError = consecutiveFailures >= 3;
+          if (isSessionExpiredError(error)) {
+            try {
+              await ref.read(recoverSessionProvider)();
+              consecutiveFailures = 0;
+              retryAttempt = 0;
+              await subscription?.cancel();
+              if (!controller.isClosed) {
+                unawaited(startStream());
+              }
+              return;
+            } catch (_) {}
+          }
           if (shouldSurfaceError) {
             controller.addError(error, stackTrace);
-          }
-          if (isSessionExpiredError(error)) {
-            await ref.read(clearSessionProvider)(markExpired: true);
           }
           scheduleRetry();
         },

@@ -152,8 +152,9 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final currentServer = ref.watch(activeServerProvider);
-    final currentSession = ref.watch(activeSessionProvider);
+    final connection = ref.watch(currentConnectionProvider);
+    final currentServer = connection.server;
+    final currentSession = connection.session;
 
     if (currentServer == null || currentSession == null) {
       return Scaffold(appBar: AppBar(title: Text(l10n.downloadsTitle)), body: Center(child: Text(l10n.noSessionPleaseLogin)));

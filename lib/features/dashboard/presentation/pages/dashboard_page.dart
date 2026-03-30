@@ -49,7 +49,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with WidgetsBindi
     }
     _lastForegroundRefreshAt = now;
 
-    if (ref.read(activeServerProvider) == null || ref.read(activeSessionProvider) == null) {
+    final connection = ref.read(currentConnectionProvider);
+    if (!connection.hasSession) {
       return;
     }
 
@@ -67,8 +68,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with WidgetsBindi
     final l10n = AppLocalizations.of(context);
     final overview = ref.watch(dashboardOverviewSafeProvider);
     final realtimeState = ref.watch(globalRealtimeOverviewProvider);
-    final currentServer = ref.watch(activeServerProvider);
-    final currentSession = ref.watch(activeSessionProvider);
+    final connection = ref.watch(currentConnectionProvider);
+    final currentServer = connection.server;
+    final currentSession = connection.session;
     final dockerInstalledAsync = ref.watch(dockerFeatureInstalledProvider);
 
     if (currentServer == null || currentSession == null) {

@@ -13,10 +13,11 @@ class DebugInfoPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final currentServer = ref.watch(activeServerProvider);
-    final currentSession = ref.watch(activeSessionProvider);
+    final connection = ref.watch(currentConnectionProvider);
+    final currentServer = connection.server;
+    final currentSession = connection.session;
     final savedServers = ref.watch(savedServersProvider);
-    final savedUsername = ref.watch(savedUsernameProvider);
+    final savedUsername = connection.username;
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.debugInfo)),

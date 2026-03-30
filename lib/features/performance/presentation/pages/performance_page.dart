@@ -68,7 +68,8 @@ class _PerformancePageState extends ConsumerState<PerformancePage> with SingleTi
 
   @override
   Widget build(BuildContext context) {
-    final currentSession = ref.watch(activeSessionProvider);
+    final connection = ref.watch(currentConnectionProvider);
+    final currentSession = connection.session;
     final overview = ref.watch(dashboardOverviewSafeProvider);
     final currentOverview = overview.valueOrNull;
 

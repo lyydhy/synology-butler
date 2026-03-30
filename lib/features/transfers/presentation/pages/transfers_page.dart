@@ -554,7 +554,9 @@ class _TransferTaskCardState extends ConsumerState<_TransferTaskCard> {
                             : task.targetPath;
                         await Clipboard.setData(ClipboardData(text: text));
                         if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
+                          final messenger = ScaffoldMessenger.of(context);
+                          messenger.hideCurrentSnackBar();
+                          messenger.showSnackBar(
                             SnackBar(content: Text(task.status == TransferTaskStatus.failed ? '失败原因已复制' : '路径已复制')),
                           );
                         }
@@ -563,13 +565,17 @@ class _TransferTaskCardState extends ConsumerState<_TransferTaskCard> {
                         try {
                           await FileLauncher.open(task.targetPath);
                           if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
+                            final messenger = ScaffoldMessenger.of(context);
+                            messenger.hideCurrentSnackBar();
+                            messenger.showSnackBar(
                               const SnackBar(content: Text('已调用系统打开方式')),
                             );
                           }
                         } catch (e) {
                           if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
+                            final messenger = ScaffoldMessenger.of(context);
+                            messenger.hideCurrentSnackBar();
+                            messenger.showSnackBar(
                               SnackBar(content: Text(ErrorMapper.map(e).message)),
                             );
                           }
@@ -581,7 +587,9 @@ class _TransferTaskCardState extends ConsumerState<_TransferTaskCard> {
                           await FileLauncher.open(parent);
                         } catch (_) {
                           if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
+                            final messenger = ScaffoldMessenger.of(context);
+                            messenger.hideCurrentSnackBar();
+                            messenger.showSnackBar(
                               SnackBar(content: Text('目录：$parent')),
                             );
                           }
@@ -675,13 +683,17 @@ class _TransferTaskCardState extends ConsumerState<_TransferTaskCard> {
                         try {
                           await FileLauncher.open(task.targetPath);
                           if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
+                            final messenger = ScaffoldMessenger.of(context);
+                            messenger.hideCurrentSnackBar();
+                            messenger.showSnackBar(
                               const SnackBar(content: Text('已调用系统打开方式')),
                             );
                           }
                         } catch (e) {
                           if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
+                            final messenger = ScaffoldMessenger.of(context);
+                            messenger.hideCurrentSnackBar();
+                            messenger.showSnackBar(
                               SnackBar(content: Text(ErrorMapper.map(e).message)),
                             );
                           }
@@ -698,7 +710,9 @@ class _TransferTaskCardState extends ConsumerState<_TransferTaskCard> {
                           await FileLauncher.open(parent);
                         } catch (_) {
                           if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
+                            final messenger = ScaffoldMessenger.of(context);
+                            messenger.hideCurrentSnackBar();
+                            messenger.showSnackBar(
                               SnackBar(content: Text('目录：$parent')),
                             );
                           }
@@ -720,7 +734,9 @@ class _TransferTaskCardState extends ConsumerState<_TransferTaskCard> {
                           : task.targetPath;
                       await Clipboard.setData(ClipboardData(text: text));
                       if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
+                        final messenger = ScaffoldMessenger.of(context);
+                        messenger.hideCurrentSnackBar();
+                        messenger.showSnackBar(
                           SnackBar(content: Text(task.status == TransferTaskStatus.failed ? '失败原因已复制' : '路径已复制')),
                         );
                       }

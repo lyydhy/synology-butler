@@ -24,8 +24,9 @@ class _DiagnosticsPageState extends ConsumerState<DiagnosticsPage> {
   Future<void> testAuth() async {
     setState(() => loadingAuth = true);
     try {
-      final server = ref.read(activeServerProvider);
-      final session = ref.read(activeSessionProvider);
+      final connection = ref.read(currentConnectionProvider);
+      final server = connection.server;
+      final session = connection.session;
       if (server == null || session == null) throw Exception('当前没有可用会话');
       setState(() => authResult = '成功：已存在当前设备与会话');
     } catch (e) {

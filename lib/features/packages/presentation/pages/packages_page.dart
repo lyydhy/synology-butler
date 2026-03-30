@@ -59,8 +59,9 @@ class _PackagesPageState extends ConsumerState<PackagesPage> with SingleTickerPr
 
   @override
   Widget build(BuildContext context) {
-    final server = ref.watch(activeServerProvider);
-    final session = ref.watch(activeSessionProvider);
+    final connection = ref.watch(currentConnectionProvider);
+    final server = connection.server;
+    final session = connection.session;
     final packagesAsync = ref.watch(mergedPackagesProvider);
     final installState = ref.watch(packageInstallStateProvider);
     final installStatus = installState.statusText;
