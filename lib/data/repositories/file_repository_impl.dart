@@ -22,6 +22,7 @@ class FileRepositoryImpl implements FileRepository {
             path: item.path,
             isDirectory: item.isDirectory,
             size: item.size,
+            modifiedAt: item.modifiedAt
           ),
         )
         .toList();

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:dayfl/dayfl.dart';
 import 'package:dio/dio.dart';
 
 import '../../core/network/app_dio.dart';
@@ -246,7 +247,7 @@ class DsmFileStationApi implements FileStationApi {
           path: (map['path'] ?? additional['real_path'] ?? '').toString(),
           isDirectory: ((map['isdir'] ?? false) == true),
           size: (additional['size'] as num?)?.toInt() ?? 0,
-          modifiedAt: modifiedSeconds == null ? null : DateTime.fromMillisecondsSinceEpoch(modifiedSeconds * 1000),
+          modifiedAt: Dayfl(modifiedSeconds).dateTime,
         );
       }).toList();
     }
