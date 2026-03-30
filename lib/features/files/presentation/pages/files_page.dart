@@ -11,6 +11,7 @@ import '../../../../core/utils/file_launcher.dart';
 import '../../../../core/utils/server_url_helper.dart';
 import '../../../../domain/entities/file_background_task.dart';
 import '../../../../domain/entities/file_item.dart';
+import '../../../../domain/entities/transfer_task.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../auth/presentation/providers/current_connection_readers.dart';
 import '../../../preferences/providers/preferences_providers.dart';
@@ -49,7 +50,6 @@ class _FilesPageState extends ConsumerState<FilesPage> {
   static const String _defaultSort = 'type';
 
   Timer? _pollTimer;
-  String? _lastFinishedDownloadId;
   Set<String> _lastBackgroundTaskIds = <String>{};
 
   /// 当前页面所在目录。
@@ -79,19 +79,37 @@ class _FilesPageState extends ConsumerState<FilesPage> {
       ref.invalidate(fileListProvider(_fileQuery));
     });
 
-    ref.listenManual(latestFinishedDownloadProvider, (previous, next) {
-      if (!mounted || next == null) return;
-      if (_lastFinishedDownloadId == next.id) return;
-      _lastFinishedDownloadId = next.id;
+    ref.listenManual<List<TransferTask>>(transferControllerProvider, (previous, next) {
+      if (!mounted) return;
+
+      final previousMap = {
+        for (final task in previous ?? const <TransferTask>[]) task.id: task,
+      };
+
+      TransferTask? finishedDownload;
+      for (final task in next) {
+        if (task.type != TransferTaskType.download) continue;
+        if (task.status != TransferTaskStatus.success) continue;
+
+        final oldTask = previousMap[task.id];
+        final wasSuccessBefore = oldTask?.status == TransferTaskStatus.success;
+        if (!wasSuccessBefore) {
+          finishedDownload = task;
+          break;
+        }
+      }
+
+      final task = finishedDownload;
+      if (task == null) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${next.title} 下载完成'),
+          content: Text('${task.title} 下载完成'),
           action: SnackBarAction(
             label: '打开',
             onPressed: () async {
               try {
-                await FileLauncher.open(next.targetPath);
+                await FileLauncher.open(task.targetPath);
               } catch (e) {
                 if (!mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
