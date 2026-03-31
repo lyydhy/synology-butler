@@ -1004,4 +1004,42 @@ class AppLocalizationsZh extends AppLocalizations {
   String packageInstallFailed(Object error) {
     return '套件安装失败：$error';
   }
+
+  @override
+  String get transfersTitle => '传输中心';
+
+  @override
+  String get clearCompleted => '删除已完成记录';
+
+  @override
+  String get clearFailed => '删除失败记录';
+
+  @override
+  String get filterAll => '全部';
+
+  @override
+  String get filterActive => '进行中';
+
+  @override
+  String get filterCompleted => '已完成';
+
+  @override
+  String get filterFailed => '失败';
+
+  @override
+  String get deleteCompleted => '删除已完成';
+
+  @override
+  String get deleteFailedRecords => '删除失败记录';
+
+  @override
+  String get openedWithSystem => '已调用系统打开方式';
+
+  @override
+  String directory(Object path) {
+    return '目录：$path';
+  }
+
+  @override
+  String get openDirectory => '打开目录';
 }

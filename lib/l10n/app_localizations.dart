@@ -1939,6 +1939,78 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'套件安装失败：{error}'**
   String packageInstallFailed(Object error);
+
+  /// No description provided for @transfersTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'传输中心'**
+  String get transfersTitle;
+
+  /// No description provided for @clearCompleted.
+  ///
+  /// In zh, this message translates to:
+  /// **'删除已完成记录'**
+  String get clearCompleted;
+
+  /// No description provided for @clearFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'删除失败记录'**
+  String get clearFailed;
+
+  /// No description provided for @filterAll.
+  ///
+  /// In zh, this message translates to:
+  /// **'全部'**
+  String get filterAll;
+
+  /// No description provided for @filterActive.
+  ///
+  /// In zh, this message translates to:
+  /// **'进行中'**
+  String get filterActive;
+
+  /// No description provided for @filterCompleted.
+  ///
+  /// In zh, this message translates to:
+  /// **'已完成'**
+  String get filterCompleted;
+
+  /// No description provided for @filterFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'失败'**
+  String get filterFailed;
+
+  /// No description provided for @deleteCompleted.
+  ///
+  /// In zh, this message translates to:
+  /// **'删除已完成'**
+  String get deleteCompleted;
+
+  /// No description provided for @deleteFailedRecords.
+  ///
+  /// In zh, this message translates to:
+  /// **'删除失败记录'**
+  String get deleteFailedRecords;
+
+  /// No description provided for @openedWithSystem.
+  ///
+  /// In zh, this message translates to:
+  /// **'已调用系统打开方式'**
+  String get openedWithSystem;
+
+  /// No description provided for @directory.
+  ///
+  /// In zh, this message translates to:
+  /// **'目录：{path}'**
+  String directory(Object path);
+
+  /// No description provided for @openDirectory.
+  ///
+  /// In zh, this message translates to:
+  /// **'打开目录'**
+  String get openDirectory;
 }
 
 class _AppLocalizationsDelegate

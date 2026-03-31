@@ -1024,4 +1024,42 @@ class AppLocalizationsEn extends AppLocalizations {
   String packageInstallFailed(Object error) {
     return 'Package installation failed: $error';
   }
+
+  @override
+  String get transfersTitle => 'Transfers';
+
+  @override
+  String get clearCompleted => 'Clear completed records';
+
+  @override
+  String get clearFailed => 'Clear failed records';
+
+  @override
+  String get filterAll => 'All';
+
+  @override
+  String get filterActive => 'Active';
+
+  @override
+  String get filterCompleted => 'Completed';
+
+  @override
+  String get filterFailed => 'Failed';
+
+  @override
+  String get deleteCompleted => 'Delete Completed';
+
+  @override
+  String get deleteFailedRecords => 'Delete Failed Records';
+
+  @override
+  String get openedWithSystem => 'Opened with system handler';
+
+  @override
+  String directory(Object path) {
+    return 'Directory: $path';
+  }
+
+  @override
+  String get openDirectory => 'Open Directory';
 }

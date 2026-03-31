@@ -528,5 +528,24 @@
     "placeholders": {
       "error": {}
     }
-  }
+  },
+
+  "transfersTitle": "Transfers",
+  "clearCompleted": "Clear completed records",
+  "clearFailed": "Clear failed records",
+  "filterAll": "All",
+  "filterActive": "Active",
+  "filterCompleted": "Completed",
+  "filterFailed": "Failed",
+  "deleteCompleted": "Delete Completed",
+  "deleteFailedRecords": "Delete Failed Records",
+  "openedWithSystem": "Opened with system handler",
+  "directory": "Directory: {path}",
+  "@directory": {
+    "placeholders": {
+      "path": {}
+    }
+  },
+  "open": "Open",
+  "openDirectory": "Open Directory"
 }

@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/error/error_mapper.dart';
 import '../../../../core/utils/file_launcher.dart';
+import '../../../../core/utils/l10n.dart';
 import '../../../../domain/entities/transfer_task.dart';
 import '../providers/transfer_providers.dart';
 
@@ -41,16 +42,16 @@ class _TransfersPageState extends ConsumerState<TransfersPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('传输中心'),
+        title: Text(l10n.transfersTitle),
         actions: [
           PopupMenuButton<String>(
             onSelected: (value) {
               if (value == 'clear_success') controller.clearCompleted();
               if (value == 'clear_failed') controller.clearFailed();
             },
-            itemBuilder: (context) => const [
-              PopupMenuItem(value: 'clear_success', child: Text('删除已完成记录')),
-              PopupMenuItem(value: 'clear_failed', child: Text('删除失败记录')),
+            itemBuilder: (context) => [
+              PopupMenuItem(value: 'clear_success', child: Text(l10n.clearCompleted)),
+              PopupMenuItem(value: 'clear_failed', child: Text(l10n.clearFailed)),
             ],
           ),
         ],
@@ -85,28 +86,28 @@ class _TransfersPageState extends ConsumerState<TransfersPage> {
                     scrollDirection: Axis.horizontal,
                     children: [
                       _FilterChip(
-                        label: '全部',
+                        label: l10n.filterAll,
                         count: tasks.length,
                         selected: _filter == _TransferFilter.all,
                         onTap: () => setState(() => _filter = _TransferFilter.all),
                       ),
                       const SizedBox(width: 8),
                       _FilterChip(
-                        label: '进行中',
+                        label: l10n.filterActive,
                         count: activeTasks.length,
                         selected: _filter == _TransferFilter.active,
                         onTap: () => setState(() => _filter = _TransferFilter.active),
                       ),
                       const SizedBox(width: 8),
                       _FilterChip(
-                        label: '已完成',
+                        label: l10n.filterCompleted,
                         count: successTasks.length,
                         selected: _filter == _TransferFilter.success,
                         onTap: () => setState(() => _filter = _TransferFilter.success),
                       ),
                       const SizedBox(width: 8),
                       _FilterChip(
-                        label: '失败',
+                        label: l10n.filterFailed,
                         count: failedTasks.length,
                         selected: _filter == _TransferFilter.failed,
                         onTap: () => setState(() => _filter = _TransferFilter.failed),
@@ -199,11 +200,11 @@ class _OverviewCard extends StatelessWidget {
           const SizedBox(height: 14),
           Row(
             children: [
-              Expanded(child: _OverviewMetric(label: '进行中', value: '$activeCount', color: Colors.blue)),
+              Expanded(child: _OverviewMetric(label: l10n.filterActive, value: '$activeCount', color: Colors.blue)),
               const SizedBox(width: 10),
-              Expanded(child: _OverviewMetric(label: '已完成', value: '$successCount', color: Colors.green)),
+              Expanded(child: _OverviewMetric(label: l10n.filterCompleted, value: '$successCount', color: Colors.green)),
               const SizedBox(width: 10),
-              Expanded(child: _OverviewMetric(label: '失败', value: '$failedCount', color: Colors.redAccent)),
+              Expanded(child: _OverviewMetric(label: l10n.filterFailed, value: '$failedCount', color: Colors.redAccent)),
             ],
           ),
           if (successCount > 0 || failedCount > 0) ...[
@@ -216,13 +217,13 @@ class _OverviewCard extends StatelessWidget {
                   OutlinedButton.icon(
                     onPressed: onClearSuccess,
                     icon: const Icon(Icons.done_all_rounded),
-                    label: const Text('删除已完成'),
+                    label: Text(l10n.deleteCompleted),
                   ),
                 if (failedCount > 0)
                   OutlinedButton.icon(
                     onPressed: onClearFailed,
                     icon: const Icon(Icons.error_outline_rounded),
-                    label: const Text('删除失败'),
+                    label: Text(l10n.deleteFailedRecords),
                   ),
               ],
             ),
@@ -367,7 +368,7 @@ class _TransferSectionList extends StatelessWidget {
     final failed = tasks.where((t) => t.status == TransferTaskStatus.failed).toList();
     final children = <Widget>[
       if (active.isNotEmpty) ...[
-        _SectionHeader(title: '进行中', count: active.length),
+        _SectionHeader(title: l10n.filterActive, count: active.length),
         const SizedBox(height: 10),
         ...active.map((task) => Padding(
               padding: const EdgeInsets.only(bottom: 10),
@@ -376,7 +377,7 @@ class _TransferSectionList extends StatelessWidget {
       ],
       if (success.isNotEmpty) ...[
         if (active.isNotEmpty) const SizedBox(height: 8),
-        _SectionHeader(title: '已完成', count: success.length),
+        _SectionHeader(title: l10n.filterCompleted, count: success.length),
         const SizedBox(height: 10),
         ...success.map((task) => Padding(
               padding: const EdgeInsets.only(bottom: 10),
@@ -385,7 +386,7 @@ class _TransferSectionList extends StatelessWidget {
       ],
       if (failed.isNotEmpty) ...[
         if (active.isNotEmpty || success.isNotEmpty) const SizedBox(height: 8),
-        _SectionHeader(title: '失败', count: failed.length),
+        _SectionHeader(title: l10n.filterFailed, count: failed.length),
         const SizedBox(height: 10),
         ...failed.map((task) => Padding(
               padding: const EdgeInsets.only(bottom: 10),
