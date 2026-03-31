@@ -569,7 +569,7 @@ class _TransferTaskCardState extends ConsumerState<_TransferTaskCard> {
                             final messenger = ScaffoldMessenger.of(context);
                             messenger.hideCurrentSnackBar();
                             messenger.showSnackBar(
-                              const SnackBar(content: Text('已调用系统打开方式')),
+                              SnackBar(content: Text(l10n.openedWithSystem)),
                             );
                           }
                         } catch (e) {
@@ -591,7 +591,7 @@ class _TransferTaskCardState extends ConsumerState<_TransferTaskCard> {
                             final messenger = ScaffoldMessenger.of(context);
                             messenger.hideCurrentSnackBar();
                             messenger.showSnackBar(
-                              SnackBar(content: Text('目录：$parent')),
+                              SnackBar(content: Text(l10n.directory(parent))),
                             );
                           }
                         }
@@ -601,16 +601,16 @@ class _TransferTaskCardState extends ConsumerState<_TransferTaskCard> {
                   itemBuilder: (context) => [
                     PopupMenuItem(value: 'toggle', child: Text(expanded ? '收起详情' : '查看详情')),
                     if (task.status == TransferTaskStatus.success && task.type == TransferTaskType.download)
-                      const PopupMenuItem(value: 'open', child: Text('打开')),
+                      PopupMenuItem(value: 'open', child: Text(l10n.open)),
                     if (task.status == TransferTaskStatus.success && task.type == TransferTaskType.download)
-                      const PopupMenuItem(value: 'open_dir', child: Text('打开目录')),
+                      PopupMenuItem(value: 'open_dir', child: Text(l10n.openDirectory)),
                     if (task.status == TransferTaskStatus.failed)
-                      const PopupMenuItem(value: 'retry', child: Text('重试')),
+                      PopupMenuItem(value: 'retry', child: Text(l10n.retry)),
                     PopupMenuItem(
                       value: 'copy',
                       child: Text(task.status == TransferTaskStatus.failed ? '复制失败原因' : '复制路径'),
                     ),
-                    const PopupMenuItem(value: 'remove', child: Text('移除记录')),
+                    PopupMenuItem(value: 'remove', child: Text(l10n.removeRecord)),
                   ],
                 ),
               ],
@@ -687,7 +687,7 @@ class _TransferTaskCardState extends ConsumerState<_TransferTaskCard> {
                             final messenger = ScaffoldMessenger.of(context);
                             messenger.hideCurrentSnackBar();
                             messenger.showSnackBar(
-                              const SnackBar(content: Text('已调用系统打开方式')),
+                              SnackBar(content: Text(l10n.openedWithSystem)),
                             );
                           }
                         } catch (e) {
@@ -701,7 +701,7 @@ class _TransferTaskCardState extends ConsumerState<_TransferTaskCard> {
                         }
                       },
                       icon: const Icon(Icons.open_in_new_rounded),
-                      label: const Text('打开'),
+                      label: Text(l10n.open),
                     ),
                   if (task.status == TransferTaskStatus.success && task.type == TransferTaskType.download)
                     OutlinedButton.icon(
@@ -714,19 +714,19 @@ class _TransferTaskCardState extends ConsumerState<_TransferTaskCard> {
                             final messenger = ScaffoldMessenger.of(context);
                             messenger.hideCurrentSnackBar();
                             messenger.showSnackBar(
-                              SnackBar(content: Text('目录：$parent')),
+                              SnackBar(content: Text(l10n.directory(parent))),
                             );
                           }
                         }
                       },
                       icon: const Icon(Icons.folder_open_outlined),
-                      label: const Text('打开目录'),
+                      label: Text(l10n.openDirectory),
                     ),
                   if (task.status == TransferTaskStatus.failed)
                     FilledButton.tonalIcon(
                       onPressed: () => controller.retryTask(task),
                       icon: const Icon(Icons.refresh_rounded),
-                      label: const Text('重试'),
+                      label: Text(l10n.retry),
                     ),
                   OutlinedButton.icon(
                     onPressed: () async {
@@ -748,7 +748,7 @@ class _TransferTaskCardState extends ConsumerState<_TransferTaskCard> {
                   OutlinedButton.icon(
                     onPressed: () => controller.removeTask(task.id),
                     icon: const Icon(Icons.delete_outline_rounded),
-                    label: const Text('移除记录'),
+                    label: Text(l10n.removeRecord),
                   ),
                 ],
               ),

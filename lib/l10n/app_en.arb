@@ -547,5 +547,47 @@
     }
   },
   "open": "Open",
-  "openDirectory": "Open Directory"
+  "openDirectory": "Open Directory",
+
+  "retry": "Retry",
+  "removeRecord": "Remove Record",
+  "reasonCopied": "Failure reason copied",
+  "pathCopied": "Path copied",
+
+  "containerSuccess": "{action} container success: {name}",
+  "@containerSuccess": {
+    "placeholders": {
+      "action": {},
+      "name": {}
+    }
+  },
+  "containerFailed": "{action} container failed: {error}",
+  "@containerFailed": {
+    "placeholders": {
+      "action": {},
+      "error": {}
+    }
+  },
+  "containerManagement": "Container Management",
+  "containerRunning": "Running",
+  "containerStopped": "Stopped",
+  "createNew": "Create New",
+  "filterLatest": "latest",
+  "filterOtherTags": "Other Tags",
+  "sortBy": "Sort By",
+  "sortNameAsc": "Name A-Z",
+  "sortNameDesc": "Name Z-A",
+  "sortTagAsc": "Tag A-Z",
+  "sortTagDesc": "Tag Z-A",
+  "sortSizeDesc": "Size High to Low",
+  "sortSizeAsc": "Size Low to High",
+  "restart": "Restart",
+  "forceStop": "Force Stop",
+  "ports": "Ports: {ports}",
+  "@ports": {
+    "placeholders": {
+      "ports": {}
+    }
+  },
+  "viewAction": "View"
 }

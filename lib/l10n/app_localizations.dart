@@ -2011,6 +2011,132 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'打开目录'**
   String get openDirectory;
+
+  /// No description provided for @removeRecord.
+  ///
+  /// In zh, this message translates to:
+  /// **'移除记录'**
+  String get removeRecord;
+
+  /// No description provided for @reasonCopied.
+  ///
+  /// In zh, this message translates to:
+  /// **'失败原因已复制'**
+  String get reasonCopied;
+
+  /// No description provided for @containerSuccess.
+  ///
+  /// In zh, this message translates to:
+  /// **'{action}容器成功：{name}'**
+  String containerSuccess(Object action, Object name);
+
+  /// No description provided for @containerFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'{action}容器失败：{error}'**
+  String containerFailed(Object action, Object error);
+
+  /// No description provided for @containerManagement.
+  ///
+  /// In zh, this message translates to:
+  /// **'容器管理'**
+  String get containerManagement;
+
+  /// No description provided for @containerRunning.
+  ///
+  /// In zh, this message translates to:
+  /// **'运行中'**
+  String get containerRunning;
+
+  /// No description provided for @containerStopped.
+  ///
+  /// In zh, this message translates to:
+  /// **'已停止'**
+  String get containerStopped;
+
+  /// No description provided for @createNew.
+  ///
+  /// In zh, this message translates to:
+  /// **'新建'**
+  String get createNew;
+
+  /// No description provided for @filterLatest.
+  ///
+  /// In zh, this message translates to:
+  /// **'latest'**
+  String get filterLatest;
+
+  /// No description provided for @filterOtherTags.
+  ///
+  /// In zh, this message translates to:
+  /// **'其他标签'**
+  String get filterOtherTags;
+
+  /// No description provided for @sortBy.
+  ///
+  /// In zh, this message translates to:
+  /// **'排序'**
+  String get sortBy;
+
+  /// No description provided for @sortNameAsc.
+  ///
+  /// In zh, this message translates to:
+  /// **'名称 A-Z'**
+  String get sortNameAsc;
+
+  /// No description provided for @sortNameDesc.
+  ///
+  /// In zh, this message translates to:
+  /// **'名称 Z-A'**
+  String get sortNameDesc;
+
+  /// No description provided for @sortTagAsc.
+  ///
+  /// In zh, this message translates to:
+  /// **'标签 A-Z'**
+  String get sortTagAsc;
+
+  /// No description provided for @sortTagDesc.
+  ///
+  /// In zh, this message translates to:
+  /// **'标签 Z-A'**
+  String get sortTagDesc;
+
+  /// No description provided for @sortSizeDesc.
+  ///
+  /// In zh, this message translates to:
+  /// **'大小 从大到小'**
+  String get sortSizeDesc;
+
+  /// No description provided for @sortSizeAsc.
+  ///
+  /// In zh, this message translates to:
+  /// **'大小 从小到大'**
+  String get sortSizeAsc;
+
+  /// No description provided for @restart.
+  ///
+  /// In zh, this message translates to:
+  /// **'重启'**
+  String get restart;
+
+  /// No description provided for @forceStop.
+  ///
+  /// In zh, this message translates to:
+  /// **'强制停止'**
+  String get forceStop;
+
+  /// No description provided for @ports.
+  ///
+  /// In zh, this message translates to:
+  /// **'端口：{ports}'**
+  String ports(Object ports);
+
+  /// No description provided for @viewAction.
+  ///
+  /// In zh, this message translates to:
+  /// **'查看'**
+  String get viewAction;
 }
 
 class _AppLocalizationsDelegate

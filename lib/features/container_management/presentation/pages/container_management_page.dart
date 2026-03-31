@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/utils/l10n.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../core/widgets/app_error_state.dart';
 import '../../../../core/widgets/app_status_chip.dart';
@@ -114,7 +115,7 @@ class _ContainerManagementPageState extends ConsumerState<ContainerManagementPag
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('容器管理'),
+        title: Text(l10n.containerManagement),
         actions: [
           IconButton(
             tooltip: '刷新',

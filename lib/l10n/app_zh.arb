@@ -547,5 +547,48 @@
     }
   },
   "open": "打开",
-  "openDirectory": "打开目录"
+  "openDirectory": "打开目录",
+
+  "retry": "重试",
+  "removeRecord": "移除记录",
+  "reasonCopied": "失败原因已复制",
+  "pathCopied": "路径已复制",
+
+  "containerSuccess": "{action}容器成功：{name}",
+  "@containerSuccess": {
+    "placeholders": {
+      "action": {},
+      "name": {}
+    }
+  },
+  "containerFailed": "{action}容器失败：{error}",
+  "@containerFailed": {
+    "placeholders": {
+      "action": {},
+      "error": {}
+    }
+  },
+  "containerManagement": "容器管理",
+  "containerAll": "全部",
+  "containerRunning": "运行中",
+  "containerStopped": "已停止",
+  "createNew": "新建",
+  "filterLatest": "latest",
+  "filterOtherTags": "其他标签",
+  "sortBy": "排序",
+  "sortNameAsc": "名称 A-Z",
+  "sortNameDesc": "名称 Z-A",
+  "sortTagAsc": "标签 A-Z",
+  "sortTagDesc": "标签 Z-A",
+  "sortSizeDesc": "大小 从大到小",
+  "sortSizeAsc": "大小 从小到大",
+  "restart": "重启",
+  "forceStop": "强制停止",
+  "ports": "端口：{ports}",
+  "@ports": {
+    "placeholders": {
+      "ports": {}
+    }
+  },
+  "viewAction": "查看"
 }

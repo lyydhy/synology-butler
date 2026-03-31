@@ -1062,4 +1062,73 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get openDirectory => 'Open Directory';
+
+  @override
+  String get removeRecord => 'Remove Record';
+
+  @override
+  String get reasonCopied => 'Failure reason copied';
+
+  @override
+  String containerSuccess(Object action, Object name) {
+    return '$action container success: $name';
+  }
+
+  @override
+  String containerFailed(Object action, Object error) {
+    return '$action container failed: $error';
+  }
+
+  @override
+  String get containerManagement => 'Container Management';
+
+  @override
+  String get containerRunning => 'Running';
+
+  @override
+  String get containerStopped => 'Stopped';
+
+  @override
+  String get createNew => 'Create New';
+
+  @override
+  String get filterLatest => 'latest';
+
+  @override
+  String get filterOtherTags => 'Other Tags';
+
+  @override
+  String get sortBy => 'Sort By';
+
+  @override
+  String get sortNameAsc => 'Name A-Z';
+
+  @override
+  String get sortNameDesc => 'Name Z-A';
+
+  @override
+  String get sortTagAsc => 'Tag A-Z';
+
+  @override
+  String get sortTagDesc => 'Tag Z-A';
+
+  @override
+  String get sortSizeDesc => 'Size High to Low';
+
+  @override
+  String get sortSizeAsc => 'Size Low to High';
+
+  @override
+  String get restart => 'Restart';
+
+  @override
+  String get forceStop => 'Force Stop';
+
+  @override
+  String ports(Object ports) {
+    return 'Ports: $ports';
+  }
+
+  @override
+  String get viewAction => 'View';
 }

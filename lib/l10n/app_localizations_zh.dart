@@ -1042,4 +1042,73 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get openDirectory => '打开目录';
+
+  @override
+  String get removeRecord => '移除记录';
+
+  @override
+  String get reasonCopied => '失败原因已复制';
+
+  @override
+  String containerSuccess(Object action, Object name) {
+    return '$action容器成功：$name';
+  }
+
+  @override
+  String containerFailed(Object action, Object error) {
+    return '$action容器失败：$error';
+  }
+
+  @override
+  String get containerManagement => '容器管理';
+
+  @override
+  String get containerRunning => '运行中';
+
+  @override
+  String get containerStopped => '已停止';
+
+  @override
+  String get createNew => '新建';
+
+  @override
+  String get filterLatest => 'latest';
+
+  @override
+  String get filterOtherTags => '其他标签';
+
+  @override
+  String get sortBy => '排序';
+
+  @override
+  String get sortNameAsc => '名称 A-Z';
+
+  @override
+  String get sortNameDesc => '名称 Z-A';
+
+  @override
+  String get sortTagAsc => '标签 A-Z';
+
+  @override
+  String get sortTagDesc => '标签 Z-A';
+
+  @override
+  String get sortSizeDesc => '大小 从大到小';
+
+  @override
+  String get sortSizeAsc => '大小 从小到大';
+
+  @override
+  String get restart => '重启';
+
+  @override
+  String get forceStop => '强制停止';
+
+  @override
+  String ports(Object ports) {
+    return '端口：$ports';
+  }
+
+  @override
+  String get viewAction => '查看';
 }
