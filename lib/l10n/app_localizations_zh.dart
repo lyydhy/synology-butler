@@ -920,4 +920,88 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsAboutSubtitle => '群晖管家 v0.1';
+
+  @override
+  String get packageCenter => '套件中心';
+
+  @override
+  String get packageAll => '全部';
+
+  @override
+  String get packageInstalled => '已安装';
+
+  @override
+  String get packageUpdatable => '可更新';
+
+  @override
+  String packageTask(Object status) {
+    return '套件任务：$status';
+  }
+
+  @override
+  String get packageListFailed => '套件列表加载失败';
+
+  @override
+  String get selectInstallLocation => '选择安装位置';
+
+  @override
+  String get selectInstallLocationHint => '先选择套件要安装到哪个存储卷';
+
+  @override
+  String storeVersion(Object version) {
+    return '商店版本 $version';
+  }
+
+  @override
+  String installedVersion(Object version) {
+    return '已装 $version';
+  }
+
+  @override
+  String startRequestSent(Object name) {
+    return '已发送启动请求：$name';
+  }
+
+  @override
+  String stopRequestSent(Object name) {
+    return '已发送停止请求：$name';
+  }
+
+  @override
+  String get confirmUninstall => '确认卸载';
+
+  @override
+  String confirmUninstallMessage(Object name) {
+    return '确定要卸载 $name 吗？';
+  }
+
+  @override
+  String uninstallRequestSent(Object name) {
+    return '已发送卸载请求：$name';
+  }
+
+  @override
+  String get confirmUpdateImpact => '确认更新影响';
+
+  @override
+  String get start => '启动';
+
+  @override
+  String get stop => '停止';
+
+  @override
+  String get uninstall => '卸载';
+
+  @override
+  String get continueAction => '继续';
+
+  @override
+  String packageTaskComplete(Object name) {
+    return '$name 安装/更新任务已完成或已提交';
+  }
+
+  @override
+  String packageInstallFailed(Object error) {
+    return '套件安装失败：$error';
+  }
 }

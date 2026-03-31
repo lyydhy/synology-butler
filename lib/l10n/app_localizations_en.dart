@@ -939,4 +939,89 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsAboutSubtitle => 'Synology Manager v0.1';
+
+  @override
+  String get packageCenter => 'Package Center';
+
+  @override
+  String get packageAll => 'All';
+
+  @override
+  String get packageInstalled => 'Installed';
+
+  @override
+  String get packageUpdatable => 'Updatable';
+
+  @override
+  String packageTask(Object status) {
+    return 'Package Task: $status';
+  }
+
+  @override
+  String get packageListFailed => 'Failed to load package list';
+
+  @override
+  String get selectInstallLocation => 'Select Install Location';
+
+  @override
+  String get selectInstallLocationHint =>
+      'Select the volume to install the package';
+
+  @override
+  String storeVersion(Object version) {
+    return 'Store Version $version';
+  }
+
+  @override
+  String installedVersion(Object version) {
+    return 'Installed $version';
+  }
+
+  @override
+  String startRequestSent(Object name) {
+    return 'Start request sent: $name';
+  }
+
+  @override
+  String stopRequestSent(Object name) {
+    return 'Stop request sent: $name';
+  }
+
+  @override
+  String get confirmUninstall => 'Confirm Uninstall';
+
+  @override
+  String confirmUninstallMessage(Object name) {
+    return 'Are you sure you want to uninstall $name?';
+  }
+
+  @override
+  String uninstallRequestSent(Object name) {
+    return 'Uninstall request sent: $name';
+  }
+
+  @override
+  String get confirmUpdateImpact => 'Confirm Update Impact';
+
+  @override
+  String get start => 'Start';
+
+  @override
+  String get stop => 'Stop';
+
+  @override
+  String get uninstall => 'Uninstall';
+
+  @override
+  String get continueAction => 'Continue';
+
+  @override
+  String packageTaskComplete(Object name) {
+    return '$name install/update task completed or submitted';
+  }
+
+  @override
+  String packageInstallFailed(Object error) {
+    return 'Package installation failed: $error';
+  }
 }

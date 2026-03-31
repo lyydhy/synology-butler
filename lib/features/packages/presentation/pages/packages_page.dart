@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/utils/l10n.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../core/widgets/app_error_state.dart';
 import '../../../../core/widgets/app_status_chip.dart';
@@ -68,17 +69,17 @@ class _PackagesPageState extends ConsumerState<PackagesPage> with SingleTickerPr
 
     if (server == null || session == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('套件中心')),
-        body: const Center(child: Text('当前没有可用会话，请先登录 NAS')),
+        appBar: AppBar(title: Text(l10n.packageCenter)),
+        body: Center(child: Text(l10n.noSessionPleaseLogin)),
       );
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('套件中心'),
+        title: Text(l10n.packageCenter),
         actions: [
           IconButton(
-            tooltip: '刷新',
+            tooltip: l10n.refresh,
             onPressed: _refreshPackages,
             icon: const Icon(Icons.refresh),
           ),
@@ -93,10 +94,10 @@ class _PackagesPageState extends ConsumerState<PackagesPage> with SingleTickerPr
               height: 54,
               iconSize: 18,
               fontSize: 13,
-              tabs: const [
-                SlidingTabItem(icon: Icons.apps_rounded, label: '全部'),
-                SlidingTabItem(icon: Icons.check_circle_outline_rounded, label: '已安装'),
-                SlidingTabItem(icon: Icons.system_update_alt_rounded, label: '可更新'),
+              tabs: [
+                SlidingTabItem(icon: Icons.apps_rounded, label: l10n.packageAll),
+                SlidingTabItem(icon: Icons.check_circle_outline_rounded, label: l10n.packageInstalled),
+                SlidingTabItem(icon: Icons.system_update_alt_rounded, label: l10n.packageUpdatable),
               ],
             ),
           ),
@@ -116,7 +117,7 @@ class _PackagesPageState extends ConsumerState<PackagesPage> with SingleTickerPr
                         child: CircularProgressIndicator(strokeWidth: 2),
                       ),
                       const SizedBox(width: 12),
-                      Expanded(child: Text('套件任务：$installStatus')),
+                      Expanded(child: Text(l10n.packageTask(installStatus))),
                     ],
                   ),
                 ),
@@ -134,7 +135,7 @@ class _PackagesPageState extends ConsumerState<PackagesPage> with SingleTickerPr
               ),
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (error, _) => AppErrorState(
-                title: '套件列表加载失败',
+                title: l10n.packageListFailed,
                 message: '$error',
                 onRetry: _refreshPackages,
               ),
@@ -184,9 +185,9 @@ class _PackageCard extends ConsumerWidget {
           child: ListView(
             shrinkWrap: true,
             children: [
-              const ListTile(
-                title: Text('选择安装位置'),
-                subtitle: Text('先选择套件要安装到哪个存储卷'),
+              ListTile(
+                title: Text(l10n.selectInstallLocation),
+                subtitle: Text(l10n.selectInstallLocationHint),
               ),
               for (final volume in volumes) _VolumeTile(volume: volume),
             ],
@@ -271,9 +272,9 @@ class _PackageCard extends ConsumerWidget {
                           runSpacing: 8,
                           children: [
                             AppStatusChip(label: _statusText(), color: _statusColor(context)),
-                            AppStatusChip(label: '商店版本 ${item.version}', color: Colors.blue),
+                            AppStatusChip(label: l10n.storeVersion(item.version), color: Colors.blue),
                             if (item.installedVersion != null && item.installedVersion!.isNotEmpty)
-                              AppStatusChip(label: '已装 ${item.installedVersion}', color: Colors.teal),
+                              AppStatusChip(label: l10n.installedVersion(item.installedVersion!), color: Colors.teal),
                           ],
                         ),
                       ],
@@ -290,12 +291,12 @@ class _PackageCard extends ConsumerWidget {
                         await ref.read(packageStartProvider)(item);
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('已发送启动请求：${item.displayName}')),
+                            SnackBar(content: Text(l10n.startRequestSent(item.displayName))),
                           );
                         }
                       },
                       icon: const Icon(Icons.play_arrow_rounded),
-                      label: const Text('启动'),
+                      label: Text(l10n.start),
                     ),
                   if (item.isInstalled && item.isRunning)
                     OutlinedButton.icon(
@@ -303,12 +304,12 @@ class _PackageCard extends ConsumerWidget {
                         await ref.read(packageStopProvider)(item);
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('已发送停止请求：${item.displayName}')),
+                            SnackBar(content: Text(l10n.stopRequestSent(item.displayName))),
                           );
                         }
                       },
                       icon: const Icon(Icons.stop_rounded),
-                      label: const Text('停止'),
+                      label: Text(l10n.stop),
                     ),
                   if (item.isInstalled) const SizedBox(width: 10),
                   if (item.isInstalled)
@@ -317,11 +318,11 @@ class _PackageCard extends ConsumerWidget {
                         final confirmed = await showDialog<bool>(
                               context: context,
                               builder: (context) => AlertDialog(
-                                title: const Text('确认卸载'),
-                                content: Text('确定要卸载 ${item.displayName} 吗？'),
+                                title: Text(l10n.confirmUninstall),
+                                content: Text(l10n.confirmUninstallMessage(item.displayName)),
                                 actions: [
-                                  TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('取消')),
-                                  FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('卸载')),
+                                  TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n.cancel)),
+                                  FilledButton(onPressed: () => Navigator.of(context).pop(true), child: Text(l10n.uninstall)),
                                 ],
                               ),
                             ) ??
@@ -331,12 +332,12 @@ class _PackageCard extends ConsumerWidget {
                         await ref.read(packageUninstallProvider)(item);
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('已发送卸载请求：${item.displayName}')),
+                            SnackBar(content: Text(l10n.uninstallRequestSent(item.displayName))),
                           );
                         }
                       },
                       icon: const Icon(Icons.delete_outline),
-                      label: const Text('卸载'),
+                      label: Text(l10n.uninstall),
                     ),
                   const Spacer(),
                   FilledButton(
@@ -354,13 +355,13 @@ class _PackageCard extends ConsumerWidget {
                               final confirmed = await showDialog<bool>(
                                     context: context,
                                     builder: (context) => AlertDialog(
-                                      title: const Text('确认更新影响'),
+                                      title: Text(l10n.confirmUpdateImpact),
                                       content: Text(
                                         '继续安装/更新 ${item.displayName} 时，以下套件可能会被暂停：\n\n${impact.pausedPackages.join('、')}',
                                       ),
                                       actions: [
-                                        TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('取消')),
-                                        FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('继续')),
+                                        TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n.cancel)),
+                                        FilledButton(onPressed: () => Navigator.of(context).pop(true), child: Text(l10n.continueAction)),
                                       ],
                                     ),
                                   ) ??
@@ -372,13 +373,13 @@ class _PackageCard extends ConsumerWidget {
                               await ref.read(packageInstallProvider)(item, volumePath);
                               if (context.mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('${item.displayName} 安装/更新任务已完成或已提交')),
+                                  SnackBar(content: Text(l10n.packageTaskComplete(item.displayName))),
                                 );
                               }
                             } catch (e) {
                               if (context.mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('套件安装失败：$e')),
+                                  SnackBar(content: Text(l10n.packageInstallFailed(e.toString()))),
                                 );
                               }
                             }

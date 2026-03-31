@@ -459,5 +459,74 @@
   "settingsLogout": "退出登录",
   "settingsLogoutSubtitle": "清除当前会话和本地保存的登录态",
   "settingsAbout": "关于",
-  "settingsAboutSubtitle": "群晖管家 v0.1"
+  "settingsAboutSubtitle": "群晖管家 v0.1",
+
+  "packageCenter": "套件中心",
+  "packageAll": "全部",
+  "packageInstalled": "已安装",
+  "packageUpdatable": "可更新",
+  "packageTask": "套件任务：{status}",
+  "@packageTask": {
+    "placeholders": {
+      "status": {}
+    }
+  },
+  "packageListFailed": "套件列表加载失败",
+  "selectInstallLocation": "选择安装位置",
+  "selectInstallLocationHint": "先选择套件要安装到哪个存储卷",
+  "storeVersion": "商店版本 {version}",
+  "@storeVersion": {
+    "placeholders": {
+      "version": {}
+    }
+  },
+  "installedVersion": "已装 {version}",
+  "@installedVersion": {
+    "placeholders": {
+      "version": {}
+    }
+  },
+  "startRequestSent": "已发送启动请求：{name}",
+  "@startRequestSent": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "stopRequestSent": "已发送停止请求：{name}",
+  "@stopRequestSent": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "confirmUninstall": "确认卸载",
+  "confirmUninstallMessage": "确定要卸载 {name} 吗？",
+  "@confirmUninstallMessage": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "uninstallRequestSent": "已发送卸载请求：{name}",
+  "@uninstallRequestSent": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "confirmUpdateImpact": "确认更新影响",
+
+  "start": "启动",
+  "stop": "停止",
+  "uninstall": "卸载",
+  "continueAction": "继续",
+  "packageTaskComplete": "{name} 安装/更新任务已完成或已提交",
+  "@packageTaskComplete": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "packageInstallFailed": "套件安装失败：{error}",
+  "@packageInstallFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  }
 }

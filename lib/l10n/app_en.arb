@@ -459,5 +459,74 @@
   "settingsLogout": "Logout",
   "settingsLogoutSubtitle": "Clear current session and saved login state",
   "settingsAbout": "About",
-  "settingsAboutSubtitle": "Synology Manager v0.1"
+  "settingsAboutSubtitle": "Synology Manager v0.1",
+
+  "packageCenter": "Package Center",
+  "packageAll": "All",
+  "packageInstalled": "Installed",
+  "packageUpdatable": "Updatable",
+  "packageTask": "Package Task: {status}",
+  "@packageTask": {
+    "placeholders": {
+      "status": {}
+    }
+  },
+  "packageListFailed": "Failed to load package list",
+  "selectInstallLocation": "Select Install Location",
+  "selectInstallLocationHint": "Select the volume to install the package",
+  "storeVersion": "Store Version {version}",
+  "@storeVersion": {
+    "placeholders": {
+      "version": {}
+    }
+  },
+  "installedVersion": "Installed {version}",
+  "@installedVersion": {
+    "placeholders": {
+      "version": {}
+    }
+  },
+  "startRequestSent": "Start request sent: {name}",
+  "@startRequestSent": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "stopRequestSent": "Stop request sent: {name}",
+  "@stopRequestSent": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "confirmUninstall": "Confirm Uninstall",
+  "confirmUninstallMessage": "Are you sure you want to uninstall {name}?",
+  "@confirmUninstallMessage": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "uninstallRequestSent": "Uninstall request sent: {name}",
+  "@uninstallRequestSent": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "confirmUpdateImpact": "Confirm Update Impact",
+
+  "start": "Start",
+  "stop": "Stop",
+  "uninstall": "Uninstall",
+  "continueAction": "Continue",
+  "packageTaskComplete": "{name} install/update task completed or submitted",
+  "@packageTaskComplete": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "packageInstallFailed": "Package installation failed: {error}",
+  "@packageInstallFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  }
 }

@@ -1807,6 +1807,138 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'群晖管家 v0.1'**
   String get settingsAboutSubtitle;
+
+  /// No description provided for @packageCenter.
+  ///
+  /// In zh, this message translates to:
+  /// **'套件中心'**
+  String get packageCenter;
+
+  /// No description provided for @packageAll.
+  ///
+  /// In zh, this message translates to:
+  /// **'全部'**
+  String get packageAll;
+
+  /// No description provided for @packageInstalled.
+  ///
+  /// In zh, this message translates to:
+  /// **'已安装'**
+  String get packageInstalled;
+
+  /// No description provided for @packageUpdatable.
+  ///
+  /// In zh, this message translates to:
+  /// **'可更新'**
+  String get packageUpdatable;
+
+  /// No description provided for @packageTask.
+  ///
+  /// In zh, this message translates to:
+  /// **'套件任务：{status}'**
+  String packageTask(Object status);
+
+  /// No description provided for @packageListFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'套件列表加载失败'**
+  String get packageListFailed;
+
+  /// No description provided for @selectInstallLocation.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择安装位置'**
+  String get selectInstallLocation;
+
+  /// No description provided for @selectInstallLocationHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'先选择套件要安装到哪个存储卷'**
+  String get selectInstallLocationHint;
+
+  /// No description provided for @storeVersion.
+  ///
+  /// In zh, this message translates to:
+  /// **'商店版本 {version}'**
+  String storeVersion(Object version);
+
+  /// No description provided for @installedVersion.
+  ///
+  /// In zh, this message translates to:
+  /// **'已装 {version}'**
+  String installedVersion(Object version);
+
+  /// No description provided for @startRequestSent.
+  ///
+  /// In zh, this message translates to:
+  /// **'已发送启动请求：{name}'**
+  String startRequestSent(Object name);
+
+  /// No description provided for @stopRequestSent.
+  ///
+  /// In zh, this message translates to:
+  /// **'已发送停止请求：{name}'**
+  String stopRequestSent(Object name);
+
+  /// No description provided for @confirmUninstall.
+  ///
+  /// In zh, this message translates to:
+  /// **'确认卸载'**
+  String get confirmUninstall;
+
+  /// No description provided for @confirmUninstallMessage.
+  ///
+  /// In zh, this message translates to:
+  /// **'确定要卸载 {name} 吗？'**
+  String confirmUninstallMessage(Object name);
+
+  /// No description provided for @uninstallRequestSent.
+  ///
+  /// In zh, this message translates to:
+  /// **'已发送卸载请求：{name}'**
+  String uninstallRequestSent(Object name);
+
+  /// No description provided for @confirmUpdateImpact.
+  ///
+  /// In zh, this message translates to:
+  /// **'确认更新影响'**
+  String get confirmUpdateImpact;
+
+  /// No description provided for @start.
+  ///
+  /// In zh, this message translates to:
+  /// **'启动'**
+  String get start;
+
+  /// No description provided for @stop.
+  ///
+  /// In zh, this message translates to:
+  /// **'停止'**
+  String get stop;
+
+  /// No description provided for @uninstall.
+  ///
+  /// In zh, this message translates to:
+  /// **'卸载'**
+  String get uninstall;
+
+  /// No description provided for @continueAction.
+  ///
+  /// In zh, this message translates to:
+  /// **'继续'**
+  String get continueAction;
+
+  /// No description provided for @packageTaskComplete.
+  ///
+  /// In zh, this message translates to:
+  /// **'{name} 安装/更新任务已完成或已提交'**
+  String packageTaskComplete(Object name);
+
+  /// No description provided for @packageInstallFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'套件安装失败：{error}'**
+  String packageInstallFailed(Object error);
 }
 
 class _AppLocalizationsDelegate
