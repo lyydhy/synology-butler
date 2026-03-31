@@ -12,6 +12,7 @@ import '../models/external_access_model.dart';
 import '../models/external_device_model.dart';
 import '../models/index_service_model.dart';
 import '../models/information_center_model.dart';
+import '../models/shared_folder_model.dart';
 import '../models/system_status_model.dart';
 import '../models/task_scheduler_model.dart';
 
@@ -43,6 +44,8 @@ abstract class SystemApi {
   Future<List<ExternalDeviceModel>> fetchExternalDevices();
 
   Future<void> ejectExternalDevice({required String id, required String bus});
+
+  Future<List<SharedFolderModel>> fetchSharedFolders();
 }
 
 class DsmSystemApi implements SystemApi {
@@ -355,6 +358,53 @@ class DsmSystemApi implements SystemApi {
     if (!(response.data is Map && response.data['success'] == true)) {
       throw Exception(response.data is Map ? response.data['error']?.toString() ?? '弹出外接设备失败' : '弹出外接设备失败');
     }
+  }
+
+  @override
+  Future<List<SharedFolderModel>> fetchSharedFolders() async {
+    final client = _dio;
+    final response = await client.post(
+      '/webapi/entry.cgi',
+      data: {
+        'api': 'SYNO.Core.Share',
+        'method': 'list',
+        'version': '1',
+        'shareType': 'all',
+        'additional': jsonEncode([
+          'hidden',
+          'recyclebin',
+          'encryption',
+          'volume_status',
+          'usage',
+        ]),
+      },
+      options: Options(contentType: Headers.formUrlEncodedContentType),
+    );
+
+    if (!(response.data is Map && response.data['success'] == true)) {
+      throw Exception(response.data is Map ? response.data['error']?.toString() ?? '加载共享文件夹失败' : '加载共享文件夹失败');
+    }
+
+    final data = response.data['data'] as Map? ?? const {};
+    final shares = ((data['shares'] as List?) ?? (data['list'] as List?) ?? const [])
+        .whereType<Map>()
+        .map(
+          (item) => SharedFolderModel(
+            name: (item['name'] ?? '').toString(),
+            description: (item['desc'] ?? item['description'] ?? '').toString(),
+            volumePath: (item['vol_path'] ?? item['volume_path'] ?? '').toString(),
+            fileSystem: (item['fstype'] ?? item['file_system'] ?? '').toString(),
+            isReadOnly: item['readonly'] == true || item['is_read_only'] == true,
+            isHidden: item['hidden'] == true,
+            recycleBinEnabled: item['enable_recycle_bin'] == true || item['recyclebin'] == true,
+            encrypted: item['encryption'] == true || item['is_encrypted'] == true,
+            usageText: (item['usage_str'] ?? item['used'] ?? item['usage'] ?? '').toString(),
+          ),
+        )
+        .where((item) => item.name.isNotEmpty)
+        .toList();
+
+    return shares;
   }
 
   @override

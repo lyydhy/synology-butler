@@ -2,6 +2,7 @@ import '../entities/external_access.dart';
 import '../entities/external_device.dart';
 import '../entities/index_service.dart';
 import '../entities/information_center.dart';
+import '../entities/shared_folder.dart';
 import '../entities/system_status.dart';
 import '../entities/task_scheduler.dart';
 
@@ -31,4 +32,6 @@ abstract class SystemRepository {
   Future<List<ExternalDevice>> fetchExternalDevices();
 
   Future<void> ejectExternalDevice({required String id, required String bus});
+
+  Future<List<SharedFolder>> fetchSharedFolders();
 }

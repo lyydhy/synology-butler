@@ -15,6 +15,7 @@ import '../features/debug/presentation/pages/debug_info_page.dart';
 import '../features/diagnostics/presentation/pages/diagnostics_page.dart';
 import '../features/external_access/presentation/pages/external_access_page.dart';
 import '../features/external_devices/presentation/pages/external_devices_page.dart';
+import '../features/shared_folders/presentation/pages/shared_folders_page.dart';
 import '../features/external_share/models/shared_incoming_file.dart';
 import '../features/external_share/pages/external_file_upload_page.dart';
 import '../features/files/presentation/pages/files_page.dart';
@@ -51,6 +52,7 @@ GoRouter createAppRouter({required String initialLocation}) {
     GoRoute(path: '/index-service', builder: (context, state) => const IndexServicePage()),
     GoRoute(path: '/task-scheduler', builder: (context, state) => const TaskSchedulerPage()),
     GoRoute(path: '/external-devices', builder: (context, state) => const ExternalDevicesPage()),
+    GoRoute(path: '/shared-folders', builder: (context, state) => const SharedFoldersPage()),
     GoRoute(path: '/packages', builder: (context, state) => const PackagesPage()),
     GoRoute(path: '/performance', builder: (context, state) => const PerformancePage()),
     GoRoute(path: '/container-management', builder: (context, state) => const ContainerManagementPage()),

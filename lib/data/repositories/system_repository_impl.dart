@@ -3,6 +3,7 @@ import '../../domain/entities/external_access.dart';
 import '../../domain/entities/external_device.dart';
 import '../../domain/entities/index_service.dart';
 import '../../domain/entities/information_center.dart';
+import '../../domain/entities/shared_folder.dart';
 import '../../domain/entities/system_status.dart';
 import '../../domain/entities/task_scheduler.dart';
 import '../../domain/repositories/system_repository.dart';
@@ -246,6 +247,26 @@ class SystemRepositoryImpl implements SystemRepository {
       serialNumber: model.serialNumber,
       uptimeText: model.uptimeText,
     );
+  }
+
+  @override
+  Future<List<SharedFolder>> fetchSharedFolders() async {
+    final models = await _systemApi.fetchSharedFolders();
+    return models
+        .map(
+          (item) => SharedFolder(
+            name: item.name,
+            description: item.description,
+            volumePath: item.volumePath,
+            fileSystem: item.fileSystem,
+            isReadOnly: item.isReadOnly,
+            isHidden: item.isHidden,
+            recycleBinEnabled: item.recycleBinEnabled,
+            encrypted: item.encrypted,
+            usageText: item.usageText,
+          ),
+        )
+        .toList();
   }
 
   @override
