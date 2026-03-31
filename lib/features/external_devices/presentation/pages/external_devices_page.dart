@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/utils/l10n.dart';
+
 import '../../../../core/widgets/app_error_state.dart';
 import '../../../../domain/entities/external_device.dart';
 import '../providers/external_devices_providers.dart';
@@ -12,13 +14,14 @@ class ExternalDevicesPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final devicesAsync = ref.watch(externalDevicesProvider);
     final busyIds = ref.watch(externalDeviceBusyIdsProvider);
+    
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('外接设备'),
+        title: Text(l10n.externalDevicesTitle),
         actions: [
           IconButton(
-            tooltip: '刷新',
+            tooltip: l10n.retry,
             onPressed: () => ref.invalidate(externalDevicesProvider),
             icon: const Icon(Icons.refresh_rounded),
           ),
@@ -34,15 +37,15 @@ class ExternalDevicesPage extends ConsumerWidget {
         ),
         data: (devices) {
           if (devices.isEmpty) {
-            return const Center(
+            return Center(
               child: Padding(
-                padding: EdgeInsets.all(24),
+                padding: const EdgeInsets.all(24),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.usb_off_rounded, size: 52),
-                    SizedBox(height: 12),
-                    Text('当前没有连接外接设备'),
+                    const Icon(Icons.usb_off_rounded, size: 52),
+                    const SizedBox(height: 12),
+                    Text(l10n.noExternalDevices),
                   ],
                 ),
               ),
@@ -58,15 +61,16 @@ class ExternalDevicesPage extends ConsumerWidget {
               return _DeviceCard(
                 device: device,
                 busy: busy,
+                
                 onEject: () async {
                   final messenger = ScaffoldMessenger.of(context);
                   try {
                     await ref.read(ejectExternalDeviceProvider)(device);
                     messenger.hideCurrentSnackBar();
-                    messenger.showSnackBar(const SnackBar(content: Text('已提交弹出设备请求')));
+                    messenger.showSnackBar(SnackBar(content: Text(l10n.ejectSubmitted)));
                   } catch (error) {
                     messenger.hideCurrentSnackBar();
-                    messenger.showSnackBar(SnackBar(content: Text('弹出失败：$error')));
+                    messenger.showSnackBar(SnackBar(content: Text('${l10n.ejectFailed}：$error')));
                   }
                 },
               );
@@ -81,9 +85,10 @@ class ExternalDevicesPage extends ConsumerWidget {
 class _DeviceCard extends StatelessWidget {
   final ExternalDevice device;
   final bool busy;
+  
   final Future<void> Function() onEject;
 
-  const _DeviceCard({required this.device, required this.busy, required this.onEject});
+  const _DeviceCard({required this.device, required this.busy,  required this.onEject});
 
   @override
   Widget build(BuildContext context) {
@@ -156,10 +161,10 @@ class _DeviceCard extends StatelessWidget {
                     children: [
                       Text(volume.name.isEmpty ? '未命名卷' : volume.name, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
                       const SizedBox(height: 4),
-                      Text('文件系统：${volume.fileSystem.isEmpty ? '-' : volume.fileSystem}'),
-                      Text('挂载路径：${volume.mountPath.isEmpty ? '-' : volume.mountPath}'),
+                      Text('${l10n.fileSystem}：${volume.fileSystem.isEmpty ? '-' : volume.fileSystem}'),
+                      Text('${l10n.mountPath}：${volume.mountPath.isEmpty ? '-' : volume.mountPath}'),
                       if (volume.totalSizeText.isNotEmpty || volume.usedSizeText.isNotEmpty)
-                        Text('容量：${volume.usedSizeText.isEmpty ? '-' : volume.usedSizeText} / ${volume.totalSizeText.isEmpty ? '-' : volume.totalSizeText}'),
+                        Text('${l10n.capacity}：${volume.usedSizeText.isEmpty ? '-' : volume.usedSizeText} / ${volume.totalSizeText.isEmpty ? '-' : volume.totalSizeText}'),
                     ],
                   ),
                 ),
@@ -174,7 +179,7 @@ class _DeviceCard extends StatelessWidget {
               icon: busy
                   ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                   : const Icon(Icons.eject_rounded),
-              label: Text(device.canEject ? '弹出设备' : '当前不可弹出'),
+              label: Text(device.canEject ? l10n.ejectDevice : '当前不可弹出'),
             ),
           ),
         ],

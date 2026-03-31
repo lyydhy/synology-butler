@@ -6,7 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/error/error_mapper.dart';
-import '../../../l10n/app_localizations.dart';
+import '../../../core/utils/l10n.dart';
 import '../../transfers/presentation/providers/transfer_providers.dart';
 import '../models/shared_incoming_file.dart';
 
@@ -91,7 +91,7 @@ class _ExternalFileUploadPageState extends ConsumerState<ExternalFileUploadPage>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context);
+    
 
     return Scaffold(
       appBar: AppBar(title: const Text('上传到群晖')),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/utils/l10n.dart';
+
 import '../../../../core/widgets/app_error_state.dart';
 import '../providers/external_access_providers.dart';
 
@@ -18,15 +20,16 @@ class ExternalAccessPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final dataAsync = ref.watch(externalAccessProvider);
     final refreshing = ref.watch(ddnsRefreshControllerProvider);
+    
 
     Future<void> refreshAll() => ref.read(refreshDdnsProvider)(recordId: null);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('外部访问'),
+        title: Text(l10n.externalAccessTitle),
         actions: [
           IconButton(
-            tooltip: '刷新 DDNS',
+            tooltip: l10n.retry,
             onPressed: refreshing ? null : refreshAll,
             icon: refreshing
                 ? const SizedBox(
@@ -48,15 +51,15 @@ class ExternalAccessPage extends ConsumerWidget {
         ),
         data: (data) {
           if (data.records.isEmpty) {
-            return const Center(
+            return Center(
               child: Padding(
-                padding: EdgeInsets.all(24),
+                padding: const EdgeInsets.all(24),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.public_off_outlined, size: 52),
-                    SizedBox(height: 12),
-                    Text('当前没有 DDNS 记录'),
+                    const Icon(Icons.public_off_outlined, size: 52),
+                    const SizedBox(height: 12),
+                    Text(l10n.noDdnsRecords),
                   ],
                 ),
               ),
@@ -110,7 +113,7 @@ class _SummaryCard extends StatelessWidget {
         children: [
           const Icon(Icons.schedule_rounded),
           const SizedBox(width: 12),
-          Expanded(child: Text('下次自动更新时间：$nextUpdateTime')),
+          Expanded(child: Text('${l10n.nextAutoUpdateTime}：$nextUpdateTime')),
         ],
       ),
     );
@@ -170,16 +173,16 @@ class _RecordCard extends StatelessWidget {
           const SizedBox(height: 12),
           Text(hostname, style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600)),
           const SizedBox(height: 4),
-          Text('IP：$ip'),
+          Text('${l10n.ipAddress}：$ip'),
           const SizedBox(height: 4),
-          Text('上次更新：${lastUpdated.isEmpty ? '-' : lastUpdated}'),
+          Text('${l10n.lastUpdated}：${lastUpdated.isEmpty ? '-' : lastUpdated}'),
           const SizedBox(height: 12),
           Align(
             alignment: Alignment.centerRight,
             child: OutlinedButton.icon(
               onPressed: refreshing ? null : onRefresh,
               icon: const Icon(Icons.refresh_rounded),
-              label: const Text('立即刷新'),
+              label: Text(l10n.refreshNow),
             ),
           ),
         ],

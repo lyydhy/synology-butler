@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/error/error_mapper.dart';
-import '../../../../l10n/app_localizations.dart';
+import '../../../../core/utils/l10n.dart';
 import '../providers/text_editor_providers.dart';
 import '../widgets/file_type_helper.dart';
 
@@ -19,7 +19,7 @@ class TextPreviewPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
+    
     final fileAsync = ref.watch(textFileProvider(path));
     final canEdit = FileTypeHelper.isTextEditableName(name) && !FileTypeHelper.isNfoName(name);
 

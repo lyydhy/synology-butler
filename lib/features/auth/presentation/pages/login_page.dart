@@ -6,10 +6,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/error/error_mapper.dart';
+import '../../../../core/utils/l10n.dart';
 import '../../../../core/utils/local_app_logger.dart';
 import '../../../../core/utils/server_url_helper.dart';
 import '../../../../domain/entities/nas_server.dart';
-import '../../../../l10n/app_localizations.dart';
 import '../../../../core/network/app_dio.dart';
 import '../providers/auth_providers.dart';
 import '../providers/current_connection_readers.dart';
@@ -66,7 +66,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     loginMode = hasSavedServers ? _LoginMode.quick : _LoginMode.manual;
 
     if (server == null) {
-      serverNameController.text = '我的 NAS';
+      serverNameController.text = l10n.defaultDeviceName;
       hostController.text = '192.168.1.2';
       portController.text = '5001';
       usernameController.text = savedUsername ?? '';
@@ -99,7 +99,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       quickLoginEditUsername = false;
       passwordController.clear();
       errorText = null;
-      infoText = '已选择 ${server.name}，输入密码即可重新登录';
+      infoText = l10n.selectedEnterPassword(server.name);
       _validateFields();
     });
 
@@ -132,7 +132,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
     final messenger = ScaffoldMessenger.of(context);
     messenger.hideCurrentSnackBar();
-    messenger.showSnackBar(SnackBar(content: Text('已删除 ${server.name} 的历史记录')));
+    messenger.showSnackBar(SnackBar(content: Text(l10n.historyDeleted(server.name))));
   }
 
   void _validateFields() {
@@ -142,14 +142,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     final password = passwordController.text;
     final parsedPort = int.tryParse(portText);
 
-    hostValidationText = host.isEmpty ? '请输入 NAS 地址或域名' : null;
+    hostValidationText = host.isEmpty ? l10n.enterNasAddress : null;
     portValidationText = portText.isEmpty
-        ? '请输入端口'
+        ? l10n.enterPort
         : (parsedPort == null || parsedPort <= 0 || parsedPort > 65535)
-            ? '端口范围应为 1 - 65535'
+            ? l10n.portRange
             : null;
-    usernameValidationText = username.isEmpty ? '请输入用户名' : null;
-    passwordValidationText = password.isEmpty ? '请输入密码' : null;
+    usernameValidationText = username.isEmpty ? l10n.enterUsername : null;
+    passwordValidationText = password.isEmpty ? l10n.enterPassword : null;
   }
 
   bool get _canSubmit {
@@ -172,7 +172,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
     return NasServer(
       id: '$normalizedHost:${portController.text.trim()}:${https ? 'https' : 'http'}:${ignoreBadCertificate ? 'insecure' : 'strict'}',
-      name: '我的 NAS',
+      name: l10n.defaultDeviceName,
       host: normalizedHost,
       port: int.tryParse(portController.text.trim()) ?? 5001,
       https: https,
@@ -223,7 +223,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         extra: {'baseUrl': baseUrl},
       );
       setState(() {
-        infoText = '连接成功：已探测到 DSM Web API';
+        infoText = l10n.connectionSuccess;
       });
     } on DioException catch (e) {
       final details = [
@@ -245,7 +245,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         await showDialog<void>(
           context: context,
           builder: (dialogContext) => AlertDialog(
-            title: const Text('测试连接失败'),
+            title: Text(l10n.connectionTestFailed),
             content: SingleChildScrollView(child: SelectableText(details)),
             actions: [
               TextButton(
@@ -253,11 +253,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   await Clipboard.setData(ClipboardData(text: details));
                   if (dialogContext.mounted) Navigator.of(dialogContext).pop();
                 },
-                child: const Text('复制'),
+                child: Text(l10n.copy),
               ),
               FilledButton(
                 onPressed: () => Navigator.of(dialogContext).pop(),
-                child: const Text('关闭'),
+                child: Text(l10n.close),
               ),
             ],
           ),
@@ -326,7 +326,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       );
       if (!version.isDsm7OrAbove) {
         setState(() {
-          errorText = '检测到当前设备为 ${version.displayText}。本应用当前仅支持 DSM 7，暂不支持 DSM 6 登录。';
+          errorText = l10n.dsm6NotSupported(version.displayText);
         });
         return;
       }
@@ -366,13 +366,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   }
 
   String _formatLastUsed(int? timestampMs) {
-    if (timestampMs == null || timestampMs <= 0) return '未记录登录时间';
+    if (timestampMs == null || timestampMs <= 0) return l10n.noLoginTimeRecorded;
     final diff = DateTime.now().difference(DateTime.fromMillisecondsSinceEpoch(timestampMs));
-    if (diff.inMinutes < 1) return '刚刚使用';
-    if (diff.inHours < 1) return '${diff.inMinutes} 分钟前使用';
-    if (diff.inDays < 1) return '${diff.inHours} 小时前使用';
-    if (diff.inDays < 30) return '${diff.inDays} 天前使用';
-    return '较早前使用';
+    if (diff.inMinutes < 1) return l10n.justUsed;
+    if (diff.inHours < 1) return l10n.minutesAgo(diff.inMinutes);
+    if (diff.inDays < 1) return l10n.hoursAgo(diff.inHours);
+    if (diff.inDays < 30) return l10n.daysAgo(diff.inDays);
+    return l10n.usedEarlier;
   }
 
   String _buildServerInitials(NasServer server) {
@@ -447,7 +447,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           if (!https) {
             final messenger = ScaffoldMessenger.of(context);
             messenger.hideCurrentSnackBar();
-            messenger.showSnackBar(const SnackBar(content: Text('已切换为 HTTP，请仅在可信局域网中使用')));
+            messenger.showSnackBar(SnackBar(content: Text(l10n.switchedToHttp)));
           }
         },
         child: Container(
@@ -480,7 +480,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           ref.watch(savedServerLastUsedProvider),
         ),
         icon: const Icon(Icons.history_rounded, size: 18),
-        label: const Text('从历史登录设备中选择', style: TextStyle(fontWeight: FontWeight.w600)),
+        label: Text(l10n.selectFromHistory, style: const TextStyle(fontWeight: FontWeight.w600)),
         style: TextButton.styleFrom(
           foregroundColor: const Color(0xFF2563EB),
           padding: const EdgeInsets.symmetric(vertical: 14),
@@ -530,7 +530,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   children: [
                     const Icon(Icons.history_rounded, color: Color(0xFF2563EB)),
                     const SizedBox(width: 10),
-                    const Text('历史登录设备', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+                    Text(l10n.historyDevices, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
                     const Spacer(),
                     IconButton(
                       onPressed: () => Navigator.pop(sheetCtx),
@@ -594,7 +594,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         child: Row(children: [
           Container(width: 42, height: 42, decoration: BoxDecoration(color: const Color(0xFFEFF6FF), borderRadius: BorderRadius.circular(14)), child: const Icon(Icons.history_toggle_off_rounded, color: Color(0xFF2563EB))),
           const SizedBox(width: 12),
-          const Expanded(child: Text('请选择一个历史设备后再快速登录', style: TextStyle(fontWeight: FontWeight.w600))),
+          Expanded(child: Text(l10n.selectDeviceFirst, style: const TextStyle(fontWeight: FontWeight.w600))),
         ]),
       );
     }
@@ -617,7 +617,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     );
   }
 
-  Widget _buildQuickLoginCard(AppLocalizations l10n, List<NasServer> savedServers) {
+  Widget _buildQuickLoginCard(List<NasServer> savedServers) {
     final selectedServer = _findSelectedServer(savedServers);
     return Container(
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(28), boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 28, offset: const Offset(0, 12))]),
@@ -628,9 +628,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             Container(width: 38, height: 38, decoration: BoxDecoration(color: const Color(0xFFEEF4FF), borderRadius: BorderRadius.circular(12)), child: const Icon(Icons.flash_on_rounded, color: Color(0xFF2563EB), size: 20)),
             const SizedBox(width: 10),
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('快速登录', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17)),
+              Text(l10n.quickLogin, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17)),
               const SizedBox(height: 2),
-              Text(selectedServerId == null ? '选择设备后输入密码即可登录' : '设备已就绪，输入密码即可登录', style: TextStyle(color: Colors.grey.shade600, fontSize: 12.5)),
+              Text(selectedServerId == null ? l10n.selectDeviceThenPassword : l10n.deviceReadyEnterPassword, style: TextStyle(color: Colors.grey.shade600, fontSize: 12.5)),
             ])),
           ]),
           const SizedBox(height: 14),
@@ -644,18 +644,18 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 const Icon(Icons.person_outline, color: Color(0xFF2563EB)),
                 const SizedBox(width: 12),
                 Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('用户名', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                  Text(l10n.username, style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
                   const SizedBox(height: 4),
-                  Text(usernameController.text.trim().isEmpty ? '未记录用户名，请点击更换账号' : usernameController.text.trim(), style: const TextStyle(fontWeight: FontWeight.w700)),
+                  Text(usernameController.text.trim().isEmpty ? l10n.noUsernameTapChange : usernameController.text.trim(), style: const TextStyle(fontWeight: FontWeight.w700)),
                 ])),
-                TextButton(onPressed: () => setState(() => quickLoginEditUsername = true), child: Text(usernameController.text.trim().isEmpty ? '填写' : '更换账号')),
+                TextButton(onPressed: () => setState(() => quickLoginEditUsername = true), child: Text(usernameController.text.trim().isEmpty ? l10n.fill : l10n.changeAccount)),
               ]),
             )
           else
             TextField(
               controller: usernameController,
               onChanged: (_) => setState(() {}),
-              decoration: _inputDecoration(label: l10n.username, icon: Icons.person_outline, suffixIcon: TextButton(onPressed: () => setState(() => quickLoginEditUsername = false), child: const Text('完成'))),
+              decoration: _inputDecoration(label: l10n.username, icon: Icons.person_outline, suffixIcon: TextButton(onPressed: () => setState(() => quickLoginEditUsername = false), child: Text(l10n.done))),
             ),
           const SizedBox(height: 10),
           TextField(
@@ -677,7 +677,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             child: FilledButton.icon(
               onPressed: _canQuickLogin ? login : null,
               icon: isLoading ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Icon(Icons.login_rounded),
-              label: Text(isLoading ? l10n.loggingIn : '登录 DSM'),
+              label: Text(isLoading ? l10n.loggingIn : l10n.loginDsm),
             ),
           ),
           const SizedBox(height: 10),
@@ -689,11 +689,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   loginMode = _LoginMode.manual;
                   quickLoginEditUsername = false;
                   errorText = null;
-                  infoText = '已切换到新账号 / 新设备登录';
+                  infoText = l10n.switchedToNewAccount;
                 });
               },
               icon: const Icon(Icons.edit_outlined, size: 18),
-              label: const Text('新账号 / 新设备登录'),
+              label: Text(l10n.newAccountDevice),
             ),
           ),
         ]),
@@ -701,7 +701,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     );
   }
 
-  Widget _buildInputCard(AppLocalizations l10n, {required bool showBackToQuick}) {
+  Widget _buildInputCard({required bool showBackToQuick}) {
     return Container(
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(28), boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 28, offset: const Offset(0, 12))]),
       child: Padding(
@@ -711,11 +711,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             Container(width: 42, height: 42, decoration: BoxDecoration(color: const Color(0xFFEEF4FF), borderRadius: BorderRadius.circular(14)), child: const Icon(Icons.admin_panel_settings_outlined, color: Color(0xFF2563EB))),
             const SizedBox(width: 12),
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('连接信息', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
+              Text(l10n.connectionInfo, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
               const SizedBox(height: 2),
-              Text('填写 NAS 地址与 DSM 账号信息', style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
+              Text(l10n.enterNasCredentials, style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
             ])),
-            if (showBackToQuick) TextButton(onPressed: () => setState(() => loginMode = _LoginMode.quick), child: const Text('快速登录')),
+            if (showBackToQuick) TextButton(onPressed: () => setState(() => loginMode = _LoginMode.quick), child: Text(l10n.quickLogin)),
           ]),
           const SizedBox(height: 18),
           Row(children: [
@@ -732,8 +732,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               contentPadding: EdgeInsets.zero,
               value: ignoreBadCertificate,
               onChanged: https ? (value) => setState(() => ignoreBadCertificate = value) : null,
-              title: const Text('忽略 SSL 证书'),
-              subtitle: Text(https ? '仅适用于自签名或异常证书场景' : '仅 HTTPS 下可用', style: TextStyle(color: Colors.grey.shade600, fontSize: 12.5)),
+              title: Text(l10n.ignoreSslCert),
+              subtitle: Text(https ? l10n.ignoreSslCertHint : l10n.httpsOnly, style: TextStyle(color: Colors.grey.shade600, fontSize: 12.5)),
             ),
           ),
           const SizedBox(height: 12),
@@ -754,14 +754,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               contentPadding: EdgeInsets.zero,
               value: rememberPassword,
               onChanged: (value) => setState(() => rememberPassword = value ?? false),
-              title: const Text('记住密码'),
+              title: Text(l10n.rememberPassword),
               controlAffinity: ListTileControlAffinity.leading,
             ),
           ),
           const SizedBox(height: 12),
-          SizedBox(width: double.infinity, child: FilledButton.icon(onPressed: _canSubmit ? login : null, icon: isLoading ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Icon(Icons.login_rounded), label: Text(isLoading ? l10n.loggingIn : '登录 DSM'))),
+          SizedBox(width: double.infinity, child: FilledButton.icon(onPressed: _canSubmit ? login : null, icon: isLoading ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Icon(Icons.login_rounded), label: Text(isLoading ? l10n.loggingIn : l10n.loginDsm))),
           const SizedBox(height: 10),
-          SizedBox(width: double.infinity, child: OutlinedButton.icon(onPressed: isTesting ? null : testConnection, icon: isTesting ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.wifi_tethering_outlined), label: Text(isTesting ? l10n.testingConnection : '测试连接'))),
+          SizedBox(width: double.infinity, child: OutlinedButton.icon(onPressed: isTesting ? null : testConnection, icon: isTesting ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.wifi_tethering_outlined), label: Text(isTesting ? l10n.testingConnection : l10n.testConnection))),
         ]),
       ),
     );
@@ -769,7 +769,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
     final connection = ref.watch(currentConnectionProvider);
     final currentServer = connection.server;
     final savedUsername = connection.username;
@@ -801,7 +800,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         if (!mounted) return;
         setState(() {
           infoText = null;
-          errorText = '登录状态已过期，请重新登录以恢复实时连接。';
+          errorText = l10n.sessionExpired;
         });
         await ref.read(localStorageProvider).remove(AppConstants.sessionExpiredFlagKey);
       });
@@ -828,10 +827,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     Container(width: 44, height: 44, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.14), borderRadius: BorderRadius.circular(14)), child: const Icon(Icons.dns_rounded, color: Colors.white, size: 24)),
                     const SizedBox(width: 12),
                     Expanded(child: Text(l10n.appTitle, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w800, height: 1.1))),
-                    Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6), decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(999)), child: const Text('DSM 7+', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 12))),
+                    Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6), decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(999)), child: Text(l10n.dsm7Plus, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 12))),
                   ]),
                   const SizedBox(height: 10),
-                  Text(showQuickLogin ? '已为你准备好快速登录。' : '连接你的群晖 DSM。', style: TextStyle(color: Colors.white.withValues(alpha: 0.90), height: 1.35, fontSize: 13)),
+                  Text(showQuickLogin ? l10n.quickLoginReady : l10n.connectToDsm, style: TextStyle(color: Colors.white.withValues(alpha: 0.90), height: 1.35, fontSize: 13)),
                   const SizedBox(height: 4),
                 ]),
               ),
@@ -841,23 +840,23 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 Padding(
                   padding: const EdgeInsets.only(left: 2, bottom: 12),
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text('快速重新登录', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+                    Text(l10n.quickRelogin, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
                     const SizedBox(height: 6),
-                    Text('有历史记录时优先显示这个界面，减少输入内容。', style: TextStyle(color: Colors.grey.shade600)),
+                    Text(l10n.quickReloginHint, style: TextStyle(color: Colors.grey.shade600)),
                   ]),
                 ),
-                _buildQuickLoginCard(l10n, savedServers),
+                _buildQuickLoginCard(savedServers),
                 _buildServerSelector(),
               ] else ...[
                 Padding(
                   padding: const EdgeInsets.only(left: 2, bottom: 12),
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text('登录到 NAS', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+                    Text(l10n.loginToNas, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
                     const SizedBox(height: 6),
-                    Text('支持局域网 IP、域名和端口。', style: TextStyle(color: Colors.grey.shade600)),
+                    Text(l10n.loginToNasHint, style: TextStyle(color: Colors.grey.shade600)),
                   ]),
                 ),
-                _buildInputCard(l10n, showBackToQuick: savedServers.isNotEmpty),
+                _buildInputCard(showBackToQuick: savedServers.isNotEmpty),
               ],
             ],
           ),

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../l10n/app_localizations.dart';
+import '../../../../core/utils/l10n.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../auth/presentation/providers/current_connection_readers.dart';
 import '../../../preferences/providers/preferences_providers.dart';
@@ -11,7 +11,7 @@ import '../../../preferences/providers/preferences_providers.dart';
 class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
 
-  String _themeModeLabel(AppLocalizations l10n, AppThemeModeOption option) {
+  String _themeModeLabel(AppThemeModeOption option) {
     switch (option) {
       case AppThemeModeOption.light:
         return l10n.lightMode;
@@ -35,7 +35,7 @@ class SettingsPage extends ConsumerWidget {
     }
   }
 
-  String _localeLabel(AppLocalizations l10n, AppLocaleOption option) {
+  String _localeLabel(AppLocaleOption option) {
     switch (option) {
       case AppLocaleOption.zh:
         return l10n.simplifiedChinese;
@@ -48,7 +48,7 @@ class SettingsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
+    
     final server = ref.watch(currentConnectionProvider).server;
     final theme = Theme.of(context);
     final themeMode = ref.watch(themeModeProvider);
@@ -96,7 +96,7 @@ class SettingsPage extends ConsumerWidget {
               _SettingsDropdownTile<AppThemeModeOption>(
                 icon: Icons.brightness_6_rounded,
                 title: l10n.themeMode,
-                subtitle: _themeModeLabel(l10n, themeMode),
+                subtitle: _themeModeLabel(themeMode),
                 value: themeMode,
                 items: [
                   DropdownMenuItem(value: AppThemeModeOption.system, child: Text(l10n.followSystem)),
@@ -125,7 +125,7 @@ class SettingsPage extends ConsumerWidget {
               _SettingsDropdownTile<AppLocaleOption>(
                 icon: Icons.language_rounded,
                 title: l10n.language,
-                subtitle: _localeLabel(l10n, locale),
+                subtitle: _localeLabel(locale),
                 value: locale,
                 items: [
                   DropdownMenuItem(value: AppLocaleOption.system, child: Text(l10n.followSystem)),

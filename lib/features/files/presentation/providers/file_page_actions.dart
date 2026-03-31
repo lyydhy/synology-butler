@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/error/error_mapper.dart';
+import '../../../../core/utils/l10n.dart';
 import '../../../../domain/entities/file_item.dart';
-import '../../../../l10n/app_localizations.dart';
 import '../../../transfers/presentation/providers/transfer_providers.dart';
 import 'file_providers.dart';
 
@@ -47,10 +47,11 @@ class FilePageActions {
     Set<String> selectedPaths,
     VoidCallback onSelectionCleared,
   ) async {
+    
     final selectedItems = files.where((item) => selectedPaths.contains(item.path) && !item.isDirectory).toList();
     if (selectedItems.isEmpty) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('请至少选择一个文件进行下载')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.selectOneFile)));
       }
       return;
     }
@@ -61,7 +62,7 @@ class FilePageActions {
 
     onSelectionCleared();
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已加入 ${selectedItems.length} 个下载任务')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.addedDownloadTasks(selectedItems.length))));
     }
   }
 
@@ -72,15 +73,15 @@ class FilePageActions {
     Set<String> selectedPaths,
     VoidCallback onSelectionCleared,
   ) async {
-    final l10n = AppLocalizations.of(context);
+    
     final paths = selectedPaths.toList();
     if (paths.isEmpty) return;
 
     final confirmed = await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('批量删除'),
-            content: Text('确定要删除选中的 ${paths.length} 项吗？'),
+            title: Text(l10n.batchDelete),
+            content: Text(l10n.confirmBatchDelete(paths.length)),
             actions: [
               TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n.cancel)),
               FilledButton(onPressed: () => Navigator.of(context).pop(true), child: Text(l10n.deleteConfirm)),
@@ -95,7 +96,7 @@ class FilePageActions {
       await ref.read(fileBatchDeleteProvider)(paths);
       onSelectionCleared();
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已删除 ${paths.length} 项')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.deletedCount(paths.length))));
       }
     } catch (e) {
       if (context.mounted) {
@@ -106,7 +107,7 @@ class FilePageActions {
 
   /// 展示新建文件夹对话框。
   Future<void> showCreateFolderDialog(BuildContext context, WidgetRef ref, String currentPath) async {
-    final l10n = AppLocalizations.of(context);
+    
     final controller = TextEditingController();
     String? errorText;
     bool isSubmitting = false;
@@ -166,7 +167,7 @@ class FilePageActions {
     String currentPath,
     Future<({String fileName, Uint8List bytes})?> Function() picker,
   ) async {
-    final l10n = AppLocalizations.of(context);
+    
     String? fileName;
     Uint8List? fileBytes;
     String? errorText;
@@ -221,7 +222,7 @@ class FilePageActions {
                       });
                       try {
                         if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('已加入上传任务')));
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.uploadTaskAdded)));
                         }
                         await ref.read(transferControllerProvider.notifier).enqueueUpload(
                               parentPath: currentPath,

@@ -130,5 +130,234 @@
   },
   "appLogsSanitizedBadge": "Sanitized",
   "appLogsRawBadge": "Raw log",
-  "appLogsViewerHint": "You are viewing sanitized content, which is safer to copy or export for troubleshooting."
+  "appLogsViewerHint": "You are viewing sanitized content, which is safer to copy or export for troubleshooting.",
+
+  "controlPanelTitle": "Control Panel",
+  "taskSchedulerTitle": "Task Scheduler",
+  "externalDevicesTitle": "External Devices",
+  "externalAccessTitle": "External Access",
+  "indexServiceTitle": "Indexing Service",
+  "sharedFoldersTitle": "Shared Folders",
+  "userGroupsTitle": "Users & Groups",
+  "informationCenterTitle": "Information Center",
+
+  "noTasks": "No scheduled tasks",
+  "noExternalDevices": "No external devices connected",
+  "noDdnsRecords": "No DDNS records",
+  "noSharedFolders": "No shared folders",
+  "noUsersFound": "No users found",
+  "noGroupsFound": "No groups found",
+
+  "executeNow": "Execute Now",
+  "taskSubmitted": "Task submitted for execution",
+  "executeFailed": "Execution failed",
+  "updateFailed": "Update failed",
+
+  "ejectDevice": "Eject Device",
+  "ejectSubmitted": "Eject request submitted",
+  "ejectFailed": "Eject failed",
+  "fileSystem": "File System",
+  "mountPath": "Mount Path",
+  "capacity": "Capacity",
+
+  "nextAutoUpdateTime": "Next auto update time",
+  "ipAddress": "IP",
+  "lastUpdated": "Last updated",
+  "refreshNow": "Refresh Now",
+
+  "thumbnailQuality": "Thumbnail Quality",
+  "thumbnailQualityUpdated": "Thumbnail quality updated",
+  "rebuildIndex": "Rebuild Index",
+  "rebuildIndexDesc": "Re-trigger media indexing. Useful for missing thumbnails or abnormal index status.",
+  "rebuildSubmitted": "Rebuild index request submitted",
+  "rebuildFailed": "Rebuild failed",
+  "currentIndexStatus": "Current Status",
+  "currentTask": "Current Task",
+  "noIndexTasks": "No indexing tasks",
+
+  "historyDeleted": "History deleted for {name}",
+  "@historyDeleted": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "connectionTestFailed": "Connection test failed",
+  "copy": "Copy",
+  "switchedToHttp": "Switched to HTTP. Only use in trusted local networks.",
+  "selectFromHistory": "Select from history",
+  "historyDevices": "History devices",
+  "selectDeviceFirst": "Please select a device first to quick login",
+  "quickLogin": "Quick Login",
+  "done": "Done",
+  "newAccountDevice": "New Account / Device",
+  "connectionInfo": "Connection Info",
+  "enterNasCredentials": "Enter NAS address and DSM credentials",
+  "ignoreSslCert": "Ignore SSL Certificate",
+  "ignoreSslCertHint": "Only for self-signed or abnormal certificates",
+  "httpsOnly": "Only available for HTTPS",
+  "rememberPassword": "Remember Password",
+  "loginDsm": "Login to DSM",
+  "dsm7Plus": "DSM 7+",
+  "quickLoginReady": "Quick login ready for you.",
+  "connectToDsm": "Connect to your Synology DSM.",
+  "quickRelogin": "Quick Re-login",
+  "quickReloginHint": "Show this interface when history is available to reduce input.",
+  "loginToNas": "Login to NAS",
+  "loginToNasHint": "Supports LAN IP, domain and port.",
+  "noUsernameTapChange": "No username recorded, tap to change account",
+  "fill": "Fill",
+  "changeAccount": "Change Account",
+  "justUsed": "Just used",
+  "minutesAgo": "Used {n} minutes ago",
+  "@minutesAgo": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "hoursAgo": "Used {n} hours ago",
+  "@hoursAgo": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "daysAgo": "Used {n} days ago",
+  "@daysAgo": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "usedEarlier": "Used earlier",
+  "noLoginTimeRecorded": "No login time recorded",
+  "selectedEnterPassword": "Selected {name}, enter password to login",
+  "@selectedEnterPassword": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "connectionSuccess": "Connection successful: DSM Web API detected",
+  "dsm6NotSupported": "Detected {version}. This app only supports DSM 7, DSM 6 login is not supported yet.",
+  "@dsm6NotSupported": {
+    "placeholders": {
+      "version": {}
+    }
+  },
+  "switchedToNewAccount": "Switched to new account / device login",
+  "sessionExpired": "Session expired. Please login again to restore real-time connection.",
+  "enterNasAddress": "Please enter NAS address or domain",
+  "enterPort": "Please enter port",
+  "portRange": "Port should be between 1 - 65535",
+  "enterUsername": "Please enter username",
+  "enterPassword": "Please enter password",
+  "selectDeviceThenPassword": "Select a device then enter password to login",
+  "deviceReadyEnterPassword": "Device ready, enter password to login",
+  "previewImage": "Preview Image",
+  "download": "Download",
+  "downloadAndOpen": "Download and Open",
+  "startDownloading": "Starting download {name}",
+  "@startDownloading": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "downloadCompleteOpen": "Starting download {name}, will open when complete",
+  "@downloadCompleteOpen": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "downloadTaskComplete": "{title} download complete",
+  "@downloadTaskComplete": {
+    "placeholders": {
+      "title": {}
+    }
+  },
+  "confirmDelete": "Are you sure you want to delete \\\"{name}\\\"?",
+  "@confirmDelete": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "downloadDirSet": "Download directory set to {path}",
+  "@downloadDirSet": {
+    "placeholders": {
+      "path": {}
+    }
+  },
+  "selectUploadDir": "Select upload directory",
+  "loadFilesFailed": "Failed to load files: {error}",
+  "@loadFilesFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "selectCurrentDir": "Select current directory: {path}",
+  "@selectCurrentDir": {
+    "placeholders": {
+      "path": {}
+    }
+  },
+  "refresh": "Refresh",
+  "discardChanges": "Discard changes?",
+  "discardChangesHint": "Current file has unsaved changes. Are you sure you want to go back?",
+  "discard": "Discard",
+  "saveSuccess": "Saved successfully",
+  "save": "Save",
+  "savedToAlbum": "Saved to album",
+  "loadingImage": "Loading image...",
+  "videoLoadFailed": "Video load failed",
+  "selectOneFile": "Please select at least one file to download",
+  "addedDownloadTasks": "Added {count} download tasks",
+  "@addedDownloadTasks": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "batchDelete": "Batch Delete",
+  "confirmBatchDelete": "Are you sure you want to delete {count} selected items?",
+  "@confirmBatchDelete": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "deletedCount": "Deleted {count} items",
+  "@deletedCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "uploadTaskAdded": "Upload task added",
+  "videoPreviewHint": "Open video preview from list",
+  "pathCopied": "Path copied",
+
+  "open": "Open",
+  "backgroundTaskRunning": "Background task running",
+  "backgroundTaskRunningCount": "Background task running ({count})",
+  "@backgroundTaskRunningCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "taskComplete": "{name} task complete",
+  "@taskComplete": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "taskCompleteMultiple": "{name} and {count} other tasks complete",
+  "@taskCompleteMultiple": {
+    "placeholders": {
+      "name": {},
+      "count": {}
+    }
+  },
+  "transfer": "Transfer",
+  "downloadAndOpenTitle": "Download and Open",
+  "processingLabel": "Processing",
+
+  "fileServicesTitle": "File Services",
+  "noFileServices": "No file service information available",
+  "fileServiceEnabled": "Enabled",
+  "fileServiceDisabled": "Disabled",
+
+  "defaultDeviceName": "My NAS"
 }

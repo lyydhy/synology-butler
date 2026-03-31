@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/utils/server_url_helper.dart';
-import '../../../../l10n/app_localizations.dart';
+import '../../../../core/utils/l10n.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../auth/presentation/providers/current_connection_readers.dart';
 
@@ -12,7 +12,7 @@ class DebugInfoPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
+    
     final connection = ref.watch(currentConnectionProvider);
     final currentServer = connection.server;
     final currentSession = connection.session;

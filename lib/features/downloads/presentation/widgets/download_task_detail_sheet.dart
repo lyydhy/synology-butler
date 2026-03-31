@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/utils/download_status_helper.dart';
 import '../../../../domain/entities/download_task.dart';
-import '../../../../l10n/app_localizations.dart';
+import '../../../../core/utils/l10n.dart';
 
 class DownloadTaskDetailSheet extends StatelessWidget {
   const DownloadTaskDetailSheet({
@@ -14,7 +14,7 @@ class DownloadTaskDetailSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+    
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(16),

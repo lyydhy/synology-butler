@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/utils/l10n.dart';
+
 import '../../../../core/widgets/app_error_state.dart';
 import '../../../../domain/entities/shared_folder.dart';
 import '../providers/shared_folders_providers.dart';
@@ -11,13 +13,14 @@ class SharedFoldersPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final foldersAsync = ref.watch(sharedFoldersProvider);
+    
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('共享文件夹'),
+        title: Text(l10n.sharedFoldersTitle),
         actions: [
           IconButton(
-            tooltip: '刷新',
+            tooltip: l10n.retry,
             onPressed: () => ref.invalidate(sharedFoldersProvider),
             icon: const Icon(Icons.refresh_rounded),
           ),
@@ -33,15 +36,15 @@ class SharedFoldersPage extends ConsumerWidget {
         ),
         data: (folders) {
           if (folders.isEmpty) {
-            return const Center(
+            return Center(
               child: Padding(
-                padding: EdgeInsets.all(24),
+                padding: const EdgeInsets.all(24),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.folder_off_rounded, size: 52),
-                    SizedBox(height: 12),
-                    Text('当前没有共享文件夹'),
+                    const Icon(Icons.folder_off_rounded, size: 52),
+                    const SizedBox(height: 12),
+                    Text(l10n.noSharedFolders),
                   ],
                 ),
               ),

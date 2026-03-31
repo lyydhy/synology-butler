@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/utils/l10n.dart';
+
 import '../../../../core/widgets/app_error_state.dart';
 import '../../../../domain/entities/index_service.dart';
 import '../providers/index_service_providers.dart';
@@ -18,13 +20,14 @@ class IndexServicePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final dataAsync = ref.watch(indexServiceProvider);
     final busy = ref.watch(indexServiceBusyProvider);
+    
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('索引服务'),
+        title: Text(l10n.indexServiceTitle),
         actions: [
           IconButton(
-            tooltip: '刷新',
+            tooltip: l10n.retry,
             onPressed: busy ? null : () => ref.invalidate(indexServiceProvider),
             icon: busy
                 ? const SizedBox(
@@ -48,37 +51,39 @@ class IndexServicePage extends ConsumerWidget {
           return ListView(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
             children: [
-              _StatusCard(indexing: data.indexing, statusText: data.statusText),
+              _StatusCard(indexing: data.indexing, statusText: data.statusText, ),
               const SizedBox(height: 12),
               _ThumbnailQualityCard(
                 currentQuality: data.thumbnailQuality,
                 busy: busy,
+                
                 onChanged: (value) async {
                   if (value == null) return;
                   final messenger = ScaffoldMessenger.of(context);
                   try {
                     await ref.read(setThumbnailQualityProvider)(value);
-                    messenger.showSnackBar(const SnackBar(content: Text('缩图质量已更新')));
+                    messenger.showSnackBar(SnackBar(content: Text(l10n.thumbnailQualityUpdated)));
                   } catch (error) {
-                    messenger.showSnackBar(SnackBar(content: Text('更新失败：$error')));
+                    messenger.showSnackBar(SnackBar(content: Text('${l10n.updateFailed}：$error')));
                   }
                 },
               ),
               const SizedBox(height: 12),
               _ActionCard(
                 busy: busy,
+                
                 onRebuild: () async {
                   final messenger = ScaffoldMessenger.of(context);
                   try {
                     await ref.read(rebuildIndexProvider)();
-                    messenger.showSnackBar(const SnackBar(content: Text('已提交重建索引请求')));
+                    messenger.showSnackBar(SnackBar(content: Text(l10n.rebuildSubmitted)));
                   } catch (error) {
-                    messenger.showSnackBar(SnackBar(content: Text('重建失败：$error')));
+                    messenger.showSnackBar(SnackBar(content: Text('${l10n.rebuildFailed}：$error')));
                   }
                 },
               ),
               const SizedBox(height: 12),
-              _TaskCard(tasks: data.tasks),
+              _TaskCard(tasks: data.tasks, ),
             ],
           );
         },
@@ -90,8 +95,9 @@ class IndexServicePage extends ConsumerWidget {
 class _StatusCard extends StatelessWidget {
   final bool indexing;
   final String statusText;
+  
 
-  const _StatusCard({required this.indexing, required this.statusText});
+  const _StatusCard({required this.indexing, required this.statusText, });
 
   @override
   Widget build(BuildContext context) {
@@ -116,7 +122,7 @@ class _StatusCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('当前状态', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+                Text(l10n.currentIndexStatus, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
                 const SizedBox(height: 4),
                 Text(statusText.isEmpty ? (indexing ? '索引进行中' : '空闲') : statusText),
               ],
@@ -131,9 +137,10 @@ class _StatusCard extends StatelessWidget {
 class _ThumbnailQualityCard extends StatelessWidget {
   final int currentQuality;
   final bool busy;
+  
   final ValueChanged<int?> onChanged;
 
-  const _ThumbnailQualityCard({required this.currentQuality, required this.busy, required this.onChanged});
+  const _ThumbnailQualityCard({required this.currentQuality, required this.busy,  required this.onChanged});
 
   @override
   Widget build(BuildContext context) {
@@ -148,7 +155,7 @@ class _ThumbnailQualityCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('缩图质量', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+          Text(l10n.thumbnailQuality, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
           const SizedBox(height: 8),
           DropdownButtonFormField<int>(
             initialValue: IndexServicePage._qualityOptions.containsKey(currentQuality) ? currentQuality : 2,
@@ -169,9 +176,10 @@ class _ThumbnailQualityCard extends StatelessWidget {
 
 class _ActionCard extends StatelessWidget {
   final bool busy;
+  
   final Future<void> Function() onRebuild;
 
-  const _ActionCard({required this.busy, required this.onRebuild});
+  const _ActionCard({required this.busy,  required this.onRebuild});
 
   @override
   Widget build(BuildContext context) {
@@ -186,16 +194,16 @@ class _ActionCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('重建索引', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+          Text(l10n.rebuildIndex, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
           const SizedBox(height: 8),
-          Text('重新触发媒体索引，适合补救缩图缺失或索引状态异常。', style: theme.textTheme.bodyMedium),
+          Text(l10n.rebuildIndexDesc, style: theme.textTheme.bodyMedium),
           const SizedBox(height: 12),
           Align(
             alignment: Alignment.centerRight,
             child: FilledButton.icon(
               onPressed: busy ? null : onRebuild,
               icon: const Icon(Icons.replay_rounded),
-              label: const Text('重建索引'),
+              label: Text(l10n.rebuildIndex),
             ),
           ),
         ],
@@ -206,8 +214,9 @@ class _ActionCard extends StatelessWidget {
 
 class _TaskCard extends StatelessWidget {
   final List<IndexServiceTask> tasks;
+  
 
-  const _TaskCard({required this.tasks});
+  const _TaskCard({required this.tasks, });
 
   @override
   Widget build(BuildContext context) {
@@ -222,10 +231,10 @@ class _TaskCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('当前任务', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+          Text(l10n.currentTask, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
           const SizedBox(height: 8),
           if (tasks.isEmpty)
-            Text('当前没有索引任务', style: theme.textTheme.bodyMedium)
+            Text(l10n.noIndexTasks, style: theme.textTheme.bodyMedium)
           else
             ...tasks.map(
               (task) => Padding(

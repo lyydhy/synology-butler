@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../l10n/app_localizations.dart';
+import '../../../../core/utils/l10n.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../auth/presentation/providers/current_connection_readers.dart';
 import '../widgets/server_edit_dialog.dart';
@@ -12,7 +12,7 @@ class ServerManagementPage extends ConsumerWidget {
   const ServerManagementPage({super.key});
 
   Future<bool> _confirmDelete(BuildContext context, String name) async {
-    final l10n = AppLocalizations.of(context);
+    
     return await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
@@ -28,7 +28,7 @@ class ServerManagementPage extends ConsumerWidget {
   }
 
   Future<void> _editServer(BuildContext context, WidgetRef ref, dynamic server) async {
-    final l10n = AppLocalizations.of(context);
+    
     final updated = await showDialog(
       context: context,
       builder: (context) => ServerEditDialog(server: server),
@@ -46,7 +46,7 @@ class ServerManagementPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
+    
     final theme = Theme.of(context);
     final servers = ref.watch(savedServersProvider);
     final currentServer = ref.watch(currentConnectionProvider).server;

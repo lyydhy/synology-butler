@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../l10n/app_localizations.dart';
+import '../../../../core/utils/l10n.dart';
 import 'path_breadcrumb.dart';
 
 class FilesHeader extends StatelessWidget {
@@ -33,7 +33,7 @@ class FilesHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+    
     final theme = Theme.of(context);
 
     return Container(

@@ -3,6 +3,7 @@ import '../../domain/entities/dsm_group.dart';
 import '../../domain/entities/dsm_user.dart';
 import '../../domain/entities/external_access.dart';
 import '../../domain/entities/external_device.dart';
+import '../../domain/entities/file_service.dart';
 import '../../domain/entities/index_service.dart';
 import '../../domain/entities/information_center.dart';
 import '../../domain/entities/shared_folder.dart';
@@ -354,5 +355,10 @@ class SystemRepositoryImpl implements SystemRepository {
         uptimeText: model.uptimeText,
       ),
     );
+  }
+
+  @override
+  Future<FileServicesModel> fetchFileServices() {
+    return _systemApi.fetchFileServices();
   }
 }

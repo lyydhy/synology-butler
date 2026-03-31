@@ -8,7 +8,7 @@ import '../../../../core/network/realtime_reconnect_bridge.dart';
 import '../../../../core/utils/server_url_helper.dart';
 import '../../../../core/utils/time_util.dart';
 import '../../../../domain/entities/system_status.dart';
-import '../../../../l10n/app_localizations.dart';
+import '../../../../core/utils/l10n.dart';
 import '../../../auth/presentation/providers/current_connection_readers.dart';
 import '../../../packages/presentation/providers/package_providers.dart';
 import '../providers/dashboard_providers.dart';
@@ -65,7 +65,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with WidgetsBindi
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+    
     final overview = ref.watch(dashboardOverviewSafeProvider);
     final realtimeState = ref.watch(globalRealtimeOverviewProvider);
     final connection = ref.watch(currentConnectionProvider);

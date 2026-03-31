@@ -364,4 +364,411 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get appLogsViewerHint => '当前展示的是脱敏后的内容，适合复制或导出给别人排查问题。';
+
+  @override
+  String get controlPanelTitle => '控制面板';
+
+  @override
+  String get taskSchedulerTitle => '任务计划';
+
+  @override
+  String get externalDevicesTitle => '外接设备';
+
+  @override
+  String get externalAccessTitle => '外部访问';
+
+  @override
+  String get indexServiceTitle => '索引服务';
+
+  @override
+  String get sharedFoldersTitle => '共享文件夹';
+
+  @override
+  String get userGroupsTitle => '用户与群组';
+
+  @override
+  String get informationCenterTitle => '信息中心';
+
+  @override
+  String get noTasks => '当前没有任务计划';
+
+  @override
+  String get noExternalDevices => '当前没有连接外接设备';
+
+  @override
+  String get noDdnsRecords => '当前没有 DDNS 记录';
+
+  @override
+  String get noSharedFolders => '当前没有共享文件夹';
+
+  @override
+  String get noUsersFound => '没有找到用户';
+
+  @override
+  String get noGroupsFound => '没有找到群组';
+
+  @override
+  String get executeNow => '立即执行';
+
+  @override
+  String get taskSubmitted => '任务已提交执行';
+
+  @override
+  String get executeFailed => '执行失败';
+
+  @override
+  String get updateFailed => '更新失败';
+
+  @override
+  String get ejectDevice => '弹出设备';
+
+  @override
+  String get ejectSubmitted => '已提交弹出设备请求';
+
+  @override
+  String get ejectFailed => '弹出失败';
+
+  @override
+  String get fileSystem => '文件系统';
+
+  @override
+  String get mountPath => '挂载路径';
+
+  @override
+  String get capacity => '容量';
+
+  @override
+  String get nextAutoUpdateTime => '下次自动更新时间';
+
+  @override
+  String get ipAddress => 'IP';
+
+  @override
+  String get lastUpdated => '上次更新';
+
+  @override
+  String get refreshNow => '立即刷新';
+
+  @override
+  String get thumbnailQuality => '缩图质量';
+
+  @override
+  String get thumbnailQualityUpdated => '缩图质量已更新';
+
+  @override
+  String get rebuildIndex => '重建索引';
+
+  @override
+  String get rebuildIndexDesc => '重新触发媒体索引，适合补救缩图缺失或索引状态异常。';
+
+  @override
+  String get rebuildSubmitted => '已提交重建索引请求';
+
+  @override
+  String get rebuildFailed => '重建失败';
+
+  @override
+  String get currentIndexStatus => '当前状态';
+
+  @override
+  String get currentTask => '当前任务';
+
+  @override
+  String get noIndexTasks => '当前没有索引任务';
+
+  @override
+  String historyDeleted(Object name) {
+    return '已删除 $name 的历史记录';
+  }
+
+  @override
+  String get connectionTestFailed => '测试连接失败';
+
+  @override
+  String get copy => '复制';
+
+  @override
+  String get switchedToHttp => '已切换为 HTTP，请仅在可信局域网中使用';
+
+  @override
+  String get selectFromHistory => '从历史登录设备中选择';
+
+  @override
+  String get historyDevices => '历史登录设备';
+
+  @override
+  String get selectDeviceFirst => '请选择一个历史设备后再快速登录';
+
+  @override
+  String get quickLogin => '快速登录';
+
+  @override
+  String get done => '完成';
+
+  @override
+  String get newAccountDevice => '新账号 / 新设备登录';
+
+  @override
+  String get connectionInfo => '连接信息';
+
+  @override
+  String get enterNasCredentials => '填写 NAS 地址与 DSM 账号信息';
+
+  @override
+  String get ignoreSslCert => '忽略 SSL 证书';
+
+  @override
+  String get ignoreSslCertHint => '仅适用于自签名或异常证书场景';
+
+  @override
+  String get httpsOnly => '仅 HTTPS 下可用';
+
+  @override
+  String get rememberPassword => '记住密码';
+
+  @override
+  String get loginDsm => '登录 DSM';
+
+  @override
+  String get dsm7Plus => 'DSM 7+';
+
+  @override
+  String get quickLoginReady => '已为你准备好快速登录。';
+
+  @override
+  String get connectToDsm => '连接你的群晖 DSM。';
+
+  @override
+  String get quickRelogin => '快速重新登录';
+
+  @override
+  String get quickReloginHint => '有历史记录时优先显示这个界面，减少输入内容。';
+
+  @override
+  String get loginToNas => '登录到 NAS';
+
+  @override
+  String get loginToNasHint => '支持局域网 IP、域名和端口。';
+
+  @override
+  String get noUsernameTapChange => '未记录用户名，请点击更换账号';
+
+  @override
+  String get fill => '填写';
+
+  @override
+  String get changeAccount => '更换账号';
+
+  @override
+  String get justUsed => '刚刚使用';
+
+  @override
+  String minutesAgo(Object n) {
+    return '$n 分钟前使用';
+  }
+
+  @override
+  String hoursAgo(Object n) {
+    return '$n 小时前使用';
+  }
+
+  @override
+  String daysAgo(Object n) {
+    return '$n 天前使用';
+  }
+
+  @override
+  String get usedEarlier => '较早前使用';
+
+  @override
+  String get noLoginTimeRecorded => '未记录登录时间';
+
+  @override
+  String selectedEnterPassword(Object name) {
+    return '已选择 $name，输入密码即可重新登录';
+  }
+
+  @override
+  String get connectionSuccess => '连接成功：已探测到 DSM Web API';
+
+  @override
+  String dsm6NotSupported(Object version) {
+    return '检测到当前设备为 $version。本应用当前仅支持 DSM 7，暂不支持 DSM 6 登录。';
+  }
+
+  @override
+  String get switchedToNewAccount => '已切换到新账号 / 新设备登录';
+
+  @override
+  String get sessionExpired => '登录状态已过期，请重新登录以恢复实时连接。';
+
+  @override
+  String get enterNasAddress => '请输入 NAS 地址或域名';
+
+  @override
+  String get enterPort => '请输入端口';
+
+  @override
+  String get portRange => '端口范围应为 1 - 65535';
+
+  @override
+  String get enterUsername => '请输入用户名';
+
+  @override
+  String get enterPassword => '请输入密码';
+
+  @override
+  String get selectDeviceThenPassword => '选择设备后输入密码即可登录';
+
+  @override
+  String get deviceReadyEnterPassword => '设备已就绪，输入密码即可登录';
+
+  @override
+  String get previewImage => '预览图片';
+
+  @override
+  String get download => '下载';
+
+  @override
+  String get downloadAndOpen => '下载并打开';
+
+  @override
+  String startDownloading(Object name) {
+    return '开始下载 $name';
+  }
+
+  @override
+  String downloadCompleteOpen(Object name) {
+    return '开始下载 $name，完成后可直接打开';
+  }
+
+  @override
+  String downloadTaskComplete(Object title) {
+    return '$title 下载完成';
+  }
+
+  @override
+  String confirmDelete(Object name) {
+    return '确定要删除\\\"$name\\\"吗？';
+  }
+
+  @override
+  String downloadDirSet(Object path) {
+    return '下载目录已设置为 $path';
+  }
+
+  @override
+  String get selectUploadDir => '选择上传目录';
+
+  @override
+  String loadFilesFailed(Object error) {
+    return '加载文件失败：$error';
+  }
+
+  @override
+  String selectCurrentDir(Object path) {
+    return '选择当前目录：$path';
+  }
+
+  @override
+  String get refresh => '刷新';
+
+  @override
+  String get discardChanges => '放弃修改？';
+
+  @override
+  String get discardChangesHint => '当前文件有未保存修改，确定直接返回吗？';
+
+  @override
+  String get discard => '放弃';
+
+  @override
+  String get saveSuccess => '保存成功';
+
+  @override
+  String get save => '保存';
+
+  @override
+  String get savedToAlbum => '已保存到相册';
+
+  @override
+  String get loadingImage => '正在加载图片...';
+
+  @override
+  String get videoLoadFailed => '视频加载失败';
+
+  @override
+  String get selectOneFile => '请至少选择一个文件进行下载';
+
+  @override
+  String addedDownloadTasks(Object count) {
+    return '已加入 $count 个下载任务';
+  }
+
+  @override
+  String get batchDelete => '批量删除';
+
+  @override
+  String confirmBatchDelete(Object count) {
+    return '确定要删除选中的 $count 项吗？';
+  }
+
+  @override
+  String deletedCount(Object count) {
+    return '已删除 $count 项';
+  }
+
+  @override
+  String get uploadTaskAdded => '已加入上传任务';
+
+  @override
+  String get videoPreviewHint => '视频预览请从列表打开';
+
+  @override
+  String get pathCopied => '路径已复制';
+
+  @override
+  String get open => '打开';
+
+  @override
+  String get backgroundTaskRunning => '后台任务进行中';
+
+  @override
+  String backgroundTaskRunningCount(Object count) {
+    return '后台任务进行中（$count）';
+  }
+
+  @override
+  String taskComplete(Object name) {
+    return '$name任务已完成';
+  }
+
+  @override
+  String taskCompleteMultiple(Object name, Object count) {
+    return '$name等$count个后台任务已完成';
+  }
+
+  @override
+  String get transfer => '传输';
+
+  @override
+  String get downloadAndOpenTitle => '下载并打开';
+
+  @override
+  String get processingLabel => '处理中';
+
+  @override
+  String get fileServicesTitle => '文件服务';
+
+  @override
+  String get noFileServices => '未获取到文件服务信息';
+
+  @override
+  String get fileServiceEnabled => '已启用';
+
+  @override
+  String get fileServiceDisabled => '未启用';
+
+  @override
+  String get defaultDeviceName => '我的 NAS';
 }

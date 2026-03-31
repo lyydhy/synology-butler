@@ -799,6 +799,744 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'当前展示的是脱敏后的内容，适合复制或导出给别人排查问题。'**
   String get appLogsViewerHint;
+
+  /// No description provided for @controlPanelTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'控制面板'**
+  String get controlPanelTitle;
+
+  /// No description provided for @taskSchedulerTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'任务计划'**
+  String get taskSchedulerTitle;
+
+  /// No description provided for @externalDevicesTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'外接设备'**
+  String get externalDevicesTitle;
+
+  /// No description provided for @externalAccessTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'外部访问'**
+  String get externalAccessTitle;
+
+  /// No description provided for @indexServiceTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'索引服务'**
+  String get indexServiceTitle;
+
+  /// No description provided for @sharedFoldersTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'共享文件夹'**
+  String get sharedFoldersTitle;
+
+  /// No description provided for @userGroupsTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'用户与群组'**
+  String get userGroupsTitle;
+
+  /// No description provided for @informationCenterTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'信息中心'**
+  String get informationCenterTitle;
+
+  /// No description provided for @noTasks.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前没有任务计划'**
+  String get noTasks;
+
+  /// No description provided for @noExternalDevices.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前没有连接外接设备'**
+  String get noExternalDevices;
+
+  /// No description provided for @noDdnsRecords.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前没有 DDNS 记录'**
+  String get noDdnsRecords;
+
+  /// No description provided for @noSharedFolders.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前没有共享文件夹'**
+  String get noSharedFolders;
+
+  /// No description provided for @noUsersFound.
+  ///
+  /// In zh, this message translates to:
+  /// **'没有找到用户'**
+  String get noUsersFound;
+
+  /// No description provided for @noGroupsFound.
+  ///
+  /// In zh, this message translates to:
+  /// **'没有找到群组'**
+  String get noGroupsFound;
+
+  /// No description provided for @executeNow.
+  ///
+  /// In zh, this message translates to:
+  /// **'立即执行'**
+  String get executeNow;
+
+  /// No description provided for @taskSubmitted.
+  ///
+  /// In zh, this message translates to:
+  /// **'任务已提交执行'**
+  String get taskSubmitted;
+
+  /// No description provided for @executeFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'执行失败'**
+  String get executeFailed;
+
+  /// No description provided for @updateFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'更新失败'**
+  String get updateFailed;
+
+  /// No description provided for @ejectDevice.
+  ///
+  /// In zh, this message translates to:
+  /// **'弹出设备'**
+  String get ejectDevice;
+
+  /// No description provided for @ejectSubmitted.
+  ///
+  /// In zh, this message translates to:
+  /// **'已提交弹出设备请求'**
+  String get ejectSubmitted;
+
+  /// No description provided for @ejectFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'弹出失败'**
+  String get ejectFailed;
+
+  /// No description provided for @fileSystem.
+  ///
+  /// In zh, this message translates to:
+  /// **'文件系统'**
+  String get fileSystem;
+
+  /// No description provided for @mountPath.
+  ///
+  /// In zh, this message translates to:
+  /// **'挂载路径'**
+  String get mountPath;
+
+  /// No description provided for @capacity.
+  ///
+  /// In zh, this message translates to:
+  /// **'容量'**
+  String get capacity;
+
+  /// No description provided for @nextAutoUpdateTime.
+  ///
+  /// In zh, this message translates to:
+  /// **'下次自动更新时间'**
+  String get nextAutoUpdateTime;
+
+  /// No description provided for @ipAddress.
+  ///
+  /// In zh, this message translates to:
+  /// **'IP'**
+  String get ipAddress;
+
+  /// No description provided for @lastUpdated.
+  ///
+  /// In zh, this message translates to:
+  /// **'上次更新'**
+  String get lastUpdated;
+
+  /// No description provided for @refreshNow.
+  ///
+  /// In zh, this message translates to:
+  /// **'立即刷新'**
+  String get refreshNow;
+
+  /// No description provided for @thumbnailQuality.
+  ///
+  /// In zh, this message translates to:
+  /// **'缩图质量'**
+  String get thumbnailQuality;
+
+  /// No description provided for @thumbnailQualityUpdated.
+  ///
+  /// In zh, this message translates to:
+  /// **'缩图质量已更新'**
+  String get thumbnailQualityUpdated;
+
+  /// No description provided for @rebuildIndex.
+  ///
+  /// In zh, this message translates to:
+  /// **'重建索引'**
+  String get rebuildIndex;
+
+  /// No description provided for @rebuildIndexDesc.
+  ///
+  /// In zh, this message translates to:
+  /// **'重新触发媒体索引，适合补救缩图缺失或索引状态异常。'**
+  String get rebuildIndexDesc;
+
+  /// No description provided for @rebuildSubmitted.
+  ///
+  /// In zh, this message translates to:
+  /// **'已提交重建索引请求'**
+  String get rebuildSubmitted;
+
+  /// No description provided for @rebuildFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'重建失败'**
+  String get rebuildFailed;
+
+  /// No description provided for @currentIndexStatus.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前状态'**
+  String get currentIndexStatus;
+
+  /// No description provided for @currentTask.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前任务'**
+  String get currentTask;
+
+  /// No description provided for @noIndexTasks.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前没有索引任务'**
+  String get noIndexTasks;
+
+  /// No description provided for @historyDeleted.
+  ///
+  /// In zh, this message translates to:
+  /// **'已删除 {name} 的历史记录'**
+  String historyDeleted(Object name);
+
+  /// No description provided for @connectionTestFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'测试连接失败'**
+  String get connectionTestFailed;
+
+  /// No description provided for @copy.
+  ///
+  /// In zh, this message translates to:
+  /// **'复制'**
+  String get copy;
+
+  /// No description provided for @switchedToHttp.
+  ///
+  /// In zh, this message translates to:
+  /// **'已切换为 HTTP，请仅在可信局域网中使用'**
+  String get switchedToHttp;
+
+  /// No description provided for @selectFromHistory.
+  ///
+  /// In zh, this message translates to:
+  /// **'从历史登录设备中选择'**
+  String get selectFromHistory;
+
+  /// No description provided for @historyDevices.
+  ///
+  /// In zh, this message translates to:
+  /// **'历史登录设备'**
+  String get historyDevices;
+
+  /// No description provided for @selectDeviceFirst.
+  ///
+  /// In zh, this message translates to:
+  /// **'请选择一个历史设备后再快速登录'**
+  String get selectDeviceFirst;
+
+  /// No description provided for @quickLogin.
+  ///
+  /// In zh, this message translates to:
+  /// **'快速登录'**
+  String get quickLogin;
+
+  /// No description provided for @done.
+  ///
+  /// In zh, this message translates to:
+  /// **'完成'**
+  String get done;
+
+  /// No description provided for @newAccountDevice.
+  ///
+  /// In zh, this message translates to:
+  /// **'新账号 / 新设备登录'**
+  String get newAccountDevice;
+
+  /// No description provided for @connectionInfo.
+  ///
+  /// In zh, this message translates to:
+  /// **'连接信息'**
+  String get connectionInfo;
+
+  /// No description provided for @enterNasCredentials.
+  ///
+  /// In zh, this message translates to:
+  /// **'填写 NAS 地址与 DSM 账号信息'**
+  String get enterNasCredentials;
+
+  /// No description provided for @ignoreSslCert.
+  ///
+  /// In zh, this message translates to:
+  /// **'忽略 SSL 证书'**
+  String get ignoreSslCert;
+
+  /// No description provided for @ignoreSslCertHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'仅适用于自签名或异常证书场景'**
+  String get ignoreSslCertHint;
+
+  /// No description provided for @httpsOnly.
+  ///
+  /// In zh, this message translates to:
+  /// **'仅 HTTPS 下可用'**
+  String get httpsOnly;
+
+  /// No description provided for @rememberPassword.
+  ///
+  /// In zh, this message translates to:
+  /// **'记住密码'**
+  String get rememberPassword;
+
+  /// No description provided for @loginDsm.
+  ///
+  /// In zh, this message translates to:
+  /// **'登录 DSM'**
+  String get loginDsm;
+
+  /// No description provided for @dsm7Plus.
+  ///
+  /// In zh, this message translates to:
+  /// **'DSM 7+'**
+  String get dsm7Plus;
+
+  /// No description provided for @quickLoginReady.
+  ///
+  /// In zh, this message translates to:
+  /// **'已为你准备好快速登录。'**
+  String get quickLoginReady;
+
+  /// No description provided for @connectToDsm.
+  ///
+  /// In zh, this message translates to:
+  /// **'连接你的群晖 DSM。'**
+  String get connectToDsm;
+
+  /// No description provided for @quickRelogin.
+  ///
+  /// In zh, this message translates to:
+  /// **'快速重新登录'**
+  String get quickRelogin;
+
+  /// No description provided for @quickReloginHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'有历史记录时优先显示这个界面，减少输入内容。'**
+  String get quickReloginHint;
+
+  /// No description provided for @loginToNas.
+  ///
+  /// In zh, this message translates to:
+  /// **'登录到 NAS'**
+  String get loginToNas;
+
+  /// No description provided for @loginToNasHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'支持局域网 IP、域名和端口。'**
+  String get loginToNasHint;
+
+  /// No description provided for @noUsernameTapChange.
+  ///
+  /// In zh, this message translates to:
+  /// **'未记录用户名，请点击更换账号'**
+  String get noUsernameTapChange;
+
+  /// No description provided for @fill.
+  ///
+  /// In zh, this message translates to:
+  /// **'填写'**
+  String get fill;
+
+  /// No description provided for @changeAccount.
+  ///
+  /// In zh, this message translates to:
+  /// **'更换账号'**
+  String get changeAccount;
+
+  /// No description provided for @justUsed.
+  ///
+  /// In zh, this message translates to:
+  /// **'刚刚使用'**
+  String get justUsed;
+
+  /// No description provided for @minutesAgo.
+  ///
+  /// In zh, this message translates to:
+  /// **'{n} 分钟前使用'**
+  String minutesAgo(Object n);
+
+  /// No description provided for @hoursAgo.
+  ///
+  /// In zh, this message translates to:
+  /// **'{n} 小时前使用'**
+  String hoursAgo(Object n);
+
+  /// No description provided for @daysAgo.
+  ///
+  /// In zh, this message translates to:
+  /// **'{n} 天前使用'**
+  String daysAgo(Object n);
+
+  /// No description provided for @usedEarlier.
+  ///
+  /// In zh, this message translates to:
+  /// **'较早前使用'**
+  String get usedEarlier;
+
+  /// No description provided for @noLoginTimeRecorded.
+  ///
+  /// In zh, this message translates to:
+  /// **'未记录登录时间'**
+  String get noLoginTimeRecorded;
+
+  /// No description provided for @selectedEnterPassword.
+  ///
+  /// In zh, this message translates to:
+  /// **'已选择 {name}，输入密码即可重新登录'**
+  String selectedEnterPassword(Object name);
+
+  /// No description provided for @connectionSuccess.
+  ///
+  /// In zh, this message translates to:
+  /// **'连接成功：已探测到 DSM Web API'**
+  String get connectionSuccess;
+
+  /// No description provided for @dsm6NotSupported.
+  ///
+  /// In zh, this message translates to:
+  /// **'检测到当前设备为 {version}。本应用当前仅支持 DSM 7，暂不支持 DSM 6 登录。'**
+  String dsm6NotSupported(Object version);
+
+  /// No description provided for @switchedToNewAccount.
+  ///
+  /// In zh, this message translates to:
+  /// **'已切换到新账号 / 新设备登录'**
+  String get switchedToNewAccount;
+
+  /// No description provided for @sessionExpired.
+  ///
+  /// In zh, this message translates to:
+  /// **'登录状态已过期，请重新登录以恢复实时连接。'**
+  String get sessionExpired;
+
+  /// No description provided for @enterNasAddress.
+  ///
+  /// In zh, this message translates to:
+  /// **'请输入 NAS 地址或域名'**
+  String get enterNasAddress;
+
+  /// No description provided for @enterPort.
+  ///
+  /// In zh, this message translates to:
+  /// **'请输入端口'**
+  String get enterPort;
+
+  /// No description provided for @portRange.
+  ///
+  /// In zh, this message translates to:
+  /// **'端口范围应为 1 - 65535'**
+  String get portRange;
+
+  /// No description provided for @enterUsername.
+  ///
+  /// In zh, this message translates to:
+  /// **'请输入用户名'**
+  String get enterUsername;
+
+  /// No description provided for @enterPassword.
+  ///
+  /// In zh, this message translates to:
+  /// **'请输入密码'**
+  String get enterPassword;
+
+  /// No description provided for @selectDeviceThenPassword.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择设备后输入密码即可登录'**
+  String get selectDeviceThenPassword;
+
+  /// No description provided for @deviceReadyEnterPassword.
+  ///
+  /// In zh, this message translates to:
+  /// **'设备已就绪，输入密码即可登录'**
+  String get deviceReadyEnterPassword;
+
+  /// No description provided for @previewImage.
+  ///
+  /// In zh, this message translates to:
+  /// **'预览图片'**
+  String get previewImage;
+
+  /// No description provided for @download.
+  ///
+  /// In zh, this message translates to:
+  /// **'下载'**
+  String get download;
+
+  /// No description provided for @downloadAndOpen.
+  ///
+  /// In zh, this message translates to:
+  /// **'下载并打开'**
+  String get downloadAndOpen;
+
+  /// No description provided for @startDownloading.
+  ///
+  /// In zh, this message translates to:
+  /// **'开始下载 {name}'**
+  String startDownloading(Object name);
+
+  /// No description provided for @downloadCompleteOpen.
+  ///
+  /// In zh, this message translates to:
+  /// **'开始下载 {name}，完成后可直接打开'**
+  String downloadCompleteOpen(Object name);
+
+  /// No description provided for @downloadTaskComplete.
+  ///
+  /// In zh, this message translates to:
+  /// **'{title} 下载完成'**
+  String downloadTaskComplete(Object title);
+
+  /// No description provided for @confirmDelete.
+  ///
+  /// In zh, this message translates to:
+  /// **'确定要删除\\\"{name}\\\"吗？'**
+  String confirmDelete(Object name);
+
+  /// No description provided for @downloadDirSet.
+  ///
+  /// In zh, this message translates to:
+  /// **'下载目录已设置为 {path}'**
+  String downloadDirSet(Object path);
+
+  /// No description provided for @selectUploadDir.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择上传目录'**
+  String get selectUploadDir;
+
+  /// No description provided for @loadFilesFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'加载文件失败：{error}'**
+  String loadFilesFailed(Object error);
+
+  /// No description provided for @selectCurrentDir.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择当前目录：{path}'**
+  String selectCurrentDir(Object path);
+
+  /// No description provided for @refresh.
+  ///
+  /// In zh, this message translates to:
+  /// **'刷新'**
+  String get refresh;
+
+  /// No description provided for @discardChanges.
+  ///
+  /// In zh, this message translates to:
+  /// **'放弃修改？'**
+  String get discardChanges;
+
+  /// No description provided for @discardChangesHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前文件有未保存修改，确定直接返回吗？'**
+  String get discardChangesHint;
+
+  /// No description provided for @discard.
+  ///
+  /// In zh, this message translates to:
+  /// **'放弃'**
+  String get discard;
+
+  /// No description provided for @saveSuccess.
+  ///
+  /// In zh, this message translates to:
+  /// **'保存成功'**
+  String get saveSuccess;
+
+  /// No description provided for @save.
+  ///
+  /// In zh, this message translates to:
+  /// **'保存'**
+  String get save;
+
+  /// No description provided for @savedToAlbum.
+  ///
+  /// In zh, this message translates to:
+  /// **'已保存到相册'**
+  String get savedToAlbum;
+
+  /// No description provided for @loadingImage.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在加载图片...'**
+  String get loadingImage;
+
+  /// No description provided for @videoLoadFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'视频加载失败'**
+  String get videoLoadFailed;
+
+  /// No description provided for @selectOneFile.
+  ///
+  /// In zh, this message translates to:
+  /// **'请至少选择一个文件进行下载'**
+  String get selectOneFile;
+
+  /// No description provided for @addedDownloadTasks.
+  ///
+  /// In zh, this message translates to:
+  /// **'已加入 {count} 个下载任务'**
+  String addedDownloadTasks(Object count);
+
+  /// No description provided for @batchDelete.
+  ///
+  /// In zh, this message translates to:
+  /// **'批量删除'**
+  String get batchDelete;
+
+  /// No description provided for @confirmBatchDelete.
+  ///
+  /// In zh, this message translates to:
+  /// **'确定要删除选中的 {count} 项吗？'**
+  String confirmBatchDelete(Object count);
+
+  /// No description provided for @deletedCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'已删除 {count} 项'**
+  String deletedCount(Object count);
+
+  /// No description provided for @uploadTaskAdded.
+  ///
+  /// In zh, this message translates to:
+  /// **'已加入上传任务'**
+  String get uploadTaskAdded;
+
+  /// No description provided for @videoPreviewHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'视频预览请从列表打开'**
+  String get videoPreviewHint;
+
+  /// No description provided for @pathCopied.
+  ///
+  /// In zh, this message translates to:
+  /// **'路径已复制'**
+  String get pathCopied;
+
+  /// No description provided for @open.
+  ///
+  /// In zh, this message translates to:
+  /// **'打开'**
+  String get open;
+
+  /// No description provided for @backgroundTaskRunning.
+  ///
+  /// In zh, this message translates to:
+  /// **'后台任务进行中'**
+  String get backgroundTaskRunning;
+
+  /// No description provided for @backgroundTaskRunningCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'后台任务进行中（{count}）'**
+  String backgroundTaskRunningCount(Object count);
+
+  /// No description provided for @taskComplete.
+  ///
+  /// In zh, this message translates to:
+  /// **'{name}任务已完成'**
+  String taskComplete(Object name);
+
+  /// No description provided for @taskCompleteMultiple.
+  ///
+  /// In zh, this message translates to:
+  /// **'{name}等{count}个后台任务已完成'**
+  String taskCompleteMultiple(Object name, Object count);
+
+  /// No description provided for @transfer.
+  ///
+  /// In zh, this message translates to:
+  /// **'传输'**
+  String get transfer;
+
+  /// No description provided for @downloadAndOpenTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'下载并打开'**
+  String get downloadAndOpenTitle;
+
+  /// No description provided for @processingLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'处理中'**
+  String get processingLabel;
+
+  /// No description provided for @fileServicesTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'文件服务'**
+  String get fileServicesTitle;
+
+  /// No description provided for @noFileServices.
+  ///
+  /// In zh, this message translates to:
+  /// **'未获取到文件服务信息'**
+  String get noFileServices;
+
+  /// No description provided for @fileServiceEnabled.
+  ///
+  /// In zh, this message translates to:
+  /// **'已启用'**
+  String get fileServiceEnabled;
+
+  /// No description provided for @fileServiceDisabled.
+  ///
+  /// In zh, this message translates to:
+  /// **'未启用'**
+  String get fileServiceDisabled;
+
+  /// No description provided for @defaultDeviceName.
+  ///
+  /// In zh, this message translates to:
+  /// **'我的 NAS'**
+  String get defaultDeviceName;
 }
 
 class _AppLocalizationsDelegate

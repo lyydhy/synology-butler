@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/utils/l10n.dart';
+
 class ControlPanelPage extends StatelessWidget {
   const ControlPanelPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    
 
     return Scaffold(
-      appBar: AppBar(title: const Text('控制面板')),
+      appBar: AppBar(title: Text(l10n.controlPanelTitle)),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
         children: [
@@ -87,7 +90,14 @@ class ControlPanelPage extends StatelessWidget {
                 statusColor: Colors.green,
                 onTap: () => context.push('/user-groups'),
               ),
-              const _StaticPanelItem(icon: Icons.dns_outlined, title: '文件服务', subtitle: '第三阶段'),
+              _PanelItem(
+                icon: Icons.dns_outlined,
+                title: '文件服务',
+                subtitle: 'SMB/NFS/FTP/AFP/SFTP 状态',
+                status: '已接入',
+                statusColor: Colors.green,
+                onTap: () => context.push('/file-services'),
+              ),
               const _StaticPanelItem(icon: Icons.lan_outlined, title: '网络', subtitle: '第三阶段'),
             ],
           ),

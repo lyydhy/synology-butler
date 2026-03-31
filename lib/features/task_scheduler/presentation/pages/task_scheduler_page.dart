@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/utils/l10n.dart';
+
 import '../../../../core/widgets/app_error_state.dart';
 import '../../../../domain/entities/task_scheduler.dart';
 import '../providers/task_scheduler_providers.dart';
@@ -12,13 +14,14 @@ class TaskSchedulerPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final tasksAsync = ref.watch(scheduledTasksProvider);
     final busyIds = ref.watch(scheduledTaskBusyIdsProvider);
+    
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('任务计划'),
+        title: Text(l10n.taskSchedulerTitle),
         actions: [
           IconButton(
-            tooltip: '刷新',
+            tooltip: l10n.retry,
             onPressed: () => ref.invalidate(scheduledTasksProvider),
             icon: const Icon(Icons.refresh_rounded),
           ),
@@ -34,15 +37,15 @@ class TaskSchedulerPage extends ConsumerWidget {
         ),
         data: (tasks) {
           if (tasks.isEmpty) {
-            return const Center(
+            return Center(
               child: Padding(
-                padding: EdgeInsets.all(24),
+                padding: const EdgeInsets.all(24),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.schedule_rounded, size: 52),
-                    SizedBox(height: 12),
-                    Text('当前没有任务计划'),
+                    const Icon(Icons.schedule_rounded, size: 52),
+                    const SizedBox(height: 12),
+                    Text(l10n.noTasks),
                   ],
                 ),
               ),
@@ -58,13 +61,14 @@ class TaskSchedulerPage extends ConsumerWidget {
               return _TaskCard(
                 task: task,
                 busy: busy,
+                
                 onRun: () async {
                   final messenger = ScaffoldMessenger.of(context);
                   try {
                     await ref.read(runScheduledTaskProvider)(task);
-                    messenger.showSnackBar(const SnackBar(content: Text('任务已提交执行')));
+                    messenger.showSnackBar(SnackBar(content: Text(l10n.taskSubmitted)));
                   } catch (error) {
-                    messenger.showSnackBar(SnackBar(content: Text('执行失败：$error')));
+                    messenger.showSnackBar(SnackBar(content: Text('${l10n.executeFailed}：$error')));
                   }
                 },
                 onToggle: () async {
@@ -73,7 +77,7 @@ class TaskSchedulerPage extends ConsumerWidget {
                     await ref.read(toggleScheduledTaskProvider)(task);
                     messenger.showSnackBar(SnackBar(content: Text(task.enabled ? '任务已停用' : '任务已启用')));
                   } catch (error) {
-                    messenger.showSnackBar(SnackBar(content: Text('更新失败：$error')));
+                    messenger.showSnackBar(SnackBar(content: Text('${l10n.updateFailed}：$error')));
                   }
                 },
               );
@@ -88,12 +92,14 @@ class TaskSchedulerPage extends ConsumerWidget {
 class _TaskCard extends StatelessWidget {
   final ScheduledTask task;
   final bool busy;
+  
   final Future<void> Function() onRun;
   final Future<void> Function() onToggle;
 
   const _TaskCard({
     required this.task,
     required this.busy,
+    
     required this.onRun,
     required this.onToggle,
   });
@@ -152,7 +158,7 @@ class _TaskCard extends StatelessWidget {
               FilledButton.icon(
                 onPressed: busy || task.running ? null : onRun,
                 icon: const Icon(Icons.play_arrow_rounded),
-                label: const Text('立即执行'),
+                label: Text(l10n.executeNow),
               ),
             ],
           ),

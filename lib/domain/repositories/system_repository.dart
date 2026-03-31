@@ -2,6 +2,7 @@ import '../entities/dsm_group.dart';
 import '../entities/dsm_user.dart';
 import '../entities/external_access.dart';
 import '../entities/external_device.dart';
+import '../entities/file_service.dart';
 import '../entities/index_service.dart';
 import '../entities/information_center.dart';
 import '../entities/shared_folder.dart';
@@ -40,4 +41,6 @@ abstract class SystemRepository {
   Future<List<DsmUser>> fetchUsers();
 
   Future<List<DsmGroup>> fetchGroups();
+
+  Future<FileServicesModel> fetchFileServices();
 }

@@ -8,10 +8,12 @@ import 'package:flutter/foundation.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/network/app_dio.dart';
 import '../../core/utils/dsm_logger.dart';
+import '../../domain/entities/file_service.dart';
 import '../models/dsm_group_model.dart';
 import '../models/dsm_user_model.dart';
 import '../models/external_access_model.dart';
 import '../models/external_device_model.dart';
+import '../models/file_service_model.dart';
 import '../models/index_service_model.dart';
 import '../models/information_center_model.dart';
 import '../models/shared_folder_model.dart';
@@ -52,6 +54,9 @@ abstract class SystemApi {
   Future<List<DsmUserModel>> fetchUsers();
 
   Future<List<DsmGroupModel>> fetchGroups();
+
+  /// 获取文件服务状态（SMB、NFS、FTP、AFP、SFTP）
+  Future<FileServicesModel> fetchFileServices();
 }
 
 class DsmSystemApi implements SystemApi {
@@ -2125,6 +2130,48 @@ class DsmSystemApi implements SystemApi {
     if (minutes > 0) parts.add('$minutes分钟');
     if (parts.isEmpty) parts.add('$seconds秒');
     return parts.join(' ');
+  }
+
+  @override
+  Future<FileServicesModel> fetchFileServices() async {
+    final client = _dio;
+
+    Future<Map<String, dynamic>?> fetchService(String api, String method) async {
+      try {
+        final response = await client.post(
+          '/webapi/entry.cgi',
+          data: {
+            'api': api,
+            'method': method,
+            'version': 1,
+          },
+          options: Options(contentType: Headers.formUrlEncodedContentType),
+        );
+        if (response.data is Map && response.data['success'] == true) {
+          return response.data['data'] as Map<String, dynamic>?;
+        }
+        return null;
+      } catch (_) {
+        return null;
+      }
+    }
+
+    // 并行请求所有文件服务状态
+    final results = await Future.wait([
+      fetchService('SYNO.Core.FileServ.SMB', 'get'),
+      fetchService('SYNO.Core.FileServ.NFS', 'get'),
+      fetchService('SYNO.Core.FileServ.FTP', 'get'),
+      fetchService('SYNO.Core.FileServ.AFP', 'get'),
+      fetchService('SYNO.Core.FileServ.FTP.SFTP', 'get'),
+    ]);
+
+    return FileServiceModel.fromApiResponses(
+      smbData: results[0],
+      nfsData: results[1],
+      ftpData: results[2],
+      afpData: results[3],
+      sftpData: results[4],
+    );
   }
 }
 

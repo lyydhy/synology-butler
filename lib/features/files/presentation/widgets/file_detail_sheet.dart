@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/utils/file_size_formatter.dart';
 import '../../../../domain/entities/file_item.dart';
-import '../../../../l10n/app_localizations.dart';
+import '../../../../core/utils/l10n.dart';
 import 'file_type_helper.dart';
 
 class FileDetailSheet extends StatelessWidget {
@@ -17,7 +17,7 @@ class FileDetailSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+    
 
     return SafeArea(
       child: Padding(

@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/error/error_mapper.dart';
 import '../../../../core/utils/download_status_helper.dart';
+import '../../../../core/utils/l10n.dart';
 import '../../../../domain/entities/download_task.dart';
-import '../../../../l10n/app_localizations.dart';
 import '../../../auth/presentation/providers/current_connection_readers.dart';
 import '../providers/download_providers.dart';
 import '../widgets/download_task_detail_sheet.dart';
@@ -30,7 +30,7 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
 
   /// 弹出新建下载任务对话框。
   Future<void> _showAddTaskDialog(BuildContext context) async {
-    final l10n = AppLocalizations.of(context);
+    
     final controller = TextEditingController();
     String? errorText;
     bool isSubmitting = false;
@@ -98,7 +98,7 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
 
   /// 执行下载任务操作，例如暂停、恢复、删除。
   Future<void> _handleTaskAction(BuildContext context, DownloadTask task, String action) async {
-    final l10n = AppLocalizations.of(context);
+    
     try {
       if (action == 'detail') {
         _showTaskDetail(context, task);
@@ -151,7 +151,7 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+    
     final connection = ref.watch(currentConnectionProvider);
     final currentServer = connection.server;
     final currentSession = connection.session;

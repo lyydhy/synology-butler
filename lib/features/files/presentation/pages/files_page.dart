@@ -8,11 +8,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/error/error_mapper.dart';
 import '../../../../core/utils/file_launcher.dart';
+import '../../../../core/utils/l10n.dart';
 import '../../../../core/utils/server_url_helper.dart';
 import '../../../../domain/entities/file_background_task.dart';
 import '../../../../domain/entities/file_item.dart';
 import '../../../../domain/entities/transfer_task.dart';
-import '../../../../l10n/app_localizations.dart';
 import '../../../auth/presentation/providers/current_connection_readers.dart';
 import '../../../preferences/providers/preferences_providers.dart';
 import '../../../transfers/presentation/providers/transfer_providers.dart';
@@ -108,9 +108,9 @@ class _FilesPageState extends ConsumerState<FilesPage> {
       messenger.showSnackBar(
         SnackBar(
           duration: const Duration(seconds: 5),
-          content: Text('${task.title} 下载完成'),
+          content: Text(l10n.downloadTaskComplete(task.title)),
           action: SnackBarAction(
-            label: '打开',
+            label: l10n.open,
             onPressed: () async {
               try {
                 await FileLauncher.open(task.targetPath);
@@ -152,11 +152,12 @@ class _FilesPageState extends ConsumerState<FilesPage> {
         final first = notifyTasks.first;
         final count = notifyTasks.length;
         final messenger = ScaffoldMessenger.of(context);
+        
         messenger.hideCurrentSnackBar();
         messenger.showSnackBar(
           SnackBar(
             duration: const Duration(seconds: 5),
-            content: Text(count > 1 ? '${first.displayName}等$count 个后台任务已完成' : '${first.displayName}任务已完成'),
+            content: Text(count > 1 ? l10n.taskCompleteMultiple(first.displayName, count) : l10n.taskComplete(first.displayName)),
           ),
         );
       }
@@ -240,7 +241,7 @@ class _FilesPageState extends ConsumerState<FilesPage> {
 
   /// 展示重命名对话框。
   Future<void> _showRenameDialog(BuildContext context, WidgetRef ref, FileItem item) async {
-    final l10n = AppLocalizations.of(context);
+    
     final controller = TextEditingController(text: item.name);
     String? errorText;
     bool isSubmitting = false;
@@ -296,7 +297,7 @@ class _FilesPageState extends ConsumerState<FilesPage> {
 
   /// 确认并删除单个文件。
   Future<void> _confirmDelete(BuildContext context, WidgetRef ref, FileItem item) async {
-    final l10n = AppLocalizations.of(context);
+    
     final confirmed = await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
@@ -331,7 +332,7 @@ class _FilesPageState extends ConsumerState<FilesPage> {
 
   /// 展示分享链接。
   Future<void> _showShareLink(BuildContext context, WidgetRef ref, FileItem item) async {
-    final l10n = AppLocalizations.of(context);
+    
     try {
       final link = await ref.read(fileShareProvider)(item.path);
       if (!context.mounted) return;
@@ -377,7 +378,7 @@ class _FilesPageState extends ConsumerState<FilesPage> {
 
   /// 展示单个文件的快捷操作菜单。
   void _showItemMenu(BuildContext context, WidgetRef ref, FileItem item) {
-    final l10n = AppLocalizations.of(context);
+    
     showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
@@ -488,7 +489,7 @@ class _FilesPageState extends ConsumerState<FilesPage> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+    
     final connection = ref.watch(currentConnectionProvider);
     final currentServer = connection.server;
     final currentSession = connection.session;

@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/utils/local_app_log_store.dart';
-import '../../../../l10n/app_localizations.dart';
+import '../../../../core/utils/l10n.dart';
 
 class AppLogsPage extends StatefulWidget {
   const AppLogsPage({super.key});
@@ -86,7 +86,7 @@ class _AppLogsPageState extends State<AppLogsPage> {
   }
 
   Future<void> _exportToSelectedDirectory(LocalAppLogFileSummary file) async {
-    final l10n = AppLocalizations.of(context);
+    
     final selectedDirectory = await FilePicker.platform.getDirectoryPath();
     if (selectedDirectory == null || selectedDirectory.isEmpty) return;
 
@@ -107,7 +107,7 @@ class _AppLogsPageState extends State<AppLogsPage> {
   }
 
   Future<void> openLog(LocalAppLogFileSummary file) async {
-    final l10n = AppLocalizations.of(context);
+    
     try {
       final rawText = await LocalAppLogStore.readLogFile(file.path);
       final sanitizedText = LocalAppLogStore.sanitizeLogText(rawText);
@@ -282,7 +282,7 @@ class _AppLogsPageState extends State<AppLogsPage> {
   }
 
   Future<void> clearAll() async {
-    final l10n = AppLocalizations.of(context);
+    
     await LocalAppLogStore.clearAllLogs();
     await refresh();
     if (!mounted) return;
@@ -293,7 +293,7 @@ class _AppLogsPageState extends State<AppLogsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+    
     final theme = Theme.of(context);
 
     return Scaffold(

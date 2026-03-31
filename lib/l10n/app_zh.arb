@@ -130,5 +130,234 @@
   },
   "appLogsSanitizedBadge": "已脱敏",
   "appLogsRawBadge": "原始日志",
-  "appLogsViewerHint": "当前展示的是脱敏后的内容，适合复制或导出给别人排查问题。"
+  "appLogsViewerHint": "当前展示的是脱敏后的内容，适合复制或导出给别人排查问题。",
+
+  "controlPanelTitle": "控制面板",
+  "taskSchedulerTitle": "任务计划",
+  "externalDevicesTitle": "外接设备",
+  "externalAccessTitle": "外部访问",
+  "indexServiceTitle": "索引服务",
+  "sharedFoldersTitle": "共享文件夹",
+  "userGroupsTitle": "用户与群组",
+  "informationCenterTitle": "信息中心",
+
+  "noTasks": "当前没有任务计划",
+  "noExternalDevices": "当前没有连接外接设备",
+  "noDdnsRecords": "当前没有 DDNS 记录",
+  "noSharedFolders": "当前没有共享文件夹",
+  "noUsersFound": "没有找到用户",
+  "noGroupsFound": "没有找到群组",
+
+  "executeNow": "立即执行",
+  "taskSubmitted": "任务已提交执行",
+  "executeFailed": "执行失败",
+  "updateFailed": "更新失败",
+
+  "ejectDevice": "弹出设备",
+  "ejectSubmitted": "已提交弹出设备请求",
+  "ejectFailed": "弹出失败",
+  "fileSystem": "文件系统",
+  "mountPath": "挂载路径",
+  "capacity": "容量",
+
+  "nextAutoUpdateTime": "下次自动更新时间",
+  "ipAddress": "IP",
+  "lastUpdated": "上次更新",
+  "refreshNow": "立即刷新",
+
+  "thumbnailQuality": "缩图质量",
+  "thumbnailQualityUpdated": "缩图质量已更新",
+  "rebuildIndex": "重建索引",
+  "rebuildIndexDesc": "重新触发媒体索引，适合补救缩图缺失或索引状态异常。",
+  "rebuildSubmitted": "已提交重建索引请求",
+  "rebuildFailed": "重建失败",
+  "currentIndexStatus": "当前状态",
+  "currentTask": "当前任务",
+  "noIndexTasks": "当前没有索引任务",
+
+  "historyDeleted": "已删除 {name} 的历史记录",
+  "@historyDeleted": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "connectionTestFailed": "测试连接失败",
+  "copy": "复制",
+  "switchedToHttp": "已切换为 HTTP，请仅在可信局域网中使用",
+  "selectFromHistory": "从历史登录设备中选择",
+  "historyDevices": "历史登录设备",
+  "selectDeviceFirst": "请选择一个历史设备后再快速登录",
+  "quickLogin": "快速登录",
+  "done": "完成",
+  "newAccountDevice": "新账号 / 新设备登录",
+  "connectionInfo": "连接信息",
+  "enterNasCredentials": "填写 NAS 地址与 DSM 账号信息",
+  "ignoreSslCert": "忽略 SSL 证书",
+  "ignoreSslCertHint": "仅适用于自签名或异常证书场景",
+  "httpsOnly": "仅 HTTPS 下可用",
+  "rememberPassword": "记住密码",
+  "loginDsm": "登录 DSM",
+  "dsm7Plus": "DSM 7+",
+  "quickLoginReady": "已为你准备好快速登录。",
+  "connectToDsm": "连接你的群晖 DSM。",
+  "quickRelogin": "快速重新登录",
+  "quickReloginHint": "有历史记录时优先显示这个界面，减少输入内容。",
+  "loginToNas": "登录到 NAS",
+  "loginToNasHint": "支持局域网 IP、域名和端口。",
+  "noUsernameTapChange": "未记录用户名，请点击更换账号",
+  "fill": "填写",
+  "changeAccount": "更换账号",
+  "justUsed": "刚刚使用",
+  "minutesAgo": "{n} 分钟前使用",
+  "@minutesAgo": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "hoursAgo": "{n} 小时前使用",
+  "@hoursAgo": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "daysAgo": "{n} 天前使用",
+  "@daysAgo": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "usedEarlier": "较早前使用",
+  "noLoginTimeRecorded": "未记录登录时间",
+  "selectedEnterPassword": "已选择 {name}，输入密码即可重新登录",
+  "@selectedEnterPassword": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "connectionSuccess": "连接成功：已探测到 DSM Web API",
+  "dsm6NotSupported": "检测到当前设备为 {version}。本应用当前仅支持 DSM 7，暂不支持 DSM 6 登录。",
+  "@dsm6NotSupported": {
+    "placeholders": {
+      "version": {}
+    }
+  },
+  "switchedToNewAccount": "已切换到新账号 / 新设备登录",
+  "sessionExpired": "登录状态已过期，请重新登录以恢复实时连接。",
+  "enterNasAddress": "请输入 NAS 地址或域名",
+  "enterPort": "请输入端口",
+  "portRange": "端口范围应为 1 - 65535",
+  "enterUsername": "请输入用户名",
+  "enterPassword": "请输入密码",
+  "selectDeviceThenPassword": "选择设备后输入密码即可登录",
+  "deviceReadyEnterPassword": "设备已就绪，输入密码即可登录",
+  "previewImage": "预览图片",
+  "download": "下载",
+  "downloadAndOpen": "下载并打开",
+  "startDownloading": "开始下载 {name}",
+  "@startDownloading": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "downloadCompleteOpen": "开始下载 {name}，完成后可直接打开",
+  "@downloadCompleteOpen": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "downloadTaskComplete": "{title} 下载完成",
+  "@downloadTaskComplete": {
+    "placeholders": {
+      "title": {}
+    }
+  },
+  "confirmDelete": "确定要删除\\\"{name}\\\"吗？",
+  "@confirmDelete": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "downloadDirSet": "下载目录已设置为 {path}",
+  "@downloadDirSet": {
+    "placeholders": {
+      "path": {}
+    }
+  },
+  "selectUploadDir": "选择上传目录",
+  "loadFilesFailed": "加载文件失败：{error}",
+  "@loadFilesFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "selectCurrentDir": "选择当前目录：{path}",
+  "@selectCurrentDir": {
+    "placeholders": {
+      "path": {}
+    }
+  },
+  "refresh": "刷新",
+  "discardChanges": "放弃修改？",
+  "discardChangesHint": "当前文件有未保存修改，确定直接返回吗？",
+  "discard": "放弃",
+  "saveSuccess": "保存成功",
+  "save": "保存",
+  "savedToAlbum": "已保存到相册",
+  "loadingImage": "正在加载图片...",
+  "videoLoadFailed": "视频加载失败",
+  "selectOneFile": "请至少选择一个文件进行下载",
+  "addedDownloadTasks": "已加入 {count} 个下载任务",
+  "@addedDownloadTasks": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "batchDelete": "批量删除",
+  "confirmBatchDelete": "确定要删除选中的 {count} 项吗？",
+  "@confirmBatchDelete": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "deletedCount": "已删除 {count} 项",
+  "@deletedCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "uploadTaskAdded": "已加入上传任务",
+  "videoPreviewHint": "视频预览请从列表打开",
+  "pathCopied": "路径已复制",
+
+  "open": "打开",
+  "backgroundTaskRunning": "后台任务进行中",
+  "backgroundTaskRunningCount": "后台任务进行中（{count}）",
+  "@backgroundTaskRunningCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "taskComplete": "{name}任务已完成",
+  "@taskComplete": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "taskCompleteMultiple": "{name}等{count}个后台任务已完成",
+  "@taskCompleteMultiple": {
+    "placeholders": {
+      "name": {},
+      "count": {}
+    }
+  },
+  "transfer": "传输",
+  "downloadAndOpenTitle": "下载并打开",
+  "processingLabel": "处理中",
+
+  "fileServicesTitle": "文件服务",
+  "noFileServices": "未获取到文件服务信息",
+  "fileServiceEnabled": "已启用",
+  "fileServiceDisabled": "未启用",
+
+  "defaultDeviceName": "我的 NAS"
 }

@@ -367,4 +367,420 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get appLogsViewerHint =>
       'You are viewing sanitized content, which is safer to copy or export for troubleshooting.';
+
+  @override
+  String get controlPanelTitle => 'Control Panel';
+
+  @override
+  String get taskSchedulerTitle => 'Task Scheduler';
+
+  @override
+  String get externalDevicesTitle => 'External Devices';
+
+  @override
+  String get externalAccessTitle => 'External Access';
+
+  @override
+  String get indexServiceTitle => 'Indexing Service';
+
+  @override
+  String get sharedFoldersTitle => 'Shared Folders';
+
+  @override
+  String get userGroupsTitle => 'Users & Groups';
+
+  @override
+  String get informationCenterTitle => 'Information Center';
+
+  @override
+  String get noTasks => 'No scheduled tasks';
+
+  @override
+  String get noExternalDevices => 'No external devices connected';
+
+  @override
+  String get noDdnsRecords => 'No DDNS records';
+
+  @override
+  String get noSharedFolders => 'No shared folders';
+
+  @override
+  String get noUsersFound => 'No users found';
+
+  @override
+  String get noGroupsFound => 'No groups found';
+
+  @override
+  String get executeNow => 'Execute Now';
+
+  @override
+  String get taskSubmitted => 'Task submitted for execution';
+
+  @override
+  String get executeFailed => 'Execution failed';
+
+  @override
+  String get updateFailed => 'Update failed';
+
+  @override
+  String get ejectDevice => 'Eject Device';
+
+  @override
+  String get ejectSubmitted => 'Eject request submitted';
+
+  @override
+  String get ejectFailed => 'Eject failed';
+
+  @override
+  String get fileSystem => 'File System';
+
+  @override
+  String get mountPath => 'Mount Path';
+
+  @override
+  String get capacity => 'Capacity';
+
+  @override
+  String get nextAutoUpdateTime => 'Next auto update time';
+
+  @override
+  String get ipAddress => 'IP';
+
+  @override
+  String get lastUpdated => 'Last updated';
+
+  @override
+  String get refreshNow => 'Refresh Now';
+
+  @override
+  String get thumbnailQuality => 'Thumbnail Quality';
+
+  @override
+  String get thumbnailQualityUpdated => 'Thumbnail quality updated';
+
+  @override
+  String get rebuildIndex => 'Rebuild Index';
+
+  @override
+  String get rebuildIndexDesc =>
+      'Re-trigger media indexing. Useful for missing thumbnails or abnormal index status.';
+
+  @override
+  String get rebuildSubmitted => 'Rebuild index request submitted';
+
+  @override
+  String get rebuildFailed => 'Rebuild failed';
+
+  @override
+  String get currentIndexStatus => 'Current Status';
+
+  @override
+  String get currentTask => 'Current Task';
+
+  @override
+  String get noIndexTasks => 'No indexing tasks';
+
+  @override
+  String historyDeleted(Object name) {
+    return 'History deleted for $name';
+  }
+
+  @override
+  String get connectionTestFailed => 'Connection test failed';
+
+  @override
+  String get copy => 'Copy';
+
+  @override
+  String get switchedToHttp =>
+      'Switched to HTTP. Only use in trusted local networks.';
+
+  @override
+  String get selectFromHistory => 'Select from history';
+
+  @override
+  String get historyDevices => 'History devices';
+
+  @override
+  String get selectDeviceFirst => 'Please select a device first to quick login';
+
+  @override
+  String get quickLogin => 'Quick Login';
+
+  @override
+  String get done => 'Done';
+
+  @override
+  String get newAccountDevice => 'New Account / Device';
+
+  @override
+  String get connectionInfo => 'Connection Info';
+
+  @override
+  String get enterNasCredentials => 'Enter NAS address and DSM credentials';
+
+  @override
+  String get ignoreSslCert => 'Ignore SSL Certificate';
+
+  @override
+  String get ignoreSslCertHint =>
+      'Only for self-signed or abnormal certificates';
+
+  @override
+  String get httpsOnly => 'Only available for HTTPS';
+
+  @override
+  String get rememberPassword => 'Remember Password';
+
+  @override
+  String get loginDsm => 'Login to DSM';
+
+  @override
+  String get dsm7Plus => 'DSM 7+';
+
+  @override
+  String get quickLoginReady => 'Quick login ready for you.';
+
+  @override
+  String get connectToDsm => 'Connect to your Synology DSM.';
+
+  @override
+  String get quickRelogin => 'Quick Re-login';
+
+  @override
+  String get quickReloginHint =>
+      'Show this interface when history is available to reduce input.';
+
+  @override
+  String get loginToNas => 'Login to NAS';
+
+  @override
+  String get loginToNasHint => 'Supports LAN IP, domain and port.';
+
+  @override
+  String get noUsernameTapChange =>
+      'No username recorded, tap to change account';
+
+  @override
+  String get fill => 'Fill';
+
+  @override
+  String get changeAccount => 'Change Account';
+
+  @override
+  String get justUsed => 'Just used';
+
+  @override
+  String minutesAgo(Object n) {
+    return 'Used $n minutes ago';
+  }
+
+  @override
+  String hoursAgo(Object n) {
+    return 'Used $n hours ago';
+  }
+
+  @override
+  String daysAgo(Object n) {
+    return 'Used $n days ago';
+  }
+
+  @override
+  String get usedEarlier => 'Used earlier';
+
+  @override
+  String get noLoginTimeRecorded => 'No login time recorded';
+
+  @override
+  String selectedEnterPassword(Object name) {
+    return 'Selected $name, enter password to login';
+  }
+
+  @override
+  String get connectionSuccess => 'Connection successful: DSM Web API detected';
+
+  @override
+  String dsm6NotSupported(Object version) {
+    return 'Detected $version. This app only supports DSM 7, DSM 6 login is not supported yet.';
+  }
+
+  @override
+  String get switchedToNewAccount => 'Switched to new account / device login';
+
+  @override
+  String get sessionExpired =>
+      'Session expired. Please login again to restore real-time connection.';
+
+  @override
+  String get enterNasAddress => 'Please enter NAS address or domain';
+
+  @override
+  String get enterPort => 'Please enter port';
+
+  @override
+  String get portRange => 'Port should be between 1 - 65535';
+
+  @override
+  String get enterUsername => 'Please enter username';
+
+  @override
+  String get enterPassword => 'Please enter password';
+
+  @override
+  String get selectDeviceThenPassword =>
+      'Select a device then enter password to login';
+
+  @override
+  String get deviceReadyEnterPassword =>
+      'Device ready, enter password to login';
+
+  @override
+  String get previewImage => 'Preview Image';
+
+  @override
+  String get download => 'Download';
+
+  @override
+  String get downloadAndOpen => 'Download and Open';
+
+  @override
+  String startDownloading(Object name) {
+    return 'Starting download $name';
+  }
+
+  @override
+  String downloadCompleteOpen(Object name) {
+    return 'Starting download $name, will open when complete';
+  }
+
+  @override
+  String downloadTaskComplete(Object title) {
+    return '$title download complete';
+  }
+
+  @override
+  String confirmDelete(Object name) {
+    return 'Are you sure you want to delete \\\"$name\\\"?';
+  }
+
+  @override
+  String downloadDirSet(Object path) {
+    return 'Download directory set to $path';
+  }
+
+  @override
+  String get selectUploadDir => 'Select upload directory';
+
+  @override
+  String loadFilesFailed(Object error) {
+    return 'Failed to load files: $error';
+  }
+
+  @override
+  String selectCurrentDir(Object path) {
+    return 'Select current directory: $path';
+  }
+
+  @override
+  String get refresh => 'Refresh';
+
+  @override
+  String get discardChanges => 'Discard changes?';
+
+  @override
+  String get discardChangesHint =>
+      'Current file has unsaved changes. Are you sure you want to go back?';
+
+  @override
+  String get discard => 'Discard';
+
+  @override
+  String get saveSuccess => 'Saved successfully';
+
+  @override
+  String get save => 'Save';
+
+  @override
+  String get savedToAlbum => 'Saved to album';
+
+  @override
+  String get loadingImage => 'Loading image...';
+
+  @override
+  String get videoLoadFailed => 'Video load failed';
+
+  @override
+  String get selectOneFile => 'Please select at least one file to download';
+
+  @override
+  String addedDownloadTasks(Object count) {
+    return 'Added $count download tasks';
+  }
+
+  @override
+  String get batchDelete => 'Batch Delete';
+
+  @override
+  String confirmBatchDelete(Object count) {
+    return 'Are you sure you want to delete $count selected items?';
+  }
+
+  @override
+  String deletedCount(Object count) {
+    return 'Deleted $count items';
+  }
+
+  @override
+  String get uploadTaskAdded => 'Upload task added';
+
+  @override
+  String get videoPreviewHint => 'Open video preview from list';
+
+  @override
+  String get pathCopied => 'Path copied';
+
+  @override
+  String get open => 'Open';
+
+  @override
+  String get backgroundTaskRunning => 'Background task running';
+
+  @override
+  String backgroundTaskRunningCount(Object count) {
+    return 'Background task running ($count)';
+  }
+
+  @override
+  String taskComplete(Object name) {
+    return '$name task complete';
+  }
+
+  @override
+  String taskCompleteMultiple(Object name, Object count) {
+    return '$name and $count other tasks complete';
+  }
+
+  @override
+  String get transfer => 'Transfer';
+
+  @override
+  String get downloadAndOpenTitle => 'Download and Open';
+
+  @override
+  String get processingLabel => 'Processing';
+
+  @override
+  String get fileServicesTitle => 'File Services';
+
+  @override
+  String get noFileServices => 'No file service information available';
+
+  @override
+  String get fileServiceEnabled => 'Enabled';
+
+  @override
+  String get fileServiceDisabled => 'Disabled';
+
+  @override
+  String get defaultDeviceName => 'My NAS';
 }
