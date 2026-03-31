@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/error/error_mapper.dart';
+import '../../../../core/utils/l10n.dart';
 import '../providers/text_editor_providers.dart';
 
 class TextEditorPage extends ConsumerStatefulWidget {
@@ -53,11 +54,11 @@ class _TextEditorPageState extends ConsumerState<TextEditorPage> {
         final leave = await showDialog<bool>(
               context: context,
               builder: (dialogContext) => AlertDialog(
-                title: const Text('放弃修改？'),
-                content: const Text('当前文件有未保存修改，确定直接返回吗？'),
+                title: Text(l10n.discardChanges),
+                content: Text(l10n.discardChangesHint),
                 actions: [
-                  TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: const Text('取消')),
-                  FilledButton(onPressed: () => Navigator.of(dialogContext).pop(true), child: const Text('放弃')),
+                  TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: Text(l10n.cancel)),
+                  FilledButton(onPressed: () => Navigator.of(dialogContext).pop(true), child: Text(l10n.discard)),
                 ],
               ),
             ) ??
@@ -85,14 +86,14 @@ class _TextEditorPageState extends ConsumerState<TextEditorPage> {
                   await ref.read(saveTextFileProvider)(widget.path, _controller.text);
                   if (!mounted) return;
                   setState(() => _dirty = false);
-                  messenger.showSnackBar(const SnackBar(content: Text('保存成功')));
+                  messenger.showSnackBar(SnackBar(content: Text(l10n.saveSuccess)));
                   ref.invalidate(textFileProvider(widget.path));
                 } catch (e) {
                   if (!mounted) return;
                   messenger.showSnackBar(SnackBar(content: Text(ErrorMapper.map(e).message)));
                 }
               },
-              child: const Text('保存'),
+              child: Text(l10n.save),
             ),
           ],
         ),

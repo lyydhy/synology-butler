@@ -359,5 +359,105 @@
   "fileServiceEnabled": "已启用",
   "fileServiceDisabled": "未启用",
 
-  "defaultDeviceName": "我的 NAS"
+  "defaultDeviceName": "我的 NAS",
+
+  "splashTitle": "群晖管家",
+  "splashSubtitleReady": "你的 DSM 7+ 掌上助手",
+  "splashSubtitleRestoring": "正在恢复你的连接与设备状态",
+  "splashSubtitlePreparing": "正在准备登录界面",
+  "splashLoadingStart": "正在启动...",
+  "splashLoadingEnter": "正在进入...",
+  "splashLoadingLogin": "正在跳转登录...",
+
+  "dashboardSectionApps": "应用",
+  "dashboardSectionAppsSubtitle": "常用功能快捷入口",
+  "dashboardContainerManagement": "容器管理",
+  "dashboardContainerManagementDesc": "查看容器与 Compose 项目",
+  "dashboardTransfers": "传输中心",
+  "dashboardTransfersDesc": "管理最近上传下载任务",
+  "dashboardControlPanel": "控制面板",
+  "dashboardControlPanelDesc": "按优先级进入系统功能配置",
+  "dashboardInformationCenter": "信息中心",
+  "dashboardInformationCenterDesc": "查看系统与存储详情",
+  "dashboardPerformance": "性能监控",
+  "dashboardPerformanceDesc": "查看 CPU 与内存状态",
+  "dashboardStorage": "存储空间",
+  "dashboardStorageEmpty": "暂未获取到存储空间信息",
+  "dashboardUptime": "运行时间",
+  "storageLabel": "存储空间",
+  "storageLabelN": "存储空间 {n}",
+  "@storageLabelN": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "usedSlashTotal": "已用 {used} / 总计 {total}",
+  "@usedSlashTotal": {
+    "placeholders": {
+      "used": {},
+      "total": {}
+    }
+  },
+  "usedSlashUnknown": "已用 {used} / 总计 --",
+  "@usedSlashUnknown": {
+    "placeholders": {
+      "used": {}
+    }
+  },
+  "unknownSlashTotal": "已用 -- / 总计 {total}",
+  "@unknownSlashTotal": {
+    "placeholders": {
+      "total": {}
+    }
+  },
+  "usedUnknown": "已用 -- / 总计 --",
+
+  "confirmDeleteName": "确定要删除\"{name}\"吗？",
+  "@confirmDeleteName": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "downloadDirSetTo": "下载目录已设置为 {path}",
+  "@downloadDirSetTo": {
+    "placeholders": {
+      "path": {}
+    }
+  },
+  "selectUploadDir": "选择上传目录",
+  "selectCurrentDir": "选择当前目录：{path}",
+  "@selectCurrentDir": {
+    "placeholders": {
+      "path": {}
+    }
+  },
+  "loadFilesFailed": "加载文件失败：{error}",
+  "@loadFilesFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "startDownloadingName": "开始下载 {name}",
+  "@startDownloadingName": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+
+  "previewImage": "预览图片",
+  "previewText": "预览文本",
+  "previewNfo": "预览 NFO",
+
+  "settingsConnectionStorage": "连接与存储",
+  "settingsConnectionManagement": "连接管理",
+  "settingsDownloadDirectory": "下载目录",
+  "settingsDownloadDirUpdated": "下载目录已更新",
+  "settingsAppearanceLanguage": "外观与语言",
+  "settingsAppearanceSubtitle": "调整应用显示风格和语言",
+  "settingsAppSupport": "应用与支持",
+  "settingsAppSupportSubtitle": "保留常用支持入口，移除偏调试和低频功能",
+  "settingsLogout": "退出登录",
+  "settingsLogoutSubtitle": "清除当前会话和本地保存的登录态",
+  "settingsAbout": "关于",
+  "settingsAboutSubtitle": "群晖管家 v0.1"
 }

@@ -771,4 +771,153 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get defaultDeviceName => '我的 NAS';
+
+  @override
+  String get splashTitle => '群晖管家';
+
+  @override
+  String get splashSubtitleReady => '你的 DSM 7+ 掌上助手';
+
+  @override
+  String get splashSubtitleRestoring => '正在恢复你的连接与设备状态';
+
+  @override
+  String get splashSubtitlePreparing => '正在准备登录界面';
+
+  @override
+  String get splashLoadingStart => '正在启动...';
+
+  @override
+  String get splashLoadingEnter => '正在进入...';
+
+  @override
+  String get splashLoadingLogin => '正在跳转登录...';
+
+  @override
+  String get dashboardSectionApps => '应用';
+
+  @override
+  String get dashboardSectionAppsSubtitle => '常用功能快捷入口';
+
+  @override
+  String get dashboardContainerManagement => '容器管理';
+
+  @override
+  String get dashboardContainerManagementDesc => '查看容器与 Compose 项目';
+
+  @override
+  String get dashboardTransfers => '传输中心';
+
+  @override
+  String get dashboardTransfersDesc => '管理最近上传下载任务';
+
+  @override
+  String get dashboardControlPanel => '控制面板';
+
+  @override
+  String get dashboardControlPanelDesc => '按优先级进入系统功能配置';
+
+  @override
+  String get dashboardInformationCenter => '信息中心';
+
+  @override
+  String get dashboardInformationCenterDesc => '查看系统与存储详情';
+
+  @override
+  String get dashboardPerformance => '性能监控';
+
+  @override
+  String get dashboardPerformanceDesc => '查看 CPU 与内存状态';
+
+  @override
+  String get dashboardStorage => '存储空间';
+
+  @override
+  String get dashboardStorageEmpty => '暂未获取到存储空间信息';
+
+  @override
+  String get dashboardUptime => '运行时间';
+
+  @override
+  String get storageLabel => '存储空间';
+
+  @override
+  String storageLabelN(Object n) {
+    return '存储空间 $n';
+  }
+
+  @override
+  String usedSlashTotal(Object used, Object total) {
+    return '已用 $used / 总计 $total';
+  }
+
+  @override
+  String usedSlashUnknown(Object used) {
+    return '已用 $used / 总计 --';
+  }
+
+  @override
+  String unknownSlashTotal(Object total) {
+    return '已用 -- / 总计 $total';
+  }
+
+  @override
+  String get usedUnknown => '已用 -- / 总计 --';
+
+  @override
+  String confirmDeleteName(Object name) {
+    return '确定要删除\"$name\"吗？';
+  }
+
+  @override
+  String downloadDirSetTo(Object path) {
+    return '下载目录已设置为 $path';
+  }
+
+  @override
+  String startDownloadingName(Object name) {
+    return '开始下载 $name';
+  }
+
+  @override
+  String get previewText => '预览文本';
+
+  @override
+  String get previewNfo => '预览 NFO';
+
+  @override
+  String get settingsConnectionStorage => '连接与存储';
+
+  @override
+  String get settingsConnectionManagement => '连接管理';
+
+  @override
+  String get settingsDownloadDirectory => '下载目录';
+
+  @override
+  String get settingsDownloadDirUpdated => '下载目录已更新';
+
+  @override
+  String get settingsAppearanceLanguage => '外观与语言';
+
+  @override
+  String get settingsAppearanceSubtitle => '调整应用显示风格和语言';
+
+  @override
+  String get settingsAppSupport => '应用与支持';
+
+  @override
+  String get settingsAppSupportSubtitle => '保留常用支持入口，移除偏调试和低频功能';
+
+  @override
+  String get settingsLogout => '退出登录';
+
+  @override
+  String get settingsLogoutSubtitle => '清除当前会话和本地保存的登录态';
+
+  @override
+  String get settingsAbout => '关于';
+
+  @override
+  String get settingsAboutSubtitle => '群晖管家 v0.1';
 }

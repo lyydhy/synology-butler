@@ -669,7 +669,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get selectUploadDir => 'Select upload directory';
+  String get selectUploadDir => 'Select Upload Directory';
 
   @override
   String loadFilesFailed(Object error) {
@@ -783,4 +783,160 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get defaultDeviceName => 'My NAS';
+
+  @override
+  String get splashTitle => 'Synology Manager';
+
+  @override
+  String get splashSubtitleReady => 'Your DSM 7+ Assistant';
+
+  @override
+  String get splashSubtitleRestoring =>
+      'Restoring your connection and device status';
+
+  @override
+  String get splashSubtitlePreparing => 'Preparing login screen';
+
+  @override
+  String get splashLoadingStart => 'Starting...';
+
+  @override
+  String get splashLoadingEnter => 'Entering...';
+
+  @override
+  String get splashLoadingLogin => 'Redirecting to login...';
+
+  @override
+  String get dashboardSectionApps => 'Apps';
+
+  @override
+  String get dashboardSectionAppsSubtitle => 'Quick access to common features';
+
+  @override
+  String get dashboardContainerManagement => 'Containers';
+
+  @override
+  String get dashboardContainerManagementDesc =>
+      'View containers and Compose projects';
+
+  @override
+  String get dashboardTransfers => 'Transfers';
+
+  @override
+  String get dashboardTransfersDesc => 'Manage recent uploads and downloads';
+
+  @override
+  String get dashboardControlPanel => 'Control Panel';
+
+  @override
+  String get dashboardControlPanelDesc =>
+      'Access system configuration by priority';
+
+  @override
+  String get dashboardInformationCenter => 'Info Center';
+
+  @override
+  String get dashboardInformationCenterDesc =>
+      'View system and storage details';
+
+  @override
+  String get dashboardPerformance => 'Performance';
+
+  @override
+  String get dashboardPerformanceDesc => 'View CPU and memory status';
+
+  @override
+  String get dashboardStorage => 'Storage';
+
+  @override
+  String get dashboardStorageEmpty => 'Storage information not available';
+
+  @override
+  String get dashboardUptime => 'Uptime';
+
+  @override
+  String get storageLabel => 'Storage';
+
+  @override
+  String storageLabelN(Object n) {
+    return 'Storage $n';
+  }
+
+  @override
+  String usedSlashTotal(Object used, Object total) {
+    return 'Used $used / Total $total';
+  }
+
+  @override
+  String usedSlashUnknown(Object used) {
+    return 'Used $used / Total --';
+  }
+
+  @override
+  String unknownSlashTotal(Object total) {
+    return 'Used -- / Total $total';
+  }
+
+  @override
+  String get usedUnknown => 'Used -- / Total --';
+
+  @override
+  String confirmDeleteName(Object name) {
+    return 'Are you sure you want to delete \"$name\"?';
+  }
+
+  @override
+  String downloadDirSetTo(Object path) {
+    return 'Download directory set to $path';
+  }
+
+  @override
+  String startDownloadingName(Object name) {
+    return 'Starting download of $name';
+  }
+
+  @override
+  String get previewText => 'Preview Text';
+
+  @override
+  String get previewNfo => 'Preview NFO';
+
+  @override
+  String get settingsConnectionStorage => 'Connection & Storage';
+
+  @override
+  String get settingsConnectionManagement => 'Connection Management';
+
+  @override
+  String get settingsDownloadDirectory => 'Download Directory';
+
+  @override
+  String get settingsDownloadDirUpdated => 'Download directory updated';
+
+  @override
+  String get settingsAppearanceLanguage => 'Appearance & Language';
+
+  @override
+  String get settingsAppearanceSubtitle =>
+      'Adjust app display style and language';
+
+  @override
+  String get settingsAppSupport => 'App & Support';
+
+  @override
+  String get settingsAppSupportSubtitle =>
+      'Keep common support entries, remove debug and low-frequency features';
+
+  @override
+  String get settingsLogout => 'Logout';
+
+  @override
+  String get settingsLogoutSubtitle =>
+      'Clear current session and saved login state';
+
+  @override
+  String get settingsAbout => 'About';
+
+  @override
+  String get settingsAboutSubtitle => 'Synology Manager v0.1';
 }

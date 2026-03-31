@@ -359,5 +359,105 @@
   "fileServiceEnabled": "Enabled",
   "fileServiceDisabled": "Disabled",
 
-  "defaultDeviceName": "My NAS"
+  "defaultDeviceName": "My NAS",
+
+  "splashTitle": "Synology Manager",
+  "splashSubtitleReady": "Your DSM 7+ Assistant",
+  "splashSubtitleRestoring": "Restoring your connection and device status",
+  "splashSubtitlePreparing": "Preparing login screen",
+  "splashLoadingStart": "Starting...",
+  "splashLoadingEnter": "Entering...",
+  "splashLoadingLogin": "Redirecting to login...",
+
+  "dashboardSectionApps": "Apps",
+  "dashboardSectionAppsSubtitle": "Quick access to common features",
+  "dashboardContainerManagement": "Containers",
+  "dashboardContainerManagementDesc": "View containers and Compose projects",
+  "dashboardTransfers": "Transfers",
+  "dashboardTransfersDesc": "Manage recent uploads and downloads",
+  "dashboardControlPanel": "Control Panel",
+  "dashboardControlPanelDesc": "Access system configuration by priority",
+  "dashboardInformationCenter": "Info Center",
+  "dashboardInformationCenterDesc": "View system and storage details",
+  "dashboardPerformance": "Performance",
+  "dashboardPerformanceDesc": "View CPU and memory status",
+  "dashboardStorage": "Storage",
+  "dashboardStorageEmpty": "Storage information not available",
+  "dashboardUptime": "Uptime",
+  "storageLabel": "Storage",
+  "storageLabelN": "Storage {n}",
+  "@storageLabelN": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "usedSlashTotal": "Used {used} / Total {total}",
+  "@usedSlashTotal": {
+    "placeholders": {
+      "used": {},
+      "total": {}
+    }
+  },
+  "usedSlashUnknown": "Used {used} / Total --",
+  "@usedSlashUnknown": {
+    "placeholders": {
+      "used": {}
+    }
+  },
+  "unknownSlashTotal": "Used -- / Total {total}",
+  "@unknownSlashTotal": {
+    "placeholders": {
+      "total": {}
+    }
+  },
+  "usedUnknown": "Used -- / Total --",
+
+  "confirmDeleteName": "Are you sure you want to delete \"{name}\"?",
+  "@confirmDeleteName": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "downloadDirSetTo": "Download directory set to {path}",
+  "@downloadDirSetTo": {
+    "placeholders": {
+      "path": {}
+    }
+  },
+  "selectUploadDir": "Select Upload Directory",
+  "selectCurrentDir": "Select current directory: {path}",
+  "@selectCurrentDir": {
+    "placeholders": {
+      "path": {}
+    }
+  },
+  "loadFilesFailed": "Failed to load files: {error}",
+  "@loadFilesFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "startDownloadingName": "Starting download of {name}",
+  "@startDownloadingName": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+
+  "previewImage": "Preview Image",
+  "previewText": "Preview Text",
+  "previewNfo": "Preview NFO",
+
+  "settingsConnectionStorage": "Connection & Storage",
+  "settingsConnectionManagement": "Connection Management",
+  "settingsDownloadDirectory": "Download Directory",
+  "settingsDownloadDirUpdated": "Download directory updated",
+  "settingsAppearanceLanguage": "Appearance & Language",
+  "settingsAppearanceSubtitle": "Adjust app display style and language",
+  "settingsAppSupport": "App & Support",
+  "settingsAppSupportSubtitle": "Keep common support entries, remove debug and low-frequency features",
+  "settingsLogout": "Logout",
+  "settingsLogoutSubtitle": "Clear current session and saved login state",
+  "settingsAbout": "About",
+  "settingsAboutSubtitle": "Synology Manager v0.1"
 }

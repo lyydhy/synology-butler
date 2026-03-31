@@ -1537,6 +1537,276 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'我的 NAS'**
   String get defaultDeviceName;
+
+  /// No description provided for @splashTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'群晖管家'**
+  String get splashTitle;
+
+  /// No description provided for @splashSubtitleReady.
+  ///
+  /// In zh, this message translates to:
+  /// **'你的 DSM 7+ 掌上助手'**
+  String get splashSubtitleReady;
+
+  /// No description provided for @splashSubtitleRestoring.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在恢复你的连接与设备状态'**
+  String get splashSubtitleRestoring;
+
+  /// No description provided for @splashSubtitlePreparing.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在准备登录界面'**
+  String get splashSubtitlePreparing;
+
+  /// No description provided for @splashLoadingStart.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在启动...'**
+  String get splashLoadingStart;
+
+  /// No description provided for @splashLoadingEnter.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在进入...'**
+  String get splashLoadingEnter;
+
+  /// No description provided for @splashLoadingLogin.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在跳转登录...'**
+  String get splashLoadingLogin;
+
+  /// No description provided for @dashboardSectionApps.
+  ///
+  /// In zh, this message translates to:
+  /// **'应用'**
+  String get dashboardSectionApps;
+
+  /// No description provided for @dashboardSectionAppsSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'常用功能快捷入口'**
+  String get dashboardSectionAppsSubtitle;
+
+  /// No description provided for @dashboardContainerManagement.
+  ///
+  /// In zh, this message translates to:
+  /// **'容器管理'**
+  String get dashboardContainerManagement;
+
+  /// No description provided for @dashboardContainerManagementDesc.
+  ///
+  /// In zh, this message translates to:
+  /// **'查看容器与 Compose 项目'**
+  String get dashboardContainerManagementDesc;
+
+  /// No description provided for @dashboardTransfers.
+  ///
+  /// In zh, this message translates to:
+  /// **'传输中心'**
+  String get dashboardTransfers;
+
+  /// No description provided for @dashboardTransfersDesc.
+  ///
+  /// In zh, this message translates to:
+  /// **'管理最近上传下载任务'**
+  String get dashboardTransfersDesc;
+
+  /// No description provided for @dashboardControlPanel.
+  ///
+  /// In zh, this message translates to:
+  /// **'控制面板'**
+  String get dashboardControlPanel;
+
+  /// No description provided for @dashboardControlPanelDesc.
+  ///
+  /// In zh, this message translates to:
+  /// **'按优先级进入系统功能配置'**
+  String get dashboardControlPanelDesc;
+
+  /// No description provided for @dashboardInformationCenter.
+  ///
+  /// In zh, this message translates to:
+  /// **'信息中心'**
+  String get dashboardInformationCenter;
+
+  /// No description provided for @dashboardInformationCenterDesc.
+  ///
+  /// In zh, this message translates to:
+  /// **'查看系统与存储详情'**
+  String get dashboardInformationCenterDesc;
+
+  /// No description provided for @dashboardPerformance.
+  ///
+  /// In zh, this message translates to:
+  /// **'性能监控'**
+  String get dashboardPerformance;
+
+  /// No description provided for @dashboardPerformanceDesc.
+  ///
+  /// In zh, this message translates to:
+  /// **'查看 CPU 与内存状态'**
+  String get dashboardPerformanceDesc;
+
+  /// No description provided for @dashboardStorage.
+  ///
+  /// In zh, this message translates to:
+  /// **'存储空间'**
+  String get dashboardStorage;
+
+  /// No description provided for @dashboardStorageEmpty.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂未获取到存储空间信息'**
+  String get dashboardStorageEmpty;
+
+  /// No description provided for @dashboardUptime.
+  ///
+  /// In zh, this message translates to:
+  /// **'运行时间'**
+  String get dashboardUptime;
+
+  /// No description provided for @storageLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'存储空间'**
+  String get storageLabel;
+
+  /// No description provided for @storageLabelN.
+  ///
+  /// In zh, this message translates to:
+  /// **'存储空间 {n}'**
+  String storageLabelN(Object n);
+
+  /// No description provided for @usedSlashTotal.
+  ///
+  /// In zh, this message translates to:
+  /// **'已用 {used} / 总计 {total}'**
+  String usedSlashTotal(Object used, Object total);
+
+  /// No description provided for @usedSlashUnknown.
+  ///
+  /// In zh, this message translates to:
+  /// **'已用 {used} / 总计 --'**
+  String usedSlashUnknown(Object used);
+
+  /// No description provided for @unknownSlashTotal.
+  ///
+  /// In zh, this message translates to:
+  /// **'已用 -- / 总计 {total}'**
+  String unknownSlashTotal(Object total);
+
+  /// No description provided for @usedUnknown.
+  ///
+  /// In zh, this message translates to:
+  /// **'已用 -- / 总计 --'**
+  String get usedUnknown;
+
+  /// No description provided for @confirmDeleteName.
+  ///
+  /// In zh, this message translates to:
+  /// **'确定要删除\"{name}\"吗？'**
+  String confirmDeleteName(Object name);
+
+  /// No description provided for @downloadDirSetTo.
+  ///
+  /// In zh, this message translates to:
+  /// **'下载目录已设置为 {path}'**
+  String downloadDirSetTo(Object path);
+
+  /// No description provided for @startDownloadingName.
+  ///
+  /// In zh, this message translates to:
+  /// **'开始下载 {name}'**
+  String startDownloadingName(Object name);
+
+  /// No description provided for @previewText.
+  ///
+  /// In zh, this message translates to:
+  /// **'预览文本'**
+  String get previewText;
+
+  /// No description provided for @previewNfo.
+  ///
+  /// In zh, this message translates to:
+  /// **'预览 NFO'**
+  String get previewNfo;
+
+  /// No description provided for @settingsConnectionStorage.
+  ///
+  /// In zh, this message translates to:
+  /// **'连接与存储'**
+  String get settingsConnectionStorage;
+
+  /// No description provided for @settingsConnectionManagement.
+  ///
+  /// In zh, this message translates to:
+  /// **'连接管理'**
+  String get settingsConnectionManagement;
+
+  /// No description provided for @settingsDownloadDirectory.
+  ///
+  /// In zh, this message translates to:
+  /// **'下载目录'**
+  String get settingsDownloadDirectory;
+
+  /// No description provided for @settingsDownloadDirUpdated.
+  ///
+  /// In zh, this message translates to:
+  /// **'下载目录已更新'**
+  String get settingsDownloadDirUpdated;
+
+  /// No description provided for @settingsAppearanceLanguage.
+  ///
+  /// In zh, this message translates to:
+  /// **'外观与语言'**
+  String get settingsAppearanceLanguage;
+
+  /// No description provided for @settingsAppearanceSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'调整应用显示风格和语言'**
+  String get settingsAppearanceSubtitle;
+
+  /// No description provided for @settingsAppSupport.
+  ///
+  /// In zh, this message translates to:
+  /// **'应用与支持'**
+  String get settingsAppSupport;
+
+  /// No description provided for @settingsAppSupportSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'保留常用支持入口，移除偏调试和低频功能'**
+  String get settingsAppSupportSubtitle;
+
+  /// No description provided for @settingsLogout.
+  ///
+  /// In zh, this message translates to:
+  /// **'退出登录'**
+  String get settingsLogout;
+
+  /// No description provided for @settingsLogoutSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'清除当前会话和本地保存的登录态'**
+  String get settingsLogoutSubtitle;
+
+  /// No description provided for @settingsAbout.
+  ///
+  /// In zh, this message translates to:
+  /// **'关于'**
+  String get settingsAbout;
+
+  /// No description provided for @settingsAboutSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'群晖管家 v0.1'**
+  String get settingsAboutSubtitle;
 }
 
 class _AppLocalizationsDelegate

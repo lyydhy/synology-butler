@@ -115,42 +115,42 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with WidgetsBindi
           ),
           const SizedBox(height: 16),
           _AppSection(
-            title: '应用',
-            subtitle: '常用功能快捷入口',
+            title: l10n.dashboardSectionApps,
+            subtitle: l10n.dashboardSectionAppsSubtitle,
             items: [
               if (dockerInstalledAsync.valueOrNull == true)
                 _AppEntryItem(
                   icon: Icons.inventory_2_outlined,
-                  label: '容器管理',
-                  description: '查看容器与 Compose 项目',
+                  label: l10n.dashboardContainerManagement,
+                  description: l10n.dashboardContainerManagementDesc,
                   color: Colors.blueGrey,
                   onTap: () => context.push('/container-management'),
                 ),
               _AppEntryItem(
                 icon: Icons.sync_alt_rounded,
-                label: '传输中心',
-                description: '管理最近上传下载任务',
+                label: l10n.dashboardTransfers,
+                description: l10n.dashboardTransfersDesc,
                 color: Colors.deepOrange,
                 onTap: () => context.push('/transfers'),
               ),
               _AppEntryItem(
                 icon: Icons.tune_rounded,
-                label: '控制面板',
-                description: '按优先级进入系统功能配置',
+                label: l10n.dashboardControlPanel,
+                description: l10n.dashboardControlPanelDesc,
                 color: Colors.deepPurple,
                 onTap: () => context.push('/control-panel'),
               ),
               _AppEntryItem(
                 icon: Icons.info_outline_rounded,
-                label: '信息中心',
-                description: '查看系统与存储详情',
+                label: l10n.dashboardInformationCenter,
+                description: l10n.dashboardInformationCenterDesc,
                 color: Colors.indigo,
                 onTap: () => context.push('/information-center'),
               ),
               _AppEntryItem(
                 icon: Icons.monitor_heart_outlined,
-                label: '性能监控',
-                description: '查看 CPU 与内存状态',
+                label: l10n.dashboardPerformance,
+                description: l10n.dashboardPerformanceDesc,
                 color: Colors.teal,
                 onTap: () => context.push('/performance'),
               ),
@@ -509,8 +509,8 @@ class _VolumeSection extends StatelessWidget {
   Widget build(BuildContext context) {
     if (volumes.isEmpty) {
       return SummaryCard(
-        title: '存储空间',
-        subtitle: '暂未获取到存储空间信息',
+        title: l10n.dashboardStorage,
+        subtitle: l10n.dashboardStorageEmpty,
         trailing: const Icon(Icons.storage_rounded),
         onTap: () => context.push('/information-center?tab=storage'),
       );
@@ -535,7 +535,7 @@ class _VolumeSection extends StatelessWidget {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    '存储空间',
+                    l10n.dashboardStorage,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
                   ),
                 ),
@@ -585,15 +585,15 @@ class _VolumeUsageTile extends StatelessWidget {
 
   String _buildDisplayName() {
     final raw = volume.name.trim();
-    if (raw.isEmpty) return '存储空间${index + 1}';
+    if (raw.isEmpty) return l10n.storageLabelN(index + 1);
 
     final match = RegExp(r'^volume\s*(\d+)$', caseSensitive: false).firstMatch(raw);
     if (match != null) {
-      return '存储空间${match.group(1)}';
+      return l10n.storageLabelN(match.group(1)!);
     }
 
     if (raw.toLowerCase().startsWith('volume')) {
-      return '存储空间${index + 1}';
+      return l10n.storageLabelN(index + 1);
     }
 
     return raw;
@@ -604,18 +604,18 @@ class _VolumeUsageTile extends StatelessWidget {
     final total = volume.totalBytes;
 
     if (used != null && used > 0 && total != null && total > 0) {
-      return '已用 ${_formatBytes(used)} / 总计 ${_formatBytes(total)}';
+      return l10n.usedSlashTotal(_formatBytes(used), _formatBytes(total));
     }
 
     if (used != null && used > 0) {
-      return '已用 ${_formatBytes(used)} / 总计 --';
+      return l10n.usedSlashUnknown(_formatBytes(used));
     }
 
     if (total != null && total > 0) {
-      return '已用 -- / 总计 ${_formatBytes(total)}';
+      return l10n.unknownSlashTotal(_formatBytes(total));
     }
 
-    return '已用 -- / 总计 --';
+    return l10n.usedUnknown;
   }
 
   @override
@@ -727,7 +727,7 @@ class _UptimeCardState extends State<_UptimeCard> {
 
   @override
   Widget build(BuildContext context) {
-    String subtitle = '暂未获取到运行时间';
+    String subtitle = l10n.notAvailableYet;
 
     if (_baseDuration != null && _baseTime != null) {
       final current = _baseDuration! + DateTime.now().difference(_baseTime!);
@@ -737,7 +737,7 @@ class _UptimeCardState extends State<_UptimeCard> {
     }
 
     return SummaryCard(
-      title: '运行时间',
+      title: l10n.dashboardUptime,
       subtitle: subtitle,
       trailing: const Icon(Icons.schedule_outlined),
     );

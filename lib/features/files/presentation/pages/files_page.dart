@@ -26,8 +26,8 @@ import '../widgets/files_selection_bar.dart';
 
 /// 文件管理页面。
 ///
-/// 当前第二刀继续把“当前路径 / 排序方式”回归页面本地状态，
-/// 再通过 family provider 按参数取数，减少全局状态依赖。
+/// 当前第二刀继续把"当前路径 / 排序方式"回归页面本地状态,
+/// 再通过 family provider 按参数取数,减少全局状态依赖。
 class FilesPage extends ConsumerStatefulWidget {
   const FilesPage({
     super.key,
@@ -35,7 +35,7 @@ class FilesPage extends ConsumerStatefulWidget {
     this.initialPath = _FilesPageState._rootPath,
   });
 
-  /// 目录选择模式下只允许浏览和确认目录，不展示普通文件管理操作。
+  /// 目录选择模式下只允许浏览和确认目录,不展示普通文件管理操作。
   final bool directoryPickerMode;
 
   /// 进入页面时默认展示的目录。
@@ -152,7 +152,7 @@ class _FilesPageState extends ConsumerState<FilesPage> {
         final first = notifyTasks.first;
         final count = notifyTasks.length;
         final messenger = ScaffoldMessenger.of(context);
-        
+
         messenger.hideCurrentSnackBar();
         messenger.showSnackBar(
           SnackBar(
@@ -241,7 +241,7 @@ class _FilesPageState extends ConsumerState<FilesPage> {
 
   /// 展示重命名对话框。
   Future<void> _showRenameDialog(BuildContext context, WidgetRef ref, FileItem item) async {
-    
+
     final controller = TextEditingController(text: item.name);
     String? errorText;
     bool isSubmitting = false;
@@ -297,12 +297,12 @@ class _FilesPageState extends ConsumerState<FilesPage> {
 
   /// 确认并删除单个文件。
   Future<void> _confirmDelete(BuildContext context, WidgetRef ref, FileItem item) async {
-    
+
     final confirmed = await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
             title: Text(l10n.deleteFile),
-            content: Text('确定要删除“${item.name}”吗？'),
+            content: Text(l10n.confirmDeleteName(item.name)),
             actions: [
               TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n.cancel)),
               FilledButton(onPressed: () => Navigator.of(context).pop(true), child: Text(l10n.deleteConfirm)),
@@ -332,7 +332,7 @@ class _FilesPageState extends ConsumerState<FilesPage> {
 
   /// 展示分享链接。
   Future<void> _showShareLink(BuildContext context, WidgetRef ref, FileItem item) async {
-    
+
     try {
       final link = await ref.read(fileShareProvider)(item.path);
       if (!context.mounted) return;
@@ -370,7 +370,7 @@ class _FilesPageState extends ConsumerState<FilesPage> {
       final messenger = ScaffoldMessenger.of(context);
       messenger.hideCurrentSnackBar();
       messenger.showSnackBar(
-        SnackBar(content: Text('下载目录已设置为 $selected')),
+        SnackBar(content: Text(l10n.downloadDirSetTo(selected))),
       );
     }
     return true;
@@ -378,7 +378,7 @@ class _FilesPageState extends ConsumerState<FilesPage> {
 
   /// 展示单个文件的快捷操作菜单。
   void _showItemMenu(BuildContext context, WidgetRef ref, FileItem item) {
-    
+
     showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
@@ -389,7 +389,7 @@ class _FilesPageState extends ConsumerState<FilesPage> {
             if (FileTypeHelper.isImage(item))
               ListTile(
                 leading: const Icon(Icons.image_outlined),
-                title: const Text('预览图片'),
+                title: Text(l10n.previewImage),
                 onTap: () {
                   Navigator.of(context).pop();
                   GoRouter.of(context).push('/image-preview', extra: {
@@ -401,7 +401,7 @@ class _FilesPageState extends ConsumerState<FilesPage> {
             if (FileTypeHelper.isTextPreviewable(item))
               ListTile(
                 leading: const Icon(Icons.visibility_outlined),
-                title: Text(FileTypeHelper.isNfo(item) ? '预览 NFO' : '预览文本'),
+                title: Text(FileTypeHelper.isNfo(item) ? l10n.previewNfo : l10n.previewText),
                 onTap: () {
                   Navigator.of(context).pop();
                   GoRouter.of(context).push('/text-preview', extra: {
@@ -428,7 +428,7 @@ class _FilesPageState extends ConsumerState<FilesPage> {
             ),
             ListTile(
               leading: const Icon(Icons.download_rounded),
-              title: const Text('下载'),
+              title: Text(l10n.download),
               onTap: () async {
                 Navigator.of(context).pop();
                 final ready = await _ensureDownloadDirectorySelected(context, ref);
@@ -436,7 +436,7 @@ class _FilesPageState extends ConsumerState<FilesPage> {
                 if (context.mounted) {
                   final messenger = ScaffoldMessenger.of(context);
                   messenger.hideCurrentSnackBar();
-                  messenger.showSnackBar(SnackBar(content: Text('开始下载 ${item.name}')));
+                  messenger.showSnackBar(SnackBar(content: Text(l10n.startDownloadingName(item.name))));
                 }
                 await ref.read(transferControllerProvider.notifier).enqueueDownload(
                       remotePath: item.path,
@@ -447,7 +447,7 @@ class _FilesPageState extends ConsumerState<FilesPage> {
             if (FileTypeHelper.isImage(item) || FileTypeHelper.isVideo(item))
               ListTile(
                 leading: const Icon(Icons.play_circle_outline_rounded),
-                title: const Text('下载并打开'),
+                title: Text(l10n.downloadAndOpen),
                 onTap: () async {
                   Navigator.of(context).pop();
                   final ready = await _ensureDownloadDirectorySelected(context, ref);
@@ -456,7 +456,7 @@ class _FilesPageState extends ConsumerState<FilesPage> {
                     final messenger = ScaffoldMessenger.of(context);
                     messenger.hideCurrentSnackBar();
                     messenger.showSnackBar(
-                      SnackBar(content: Text('开始下载 ${item.name}，完成后可直接打开')),
+                      SnackBar(content: Text(l10n.downloadCompleteOpen(item.name))),
                     );
                   }
                   await ref.read(transferControllerProvider.notifier).enqueueDownload(
@@ -489,7 +489,7 @@ class _FilesPageState extends ConsumerState<FilesPage> {
 
   @override
   Widget build(BuildContext context) {
-    
+
     final connection = ref.watch(currentConnectionProvider);
     final currentServer = connection.server;
     final currentSession = connection.session;
@@ -519,7 +519,7 @@ class _FilesPageState extends ConsumerState<FilesPage> {
       },
       child: Scaffold(
         appBar: isDirectoryPickerMode
-            ? AppBar(title: const Text('选择上传目录'))
+            ? AppBar(title: Text(l10n.selectUploadDir))
             : _selectionMode
                 ? FilesSelectionBar(
                     selectedCount: _selectedPaths.length,
@@ -589,7 +589,7 @@ class _FilesPageState extends ConsumerState<FilesPage> {
               onGoUp: () => _setCurrentPath(actions.parentPathOf(_currentPath)),
               onUpload: () => actions.showUploadDialog(context, ref, _currentPath, _pickSingleFile),
               onCreateFolder: () => actions.showCreateFolderDialog(context, ref, _currentPath),
-              title: isDirectoryPickerMode ? '选择上传目录' : '文件管理',
+              title: isDirectoryPickerMode ? l10n.selectUploadDir : l10n.filesTitle,
               showActionMenu: !isDirectoryPickerMode,
             ),
             Expanded(
@@ -662,7 +662,7 @@ class _FilesPageState extends ConsumerState<FilesPage> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text('加载文件失败：${ErrorMapper.map(error).message}', style: const TextStyle(color: Colors.red)),
+                        Text(l10n.loadFilesFailed(ErrorMapper.map(error).message), style: const TextStyle(color: Colors.red)),
                         const SizedBox(height: 12),
                         FilledButton(onPressed: _refreshCurrentPath, child: Text(l10n.retry)),
                       ],
@@ -682,7 +682,7 @@ class _FilesPageState extends ConsumerState<FilesPage> {
                   child: FilledButton.icon(
                     onPressed: () => context.pop(_currentPath),
                     icon: const Icon(Icons.check_circle_outline),
-                    label: Text('选择当前目录：$_currentPath'),
+                    label: Text(l10n.selectCurrentDir(_currentPath)),
                   ),
                 ),
               )
@@ -731,12 +731,12 @@ class _BackgroundTaskBanner extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  extraCount > 0 ? '后台任务进行中（${tasks.length}）' : '后台任务进行中',
+                  extraCount > 0 ? l10n.backgroundTaskRunningCount(tasks.length) : l10n.backgroundTaskRunning,
                   style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${first.displayName} · ${first.path.isEmpty ? '处理中' : first.path}${first.progress == null ? '' : ' · ${first.progress!.toStringAsFixed(0)}%'}',
+                  '${first.displayName} · ${first.path.isEmpty ? l10n.processingLabel : first.path}${first.progress == null ? '' : ' · ${first.progress!.toStringAsFixed(0)}%'}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
@@ -746,7 +746,7 @@ class _BackgroundTaskBanner extends StatelessWidget {
           ),
           TextButton(
             onPressed: onRefresh,
-            child: const Text('刷新'),
+            child: Text(l10n.refresh),
           ),
         ],
       ),

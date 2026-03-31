@@ -62,18 +62,18 @@ class SettingsPage extends ConsumerWidget {
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
         children: [
           _SectionCard(
-            title: '连接与存储',
-            subtitle: server == null ? '当前未连接设备' : '管理 NAS 连接和本地下载目录',
+            title: l10n.settingsConnectionStorage,
+            subtitle: server == null ? l10n.noSessionPleaseLogin : '管理 NAS 连接和本地下载目录',
             children: [
               _SettingsActionTile(
                 icon: Icons.dns_rounded,
-                title: '连接管理',
+                title: l10n.settingsConnectionManagement,
                 subtitle: server == null ? '查看、切换、编辑和删除已保存设备' : '当前设备：${server.name}',
                 onTap: () => context.push('/servers'),
               ),
               _SettingsActionTile(
                 icon: Icons.folder_open_rounded,
-                title: '下载目录',
+                title: l10n.settingsDownloadDirectory,
                 subtitle: downloadDirectory ?? '首次下载时选择，之后可在这里修改',
                 onTap: () async {
                   final selected = await FilePicker.platform.getDirectoryPath();
@@ -81,7 +81,7 @@ class SettingsPage extends ConsumerWidget {
                   await ref.read(saveDownloadDirectoryProvider)(selected);
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('下载目录已更新')),
+                      SnackBar(content: Text(l10n.settingsDownloadDirUpdated)),
                     );
                   }
                 },
@@ -90,8 +90,8 @@ class SettingsPage extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
           _SectionCard(
-            title: '外观与语言',
-            subtitle: '调整应用显示风格和语言',
+            title: l10n.settingsAppearanceLanguage,
+            subtitle: l10n.settingsAppearanceSubtitle,
             children: [
               _SettingsDropdownTile<AppThemeModeOption>(
                 icon: Icons.brightness_6_rounded,
@@ -140,8 +140,8 @@ class SettingsPage extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
           _SectionCard(
-            title: '应用与支持',
-            subtitle: '保留常用支持入口，移除偏调试和低频功能',
+            title: l10n.settingsAppSupport,
+            subtitle: l10n.settingsAppSupportSubtitle,
             children: [
               _SettingsActionTile(
                 icon: Icons.receipt_long_rounded,
@@ -151,8 +151,8 @@ class SettingsPage extends ConsumerWidget {
               ),
               _SettingsActionTile(
                 icon: Icons.logout_rounded,
-                title: '退出登录',
-                subtitle: '清除当前会话和本地保存的登录态',
+                title: l10n.settingsLogout,
+                subtitle: l10n.settingsLogoutSubtitle,
                 iconColor: theme.colorScheme.error,
                 textColor: theme.colorScheme.error,
                 onTap: () async {

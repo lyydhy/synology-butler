@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/utils/l10n.dart';
 import '../../../../core/utils/local_app_logger.dart';
 import '../../../external_share/services/external_share_pending_store.dart';
 import '../providers/auth_providers.dart';
@@ -72,9 +73,10 @@ class SplashPage extends ConsumerWidget {
               router.go(target);
             });
             return const _SplashContent(
-              title: '群晖管家',
-              subtitle: '正在恢复你的连接与设备状态',
-              loadingText: '正在进入...',
+              title: null,
+              subtitle: null,
+              loadingText: null,
+              restoring: true,
             );
           },
           error: (_, __) {
@@ -96,15 +98,18 @@ class SplashPage extends ConsumerWidget {
               }
             });
             return const _SplashContent(
-              title: '群晖管家',
-              subtitle: '正在准备登录界面',
-              loadingText: '正在跳转登录...',
+              title: null,
+              subtitle: null,
+              loadingText: null,
+              restoring: false,
             );
           },
           loading: () => const _SplashContent(
-            title: '群晖管家',
-            subtitle: '你的 DSM 7+ 掌上助手',
-            loadingText: '正在启动...',
+            title: null,
+            subtitle: null,
+            loadingText: null,
+            restoring: false,
+            initial: true,
           ),
         ),
       ),
@@ -114,18 +119,25 @@ class SplashPage extends ConsumerWidget {
 
 class _SplashContent extends StatelessWidget {
   const _SplashContent({
-    required this.title,
-    required this.subtitle,
-    required this.loadingText,
+    this.title,
+    this.subtitle,
+    this.loadingText,
+    this.restoring = false,
+    this.initial = false,
   });
 
-  final String title;
-  final String subtitle;
-  final String loadingText;
+  final String? title;
+  final String? subtitle;
+  final String? loadingText;
+  final bool restoring;
+  final bool initial;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final displayTitle = title ?? l10n.splashTitle;
+    final displaySubtitle = subtitle ?? (initial ? l10n.splashSubtitleReady : (restoring ? l10n.splashSubtitleRestoring : l10n.splashSubtitlePreparing));
+    final displayLoadingText = loadingText ?? (initial ? l10n.splashLoadingStart : (restoring ? l10n.splashLoadingEnter : l10n.splashLoadingLogin));
 
     return SizedBox.expand(
       child: SafeArea(
@@ -158,7 +170,7 @@ class _SplashContent extends StatelessWidget {
               ),
               const SizedBox(height: 32),
               Text(
-                title,
+                displayTitle,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800),
               ),
@@ -166,7 +178,7 @@ class _SplashContent extends StatelessWidget {
               ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 320),
                 child: Text(
-                  subtitle,
+                  displaySubtitle,
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant, height: 1.4),
                 ),
@@ -182,7 +194,7 @@ class _SplashContent extends StatelessWidget {
               ),
               const SizedBox(height: 14),
               Text(
-                loadingText,
+                displayLoadingText,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
               ),
