@@ -1,5 +1,6 @@
 ﻿import '../../core/network/app_dio.dart';
 import '../../domain/entities/external_access.dart';
+import '../../domain/entities/external_device.dart';
 import '../../domain/entities/index_service.dart';
 import '../../domain/entities/information_center.dart';
 import '../../domain/entities/system_status.dart';
@@ -67,6 +68,40 @@ class SystemRepositoryImpl implements SystemRepository {
   @override
   Future<void> rebuildIndex() {
     return _systemApi.rebuildIndex();
+  }
+
+  @override
+  Future<List<ExternalDevice>> fetchExternalDevices() async {
+    final models = await _systemApi.fetchExternalDevices();
+    return models
+        .map(
+          (item) => ExternalDevice(
+            id: item.id,
+            name: item.name,
+            bus: item.bus,
+            vendor: item.vendor,
+            model: item.model,
+            status: item.status,
+            canEject: item.canEject,
+            volumes: item.volumes
+                .map(
+                  (volume) => ExternalDeviceVolume(
+                    name: volume.name,
+                    fileSystem: volume.fileSystem,
+                    mountPath: volume.mountPath,
+                    totalSizeText: volume.totalSizeText,
+                    usedSizeText: volume.usedSizeText,
+                  ),
+                )
+                .toList(),
+          ),
+        )
+        .toList();
+  }
+
+  @override
+  Future<void> ejectExternalDevice({required String id, required String bus}) {
+    return _systemApi.ejectExternalDevice(id: id, bus: bus);
   }
 
   @override

@@ -1,4 +1,5 @@
 import '../entities/external_access.dart';
+import '../entities/external_device.dart';
 import '../entities/index_service.dart';
 import '../entities/information_center.dart';
 import '../entities/system_status.dart';
@@ -26,4 +27,8 @@ abstract class SystemRepository {
   Future<void> runScheduledTask({required int id, required String type, required String name});
 
   Future<void> setScheduledTaskEnabled({required int id, required bool enabled});
+
+  Future<List<ExternalDevice>> fetchExternalDevices();
+
+  Future<void> ejectExternalDevice({required String id, required String bus});
 }
