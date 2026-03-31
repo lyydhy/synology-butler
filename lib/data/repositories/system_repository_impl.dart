@@ -1,4 +1,6 @@
 ﻿import '../../core/network/app_dio.dart';
+import '../../domain/entities/dsm_group.dart';
+import '../../domain/entities/dsm_user.dart';
 import '../../domain/entities/external_access.dart';
 import '../../domain/entities/external_device.dart';
 import '../../domain/entities/index_service.dart';
@@ -264,6 +266,36 @@ class SystemRepositoryImpl implements SystemRepository {
             recycleBinEnabled: item.recycleBinEnabled,
             encrypted: item.encrypted,
             usageText: item.usageText,
+          ),
+        )
+        .toList();
+  }
+
+  @override
+  Future<List<DsmUser>> fetchUsers() async {
+    final models = await _systemApi.fetchUsers();
+    return models
+        .map(
+          (item) => DsmUser(
+            name: item.name,
+            description: item.description,
+            email: item.email,
+            status: item.status,
+            isExpired: item.isExpired,
+          ),
+        )
+        .toList();
+  }
+
+  @override
+  Future<List<DsmGroup>> fetchGroups() async {
+    final models = await _systemApi.fetchGroups();
+    return models
+        .map(
+          (item) => DsmGroup(
+            name: item.name,
+            description: item.description,
+            memberCount: item.memberCount,
           ),
         )
         .toList();

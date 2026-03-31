@@ -8,6 +8,8 @@ import 'package:flutter/foundation.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/network/app_dio.dart';
 import '../../core/utils/dsm_logger.dart';
+import '../models/dsm_group_model.dart';
+import '../models/dsm_user_model.dart';
 import '../models/external_access_model.dart';
 import '../models/external_device_model.dart';
 import '../models/index_service_model.dart';
@@ -46,6 +48,10 @@ abstract class SystemApi {
   Future<void> ejectExternalDevice({required String id, required String bus});
 
   Future<List<SharedFolderModel>> fetchSharedFolders();
+
+  Future<List<DsmUserModel>> fetchUsers();
+
+  Future<List<DsmGroupModel>> fetchGroups();
 }
 
 class DsmSystemApi implements SystemApi {
@@ -405,6 +411,80 @@ class DsmSystemApi implements SystemApi {
         .toList();
 
     return shares;
+  }
+
+  @override
+  Future<List<DsmUserModel>> fetchUsers() async {
+    final client = _dio;
+    final response = await client.post(
+      '/webapi/entry.cgi',
+      data: {
+        'api': 'SYNO.Core.User',
+        'method': 'list',
+        'version': '1',
+        'offset': '0',
+        'limit': '-1',
+        'additional': jsonEncode(['email', 'description', 'expired']),
+      },
+      options: Options(contentType: Headers.formUrlEncodedContentType),
+    );
+
+    if (!(response.data is Map && response.data['success'] == true)) {
+      throw Exception(response.data is Map ? response.data['error']?.toString() ?? '加载用户列表失败' : '加载用户列表失败');
+    }
+
+    final data = response.data['data'] as Map? ?? const {};
+    final users = ((data['users'] as List?) ?? const [])
+        .whereType<Map>()
+        .map(
+          (item) => DsmUserModel(
+            name: (item['name'] ?? '').toString(),
+            description: (item['description'] ?? '').toString(),
+            email: (item['email'] ?? '').toString(),
+            status: (item['expired'] ?? 'normal').toString(),
+            isExpired: item['expired'] != 'normal' && item['expired'] != null,
+          ),
+        )
+        .where((item) => item.name.isNotEmpty)
+        .toList();
+
+    return users;
+  }
+
+  @override
+  Future<List<DsmGroupModel>> fetchGroups() async {
+    final client = _dio;
+    final response = await client.post(
+      '/webapi/entry.cgi',
+      data: {
+        'api': 'SYNO.Core.Group',
+        'method': 'list',
+        'version': '1',
+        'offset': '0',
+        'limit': '-1',
+        'name_only': 'false',
+      },
+      options: Options(contentType: Headers.formUrlEncodedContentType),
+    );
+
+    if (!(response.data is Map && response.data['success'] == true)) {
+      throw Exception(response.data is Map ? response.data['error']?.toString() ?? '加载群组列表失败' : '加载群组列表失败');
+    }
+
+    final data = response.data['data'] as Map? ?? const {};
+    final groups = ((data['groups'] as List?) ?? const [])
+        .whereType<Map>()
+        .map(
+          (item) => DsmGroupModel(
+            name: (item['name'] ?? '').toString(),
+            description: (item['description'] ?? '').toString(),
+            memberCount: (item['members'] as List?)?.length ?? 0,
+          ),
+        )
+        .where((item) => item.name.isNotEmpty)
+        .toList();
+
+    return groups;
   }
 
   @override

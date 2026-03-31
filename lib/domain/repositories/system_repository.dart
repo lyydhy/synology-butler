@@ -1,3 +1,5 @@
+import '../entities/dsm_group.dart';
+import '../entities/dsm_user.dart';
 import '../entities/external_access.dart';
 import '../entities/external_device.dart';
 import '../entities/index_service.dart';
@@ -34,4 +36,8 @@ abstract class SystemRepository {
   Future<void> ejectExternalDevice({required String id, required String bus});
 
   Future<List<SharedFolder>> fetchSharedFolders();
+
+  Future<List<DsmUser>> fetchUsers();
+
+  Future<List<DsmGroup>> fetchGroups();
 }
