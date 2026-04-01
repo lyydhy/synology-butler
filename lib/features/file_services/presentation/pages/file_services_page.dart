@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/utils/l10n.dart';
+import '../../../../core/utils/toast.dart';
 import '../../../../core/widgets/app_error_state.dart';
 import '../../../../domain/entities/file_service.dart';
 import '../../../dashboard/presentation/providers/dashboard_providers.dart';
@@ -203,17 +204,9 @@ class _ServiceCard extends ConsumerWidget {
                           enabled: value,
                         );
                     ref.invalidate(fileServicesProvider);
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('${service.serviceName} 已${value ? "启用" : "禁用"}')),
-                      );
-                    }
+                    showSuccessToast('${service.serviceName} 已${value ? "启用" : "禁用"}');
                   } catch (e) {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('操作失败: $e')),
-                      );
-                    }
+                    showErrorToast('操作失败: $e');
                   }
                 },
               ),

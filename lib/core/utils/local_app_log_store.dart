@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';
@@ -71,7 +72,13 @@ class LocalAppLogStore {
     if (!await file.exists()) {
       return '';
     }
-    return file.readAsString();
+    final bytes = await file.readAsBytes();
+    try {
+      return utf8.decode(bytes);
+    } on FormatException {
+      // 遇到非法 UTF-8 字节时，用 replacementChar 替换
+      return utf8.decode(bytes, allowMalformed: true);
+    }
   }
 
   static Future<String> readSanitizedLogFile(String path) async {

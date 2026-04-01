@@ -248,6 +248,7 @@ class TransferController extends StateNotifier<List<TransferTask>> {
           progress: 1,
           receivedBytes: bytes.length,
           errorMessage: '$parentPath/$candidateName',
+          forcePersist: true,
         );
         // 显示上传完成通知
         await _notificationService.showCompleted(
@@ -260,7 +261,7 @@ class TransferController extends StateNotifier<List<TransferTask>> {
         final text = e.toString().toLowerCase();
         final looksLikeExists = text.contains('407') || text.contains('exist') || text.contains('already');
         if (!looksLikeExists) {
-          _update(id, status: TransferTaskStatus.failed, progress: 1, errorMessage: e.toString());
+          _update(id, status: TransferTaskStatus.failed, progress: 1, errorMessage: e.toString(), forcePersist: true);
           // 显示上传失败通知
           await _notificationService.showFailed(
             taskId: id,
@@ -276,7 +277,7 @@ class TransferController extends StateNotifier<List<TransferTask>> {
       }
     }
 
-    _update(id, status: TransferTaskStatus.failed, progress: 1, errorMessage: '上传重命名重试次数过多');
+    _update(id, status: TransferTaskStatus.failed, progress: 1, errorMessage: '上传重命名重试次数过多', forcePersist: true);
     // 显示上传失败通知
     await _notificationService.showFailed(
       taskId: id,
@@ -338,7 +339,7 @@ class TransferController extends StateNotifier<List<TransferTask>> {
           );
 
       _update(id, progress: 0.99);
-      _update(id, status: TransferTaskStatus.success, progress: 1, errorMessage: '已保存到 ${targetFile.path}');
+      _update(id, status: TransferTaskStatus.success, progress: 1, errorMessage: '已保存到 ${targetFile.path}', forcePersist: true);
       
       // 显示完成通知
       await _notificationService.showCompleted(
@@ -348,7 +349,7 @@ class TransferController extends StateNotifier<List<TransferTask>> {
         filePath: targetFile.path,
       );
     } catch (e) {
-      _update(id, status: TransferTaskStatus.failed, progress: 1, errorMessage: e.toString());
+      _update(id, status: TransferTaskStatus.failed, progress: 1, errorMessage: e.toString(), forcePersist: true);
       
       // 显示失败通知
       await _notificationService.showFailed(
@@ -390,6 +391,12 @@ class TransferController extends StateNotifier<List<TransferTask>> {
     return '$baseName ($index)$ext';
   }
 
+  /// 上次持久化的时间
+  DateTime _lastPersist = DateTime.now();
+  
+  /// 持久化节流间隔（毫秒）
+  static const int _persistThrottleMs = 1000;
+
   Future<void> _update(
     String id, {
     TransferTaskStatus? status,
@@ -397,6 +404,7 @@ class TransferController extends StateNotifier<List<TransferTask>> {
     int? receivedBytes,
     int? totalBytes,
     String? errorMessage,
+    bool forcePersist = false,
   }) async {
     state = [
       for (final task in state)
@@ -411,7 +419,17 @@ class TransferController extends StateNotifier<List<TransferTask>> {
         else
           task,
     ];
-    await _persist();
+    
+    // 节流持久化：只在状态变化或超过间隔时持久化
+    final now = DateTime.now();
+    final shouldPersist = forcePersist ||
+        status != null ||
+        now.difference(_lastPersist).inMilliseconds >= _persistThrottleMs;
+    
+    if (shouldPersist) {
+      _lastPersist = now;
+      await _persist();
+    }
   }
 }
 

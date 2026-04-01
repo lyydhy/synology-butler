@@ -2237,6 +2237,22 @@ class DsmSystemApi implements SystemApi {
       throw Exception('未知的服务名称: $serviceName');
     }
 
+    DsmLogger.request(
+      module: 'FileService',
+      action: 'setFileServiceEnabled',
+      method: 'POST',
+      path: _baseUrl,
+      sid: _sid,
+      synoToken: _synoToken,
+      cookieHeader: _cookieHeader,
+      extra: {
+        'serviceName': serviceName,
+        'enabled': enabled,
+        'api': config['api'],
+        'enable_key': config['enable_key'],
+      },
+    );
+
     try {
       final response = await client.post(
         '/webapi/entry.cgi',
@@ -2249,21 +2265,50 @@ class DsmSystemApi implements SystemApi {
         options: Options(contentType: Headers.formUrlEncodedContentType),
       );
 
-      if (response.data is Map && response.data['success'] != true) {
-        final error = response.data['error']?['message'] ?? '设置服务状态失败';
-        throw Exception(error);
+      final responseData = response.data;
+      
+      if (responseData is! Map || responseData['success'] != true) {
+        final errorData = responseData is Map ? responseData['error'] : null;
+        final errorMessage = errorData is Map 
+            ? (errorData['message'] ?? errorData['code'] ?? '设置服务状态失败')
+            : '设置服务状态失败';
+        
+        DsmLogger.failure(
+          module: 'FileService',
+          action: 'setFileServiceEnabled',
+          path: _baseUrl,
+          reason: errorMessage.toString(),
+          sid: _sid,
+          synoToken: _synoToken,
+          cookieHeader: _cookieHeader,
+          extra: {
+            'responseData': responseData,
+            'serviceName': serviceName,
+            'enabled': enabled,
+          },
+        );
+        
+        throw Exception(errorMessage.toString());
       }
 
       DsmLogger.success(
         module: 'FileService',
         action: 'setFileServiceEnabled',
+        path: _baseUrl,
         response: {'serviceName': serviceName, 'enabled': enabled},
       );
     } catch (e) {
+      if (e is Exception && e.toString().contains('设置服务状态')) {
+        rethrow;
+      }
       DsmLogger.failure(
         module: 'FileService',
         action: 'setFileServiceEnabled',
-        reason: '设置服务状态异常: $e',
+        path: _baseUrl,
+        reason: '请求异常: $e',
+        sid: _sid,
+        synoToken: _synoToken,
+        cookieHeader: _cookieHeader,
       );
       rethrow;
     }

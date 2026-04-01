@@ -28,6 +28,7 @@ dependencies:
   share_plus: ^10.1.2
   dayfl: ^2.0.0
   flutter_local_notifications: ^18.0.1
+  bot_toast: ^4.1.3
 
 dev_dependencies:
   flutter_test:
