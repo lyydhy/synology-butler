@@ -724,12 +724,7 @@ class DsmSystemApi implements SystemApi {
           _extractLanNetworks(networkData, ethernetData, gatewayListData);
       final externalDevices = _extractExternalDevices(usbData, esataData);
       final disks = _extractDisks(diskData);
-      final versionText = await _fetchUpgradeVersion(
-            client: client,
-            sid: connectionStore.session?.sid ?? '',
-            synoToken: connectionStore.session?.synoToken,
-          ) ??
-          _buildVersionText(infoData);
+      final versionText = _buildVersionText(infoData);
 
       int cpuCores = int.tryParse(infoData['cpu_cores']) ?? 0;
       double cpuClockSpeed = (_toInt(infoData['cpu_clock_speed']) ?? 0) / 1000;
@@ -890,17 +885,12 @@ class DsmSystemApi implements SystemApi {
       final resolvedVolumes =
           storagePollVolumes.isNotEmpty ? storagePollVolumes : mappedVolumes;
 
-      final upgradeVersionText = await _fetchUpgradeVersion(
-        client: client,
-        sid: connectionStore.session?.sid ?? '',
-        synoToken: connectionStore.session?.synoToken,
-      );
       final systemHealthUptime = await _fetchSystemHealthUptime(
         client: client,
         sid: connectionStore.session?.sid ?? '',
         synoToken: connectionStore.session?.synoToken,
       );
-      final versionText = upgradeVersionText ?? _buildVersionText(infoData);
+      final versionText = _buildVersionText(infoData);
       final resolvedStorageUsage =
           _resolveStorageUsage(totalSpace, resolvedVolumes);
 
@@ -1587,6 +1577,11 @@ class DsmSystemApi implements SystemApi {
     return 0;
   }
 
+  /// 检查 DSM 更新版本
+  ///
+  /// 返回可更新的版本号，如果没有更新返回 null。
+  /// 后续实现更新检查功能时使用。
+  // ignore: unused_element
   Future<String?> _fetchUpgradeVersion({
     required Dio client,
     required String sid,
