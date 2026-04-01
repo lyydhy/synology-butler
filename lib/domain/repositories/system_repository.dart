@@ -6,6 +6,7 @@ import '../entities/file_service.dart';
 import '../entities/index_service.dart';
 import '../entities/information_center.dart';
 import '../entities/network.dart';
+import '../entities/power_schedule_task.dart';
 import '../entities/power_status.dart';
 import '../entities/shared_folder.dart';
 import '../entities/system_status.dart';
@@ -76,4 +77,7 @@ abstract class SystemRepository {
     bool? poweronBeep,
     bool? poweroffBeep,
   });
+
+  /// 获取开关机计划
+  Future<List<PowerScheduleTask>> fetchPowerSchedule();
 }

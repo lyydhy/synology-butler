@@ -7,6 +7,7 @@ import '../../domain/entities/file_service.dart';
 import '../../domain/entities/index_service.dart';
 import '../../domain/entities/information_center.dart';
 import '../../domain/entities/network.dart';
+import '../../domain/entities/power_schedule_task.dart';
 import '../../domain/entities/power_status.dart';
 import '../../domain/entities/shared_folder.dart';
 import '../../domain/entities/system_status.dart';
@@ -422,5 +423,10 @@ class SystemRepositoryImpl implements SystemRepository {
       poweronBeep: poweronBeep,
       poweroffBeep: poweroffBeep,
     );
+  }
+
+  @override
+  Future<List<PowerScheduleTask>> fetchPowerSchedule() {
+    return _systemApi.fetchPowerSchedule();
   }
 }

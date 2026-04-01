@@ -10,6 +10,7 @@ import '../../core/network/app_dio.dart';
 import '../../core/utils/dsm_logger.dart';
 import '../../domain/entities/file_service.dart';
 import '../../domain/entities/network.dart';
+import '../../domain/entities/power_schedule_task.dart';
 import '../../domain/entities/power_status.dart';
 import '../../domain/entities/terminal_settings.dart';
 import '../../domain/entities/upgrade_status.dart';
@@ -94,6 +95,9 @@ abstract class SystemApi {
     bool? poweronBeep,
     bool? poweroffBeep,
   });
+
+  /// 获取开关机计划
+  Future<List<PowerScheduleTask>> fetchPowerSchedule();
 }
 
 class DsmSystemApi implements SystemApi {
@@ -2570,6 +2574,67 @@ class DsmSystemApi implements SystemApi {
         module: 'Power',
         action: 'setPowerSettings',
         reason: '设置电源选项异常: $e',
+      );
+      rethrow;
+    }
+  }
+
+  @override
+  Future<List<PowerScheduleTask>> fetchPowerSchedule() async {
+    final client = _dio;
+
+    try {
+      final response = await client.post(
+        '/webapi/entry.cgi',
+        data: {
+          'api': 'SYNO.Core.Hardware.PowerSchedule',
+          'method': 'load',
+          'version': 1,
+        },
+        options: Options(contentType: Headers.formUrlEncodedContentType),
+      );
+
+      if (response.data is Map && response.data['success'] == true) {
+        final data = response.data['data'] as Map<String, dynamic>?;
+        if (data == null) return [];
+
+        final tasks = <PowerScheduleTask>[];
+        
+        final powerOnTasks = data['poweron_tasks'] as List? ?? [];
+        for (final task in powerOnTasks) {
+          if (task is Map<String, dynamic>) {
+            tasks.add(PowerScheduleTask.fromJson(task, PowerScheduleType.powerOn));
+          }
+        }
+
+        final powerOffTasks = data['poweroff_tasks'] as List? ?? [];
+        for (final task in powerOffTasks) {
+          if (task is Map<String, dynamic>) {
+            tasks.add(PowerScheduleTask.fromJson(task, PowerScheduleType.powerOff));
+          }
+        }
+
+        // 按时间排序
+        tasks.sort((a, b) {
+          if (a.hour != b.hour) return a.hour.compareTo(b.hour);
+          return a.minute.compareTo(b.minute);
+        });
+
+        return tasks;
+      }
+
+      DsmLogger.failure(
+        module: 'Power',
+        action: 'fetchPowerSchedule',
+        response: response.data,
+        reason: '获取开关机计划失败',
+      );
+      return [];
+    } catch (e) {
+      DsmLogger.failure(
+        module: 'Power',
+        action: 'fetchPowerSchedule',
+        reason: '获取开关机计划异常: $e',
       );
       rethrow;
     }
