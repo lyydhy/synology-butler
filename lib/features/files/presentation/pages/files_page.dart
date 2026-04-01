@@ -7,12 +7,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/error/error_mapper.dart';
-import '../../../../core/utils/file_launcher.dart';
 import '../../../../core/utils/l10n.dart';
 import '../../../../core/utils/server_url_helper.dart';
 import '../../../../domain/entities/file_background_task.dart';
 import '../../../../domain/entities/file_item.dart';
-import '../../../../domain/entities/transfer_task.dart';
 import '../../../auth/presentation/providers/current_connection_readers.dart';
 import '../../../preferences/providers/preferences_providers.dart';
 import '../../../transfers/presentation/providers/transfer_providers.dart';
@@ -50,7 +48,6 @@ class _FilesPageState extends ConsumerState<FilesPage> {
   static const String _defaultSort = 'type';
 
   Timer? _pollTimer;
-  ProviderSubscription<List<TransferTask>>? _transferListener;
   ProviderSubscription<AsyncValue<List<FileBackgroundTask>>>? _backgroundTaskListener;
   Set<String> _lastBackgroundTaskIds = <String>{};
 
@@ -78,52 +75,6 @@ class _FilesPageState extends ConsumerState<FilesPage> {
       final connection = ref.read(currentConnectionProvider);
       if (!connection.hasSession || _selectionMode) return;
       ref.invalidate(fileListProvider(_fileQuery));
-    });
-
-    _transferListener = ref.listenManual<List<TransferTask>>(transferControllerProvider, (previous, next) {
-      if (!mounted) return;
-
-      final previousMap = {
-        for (final task in previous ?? const <TransferTask>[]) task.id: task,
-      };
-
-      TransferTask? finishedDownload;
-      for (final task in next) {
-        if (task.type != TransferTaskType.download) continue;
-        if (task.status != TransferTaskStatus.success) continue;
-
-        final oldTask = previousMap[task.id];
-        final wasSuccessBefore = oldTask?.status == TransferTaskStatus.success;
-        if (!wasSuccessBefore) {
-          finishedDownload = task;
-          break;
-        }
-      }
-
-      final task = finishedDownload;
-      if (task == null) return;
-
-      final messenger = ScaffoldMessenger.of(context);
-      messenger.hideCurrentSnackBar();
-      messenger.showSnackBar(
-        SnackBar(
-          duration: const Duration(seconds: 5),
-          content: Text(l10n.downloadTaskComplete(task.title)),
-          action: SnackBarAction(
-            label: l10n.open,
-            onPressed: () async {
-              try {
-                await FileLauncher.open(task.targetPath);
-              } catch (e) {
-                if (!mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(ErrorMapper.map(e).message)),
-                );
-              }
-            },
-          ),
-        ),
-      );
     });
 
     _backgroundTaskListener = ref.listenManual(fileBackgroundTasksProvider, (previous, next) {
@@ -167,7 +118,6 @@ class _FilesPageState extends ConsumerState<FilesPage> {
   @override
   void dispose() {
     _pollTimer?.cancel();
-    _transferListener?.close();
     _backgroundTaskListener?.close();
     super.dispose();
   }

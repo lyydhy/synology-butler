@@ -4,12 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
+import '../core/utils/l10n.dart';
+import '../domain/entities/transfer_task.dart';
 import '../features/auth/presentation/providers/auth_providers.dart';
 import '../features/dashboard/presentation/providers/dashboard_realtime_global.dart';
 import '../features/external_share/models/shared_incoming_file.dart';
 import '../features/external_share/services/external_share_pending_store.dart';
 import '../features/external_share/services/external_share_service.dart';
 import '../features/preferences/providers/preferences_providers.dart';
+import '../features/transfers/presentation/providers/download_event_provider.dart';
+import '../features/transfers/presentation/providers/transfer_providers.dart';
 import '../l10n/app_localizations.dart';
 import 'router.dart';
 import 'theme/app_theme.dart';
@@ -27,6 +31,9 @@ class _QunhuiManagerAppState extends ConsumerState<QunhuiManagerApp> {
   StreamSubscription? _externalShareSubscription;
   final ExternalSharePendingStore _pendingStore = const ExternalSharePendingStore();
   late final _router = createAppRouter(initialLocation: widget.initialLocation);
+
+  // 用于追踪上一次的下载任务状态
+  Map<String, TransferTaskStatus> _lastDownloadStatuses = {};
 
   @override
   void initState() {
@@ -53,6 +60,35 @@ class _QunhuiManagerAppState extends ConsumerState<QunhuiManagerApp> {
     await _pendingStore.save(file);
   }
 
+  void _handleDownloadCompleted(DownloadCompletedEvent event) {
+    if (!mounted) return;
+    final context = appNavigatorKey.currentContext;
+    if (context == null) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
+      SnackBar(
+        duration: const Duration(seconds: 5),
+        content: Text(l10n.downloadTaskComplete(event.fileName)),
+        action: SnackBarAction(
+          label: l10n.open,
+          onPressed: () async {
+            try {
+              // TODO: 打开文件
+              // await FileLauncher.open(event.filePath);
+            } catch (e) {
+              if (!mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(e.toString())),
+              );
+            }
+          },
+        ),
+      ),
+    );
+  }
+
   @override
   void dispose() {
     _externalShareSubscription?.cancel();
@@ -68,6 +104,58 @@ class _QunhuiManagerAppState extends ConsumerState<QunhuiManagerApp> {
     final _ = ref.watch(recoverSessionProvider);
     ref.watch(globalRealtimeOverviewProvider);
     final seedColor = seedColorFor(themeColor);
+
+    // 全局监听下载任务状态变化
+    ref.listenManual<List<TransferTask>>(transferControllerProvider, (previous, next) {
+      if (previous == null) {
+        // 首次加载，记录当前状态但不触发事件
+        _lastDownloadStatuses = {
+          for (final task in next)
+            if (task.type == TransferTaskType.download) task.id: task.status
+        };
+        return;
+      }
+
+      final newCompleted = <TransferTask>[];
+      for (final task in next) {
+        if (task.type != TransferTaskType.download) continue;
+        if (task.status != TransferTaskStatus.success) continue;
+
+        final lastStatus = _lastDownloadStatuses[task.id];
+        // 只有从 running -> success 才触发
+        if (lastStatus == TransferTaskStatus.running) {
+          newCompleted.add(task);
+        }
+      }
+
+      // 更新状态记录
+      _lastDownloadStatuses = {
+        for (final task in next)
+          if (task.type == TransferTaskType.download) task.id: task.status
+      };
+
+      // 触发第一个完成事件
+      if (newCompleted.isNotEmpty) {
+        final task = newCompleted.first;
+        ref.read(downloadCompletedEventProvider.notifier).state = DownloadCompletedEvent(
+          taskId: task.id,
+          fileName: task.title,
+          filePath: task.targetPath,
+          completedAt: DateTime.now(),
+        );
+      }
+    });
+
+    // 监听下载完成事件，弹出 SnackBar
+    ref.listenManual<DownloadCompletedEvent?>(downloadCompletedEventProvider, (previous, next) {
+      if (next != null) {
+        _handleDownloadCompleted(next);
+        // 清除事件，避免重复消费
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          ref.read(downloadCompletedEventProvider.notifier).state = null;
+        });
+      }
+    });
 
     return MaterialApp.router(
       title: '群晖管家',

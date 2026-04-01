@@ -16,6 +16,10 @@ import '../../../../data/repositories/auth_repository_impl.dart';
 import '../../../../domain/entities/nas_server.dart';
 import '../../../../domain/entities/nas_session.dart';
 import '../../../../domain/repositories/auth_repository.dart';
+import '../../../dashboard/presentation/providers/dashboard_providers.dart';
+import '../../../dashboard/presentation/providers/dashboard_realtime_global.dart';
+import '../../../information_center/presentation/providers/information_center_providers.dart';
+import '../../../packages/presentation/providers/package_providers.dart';
 
 final authApiProvider = Provider((ref) => DsmAuthApi());
 final localStorageProvider = Provider((ref) => LocalStorageService());
@@ -269,6 +273,14 @@ final switchCurrentServerProvider = Provider<Future<void> Function(NasServer)>((
   return (server) async {
     setServer(server);
     clearSession();
+
+    // 重置所有业务状态
+    ref.invalidate(dashboardBaseOverviewProvider);
+    ref.invalidate(globalRealtimeOverviewProvider);
+    ref.invalidate(informationCenterProvider);
+    ref.invalidate(installedPackagesProvider);
+    ref.invalidate(dockerFeatureInstalledProvider);
+
     final localStorage = ref.read(localStorageProvider);
     final secureStorage = ref.read(secureStorageProvider);
     await localStorage.writeString(AppConstants.savedCurrentServerIdKey, server.id);

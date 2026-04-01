@@ -74,7 +74,7 @@ final dashboardOverviewSafeProvider = Provider<AsyncValue<SystemStatus?>>((ref) 
         networkInterfaces: realtime.networkInterfaces,
         disks: realtime.disks,
         volumePerformances: realtime.volumePerformances,
-        volumes: realtime.volumes.isNotEmpty ? realtime.volumes : (base?.volumes ?? const []),
+        volumes: base?.volumes ?? const [],
         modelName: base?.modelName ?? realtime.modelName,
         serialNumber: base?.serialNumber ?? realtime.serialNumber,
         uptimeText: base?.uptimeText ?? realtime.uptimeText,
