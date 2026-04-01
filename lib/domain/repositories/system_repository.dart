@@ -49,6 +49,12 @@ abstract class SystemRepository {
 
   Future<FileServicesModel> fetchFileServices();
 
+  /// 设置文件服务启用状态
+  Future<void> setFileServiceEnabled({
+    required String serviceName,
+    required bool enabled,
+  });
+
   Future<NetworkModel> fetchNetwork();
 
   Future<UpgradeStatus> checkUpgrade();

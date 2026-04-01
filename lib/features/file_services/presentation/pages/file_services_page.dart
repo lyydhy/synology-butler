@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/l10n.dart';
 import '../../../../core/widgets/app_error_state.dart';
 import '../../../../domain/entities/file_service.dart';
+import '../../../dashboard/presentation/providers/dashboard_providers.dart';
 import '../providers/file_services_providers.dart';
 
 class FileServicesPage extends ConsumerWidget {
@@ -12,7 +13,6 @@ class FileServicesPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final servicesAsync = ref.watch(fileServicesProvider);
-    
 
     return Scaffold(
       appBar: AppBar(
@@ -128,13 +128,13 @@ class _SummaryCard extends StatelessWidget {
   }
 }
 
-class _ServiceCard extends StatelessWidget {
+class _ServiceCard extends ConsumerWidget {
   final FileServiceStatus service;
 
   const _ServiceCard({required this.service});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final color = service.enabled ? Colors.green : Colors.grey;
 
@@ -194,16 +194,28 @@ class _ServiceCard extends StatelessWidget {
                   ],
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  service.enabled ? 'ON' : 'OFF',
-                  style: theme.textTheme.labelMedium?.copyWith(color: color, fontWeight: FontWeight.w700),
-                ),
+              Switch(
+                value: service.enabled,
+                onChanged: (value) async {
+                  try {
+                    await ref.read(systemRepositoryProvider).setFileServiceEnabled(
+                          serviceName: service.serviceName,
+                          enabled: value,
+                        );
+                    ref.invalidate(fileServicesProvider);
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('${service.serviceName} 已${value ? "启用" : "禁用"}')),
+                      );
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('操作失败: $e')),
+                      );
+                    }
+                  }
+                },
               ),
             ],
           ),

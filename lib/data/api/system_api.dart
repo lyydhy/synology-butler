@@ -63,6 +63,12 @@ abstract class SystemApi {
   /// 获取文件服务状态（SMB、NFS、FTP、AFP、SFTP）
   Future<FileServicesModel> fetchFileServices();
 
+  /// 设置文件服务启用状态
+  Future<void> setFileServiceEnabled({
+    required String serviceName,
+    required bool enabled,
+  });
+
   /// 获取网络状态（常规、接口、代理、网关）
   Future<NetworkModel> fetchNetwork();
 
@@ -2208,6 +2214,59 @@ class DsmSystemApi implements SystemApi {
       afpData: results[3],
       sftpData: results[4],
     );
+  }
+
+  @override
+  Future<void> setFileServiceEnabled({
+    required String serviceName,
+    required bool enabled,
+  }) async {
+    final client = _dio;
+
+    // 服务名称到 API 的映射
+    final apiConfigs = {
+      'SMB': {'api': 'SYNO.Core.FileServ.SMB', 'version': 3, 'enable_key': 'enable_samba'},
+      'NFS': {'api': 'SYNO.Core.FileServ.NFS', 'version': 2, 'enable_key': 'enable_nfs'},
+      'FTP': {'api': 'SYNO.Core.FileServ.FTP', 'version': 3, 'enable_key': 'enable_ftp'},
+      'AFP': {'api': 'SYNO.Core.FileServ.AFP', 'version': 1, 'enable_key': 'enable_afp'},
+      'SFTP': {'api': 'SYNO.Core.FileServ.FTP.SFTP', 'version': 1, 'enable_key': 'enable'},
+    };
+
+    final config = apiConfigs[serviceName.toUpperCase()];
+    if (config == null) {
+      throw Exception('未知的服务名称: $serviceName');
+    }
+
+    try {
+      final response = await client.post(
+        '/webapi/entry.cgi',
+        data: {
+          'api': config['api'],
+          'method': 'set',
+          'version': config['version'],
+          config['enable_key']: enabled,
+        },
+        options: Options(contentType: Headers.formUrlEncodedContentType),
+      );
+
+      if (response.data is Map && response.data['success'] != true) {
+        final error = response.data['error']?['message'] ?? '设置服务状态失败';
+        throw Exception(error);
+      }
+
+      DsmLogger.success(
+        module: 'FileService',
+        action: 'setFileServiceEnabled',
+        response: {'serviceName': serviceName, 'enabled': enabled},
+      );
+    } catch (e) {
+      DsmLogger.failure(
+        module: 'FileService',
+        action: 'setFileServiceEnabled',
+        reason: '设置服务状态异常: $e',
+      );
+      rethrow;
+    }
   }
 
   @override

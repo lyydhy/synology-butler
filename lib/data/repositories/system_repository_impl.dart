@@ -368,6 +368,17 @@ class SystemRepositoryImpl implements SystemRepository {
   }
 
   @override
+  Future<void> setFileServiceEnabled({
+    required String serviceName,
+    required bool enabled,
+  }) {
+    return _systemApi.setFileServiceEnabled(
+      serviceName: serviceName,
+      enabled: enabled,
+    );
+  }
+
+  @override
   Future<NetworkModel> fetchNetwork() {
     return _systemApi.fetchNetwork();
   }
