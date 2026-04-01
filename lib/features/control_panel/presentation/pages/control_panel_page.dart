@@ -138,6 +138,12 @@ class ControlPanelPage extends ConsumerWidget {
                 subtitle: 'SSH 与 Telnet 服务',
                 onTap: () => context.push('/terminal'),
               ),
+              _PanelItem(
+                icon: Icons.power_settings_new_rounded,
+                title: '电源管理',
+                subtitle: '关机与重启',
+                onTap: () => context.push('/power'),
+              ),
             ],
           ),
         ],

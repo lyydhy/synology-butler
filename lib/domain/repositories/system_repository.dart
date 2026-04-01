@@ -58,4 +58,10 @@ abstract class SystemRepository {
     required bool telnetEnabled,
     required int sshPort,
   });
+
+  /// 关机
+  Future<void> shutdown({bool force = false});
+
+  /// 重启
+  Future<void> reboot({bool force = false});
 }

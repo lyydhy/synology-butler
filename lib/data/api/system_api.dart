@@ -76,6 +76,12 @@ abstract class SystemApi {
     required bool telnetEnabled,
     required int sshPort,
   });
+
+  /// 关机
+  Future<void> shutdown({bool force = false});
+
+  /// 重启
+  Future<void> reboot({bool force = false});
 }
 
 class DsmSystemApi implements SystemApi {
@@ -2353,6 +2359,80 @@ class DsmSystemApi implements SystemApi {
         module: 'Terminal',
         action: 'setTerminalSettings',
         reason: '设置终端异常: $e',
+      );
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> shutdown({bool force = false}) async {
+    final client = _dio;
+
+    try {
+      final response = await client.post(
+        '/webapi/entry.cgi',
+        data: {
+          'api': 'SYNO.Core.System',
+          'version': 1,
+          'method': 'shutdown',
+          'force': force,
+          'local': true,
+        },
+        options: Options(contentType: Headers.formUrlEncodedContentType),
+      );
+
+      if (response.data is Map && response.data['success'] != true) {
+        final error = response.data['error']?['message'] ?? '关机失败';
+        throw Exception(error);
+      }
+
+      DsmLogger.success(
+        module: 'System',
+        action: 'shutdown',
+        response: {'force': force},
+      );
+    } catch (e) {
+      DsmLogger.failure(
+        module: 'System',
+        action: 'shutdown',
+        reason: '关机异常: $e',
+      );
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> reboot({bool force = false}) async {
+    final client = _dio;
+
+    try {
+      final response = await client.post(
+        '/webapi/entry.cgi',
+        data: {
+          'api': 'SYNO.Core.System',
+          'version': 1,
+          'method': 'reboot',
+          'force': force,
+          'local': true,
+        },
+        options: Options(contentType: Headers.formUrlEncodedContentType),
+      );
+
+      if (response.data is Map && response.data['success'] != true) {
+        final error = response.data['error']?['message'] ?? '重启失败';
+        throw Exception(error);
+      }
+
+      DsmLogger.success(
+        module: 'System',
+        action: 'reboot',
+        response: {'force': force},
+      );
+    } catch (e) {
+      DsmLogger.failure(
+        module: 'System',
+        action: 'reboot',
+        reason: '重启异常: $e',
       );
       rethrow;
     }

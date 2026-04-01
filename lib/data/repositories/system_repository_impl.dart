@@ -392,4 +392,14 @@ class SystemRepositoryImpl implements SystemRepository {
       sshPort: sshPort,
     );
   }
+
+  @override
+  Future<void> shutdown({bool force = false}) {
+    return _systemApi.shutdown(force: force);
+  }
+
+  @override
+  Future<void> reboot({bool force = false}) {
+    return _systemApi.reboot(force: force);
+  }
 }

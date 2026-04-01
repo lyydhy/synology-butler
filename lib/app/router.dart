@@ -31,6 +31,7 @@ import '../features/information_center/presentation/pages/information_center_pag
 import '../features/packages/presentation/pages/package_detail_page.dart';
 import '../features/packages/presentation/pages/packages_page.dart';
 import '../features/performance/presentation/pages/performance_page.dart';
+import '../features/power/presentation/pages/power_page.dart';
 import '../features/server-management/presentation/pages/server_management_page.dart';
 import '../features/shell/main_shell_page.dart';
 import '../features/task_scheduler/presentation/pages/task_scheduler_page.dart';
@@ -62,6 +63,7 @@ GoRouter createAppRouter({required String initialLocation}) {
     GoRoute(path: '/file-services', builder: (context, state) => const FileServicesPage()),
     GoRoute(path: '/network', builder: (context, state) => const NetworkPage()),
     GoRoute(path: '/terminal', builder: (context, state) => const TerminalPage()),
+    GoRoute(path: '/power', builder: (context, state) => const PowerPage()),
     GoRoute(path: '/upgrade', builder: (context, state) => const UpgradePage()),
     GoRoute(path: '/packages', builder: (context, state) => const PackagesPage()),
     GoRoute(path: '/performance', builder: (context, state) => const PerformancePage()),
