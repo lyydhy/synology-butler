@@ -35,33 +35,49 @@ class NetworkModel {
       if (item['success'] != true) continue;
 
       final api = item['api'] as String?;
-      final data = item['data'] as Map<String, dynamic>?;
+      final data = item['data'];
 
       if (data == null) continue;
 
       switch (api) {
         case 'SYNO.Core.Network':
-          general = NetworkGeneral.fromJson(data);
+          if (data is Map<String, dynamic>) {
+            general = NetworkGeneral.fromJson(data);
+          }
           break;
         case 'SYNO.Core.Network.Ethernet':
-          if (data['ethernets'] is List) {
+          // data 可能直接是 List，也可能是 Map 中的 'ethernets'
+          if (data is List) {
+            ethernets = data
+                .map((e) => NetworkInterface.fromJson(e as Map<String, dynamic>))
+                .toList();
+          } else if (data is Map<String, dynamic> && data['ethernets'] is List) {
             ethernets = (data['ethernets'] as List)
                 .map((e) => NetworkInterface.fromJson(e as Map<String, dynamic>))
                 .toList();
           }
           break;
         case 'SYNO.Core.Network.PPPoE':
-          if (data['pppoes'] is List) {
+          // data 可能直接是 List，也可能是 Map 中的 'pppoes'
+          if (data is List) {
+            pppoes = data
+                .map((e) => NetworkInterface.fromJson(e as Map<String, dynamic>))
+                .toList();
+          } else if (data is Map<String, dynamic> && data['pppoes'] is List) {
             pppoes = (data['pppoes'] as List)
                 .map((e) => NetworkInterface.fromJson(e as Map<String, dynamic>))
                 .toList();
           }
           break;
         case 'SYNO.Core.Network.Proxy':
-          proxy = ProxySettings.fromJson(data);
+          if (data is Map<String, dynamic>) {
+            proxy = ProxySettings.fromJson(data);
+          }
           break;
         case 'SYNO.Core.Network.Router.Gateway.List':
-          gateway = GatewayInfo.fromJson(data);
+          if (data is Map<String, dynamic>) {
+            gateway = GatewayInfo.fromJson(data);
+          }
           break;
       }
     }
