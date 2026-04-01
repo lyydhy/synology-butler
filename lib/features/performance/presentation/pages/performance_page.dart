@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/widgets/sliding_tab_bar.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../domain/entities/system_status.dart';
 import '../../../auth/presentation/providers/current_connection_readers.dart';
 import '../../../dashboard/presentation/providers/dashboard_providers.dart';
@@ -68,6 +69,7 @@ class _PerformancePageState extends ConsumerState<PerformancePage> with SingleTi
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final connection = ref.watch(currentConnectionProvider);
     final currentSession = connection.session;
     final overview = ref.watch(dashboardOverviewSafeProvider);
@@ -77,18 +79,18 @@ class _PerformancePageState extends ConsumerState<PerformancePage> with SingleTi
 
     if (currentSession == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('性能监控')),
-        body: const Center(child: Text('当前没有可用会话，请先登录')),
+        appBar: AppBar(title: Text(l10n.performanceMonitor)),
+        body: Center(child: Text(l10n.noSessionPleaseLogin)),
       );
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('性能监控'),
+        title: Text(l10n.performanceMonitor),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
-            tooltip: '清除历史并刷新',
+            tooltip: l10n.clearHistoryAndRefresh,
             onPressed: _clearHistory,
           ),
         ],
@@ -101,13 +103,13 @@ class _PerformancePageState extends ConsumerState<PerformancePage> with SingleTi
               height: 54,
               iconSize: 18,
               fontSize: 13,
-              tabs: const [
-                SlidingTabItem(icon: Icons.dashboard_outlined, label: '概览'),
-                SlidingTabItem(icon: Icons.memory_outlined, label: 'CPU'),
-                SlidingTabItem(icon: Icons.developer_board_outlined, label: '内存'),
-                SlidingTabItem(icon: Icons.swap_vert_rounded, label: '网络'),
-                SlidingTabItem(icon: Icons.album_outlined, label: '磁盘'),
-                SlidingTabItem(icon: Icons.storage_rounded, label: '存储'),
+              tabs: [
+                SlidingTabItem(icon: Icons.dashboard_outlined, label: l10n.overview),
+                SlidingTabItem(icon: Icons.memory_outlined, label: l10n.cpu),
+                SlidingTabItem(icon: Icons.developer_board_outlined, label: l10n.memory),
+                SlidingTabItem(icon: Icons.swap_vert_rounded, label: l10n.network),
+                SlidingTabItem(icon: Icons.album_outlined, label: l10n.disk),
+                SlidingTabItem(icon: Icons.storage_rounded, label: l10n.storage),
               ],
             ),
           ),
@@ -115,7 +117,7 @@ class _PerformancePageState extends ConsumerState<PerformancePage> with SingleTi
       ),
       body: overview.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('加载失败: $e')),
+        error: (e, _) => Center(child: Text(l10n.loadFailed(e.toString()))),
         data: (_) => TabBarView(
           controller: _tabController,
           children: [

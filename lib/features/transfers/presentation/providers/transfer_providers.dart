@@ -85,6 +85,8 @@ class TransferController extends StateNotifier<List<TransferTask>> {
       sourcePath: fileName,
       targetPath: parentPath,
       progress: 0,
+      totalBytes: bytes.length,
+      receivedBytes: 0,
       createdAt: DateTime.now(),
     );
     state = [task, ...state];
@@ -95,6 +97,7 @@ class TransferController extends StateNotifier<List<TransferTask>> {
   Future<void> enqueueDownload({
     required String remotePath,
     required String displayName,
+    int? estimatedSize,
   }) async {
     final targetDir = await _resolveDownloadDirectory();
     final targetFile = await _resolveUniqueFile(targetDir, displayName);
@@ -107,6 +110,8 @@ class TransferController extends StateNotifier<List<TransferTask>> {
       sourcePath: remotePath,
       targetPath: targetFile.path,
       progress: 0,
+      totalBytes: estimatedSize ?? 0,
+      receivedBytes: 0,
       createdAt: DateTime.now(),
     );
     state = [task, ...state];
@@ -121,6 +126,21 @@ class TransferController extends StateNotifier<List<TransferTask>> {
   }
 
   Future<void> retryTask(TransferTask task) async {
+    // 先删除旧记录
+    state = state.where((t) => t.id != task.id).toList();
+    await _persist();
+
+    // 如果是下载任务，删除本地临时文件
+    if (task.type == TransferTaskType.download) {
+      final file = File(task.targetPath);
+      if (await file.exists()) {
+        try {
+          await file.delete();
+        } catch (_) {}
+      }
+    }
+
+    // 创建新任务
     final retryId = _id();
     final retryTask = TransferTask(
       id: retryId,
@@ -130,6 +150,8 @@ class TransferController extends StateNotifier<List<TransferTask>> {
       sourcePath: task.sourcePath,
       targetPath: task.targetPath,
       progress: 0,
+      receivedBytes: 0,
+      totalBytes: task.totalBytes,
       createdAt: DateTime.now(),
     );
     state = [retryTask, ...state];
@@ -149,10 +171,34 @@ class TransferController extends StateNotifier<List<TransferTask>> {
         errorMessage: '上传任务暂不支持从传输页直接重试，请回到文件页重新选择上传',
       );
     }).toList();
+    await _persist();
   }
 
-  Future<void> removeTask(String id) async {
-    state = state.where((task) => task.id != id).toList();
+  Future<void> removeTask(String id, {bool deleteFile = false}) async {
+    final task = state.firstWhere((t) => t.id == id, orElse: () => throw StateError('Task not found'));
+
+    // 如果正在下载，标记为取消
+    if (task.status == TransferTaskStatus.running || task.status == TransferTaskStatus.queued) {
+      // 删除本地临时文件
+      if (task.type == TransferTaskType.download) {
+        final file = File(task.targetPath);
+        if (await file.exists()) {
+          try {
+            await file.delete();
+          } catch (_) {}
+        }
+      }
+    } else if (deleteFile && task.type == TransferTaskType.download && task.status == TransferTaskStatus.success) {
+      // 已完成的下载，如果指定删除文件
+      final file = File(task.targetPath);
+      if (await file.exists()) {
+        try {
+          await file.delete();
+        } catch (_) {}
+      }
+    }
+
+    state = state.where((t) => t.id != id).toList();
     await _persist();
   }
 
@@ -172,7 +218,7 @@ class TransferController extends StateNotifier<List<TransferTask>> {
     required String fileName,
     required Uint8List bytes,
   }) async {
-    _update(id, status: TransferTaskStatus.running, progress: 0.1);
+    _update(id, status: TransferTaskStatus.running, progress: 0.1, receivedBytes: 0, totalBytes: bytes.length);
 
     var candidateName = fileName;
     for (var attempt = 0; attempt < 20; attempt++) {
@@ -182,6 +228,7 @@ class TransferController extends StateNotifier<List<TransferTask>> {
           id,
           status: TransferTaskStatus.success,
           progress: 1,
+          receivedBytes: bytes.length,
           errorMessage: '$parentPath/$candidateName',
         );
         return;
@@ -212,9 +259,12 @@ class TransferController extends StateNotifier<List<TransferTask>> {
             path: remotePath,
             localPath: targetFile.path,
             onReceiveProgress: (received, total) {
-              if (total <= 0) return;
-              final progress = received / total;
-              _update(id, progress: progress.clamp(0.0, 0.98));
+              if (total <= 0) {
+                _update(id, progress: 0.1, receivedBytes: received, totalBytes: 0);
+              } else {
+                final progress = received / total;
+                _update(id, progress: progress.clamp(0.0, 0.98), receivedBytes: received, totalBytes: total);
+              }
             },
           );
 
@@ -259,6 +309,8 @@ class TransferController extends StateNotifier<List<TransferTask>> {
     String id, {
     TransferTaskStatus? status,
     double? progress,
+    int? receivedBytes,
+    int? totalBytes,
     String? errorMessage,
   }) async {
     state = [
@@ -267,6 +319,8 @@ class TransferController extends StateNotifier<List<TransferTask>> {
           task.copyWith(
             status: status,
             progress: progress,
+            receivedBytes: receivedBytes,
+            totalBytes: totalBytes,
             errorMessage: errorMessage,
           )
         else

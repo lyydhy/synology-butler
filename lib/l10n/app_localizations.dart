@@ -1985,13 +1985,13 @@ abstract class AppLocalizations {
   /// No description provided for @deleteCompleted.
   ///
   /// In zh, this message translates to:
-  /// **'删除已完成'**
+  /// **'清除已完成'**
   String get deleteCompleted;
 
   /// No description provided for @deleteFailedRecords.
   ///
   /// In zh, this message translates to:
-  /// **'删除失败记录'**
+  /// **'清除失败记录'**
   String get deleteFailedRecords;
 
   /// No description provided for @openedWithSystem.
@@ -2041,6 +2041,12 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'容器管理'**
   String get containerManagement;
+
+  /// No description provided for @containerAll.
+  ///
+  /// In zh, this message translates to:
+  /// **'全部'**
+  String get containerAll;
 
   /// No description provided for @containerRunning.
   ///
@@ -2137,6 +2143,222 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'查看'**
   String get viewAction;
+
+  /// No description provided for @performanceMonitor.
+  ///
+  /// In zh, this message translates to:
+  /// **'性能监控'**
+  String get performanceMonitor;
+
+  /// No description provided for @clearHistoryAndRefresh.
+  ///
+  /// In zh, this message translates to:
+  /// **'清除历史并刷新'**
+  String get clearHistoryAndRefresh;
+
+  /// No description provided for @overview.
+  ///
+  /// In zh, this message translates to:
+  /// **'概览'**
+  String get overview;
+
+  /// No description provided for @network.
+  ///
+  /// In zh, this message translates to:
+  /// **'网络'**
+  String get network;
+
+  /// No description provided for @disk.
+  ///
+  /// In zh, this message translates to:
+  /// **'磁盘'**
+  String get disk;
+
+  /// No description provided for @loadFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'加载失败: {error}'**
+  String loadFailed(Object error);
+
+  /// No description provided for @connectionManagement.
+  ///
+  /// In zh, this message translates to:
+  /// **'连接管理'**
+  String get connectionManagement;
+
+  /// No description provided for @noSavedDevices.
+  ///
+  /// In zh, this message translates to:
+  /// **'还没有保存的设备'**
+  String get noSavedDevices;
+
+  /// No description provided for @addDeviceHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'先添加一个 NAS 连接，后面就可以在这里快速切换。'**
+  String get addDeviceHint;
+
+  /// No description provided for @addNewConnection.
+  ///
+  /// In zh, this message translates to:
+  /// **'添加新连接'**
+  String get addNewConnection;
+
+  /// No description provided for @savedConnections.
+  ///
+  /// In zh, this message translates to:
+  /// **'已保存的连接'**
+  String get savedConnections;
+
+  /// No description provided for @noCurrentDevice.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前未连接设备'**
+  String get noCurrentDevice;
+
+  /// No description provided for @currentDeviceName.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前设备：{name}'**
+  String currentDeviceName(Object name);
+
+  /// No description provided for @confirmDeleteDevice.
+  ///
+  /// In zh, this message translates to:
+  /// **'确定要删除设备「{name}」吗？'**
+  String confirmDeleteDevice(Object name);
+
+  /// No description provided for @recentTransfers.
+  ///
+  /// In zh, this message translates to:
+  /// **'最近传输'**
+  String get recentTransfers;
+
+  /// No description provided for @noTransfersHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'还没有任务，新的上传和下载会显示在这里'**
+  String get noTransfersHint;
+
+  /// No description provided for @transfersHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'优先看进行中和失败任务，已完成记录可以随时清理'**
+  String get transfersHint;
+
+  /// No description provided for @noTransfersInFilter.
+  ///
+  /// In zh, this message translates to:
+  /// **'这个筛选下暂时没有传输任务'**
+  String get noTransfersInFilter;
+
+  /// No description provided for @transfersAppearHere.
+  ///
+  /// In zh, this message translates to:
+  /// **'新的上传、下载、失败重试都会出现在这里。'**
+  String get transfersAppearHere;
+
+  /// No description provided for @upload.
+  ///
+  /// In zh, this message translates to:
+  /// **'上传'**
+  String get upload;
+
+  /// No description provided for @statusQueued.
+  ///
+  /// In zh, this message translates to:
+  /// **'排队中'**
+  String get statusQueued;
+
+  /// No description provided for @statusRunning.
+  ///
+  /// In zh, this message translates to:
+  /// **'进行中'**
+  String get statusRunning;
+
+  /// No description provided for @statusCompleted.
+  ///
+  /// In zh, this message translates to:
+  /// **'已完成'**
+  String get statusCompleted;
+
+  /// No description provided for @statusFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'失败'**
+  String get statusFailed;
+
+  /// No description provided for @uploadTo.
+  ///
+  /// In zh, this message translates to:
+  /// **'上传到 {path}'**
+  String uploadTo(Object path);
+
+  /// No description provided for @saveTo.
+  ///
+  /// In zh, this message translates to:
+  /// **'保存到 {path}'**
+  String saveTo(Object path);
+
+  /// No description provided for @moreActions.
+  ///
+  /// In zh, this message translates to:
+  /// **'更多操作'**
+  String get moreActions;
+
+  /// No description provided for @collapseDetails.
+  ///
+  /// In zh, this message translates to:
+  /// **'收起详情'**
+  String get collapseDetails;
+
+  /// No description provided for @viewDetails.
+  ///
+  /// In zh, this message translates to:
+  /// **'查看详情'**
+  String get viewDetails;
+
+  /// No description provided for @copyErrorReason.
+  ///
+  /// In zh, this message translates to:
+  /// **'复制失败原因'**
+  String get copyErrorReason;
+
+  /// No description provided for @copyPath.
+  ///
+  /// In zh, this message translates to:
+  /// **'复制路径'**
+  String get copyPath;
+
+  /// No description provided for @errorCopied.
+  ///
+  /// In zh, this message translates to:
+  /// **'失败原因已复制'**
+  String get errorCopied;
+
+  /// No description provided for @copyReason.
+  ///
+  /// In zh, this message translates to:
+  /// **'复制原因'**
+  String get copyReason;
+
+  /// No description provided for @removeRecordAndFile.
+  ///
+  /// In zh, this message translates to:
+  /// **'删除记录和文件'**
+  String get removeRecordAndFile;
+
+  /// No description provided for @resultLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'结果：{message}'**
+  String resultLabel(Object message);
+
+  /// No description provided for @reasonLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'原因：{message}'**
+  String reasonLabel(Object message);
 }
 
 class _AppLocalizationsDelegate

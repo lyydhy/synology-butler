@@ -589,5 +589,80 @@
       "ports": {}
     }
   },
-  "viewAction": "View"
+  "viewAction": "View",
+  "performanceMonitor": "Performance Monitor",
+  "clearHistoryAndRefresh": "Clear history and refresh",
+  "overview": "Overview",
+  "network": "Network",
+  "disk": "Disk",
+  "loadFailed": "Load failed: {error}",
+  "@loadFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "connectionManagement": "Connection Management",
+  "noSavedDevices": "No saved devices",
+  "addDeviceHint": "Add a NAS connection first, then you can quickly switch here.",
+  "addNewConnection": "Add New Connection",
+  "savedConnections": "Saved Connections",
+  "noCurrentDevice": "No device connected",
+  "currentDeviceName": "Current device: {name}",
+  "@currentDeviceName": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "confirmDeleteDevice": "Are you sure you want to delete device \"{name}\"?",
+  "@confirmDeleteDevice": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "recentTransfers": "Recent Transfers",
+  "noTransfersHint": "No tasks yet. New uploads and downloads will appear here.",
+  "transfersHint": "Check active and failed tasks first. Completed records can be cleared anytime.",
+  "deleteCompleted": "Clear Completed",
+  "deleteFailedRecords": "Clear Failed Records",
+  "noTransfersInFilter": "No transfer tasks in this filter",
+  "transfersAppearHere": "New uploads, downloads, and retries will appear here.",
+  "upload": "Upload",
+  "download": "Download",
+  "statusQueued": "Queued",
+  "statusRunning": "Running",
+  "statusCompleted": "Completed",
+  "statusFailed": "Failed",
+  "uploadTo": "Upload to {path}",
+  "@uploadTo": {
+    "placeholders": {
+      "path": {}
+    }
+  },
+  "saveTo": "Save to {path}",
+  "@saveTo": {
+    "placeholders": {
+      "path": {}
+    }
+  },
+  "moreActions": "More actions",
+  "collapseDetails": "Collapse details",
+  "viewDetails": "View details",
+  "copyErrorReason": "Copy error reason",
+  "copyPath": "Copy path",
+  "errorCopied": "Error reason copied",
+  "pathCopied": "Path copied",
+  "copyReason": "Copy reason",
+  "removeRecordAndFile": "Delete record and file",
+  "resultLabel": "Result: {message}",
+  "@resultLabel": {
+    "placeholders": {
+      "message": {}
+    }
+  },
+  "reasonLabel": "Reason: {message}",
+  "@reasonLabel": {
+    "placeholders": {
+      "message": {}
+    }
+  }
 }

@@ -590,5 +590,80 @@
       "ports": {}
     }
   },
-  "viewAction": "查看"
+  "viewAction": "查看",
+  "performanceMonitor": "性能监控",
+  "clearHistoryAndRefresh": "清除历史并刷新",
+  "overview": "概览",
+  "network": "网络",
+  "disk": "磁盘",
+  "loadFailed": "加载失败: {error}",
+  "@loadFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "connectionManagement": "连接管理",
+  "noSavedDevices": "还没有保存的设备",
+  "addDeviceHint": "先添加一个 NAS 连接，后面就可以在这里快速切换。",
+  "addNewConnection": "添加新连接",
+  "savedConnections": "已保存的连接",
+  "noCurrentDevice": "当前未连接设备",
+  "currentDeviceName": "当前设备：{name}",
+  "@currentDeviceName": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "confirmDeleteDevice": "确定要删除设备「{name}」吗？",
+  "@confirmDeleteDevice": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "recentTransfers": "最近传输",
+  "noTransfersHint": "还没有任务，新的上传和下载会显示在这里",
+  "transfersHint": "优先看进行中和失败任务，已完成记录可以随时清理",
+  "deleteCompleted": "清除已完成",
+  "deleteFailedRecords": "清除失败记录",
+  "noTransfersInFilter": "这个筛选下暂时没有传输任务",
+  "transfersAppearHere": "新的上传、下载、失败重试都会出现在这里。",
+  "upload": "上传",
+  "download": "下载",
+  "statusQueued": "排队中",
+  "statusRunning": "进行中",
+  "statusCompleted": "已完成",
+  "statusFailed": "失败",
+  "uploadTo": "上传到 {path}",
+  "@uploadTo": {
+    "placeholders": {
+      "path": {}
+    }
+  },
+  "saveTo": "保存到 {path}",
+  "@saveTo": {
+    "placeholders": {
+      "path": {}
+    }
+  },
+  "moreActions": "更多操作",
+  "collapseDetails": "收起详情",
+  "viewDetails": "查看详情",
+  "copyErrorReason": "复制失败原因",
+  "copyPath": "复制路径",
+  "errorCopied": "失败原因已复制",
+  "pathCopied": "路径已复制",
+  "copyReason": "复制原因",
+  "removeRecordAndFile": "删除记录和文件",
+  "resultLabel": "结果：{message}",
+  "@resultLabel": {
+    "placeholders": {
+      "message": {}
+    }
+  },
+  "reasonLabel": "原因：{message}",
+  "@reasonLabel": {
+    "placeholders": {
+      "message": {}
+    }
+  }
 }

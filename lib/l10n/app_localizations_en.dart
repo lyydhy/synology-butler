@@ -1047,10 +1047,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get filterFailed => 'Failed';
 
   @override
-  String get deleteCompleted => 'Delete Completed';
+  String get deleteCompleted => 'Clear Completed';
 
   @override
-  String get deleteFailedRecords => 'Delete Failed Records';
+  String get deleteFailedRecords => 'Clear Failed Records';
 
   @override
   String get openedWithSystem => 'Opened with system handler';
@@ -1081,6 +1081,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get containerManagement => 'Container Management';
+
+  @override
+  String get containerAll => '全部';
 
   @override
   String get containerRunning => 'Running';
@@ -1131,4 +1134,130 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get viewAction => 'View';
+
+  @override
+  String get performanceMonitor => 'Performance Monitor';
+
+  @override
+  String get clearHistoryAndRefresh => 'Clear history and refresh';
+
+  @override
+  String get overview => 'Overview';
+
+  @override
+  String get network => 'Network';
+
+  @override
+  String get disk => 'Disk';
+
+  @override
+  String loadFailed(Object error) {
+    return 'Load failed: $error';
+  }
+
+  @override
+  String get connectionManagement => 'Connection Management';
+
+  @override
+  String get noSavedDevices => 'No saved devices';
+
+  @override
+  String get addDeviceHint =>
+      'Add a NAS connection first, then you can quickly switch here.';
+
+  @override
+  String get addNewConnection => 'Add New Connection';
+
+  @override
+  String get savedConnections => 'Saved Connections';
+
+  @override
+  String get noCurrentDevice => 'No device connected';
+
+  @override
+  String currentDeviceName(Object name) {
+    return 'Current device: $name';
+  }
+
+  @override
+  String confirmDeleteDevice(Object name) {
+    return 'Are you sure you want to delete device \"$name\"?';
+  }
+
+  @override
+  String get recentTransfers => 'Recent Transfers';
+
+  @override
+  String get noTransfersHint =>
+      'No tasks yet. New uploads and downloads will appear here.';
+
+  @override
+  String get transfersHint =>
+      'Check active and failed tasks first. Completed records can be cleared anytime.';
+
+  @override
+  String get noTransfersInFilter => 'No transfer tasks in this filter';
+
+  @override
+  String get transfersAppearHere =>
+      'New uploads, downloads, and retries will appear here.';
+
+  @override
+  String get upload => 'Upload';
+
+  @override
+  String get statusQueued => 'Queued';
+
+  @override
+  String get statusRunning => 'Running';
+
+  @override
+  String get statusCompleted => 'Completed';
+
+  @override
+  String get statusFailed => 'Failed';
+
+  @override
+  String uploadTo(Object path) {
+    return 'Upload to $path';
+  }
+
+  @override
+  String saveTo(Object path) {
+    return 'Save to $path';
+  }
+
+  @override
+  String get moreActions => 'More actions';
+
+  @override
+  String get collapseDetails => 'Collapse details';
+
+  @override
+  String get viewDetails => 'View details';
+
+  @override
+  String get copyErrorReason => 'Copy error reason';
+
+  @override
+  String get copyPath => 'Copy path';
+
+  @override
+  String get errorCopied => 'Error reason copied';
+
+  @override
+  String get copyReason => 'Copy reason';
+
+  @override
+  String get removeRecordAndFile => 'Delete record and file';
+
+  @override
+  String resultLabel(Object message) {
+    return 'Result: $message';
+  }
+
+  @override
+  String reasonLabel(Object message) {
+    return 'Reason: $message';
+  }
 }

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/utils/l10n.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../auth/presentation/providers/current_connection_readers.dart';
 import '../widgets/server_edit_dialog.dart';
@@ -12,12 +12,12 @@ class ServerManagementPage extends ConsumerWidget {
   const ServerManagementPage({super.key});
 
   Future<bool> _confirmDelete(BuildContext context, String name) async {
-    
+    final l10n = AppLocalizations.of(context);
     return await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
             title: Text(l10n.deleteDevice),
-            content: Text('确定要删除设备“$name”吗？'),
+            content: Text(l10n.confirmDeleteDevice(name)),
             actions: [
               TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n.cancel)),
               FilledButton(onPressed: () => Navigator.of(context).pop(true), child: Text(l10n.deleteConfirm)),
@@ -28,7 +28,7 @@ class ServerManagementPage extends ConsumerWidget {
   }
 
   Future<void> _editServer(BuildContext context, WidgetRef ref, dynamic server) async {
-    
+    final l10n = AppLocalizations.of(context);
     final updated = await showDialog(
       context: context,
       builder: (context) => ServerEditDialog(server: server),
@@ -46,13 +46,13 @@ class ServerManagementPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final servers = ref.watch(savedServersProvider);
     final currentServer = ref.watch(currentConnectionProvider).server;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('连接管理')),
+      appBar: AppBar(title: Text(l10n.connectionManagement)),
       body: servers.isEmpty
           ? Center(
               child: Padding(
@@ -70,10 +70,10 @@ class ServerManagementPage extends ConsumerWidget {
                       child: Icon(Icons.dns_rounded, size: 34, color: theme.colorScheme.primary),
                     ),
                     const SizedBox(height: 20),
-                    Text('还没有保存的设备', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+                    Text(l10n.noSavedDevices, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
                     const SizedBox(height: 8),
                     Text(
-                      '先添加一个 NAS 连接，后面就可以在这里快速切换。',
+                      l10n.addDeviceHint,
                       textAlign: TextAlign.center,
                       style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                     ),
@@ -81,7 +81,7 @@ class ServerManagementPage extends ConsumerWidget {
                     FilledButton.icon(
                       onPressed: () => context.push('/login'),
                       icon: const Icon(Icons.add_rounded),
-                      label: const Text('添加新连接'),
+                      label: Text(l10n.addNewConnection),
                     ),
                   ],
                 ),
@@ -107,10 +107,10 @@ class ServerManagementPage extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('已保存的连接', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+                      Text(l10n.savedConnections, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
                       const SizedBox(height: 4),
                       Text(
-                        currentServer == null ? '当前未连接设备' : '当前设备：${currentServer.name}',
+                        currentServer == null ? l10n.noCurrentDevice : l10n.currentDeviceName(currentServer.name),
                         style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                       ),
                       const SizedBox(height: 12),
@@ -146,7 +146,7 @@ class ServerManagementPage extends ConsumerWidget {
                       OutlinedButton.icon(
                         onPressed: () => context.push('/login'),
                         icon: const Icon(Icons.add_rounded),
-                        label: const Text('添加新连接'),
+                        label: Text(l10n.addNewConnection),
                       ),
                     ],
                   ),

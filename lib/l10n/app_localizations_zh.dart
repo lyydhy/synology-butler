@@ -1027,10 +1027,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get filterFailed => '失败';
 
   @override
-  String get deleteCompleted => '删除已完成';
+  String get deleteCompleted => '清除已完成';
 
   @override
-  String get deleteFailedRecords => '删除失败记录';
+  String get deleteFailedRecords => '清除失败记录';
 
   @override
   String get openedWithSystem => '已调用系统打开方式';
@@ -1061,6 +1061,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get containerManagement => '容器管理';
+
+  @override
+  String get containerAll => '全部';
 
   @override
   String get containerRunning => '运行中';
@@ -1111,4 +1114,126 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get viewAction => '查看';
+
+  @override
+  String get performanceMonitor => '性能监控';
+
+  @override
+  String get clearHistoryAndRefresh => '清除历史并刷新';
+
+  @override
+  String get overview => '概览';
+
+  @override
+  String get network => '网络';
+
+  @override
+  String get disk => '磁盘';
+
+  @override
+  String loadFailed(Object error) {
+    return '加载失败: $error';
+  }
+
+  @override
+  String get connectionManagement => '连接管理';
+
+  @override
+  String get noSavedDevices => '还没有保存的设备';
+
+  @override
+  String get addDeviceHint => '先添加一个 NAS 连接，后面就可以在这里快速切换。';
+
+  @override
+  String get addNewConnection => '添加新连接';
+
+  @override
+  String get savedConnections => '已保存的连接';
+
+  @override
+  String get noCurrentDevice => '当前未连接设备';
+
+  @override
+  String currentDeviceName(Object name) {
+    return '当前设备：$name';
+  }
+
+  @override
+  String confirmDeleteDevice(Object name) {
+    return '确定要删除设备「$name」吗？';
+  }
+
+  @override
+  String get recentTransfers => '最近传输';
+
+  @override
+  String get noTransfersHint => '还没有任务，新的上传和下载会显示在这里';
+
+  @override
+  String get transfersHint => '优先看进行中和失败任务，已完成记录可以随时清理';
+
+  @override
+  String get noTransfersInFilter => '这个筛选下暂时没有传输任务';
+
+  @override
+  String get transfersAppearHere => '新的上传、下载、失败重试都会出现在这里。';
+
+  @override
+  String get upload => '上传';
+
+  @override
+  String get statusQueued => '排队中';
+
+  @override
+  String get statusRunning => '进行中';
+
+  @override
+  String get statusCompleted => '已完成';
+
+  @override
+  String get statusFailed => '失败';
+
+  @override
+  String uploadTo(Object path) {
+    return '上传到 $path';
+  }
+
+  @override
+  String saveTo(Object path) {
+    return '保存到 $path';
+  }
+
+  @override
+  String get moreActions => '更多操作';
+
+  @override
+  String get collapseDetails => '收起详情';
+
+  @override
+  String get viewDetails => '查看详情';
+
+  @override
+  String get copyErrorReason => '复制失败原因';
+
+  @override
+  String get copyPath => '复制路径';
+
+  @override
+  String get errorCopied => '失败原因已复制';
+
+  @override
+  String get copyReason => '复制原因';
+
+  @override
+  String get removeRecordAndFile => '删除记录和文件';
+
+  @override
+  String resultLabel(Object message) {
+    return '结果：$message';
+  }
+
+  @override
+  String reasonLabel(Object message) {
+    return '原因：$message';
+  }
 }

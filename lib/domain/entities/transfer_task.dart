@@ -10,6 +10,8 @@ class TransferTask {
   final String sourcePath;
   final String targetPath;
   final double progress;
+  final int receivedBytes;
+  final int totalBytes;
   final String? errorMessage;
   final DateTime createdAt;
 
@@ -22,6 +24,8 @@ class TransferTask {
     required this.targetPath,
     required this.progress,
     required this.createdAt,
+    this.receivedBytes = 0,
+    this.totalBytes = 0,
     this.errorMessage,
   });
 
@@ -43,6 +47,8 @@ class TransferTask {
       sourcePath: json['sourcePath']?.toString() ?? '',
       targetPath: json['targetPath']?.toString() ?? '',
       progress: (json['progress'] as num?)?.toDouble() ?? 0,
+      receivedBytes: (json['receivedBytes'] as num?)?.toInt() ?? 0,
+      totalBytes: (json['totalBytes'] as num?)?.toInt() ?? 0,
       errorMessage: json['errorMessage']?.toString(),
       createdAt: DateTime.tryParse(json['createdAt']?.toString() ?? '') ?? DateTime.now(),
     );
@@ -57,6 +63,8 @@ class TransferTask {
       'sourcePath': sourcePath,
       'targetPath': targetPath,
       'progress': progress,
+      'receivedBytes': receivedBytes,
+      'totalBytes': totalBytes,
       'errorMessage': errorMessage,
       'createdAt': createdAt.toIso8601String(),
     };
@@ -69,6 +77,8 @@ class TransferTask {
     String? sourcePath,
     String? targetPath,
     double? progress,
+    int? receivedBytes,
+    int? totalBytes,
     String? errorMessage,
   }) {
     return TransferTask(
@@ -79,6 +89,8 @@ class TransferTask {
       sourcePath: sourcePath ?? this.sourcePath,
       targetPath: targetPath ?? this.targetPath,
       progress: progress ?? this.progress,
+      receivedBytes: receivedBytes ?? this.receivedBytes,
+      totalBytes: totalBytes ?? this.totalBytes,
       createdAt: createdAt,
       errorMessage: errorMessage ?? this.errorMessage,
     );

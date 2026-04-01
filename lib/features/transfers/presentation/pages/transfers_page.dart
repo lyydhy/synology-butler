@@ -6,7 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/error/error_mapper.dart';
 import '../../../../core/utils/file_launcher.dart';
-import '../../../../core/utils/l10n.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../domain/entities/transfer_task.dart';
 import '../providers/transfer_providers.dart';
 
@@ -24,6 +24,7 @@ class _TransfersPageState extends ConsumerState<TransfersPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final tasks = ref.watch(transferControllerProvider);
     final controller = ref.read(transferControllerProvider.notifier);
 
@@ -148,6 +149,7 @@ class _OverviewCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     return Container(
       width: double.infinity,
@@ -184,12 +186,12 @@ class _OverviewCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '最近传输',
+                      l10n.recentTransfers,
                       style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      totalCount == 0 ? '还没有任务，新的上传和下载会显示在这里' : '优先看进行中和失败任务，已完成记录可以随时清理',
+                      totalCount == 0 ? l10n.noTransfersHint : l10n.transfersHint,
                       style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant, height: 1.4),
                     ),
                   ],
@@ -334,6 +336,8 @@ class _TransferSectionList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     if (tasks.isEmpty) {
       return SliverFillRemaining(
         hasScrollBody: false,
@@ -346,13 +350,13 @@ class _TransferSectionList extends StatelessWidget {
                 Icon(Icons.inbox_outlined, size: 42, color: Theme.of(context).colorScheme.outline),
                 const SizedBox(height: 12),
                 Text(
-                  '这个筛选下暂时没有传输任务',
+                  l10n.noTransfersInFilter,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  '新的上传、下载、失败重试都会出现在这里。',
+                  l10n.transfersAppearHere,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
                   textAlign: TextAlign.center,
                 ),
@@ -474,11 +478,12 @@ class _TransferTaskCardState extends ConsumerState<_TransferTaskCard> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final task = widget.task;
     final controller = ref.read(transferControllerProvider.notifier);
     final isUpload = task.type == TransferTaskType.upload;
     final statusColor = _statusColor(task.status);
-    final progressText = _progressText(task.progress);
+    final progressText = _progressText(task, l10n);
     final pathText = task.type == TransferTaskType.download ? task.targetPath : task.sourcePath;
 
     return Container(
@@ -527,7 +532,7 @@ class _TransferTaskCardState extends ConsumerState<_TransferTaskCard> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        _subtitle(task),
+                        _subtitle(task, l10n),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
@@ -537,7 +542,7 @@ class _TransferTaskCardState extends ConsumerState<_TransferTaskCard> {
                 ),
                 const SizedBox(width: 8),
                 PopupMenuButton<String>(
-                  tooltip: '更多操作',
+                  tooltip: l10n.moreActions,
                   onSelected: (value) async {
                     switch (value) {
                       case 'toggle':
@@ -549,6 +554,9 @@ class _TransferTaskCardState extends ConsumerState<_TransferTaskCard> {
                       case 'remove':
                         controller.removeTask(task.id);
                         break;
+                      case 'remove_with_file':
+                        controller.removeTask(task.id, deleteFile: true);
+                        break;
                       case 'copy':
                         final text = task.status == TransferTaskStatus.failed
                             ? (task.errorMessage ?? task.targetPath)
@@ -558,7 +566,7 @@ class _TransferTaskCardState extends ConsumerState<_TransferTaskCard> {
                           final messenger = ScaffoldMessenger.of(context);
                           messenger.hideCurrentSnackBar();
                           messenger.showSnackBar(
-                            SnackBar(content: Text(task.status == TransferTaskStatus.failed ? '失败原因已复制' : '路径已复制')),
+                            SnackBar(content: Text(task.status == TransferTaskStatus.failed ? l10n.errorCopied : l10n.pathCopied)),
                           );
                         }
                         break;
@@ -599,7 +607,7 @@ class _TransferTaskCardState extends ConsumerState<_TransferTaskCard> {
                     }
                   },
                   itemBuilder: (context) => [
-                    PopupMenuItem(value: 'toggle', child: Text(expanded ? '收起详情' : '查看详情')),
+                    PopupMenuItem(value: 'toggle', child: Text(expanded ? l10n.collapseDetails : l10n.viewDetails)),
                     if (task.status == TransferTaskStatus.success && task.type == TransferTaskType.download)
                       PopupMenuItem(value: 'open', child: Text(l10n.open)),
                     if (task.status == TransferTaskStatus.success && task.type == TransferTaskType.download)
@@ -608,9 +616,11 @@ class _TransferTaskCardState extends ConsumerState<_TransferTaskCard> {
                       PopupMenuItem(value: 'retry', child: Text(l10n.retry)),
                     PopupMenuItem(
                       value: 'copy',
-                      child: Text(task.status == TransferTaskStatus.failed ? '复制失败原因' : '复制路径'),
+                      child: Text(task.status == TransferTaskStatus.failed ? l10n.copyErrorReason : l10n.copyPath),
                     ),
                     PopupMenuItem(value: 'remove', child: Text(l10n.removeRecord)),
+                    if (task.type == TransferTaskType.download && task.status == TransferTaskStatus.success)
+                      PopupMenuItem(value: 'remove_with_file', child: Text(l10n.removeRecordAndFile)),
                   ],
                 ),
               ],
@@ -620,13 +630,13 @@ class _TransferTaskCardState extends ConsumerState<_TransferTaskCard> {
               children: [
                 _InfoBadge(
                   icon: _statusIcon(task.status),
-                  label: _statusText(task),
+                  label: _statusText(task, l10n),
                   color: statusColor,
                 ),
                 const SizedBox(width: 8),
                 _InfoBadge(
                   icon: isUpload ? Icons.upload_rounded : Icons.download_rounded,
-                  label: isUpload ? '上传' : '下载',
+                  label: isUpload ? l10n.upload : l10n.download,
                   color: isUpload ? Colors.blue : Colors.green,
                 ),
                 const Spacer(),
@@ -664,7 +674,7 @@ class _TransferTaskCardState extends ConsumerState<_TransferTaskCard> {
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Text(
-                  task.status == TransferTaskStatus.success ? '结果：${task.errorMessage!}' : '原因：${task.errorMessage!}',
+                  task.status == TransferTaskStatus.success ? l10n.resultLabel(task.errorMessage!) : l10n.reasonLabel(task.errorMessage!),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: task.status == TransferTaskStatus.failed ? Colors.redAccent : theme.colorScheme.onSurfaceVariant,
                     height: 1.45,
@@ -738,18 +748,24 @@ class _TransferTaskCardState extends ConsumerState<_TransferTaskCard> {
                         final messenger = ScaffoldMessenger.of(context);
                         messenger.hideCurrentSnackBar();
                         messenger.showSnackBar(
-                          SnackBar(content: Text(task.status == TransferTaskStatus.failed ? '失败原因已复制' : '路径已复制')),
+                          SnackBar(content: Text(task.status == TransferTaskStatus.failed ? l10n.errorCopied : l10n.pathCopied)),
                         );
                       }
                     },
                     icon: const Icon(Icons.copy_all_outlined),
-                    label: Text(task.status == TransferTaskStatus.failed ? '复制原因' : '复制路径'),
+                    label: Text(task.status == TransferTaskStatus.failed ? l10n.copyReason : l10n.copyPath),
                   ),
                   OutlinedButton.icon(
                     onPressed: () => controller.removeTask(task.id),
                     icon: const Icon(Icons.delete_outline_rounded),
                     label: Text(l10n.removeRecord),
                   ),
+                  if (task.type == TransferTaskType.download && task.status == TransferTaskStatus.success)
+                    OutlinedButton.icon(
+                      onPressed: () => controller.removeTask(task.id, deleteFile: true),
+                      icon: const Icon(Icons.delete_forever_rounded),
+                      label: Text(l10n.removeRecordAndFile),
+                    ),
                 ],
               ),
             ],
@@ -759,28 +775,42 @@ class _TransferTaskCardState extends ConsumerState<_TransferTaskCard> {
     );
   }
 
-  String _subtitle(TransferTask task) {
+  String _subtitle(TransferTask task, AppLocalizations l10n) {
     if (task.type == TransferTaskType.upload) {
-      return '上传到 ${task.targetPath}';
+      return l10n.uploadTo(task.targetPath);
     }
-    return '保存到 ${task.targetPath}';
+    return l10n.saveTo(task.targetPath);
   }
 
-  String _progressText(double value) {
-    final percent = (value.clamp(0, 1) * 100).round();
+  String _progressText(TransferTask task, AppLocalizations l10n) {
+    // 显示字节进度
+    if (task.totalBytes > 0 && task.receivedBytes > 0) {
+      final received = _formatBytes(task.receivedBytes);
+      final total = _formatBytes(task.totalBytes);
+      return '$received / $total';
+    }
+    // 回退到百分比
+    final percent = (task.progress.clamp(0, 1) * 100).round();
     return '$percent%';
   }
 
-  String _statusText(TransferTask task) {
+  String _formatBytes(int bytes) {
+    if (bytes < 1024) return '${bytes}B';
+    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)}K';
+    if (bytes < 1024 * 1024 * 1024) return '${(bytes / (1024 * 1024)).toStringAsFixed(1)}M';
+    return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)}G';
+  }
+
+  String _statusText(TransferTask task, AppLocalizations l10n) {
     switch (task.status) {
       case TransferTaskStatus.queued:
-        return '排队中';
+        return l10n.statusQueued;
       case TransferTaskStatus.running:
-        return '进行中';
+        return l10n.statusRunning;
       case TransferTaskStatus.success:
-        return '已完成';
+        return l10n.statusCompleted;
       case TransferTaskStatus.failed:
-        return '失败';
+        return l10n.statusFailed;
     }
   }
 

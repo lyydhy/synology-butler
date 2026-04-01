@@ -85,13 +85,13 @@ class _ContainerManagementPageState extends ConsumerState<ContainerManagementPag
       if (!mounted) return;
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text('$successVerb容器成功：${item.name}')));
+        ..showSnackBar(SnackBar(content: Text(l10n.containerSuccess(successVerb, item.name))));
       _refreshOverview();
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text('$successVerb容器失败：$error')));
+        ..showSnackBar(SnackBar(content: Text(l10n.containerFailed(successVerb, error.toString()))));
     } finally {
       if (mounted) {
         setState(() {
@@ -297,10 +297,10 @@ class _ContainerListTabState extends State<_ContainerListTab> {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
           child: SegmentedButton<String>(
-            segments: const [
-              ButtonSegment(value: 'all', label: Text('全部')),
-              ButtonSegment(value: 'running', label: Text('运行中')),
-              ButtonSegment(value: 'stopped', label: Text('已停止')),
+            segments: [
+              ButtonSegment(value: 'all', label: Text(l10n.containerAll)),
+              ButtonSegment(value: 'running', label: Text(l10n.containerRunning)),
+              ButtonSegment(value: 'stopped', label: Text(l10n.containerStopped)),
             ],
             selected: {_selectedFilter},
             onSelectionChanged: (value) => setState(() => _selectedFilter = value.first),
