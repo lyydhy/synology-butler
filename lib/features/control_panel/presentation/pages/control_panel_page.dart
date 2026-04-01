@@ -1,18 +1,61 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/utils/l10n.dart';
+import '../../../upgrade/presentation/providers/upgrade_providers.dart';
 
-class ControlPanelPage extends StatelessWidget {
+class ControlPanelPage extends ConsumerWidget {
   const ControlPanelPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final hasUpdate = ref.watch(hasUpdateProvider);
+
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.controlPanelTitle),
         elevation: 0,
         scrolledUnderElevation: 1,
+        actions: [
+          if (hasUpdate)
+            Padding(
+              padding: const EdgeInsets.only(right: 16),
+              child: InkWell(
+                onTap: () => context.push('/upgrade'),
+                borderRadius: BorderRadius.circular(20),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '有更新',
+                        style: TextStyle(
+                          color: Colors.red.shade700,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+          ),
+        ],
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
@@ -31,6 +74,8 @@ class ControlPanelPage extends StatelessWidget {
                 icon: Icons.system_update_alt_rounded,
                 title: l10n.updateStatus,
                 subtitle: l10n.updateStatusSubtitle,
+                badge: hasUpdate ? '更新' : null,
+                onTap: () => context.push('/upgrade'),
               ),
               _PanelItem(
                 icon: Icons.public_rounded,
@@ -96,12 +141,6 @@ class ControlPanelPage extends StatelessWidget {
 }
 
 /// 分组卡片组件
-///
-/// 遵循 Material Design 3 规范：
-/// - 使用 surface 容器颜色
-/// - 圆角半径 16dp
-/// - 内边距 16dp
-/// - 顶部标题区，下方列表项
 class _SectionCard extends StatelessWidget {
   final String title;
   final List<Widget> items;
@@ -135,7 +174,6 @@ class _SectionCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 标题
           Padding(
             padding: const EdgeInsets.only(left: 4, bottom: 12),
             child: Text(
@@ -147,7 +185,6 @@ class _SectionCard extends StatelessWidget {
               ),
             ),
           ),
-          // 列表项
           ...items,
         ],
       ),
@@ -156,23 +193,19 @@ class _SectionCard extends StatelessWidget {
 }
 
 /// 面板列表项组件
-///
-/// 遵循 Material Design 3 规范：
-/// - 图标使用圆形容器，半径 20dp
-/// - 使用 IconButton 风格的交互反馈
-/// - 支持可点击与不可点击状态
-/// - 右侧显示前进箭头（可点击时）
 class _PanelItem extends StatelessWidget {
   final IconData icon;
   final String title;
   final String subtitle;
   final VoidCallback? onTap;
+  final String? badge;
 
   const _PanelItem({
     required this.icon,
     required this.title,
     required this.subtitle,
     this.onTap,
+    this.badge,
   });
 
   @override
@@ -191,7 +224,6 @@ class _PanelItem extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
           child: Row(
             children: [
-              // 图标容器
               Container(
                 width: 40,
                 height: 40,
@@ -210,7 +242,6 @@ class _PanelItem extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              // 文本内容
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -236,9 +267,25 @@ class _PanelItem extends StatelessWidget {
                   ],
                 ),
               ),
-              // 右侧箭头
-              if (isInteractive) ...[
+              if (badge != null) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.red,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    badge!,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
                 const SizedBox(width: 8),
+              ],
+              if (isInteractive) ...[
                 Icon(
                   Icons.chevron_right_rounded,
                   size: 20,

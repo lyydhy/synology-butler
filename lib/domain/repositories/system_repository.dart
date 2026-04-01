@@ -9,6 +9,7 @@ import '../entities/network.dart';
 import '../entities/shared_folder.dart';
 import '../entities/system_status.dart';
 import '../entities/task_scheduler.dart';
+import '../entities/upgrade_status.dart';
 
 abstract class SystemRepository {
   Future<SystemStatus> fetchOverview();
@@ -46,4 +47,6 @@ abstract class SystemRepository {
   Future<FileServicesModel> fetchFileServices();
 
   Future<NetworkModel> fetchNetwork();
+
+  Future<UpgradeStatus> checkUpgrade();
 }

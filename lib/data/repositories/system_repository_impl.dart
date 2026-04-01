@@ -10,6 +10,7 @@ import '../../domain/entities/network.dart';
 import '../../domain/entities/shared_folder.dart';
 import '../../domain/entities/system_status.dart';
 import '../../domain/entities/task_scheduler.dart';
+import '../../domain/entities/upgrade_status.dart';
 import '../../domain/repositories/system_repository.dart';
 import '../api/system_api.dart';
 
@@ -366,5 +367,10 @@ class SystemRepositoryImpl implements SystemRepository {
   @override
   Future<NetworkModel> fetchNetwork() {
     return _systemApi.fetchNetwork();
+  }
+
+  @override
+  Future<UpgradeStatus> checkUpgrade() {
+    return _systemApi.checkUpgrade();
   }
 }

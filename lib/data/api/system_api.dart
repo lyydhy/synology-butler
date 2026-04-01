@@ -10,6 +10,7 @@ import '../../core/network/app_dio.dart';
 import '../../core/utils/dsm_logger.dart';
 import '../../domain/entities/file_service.dart';
 import '../../domain/entities/network.dart';
+import '../../domain/entities/upgrade_status.dart';
 import '../models/dsm_group_model.dart';
 import '../models/dsm_user_model.dart';
 import '../models/external_access_model.dart';
@@ -61,6 +62,9 @@ abstract class SystemApi {
 
   /// 获取网络状态（常规、接口、代理、网关）
   Future<NetworkModel> fetchNetwork();
+
+  /// 检查 DSM 更新
+  Future<UpgradeStatus> checkUpgrade();
 }
 
 class DsmSystemApi implements SystemApi {
@@ -2219,6 +2223,46 @@ class DsmSystemApi implements SystemApi {
         module: 'Network',
         action: 'fetchNetwork',
         reason: '获取网络状态异常: $e',
+      );
+      rethrow;
+    }
+  }
+
+  @override
+  Future<UpgradeStatus> checkUpgrade() async {
+    final client = _dio;
+
+    try {
+      final response = await client.post(
+        '/webapi/entry.cgi',
+        data: {
+          'api': 'SYNO.Core.Upgrade.Server',
+          'method': 'check',
+          'version': 2,
+          'user_reading': true,
+          'need_auto_smallupdate': true,
+          'need_promotion': true,
+        },
+        options: Options(contentType: Headers.formUrlEncodedContentType),
+      );
+
+      if (response.data is Map && response.data['success'] == true) {
+        final data = response.data['data'] as Map<String, dynamic>?;
+        return UpgradeStatus.fromApiResponse(data);
+      }
+
+      DsmLogger.failure(
+        module: 'Upgrade',
+        action: 'checkUpgrade',
+        response: response.data,
+        reason: '更新检查失败',
+      );
+      return UpgradeStatus.noUpdate;
+    } catch (e) {
+      DsmLogger.failure(
+        module: 'Upgrade',
+        action: 'checkUpgrade',
+        reason: '检查更新异常: $e',
       );
       rethrow;
     }
