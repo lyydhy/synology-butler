@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/utils/l10n.dart';
-
 import '../../../../core/widgets/app_error_state.dart';
 import '../../../../domain/entities/shared_folder.dart';
 import '../providers/shared_folders_providers.dart';
@@ -13,7 +12,6 @@ class SharedFoldersPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final foldersAsync = ref.watch(sharedFoldersProvider);
-    
 
     return Scaffold(
       appBar: AppBar(
@@ -87,72 +85,152 @@ class _FolderCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.45)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: () => _showFolderDetail(context, folder),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 22,
+                  backgroundColor: color.withValues(alpha: 0.12),
+                  child: Icon(
+                    folder.encrypted
+                        ? Icons.lock_rounded
+                        : folder.isHidden
+                            ? Icons.visibility_off_rounded
+                            : Icons.folder_shared_rounded,
+                    color: color,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        folder.name,
+                        style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        folder.description.isEmpty ? folder.volumePath : folder.description,
+                        style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                // 状态标签
+                _buildStatusBadge(context),
+              ],
+            ),
+            if (folder.usageText.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Icon(Icons.storage_rounded, size: 16, color: theme.colorScheme.onSurfaceVariant),
+                  const SizedBox(width: 8),
+                  Text(
+                    folder.usageText,
+                    style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                  ),
+                ],
+              ),
+            ],
+            const SizedBox(height: 8),
+            // 特性标签
+            Wrap(
+              spacing: 8,
+              runSpacing: 4,
+              children: [
+                if (folder.encrypted)
+                  _FeatureTag(icon: Icons.lock_rounded, label: '加密', color: Colors.amber),
+                if (folder.isHidden)
+                  _FeatureTag(icon: Icons.visibility_off_rounded, label: '隐藏', color: Colors.grey),
+                if (folder.recycleBinEnabled)
+                  _FeatureTag(icon: Icons.delete_outline_rounded, label: '回收站', color: Colors.green),
+                if (folder.isReadOnly)
+                  _FeatureTag(icon: Icons.lock_outline_rounded, label: '只读', color: Colors.orange),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatusBadge(BuildContext context) {
+    final theme = Theme.of(context);
+    String status;
+    Color statusColor;
+
+    if (folder.encrypted) {
+      status = '加密';
+      statusColor = Colors.amber;
+    } else if (folder.isHidden) {
+      status = '隐藏';
+      statusColor = Colors.grey;
+    } else {
+      status = '正常';
+      statusColor = Colors.green;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: statusColor.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        status,
+        style: theme.textTheme.labelMedium?.copyWith(color: statusColor, fontWeight: FontWeight.w600),
+      ),
+    );
+  }
+
+  void _showFolderDetail(BuildContext context, SharedFolder folder) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (context) => _FolderDetailSheet(folder: folder),
+    );
+  }
+}
+
+class _FeatureTag extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+
+  const _FeatureTag({
+    required this.icon,
+    required this.label,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 22,
-                backgroundColor: color.withValues(alpha: 0.12),
-                child: Icon(
-                  folder.encrypted
-                      ? Icons.lock_rounded
-                      : folder.isHidden
-                          ? Icons.visibility_off_rounded
-                          : Icons.folder_shared_rounded,
-                  color: color,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      folder.name,
-                      style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      folder.description.isEmpty ? folder.volumePath : folder.description,
-                      style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-              if (folder.isReadOnly)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.orange.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    '只读',
-                    style: theme.textTheme.labelSmall?.copyWith(color: Colors.orange, fontWeight: FontWeight.w600),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          _MetaRow(label: '路径', value: folder.volumePath),
-          if (folder.fileSystem.isNotEmpty) _MetaRow(label: '文件系统', value: folder.fileSystem),
-          if (folder.usageText.isNotEmpty) _MetaRow(label: '使用量', value: folder.usageText),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              if (folder.isHidden)
-                const _TagChip(label: '隐藏', color: Colors.grey),
-              if (folder.recycleBinEnabled)
-                const _TagChip(label: '回收站', color: Colors.green),
-              if (folder.encrypted)
-                const _TagChip(label: '加密', color: Colors.amber),
-            ],
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: theme.textTheme.labelSmall?.copyWith(color: color, fontWeight: FontWeight.w500),
           ),
         ],
       ),
@@ -160,51 +238,213 @@ class _FolderCard extends StatelessWidget {
   }
 }
 
-class _MetaRow extends StatelessWidget {
-  final String label;
-  final String value;
+class _FolderDetailSheet extends StatelessWidget {
+  final SharedFolder folder;
 
-  const _MetaRow({required this.label, required this.value});
+  const _FolderDetailSheet({required this.folder});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    if (value.isEmpty) return const SizedBox.shrink();
+
+    return DraggableScrollableSheet(
+      initialChildSize: 0.6,
+      minChildSize: 0.4,
+      maxChildSize: 0.9,
+      expand: false,
+      builder: (context, scrollController) {
+        return Container(
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            children: [
+              // 拖动条
+              Container(
+                margin: const EdgeInsets.only(top: 12),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              // 标题
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 24,
+                      backgroundColor: theme.colorScheme.primaryContainer,
+                      child: Icon(Icons.folder_shared_rounded, color: theme.colorScheme.primary),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        folder.name,
+                        style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: const Icon(Icons.close_rounded),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              Expanded(
+                child: ListView(
+                  controller: scrollController,
+                  padding: const EdgeInsets.all(16),
+                  children: [
+                    _DetailTile(
+                      icon: Icons.label_outline_rounded,
+                      label: '名称',
+                      value: folder.name,
+                    ),
+                    _DetailTile(
+                      icon: Icons.description_outlined,
+                      label: '描述',
+                      value: folder.description.isEmpty ? '无' : folder.description,
+                    ),
+                    _DetailTile(
+                      icon: Icons.folder_outlined,
+                      label: '路径',
+                      value: folder.volumePath,
+                    ),
+                    _DetailTile(
+                      icon: Icons.storage_outlined,
+                      label: '文件系统',
+                      value: folder.fileSystem,
+                    ),
+                    _DetailTile(
+                      icon: Icons.pie_chart_outline_rounded,
+                      label: '空间使用',
+                      value: folder.usageText.isEmpty ? '未知' : folder.usageText,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      '特性设置',
+                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 12),
+                    _FeatureTile(
+                      icon: Icons.lock_rounded,
+                      label: '文件夹加密',
+                      enabled: folder.encrypted,
+                    ),
+                    _FeatureTile(
+                      icon: Icons.visibility_off_rounded,
+                      label: '隐藏文件夹',
+                      enabled: folder.isHidden,
+                    ),
+                    _FeatureTile(
+                      icon: Icons.delete_outline_rounded,
+                      label: '回收站',
+                      enabled: folder.recycleBinEnabled,
+                    ),
+                    _FeatureTile(
+                      icon: Icons.lock_outline_rounded,
+                      label: '只读访问',
+                      enabled: folder.isReadOnly,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _DetailTile extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+
+  const _DetailTile({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: RichText(
-        text: TextSpan(
-          style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurface),
-          children: [
-            TextSpan(
-              text: '$label：',
-              style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 20, color: theme.colorScheme.onSurfaceVariant),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  value,
+                  style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+                ),
+              ],
             ),
-            TextSpan(text: value),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class _TagChip extends StatelessWidget {
+class _FeatureTile extends StatelessWidget {
+  final IconData icon;
   final String label;
-  final Color color;
+  final bool enabled;
 
-  const _TagChip({required this.label, required this.color});
+  const _FeatureTile({
+    required this.icon,
+    required this.label,
+    required this.enabled,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final color = enabled ? Colors.green : Colors.grey;
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(8),
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
-      child: Text(
-        label,
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(color: color, fontWeight: FontWeight.w600),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: color),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              label,
+              style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+            ),
+          ),
+          Icon(
+            enabled ? Icons.check_circle_rounded : Icons.cancel_rounded,
+            color: color,
+            size: 20,
+          ),
+        ],
       ),
     );
   }
