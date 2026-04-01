@@ -408,73 +408,20 @@ class _ImageListTab extends StatefulWidget {
 }
 
 class _ImageListTabState extends State<_ImageListTab> {
-  String _selectedSort = 'nameAsc';
-
   @override
   Widget build(BuildContext context) {
     if (widget.isUnavailable) return const _UnavailablePlaceholder();
 
-    final items = widget.items.toList()
-      ..sort((a, b) {
-        switch (_selectedSort) {
-          case 'nameDesc':
-            return b.name.compareTo(a.name);
-          case 'tagAsc':
-            return a.tag.compareTo(b.tag);
-          case 'tagDesc':
-            return b.tag.compareTo(a.tag);
-          case 'sizeDesc':
-            return b.sizeText.compareTo(a.sizeText);
-          case 'sizeAsc':
-            return a.sizeText.compareTo(b.sizeText);
-          case 'nameAsc':
-          default:
-            return a.name.compareTo(b.name);
-        }
-      });
+    final items = widget.items.toList()..sort((a, b) => a.name.compareTo(b.name));
 
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-          child: Row(
-            children: [
-              const Text('排序'),
-              const SizedBox(width: 12),
-              Expanded(
-                child: DropdownButtonFormField<String>(
-                  initialValue: _selectedSort,
-                  isDense: true,
-                  decoration: const InputDecoration(border: OutlineInputBorder()),
-                  items: const [
-                    DropdownMenuItem(value: 'nameAsc', child: Text('名称 A-Z')),
-                    DropdownMenuItem(value: 'nameDesc', child: Text('名称 Z-A')),
-                    DropdownMenuItem(value: 'tagAsc', child: Text('标签 A-Z')),
-                    DropdownMenuItem(value: 'tagDesc', child: Text('标签 Z-A')),
-                    DropdownMenuItem(value: 'sizeDesc', child: Text('大小 从大到小')),
-                    DropdownMenuItem(value: 'sizeAsc', child: Text('大小 从小到大')),
-                  ],
-                  onChanged: (value) {
-                    if (value == null) return;
-                    setState(() => _selectedSort = value);
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
-        Expanded(
-          child: items.isEmpty
-              ? const _EmptyState(label: '暂无镜像数据')
-              : ListView.separated(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                  itemBuilder: (context, index) => _ImageCard(item: items[index]),
-                  separatorBuilder: (_, __) => const SizedBox(height: 12),
-                  itemCount: items.length,
-                ),
-        ),
-      ],
-    );
+    return items.isEmpty
+        ? const _EmptyState(label: '暂无镜像数据')
+        : ListView.separated(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+            itemBuilder: (context, index) => _ImageCard(item: items[index]),
+            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            itemCount: items.length,
+          );
   }
 }
 
