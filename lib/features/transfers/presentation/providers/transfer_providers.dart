@@ -6,7 +6,7 @@ import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_constants.dart';
-import '../../../../core/services/download_notification_service.dart';
+import '../../../../core/services/transfer_notification_service.dart';
 import '../../../../core/storage/platform_downloads_directory.dart';
 import '../../../../domain/entities/transfer_task.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
@@ -20,7 +20,7 @@ class TransferController extends StateNotifier<List<TransferTask>> {
 
   final Ref _ref;
   
-  DownloadNotificationService get _notificationService => _ref.read(downloadNotificationServiceProvider);
+  TransferNotificationService get _notificationService => _ref.read(transferNotificationServiceProvider);
 
   String _id() => '${DateTime.now().microsecondsSinceEpoch}_${Random().nextInt(9999)}';
 
@@ -181,7 +181,8 @@ class TransferController extends StateNotifier<List<TransferTask>> {
     final task = state.firstWhere((t) => t.id == id, orElse: () => throw StateError('Task not found'));
 
     // 取消通知
-    await _notificationService.cancel(id);
+    final transferType = task.type == TransferTaskType.download ? TransferType.download : TransferType.upload;
+    await _notificationService.cancel(id, transferType);
 
     // 如果正在下载，标记为取消
     if (task.status == TransferTaskStatus.running || task.status == TransferTaskStatus.queued) {
@@ -224,6 +225,17 @@ class TransferController extends StateNotifier<List<TransferTask>> {
     required String fileName,
     required Uint8List bytes,
   }) async {
+    // 注册活跃上传并显示通知
+    _notificationService.registerActive(id, TransferType.upload);
+    await _notificationService.showProgress(
+      taskId: id,
+      type: TransferType.upload,
+      fileName: fileName,
+      receivedBytes: 0,
+      totalBytes: bytes.length,
+      isRunning: true,
+    );
+
     _update(id, status: TransferTaskStatus.running, progress: 0.1, receivedBytes: 0, totalBytes: bytes.length);
 
     var candidateName = fileName;
@@ -237,12 +249,25 @@ class TransferController extends StateNotifier<List<TransferTask>> {
           receivedBytes: bytes.length,
           errorMessage: '$parentPath/$candidateName',
         );
+        // 显示上传完成通知
+        await _notificationService.showCompleted(
+          taskId: id,
+          type: TransferType.upload,
+          fileName: fileName,
+        );
         return;
       } catch (e) {
         final text = e.toString().toLowerCase();
         final looksLikeExists = text.contains('407') || text.contains('exist') || text.contains('already');
         if (!looksLikeExists) {
           _update(id, status: TransferTaskStatus.failed, progress: 1, errorMessage: e.toString());
+          // 显示上传失败通知
+          await _notificationService.showFailed(
+            taskId: id,
+            type: TransferType.upload,
+            fileName: fileName,
+            errorMessage: e.toString(),
+          );
           return;
         }
 
@@ -252,6 +277,13 @@ class TransferController extends StateNotifier<List<TransferTask>> {
     }
 
     _update(id, status: TransferTaskStatus.failed, progress: 1, errorMessage: '上传重命名重试次数过多');
+    // 显示上传失败通知
+    await _notificationService.showFailed(
+      taskId: id,
+      type: TransferType.upload,
+      fileName: fileName,
+      errorMessage: '上传重命名重试次数过多',
+    );
   }
 
   Future<void> _runDownload(
@@ -264,9 +296,10 @@ class TransferController extends StateNotifier<List<TransferTask>> {
     final fileName = task.title;
     
     // 注册活跃下载并显示通知
-    _notificationService.registerActive(id);
+    _notificationService.registerActive(id, TransferType.download);
     await _notificationService.showProgress(
       taskId: id,
+      type: TransferType.download,
       fileName: fileName,
       receivedBytes: 0,
       totalBytes: 0,
@@ -283,6 +316,7 @@ class TransferController extends StateNotifier<List<TransferTask>> {
                 _update(id, progress: 0.1, receivedBytes: received, totalBytes: 0);
                 _notificationService.showProgress(
                   taskId: id,
+                  type: TransferType.download,
                   fileName: fileName,
                   receivedBytes: received,
                   totalBytes: 0,
@@ -293,6 +327,7 @@ class TransferController extends StateNotifier<List<TransferTask>> {
                 _update(id, progress: progress.clamp(0.0, 0.98), receivedBytes: received, totalBytes: total);
                 _notificationService.showProgress(
                   taskId: id,
+                  type: TransferType.download,
                   fileName: fileName,
                   receivedBytes: received,
                   totalBytes: total,
@@ -308,6 +343,7 @@ class TransferController extends StateNotifier<List<TransferTask>> {
       // 显示完成通知
       await _notificationService.showCompleted(
         taskId: id,
+        type: TransferType.download,
         fileName: fileName,
         filePath: targetFile.path,
       );
@@ -317,6 +353,7 @@ class TransferController extends StateNotifier<List<TransferTask>> {
       // 显示失败通知
       await _notificationService.showFailed(
         taskId: id,
+        type: TransferType.download,
         fileName: fileName,
         errorMessage: e.toString(),
       );
