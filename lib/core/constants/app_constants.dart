@@ -22,4 +22,7 @@ class AppConstants {
 
   /// DSM realtime websocket 主动拉取当前利用率的轮询间隔（秒）。
   static const realtimeRequestIntervalSeconds = 3;
+
+  /// SnackBar 默认显示时长（秒）
+  static const snackBarDurationSeconds = 3;
 }

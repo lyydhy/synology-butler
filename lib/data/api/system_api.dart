@@ -2223,19 +2223,49 @@ class DsmSystemApi implements SystemApi {
   }) async {
     final client = _dio;
 
-    // 服务名称到 API 的映射
+    // 服务名称到 API 的映射（参考 dsm_helper）
     final apiConfigs = {
-      'SMB': {'api': 'SYNO.Core.FileServ.SMB', 'version': 3, 'enable_key': 'enable_samba'},
-      'NFS': {'api': 'SYNO.Core.FileServ.NFS', 'version': 2, 'enable_key': 'enable_nfs'},
-      'FTP': {'api': 'SYNO.Core.FileServ.FTP', 'version': 3, 'enable_key': 'enable_ftp'},
-      'AFP': {'api': 'SYNO.Core.FileServ.AFP', 'version': 1, 'enable_key': 'enable_afp'},
-      'SFTP': {'api': 'SYNO.Core.FileServ.FTP.SFTP', 'version': 1, 'enable_key': 'enable'},
+      'SMB': {
+        'api': 'SYNO.Core.FileServ.SMB',
+        'version': 3,
+        'enable_key': 'enable_samba',
+        'extra_keys': ['workgroup', 'disable_shadow_copy'],
+      },
+      'NFS': {
+        'api': 'SYNO.Core.FileServ.NFS',
+        'version': 2,
+        'enable_key': 'enable_nfs',
+        'extra_keys': ['enable_nfs_v4', 'enable_nfs_v4_1', 'nfs_v4_domain'],
+      },
+      'FTP': {
+        'api': 'SYNO.Core.FileServ.FTP',
+        'version': 3,
+        'enable_key': 'enable_ftp',
+        'extra_keys': ['enable_ftps', 'timeout', 'portnum', 'enable_fxp', 'enable_fips', 'enable_ascii', 'utf8_mode'],
+      },
+      'AFP': {
+        'api': 'SYNO.Core.FileServ.AFP',
+        'version': 1,
+        'enable_key': 'enable_afp',
+        'extra_keys': <String>[],
+      },
+      'SFTP': {
+        'api': 'SYNO.Core.FileServ.FTP.SFTP',
+        'version': 1,
+        'enable_key': 'enable',
+        'extra_keys': ['portnum', 'sftp_portnum'],
+      },
     };
 
     final config = apiConfigs[serviceName.toUpperCase()];
     if (config == null) {
       throw Exception('未知的服务名称: $serviceName');
     }
+
+    final apiName = config['api'] as String;
+    final version = config['version'] as int;
+    final enableKey = config['enable_key'] as String;
+    final extraKeys = (config['extra_keys'] as List).cast<String>();
 
     DsmLogger.request(
       module: 'FileService',
@@ -2248,20 +2278,52 @@ class DsmSystemApi implements SystemApi {
       extra: {
         'serviceName': serviceName,
         'enabled': enabled,
-        'api': config['api'],
-        'enable_key': config['enable_key'],
+        'api': apiName,
+        'enable_key': enableKey,
       },
     );
 
     try {
-      final response = await client.post(
+      // 1. 先获取当前配置
+      final getResponse = await client.post(
         '/webapi/entry.cgi',
         data: {
-          'api': config['api'],
-          'method': 'set',
-          'version': config['version'],
-          config['enable_key']: enabled,
+          'api': apiName,
+          'method': 'get',
+          'version': version,
         },
+        options: Options(contentType: Headers.formUrlEncodedContentType),
+      );
+
+      Map<String, dynamic> currentConfig = {};
+      if (getResponse.data is Map && getResponse.data['success'] == true) {
+        currentConfig = Map<String, dynamic>.from(getResponse.data['data'] ?? {});
+      }
+
+      // 2. 构建设置参数：当前配置 + 启用状态修改
+      final setData = <String, dynamic>{
+        'api': apiName,
+        'method': 'set',
+        'version': version,
+        enableKey: enabled,
+      };
+
+      // 保留必要字段
+      for (final key in extraKeys) {
+        if (currentConfig.containsKey(key)) {
+          setData[key] = currentConfig[key];
+        }
+      }
+
+      // SFTP 特殊处理：portnum 和 sftp_portnum 保持一致
+      if (serviceName.toUpperCase() == 'SFTP' && currentConfig.containsKey('portnum')) {
+        setData['portnum'] = currentConfig['portnum'];
+        setData['sftp_portnum'] = currentConfig['portnum'];
+      }
+
+      final response = await client.post(
+        '/webapi/entry.cgi',
+        data: setData,
         options: Options(contentType: Headers.formUrlEncodedContentType),
       );
 
@@ -2285,6 +2347,7 @@ class DsmSystemApi implements SystemApi {
             'responseData': responseData,
             'serviceName': serviceName,
             'enabled': enabled,
+            'setData': setData,
           },
         );
         
