@@ -148,13 +148,13 @@ class _FolderCard extends StatelessWidget {
               runSpacing: 4,
               children: [
                 if (folder.encrypted)
-                  _FeatureTag(icon: Icons.lock_rounded, label: '加密', color: Colors.amber),
+                  const _FeatureTag(icon: Icons.lock_rounded, label: '加密', color: Colors.amber),
                 if (folder.isHidden)
-                  _FeatureTag(icon: Icons.visibility_off_rounded, label: '隐藏', color: Colors.grey),
+                  const _FeatureTag(icon: Icons.visibility_off_rounded, label: '隐藏', color: Colors.grey),
                 if (folder.recycleBinEnabled)
-                  _FeatureTag(icon: Icons.delete_outline_rounded, label: '回收站', color: Colors.green),
+                  const _FeatureTag(icon: Icons.delete_outline_rounded, label: '回收站', color: Colors.green),
                 if (folder.isReadOnly)
-                  _FeatureTag(icon: Icons.lock_outline_rounded, label: '只读', color: Colors.orange),
+                  const _FeatureTag(icon: Icons.lock_outline_rounded, label: '只读', color: Colors.orange),
               ],
             ),
           ],

@@ -91,8 +91,6 @@ class _PowerPageState extends ConsumerState<PowerPage> with SingleTickerProvider
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('电源管理'),

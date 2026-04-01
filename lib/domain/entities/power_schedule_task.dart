@@ -21,7 +21,7 @@ class PowerScheduleTask {
     List<int> weekdays = weekdaysStr.split(',').map((e) => int.tryParse(e.trim()) ?? 0).toList();
 
     return PowerScheduleTask(
-      id: '${type.name}_${json['hour']}_${json['min']}_${weekdaysStr}',
+      id: '${type.name}_${json['hour']}_${json['min']}_$weekdaysStr',
       enabled: json['enabled'] as bool? ?? true,
       hour: json['hour'] as int? ?? 0,
       minute: json['min'] as int? ?? 0,
