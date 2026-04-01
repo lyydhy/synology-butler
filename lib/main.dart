@@ -9,7 +9,11 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
   // 初始化传输通知服务（上传/下载）
-  await TransferNotificationService().initialize();
+  final notificationService = TransferNotificationService();
+  await notificationService.initialize();
+  
+  // 请求通知权限（Android 13+）
+  await notificationService.requestPermission();
   
   final startupGate = StartupSessionGate();
   final startupResult = await startupGate.resolve();
