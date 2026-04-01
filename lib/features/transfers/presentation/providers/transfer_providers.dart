@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/services/download_notification_service.dart';
 import '../../../../core/storage/platform_downloads_directory.dart';
 import '../../../../domain/entities/transfer_task.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
@@ -18,6 +19,8 @@ class TransferController extends StateNotifier<List<TransferTask>> {
   }
 
   final Ref _ref;
+  
+  DownloadNotificationService get _notificationService => _ref.read(downloadNotificationServiceProvider);
 
   String _id() => '${DateTime.now().microsecondsSinceEpoch}_${Random().nextInt(9999)}';
 
@@ -177,6 +180,9 @@ class TransferController extends StateNotifier<List<TransferTask>> {
   Future<void> removeTask(String id, {bool deleteFile = false}) async {
     final task = state.firstWhere((t) => t.id == id, orElse: () => throw StateError('Task not found'));
 
+    // 取消通知
+    await _notificationService.cancel(id);
+
     // 如果正在下载，标记为取消
     if (task.status == TransferTaskStatus.running || task.status == TransferTaskStatus.queued) {
       // 删除本地临时文件
@@ -253,6 +259,20 @@ class TransferController extends StateNotifier<List<TransferTask>> {
     required String remotePath,
     required File targetFile,
   }) async {
+    // 获取任务信息用于通知
+    final task = state.firstWhere((t) => t.id == id, orElse: () => throw StateError('Task not found'));
+    final fileName = task.title;
+    
+    // 注册活跃下载并显示通知
+    _notificationService.registerActive(id);
+    await _notificationService.showProgress(
+      taskId: id,
+      fileName: fileName,
+      receivedBytes: 0,
+      totalBytes: 0,
+      isRunning: true,
+    );
+    
     _update(id, status: TransferTaskStatus.running, progress: 0.1);
     try {
       await _ref.read(fileRepositoryProvider).downloadFileToPath(
@@ -261,17 +281,45 @@ class TransferController extends StateNotifier<List<TransferTask>> {
             onReceiveProgress: (received, total) {
               if (total <= 0) {
                 _update(id, progress: 0.1, receivedBytes: received, totalBytes: 0);
+                _notificationService.showProgress(
+                  taskId: id,
+                  fileName: fileName,
+                  receivedBytes: received,
+                  totalBytes: 0,
+                  isRunning: true,
+                );
               } else {
                 final progress = received / total;
                 _update(id, progress: progress.clamp(0.0, 0.98), receivedBytes: received, totalBytes: total);
+                _notificationService.showProgress(
+                  taskId: id,
+                  fileName: fileName,
+                  receivedBytes: received,
+                  totalBytes: total,
+                  isRunning: true,
+                );
               }
             },
           );
 
       _update(id, progress: 0.99);
       _update(id, status: TransferTaskStatus.success, progress: 1, errorMessage: '已保存到 ${targetFile.path}');
+      
+      // 显示完成通知
+      await _notificationService.showCompleted(
+        taskId: id,
+        fileName: fileName,
+        filePath: targetFile.path,
+      );
     } catch (e) {
       _update(id, status: TransferTaskStatus.failed, progress: 1, errorMessage: e.toString());
+      
+      // 显示失败通知
+      await _notificationService.showFailed(
+        taskId: id,
+        fileName: fileName,
+        errorMessage: e.toString(),
+      );
     }
   }
 
