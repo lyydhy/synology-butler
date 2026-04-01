@@ -19,29 +19,29 @@ class ControlPanelPage extends StatelessWidget {
         children: [
           // 核心功能
           _SectionCard(
-            title: '核心功能',
+            title: l10n.coreFeatures,
             items: [
               _PanelItem(
                 icon: Icons.info_outline_rounded,
-                title: '信息中心',
-                subtitle: '系统信息与状态总览',
+                title: l10n.informationCenterTitle,
+                subtitle: l10n.infoCenterSubtitle,
                 onTap: () => context.push('/information-center'),
               ),
               _PanelItem(
                 icon: Icons.system_update_alt_rounded,
-                title: '更新状态',
-                subtitle: '系统版本与更新检查',
+                title: l10n.updateStatus,
+                subtitle: l10n.updateStatusSubtitle,
               ),
               _PanelItem(
                 icon: Icons.public_rounded,
-                title: '外部访问',
-                subtitle: 'DDNS 与远程连接',
+                title: l10n.externalAccessTitle,
+                subtitle: l10n.externalAccessSubtitle,
                 onTap: () => context.push('/external-access'),
               ),
               _PanelItem(
                 icon: Icons.perm_media_outlined,
-                title: '索引服务',
-                subtitle: '缩图质量与索引重建',
+                title: l10n.indexServiceTitle,
+                subtitle: l10n.indexServiceSubtitle,
                 onTap: () => context.push('/index-service'),
               ),
             ],
@@ -49,42 +49,42 @@ class ControlPanelPage extends StatelessWidget {
           const SizedBox(height: 12),
           // 系统管理
           _SectionCard(
-            title: '系统管理',
+            title: l10n.systemManagement,
             items: [
               _PanelItem(
                 icon: Icons.schedule_rounded,
-                title: '任务计划',
-                subtitle: '定时任务与执行管理',
+                title: l10n.taskSchedulerTitle,
+                subtitle: l10n.taskSchedulerSubtitle,
                 onTap: () => context.push('/task-scheduler'),
               ),
               _PanelItem(
                 icon: Icons.usb_rounded,
-                title: '外接设备',
-                subtitle: 'USB 与存储设备管理',
+                title: l10n.externalDevicesTitle,
+                subtitle: l10n.externalDevicesSubtitle,
                 onTap: () => context.push('/external-devices'),
               ),
               _PanelItem(
                 icon: Icons.folder_shared_outlined,
-                title: '共享文件夹',
-                subtitle: '文件共享与权限设置',
+                title: l10n.sharedFoldersTitle,
+                subtitle: l10n.sharedFoldersSubtitle,
                 onTap: () => context.push('/shared-folders'),
               ),
               _PanelItem(
                 icon: Icons.group_outlined,
-                title: '用户与群组',
-                subtitle: '账户与权限管理',
+                title: l10n.userGroupsTitle,
+                subtitle: l10n.userGroupsSubtitle,
                 onTap: () => context.push('/user-groups'),
               ),
               _PanelItem(
                 icon: Icons.dns_outlined,
-                title: '文件服务',
-                subtitle: 'SMB / NFS / FTP / SFTP',
+                title: l10n.fileServicesTitle,
+                subtitle: l10n.fileServicesSubtitle,
                 onTap: () => context.push('/file-services'),
               ),
               _PanelItem(
                 icon: Icons.lan_outlined,
-                title: '网络',
-                subtitle: '接口、代理与网关',
+                title: l10n.networkTitle,
+                subtitle: l10n.networkSubtitle,
                 onTap: () => context.push('/network'),
               ),
             ],

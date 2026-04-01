@@ -1302,4 +1302,43 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get disabled => '已禁用';
+
+  @override
+  String get coreFeatures => '核心功能';
+
+  @override
+  String get systemManagement => '系统管理';
+
+  @override
+  String get infoCenterSubtitle => '系统信息与状态总览';
+
+  @override
+  String get updateStatusSubtitle => '系统版本与更新检查';
+
+  @override
+  String get externalAccessSubtitle => 'DDNS 与远程连接';
+
+  @override
+  String get indexServiceSubtitle => '缩图质量与索引重建';
+
+  @override
+  String get taskSchedulerSubtitle => '定时任务与执行管理';
+
+  @override
+  String get externalDevicesSubtitle => 'USB 与存储设备管理';
+
+  @override
+  String get sharedFoldersSubtitle => '文件共享与权限设置';
+
+  @override
+  String get userGroupsSubtitle => '账户与权限管理';
+
+  @override
+  String get fileServicesSubtitle => 'SMB / NFS / FTP / SFTP';
+
+  @override
+  String get networkSubtitle => '接口、代理与网关';
+
+  @override
+  String get updateStatus => '更新状态';
 }

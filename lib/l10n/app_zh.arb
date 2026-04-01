@@ -688,5 +688,18 @@
   "interface": "接口",
   "address": "地址",
   "enabled": "已启用",
-  "disabled": "已禁用"
+  "disabled": "已禁用",
+  "coreFeatures": "核心功能",
+  "systemManagement": "系统管理",
+  "infoCenterSubtitle": "系统信息与状态总览",
+  "updateStatusSubtitle": "系统版本与更新检查",
+  "externalAccessSubtitle": "DDNS 与远程连接",
+  "indexServiceSubtitle": "缩图质量与索引重建",
+  "taskSchedulerSubtitle": "定时任务与执行管理",
+  "externalDevicesSubtitle": "USB 与存储设备管理",
+  "sharedFoldersSubtitle": "文件共享与权限设置",
+  "userGroupsSubtitle": "账户与权限管理",
+  "fileServicesSubtitle": "SMB / NFS / FTP / SFTP",
+  "networkSubtitle": "接口、代理与网关",
+  "updateStatus": "更新状态"
 }

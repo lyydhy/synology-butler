@@ -2491,6 +2491,84 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'已禁用'**
   String get disabled;
+
+  /// No description provided for @coreFeatures.
+  ///
+  /// In zh, this message translates to:
+  /// **'核心功能'**
+  String get coreFeatures;
+
+  /// No description provided for @systemManagement.
+  ///
+  /// In zh, this message translates to:
+  /// **'系统管理'**
+  String get systemManagement;
+
+  /// No description provided for @infoCenterSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'系统信息与状态总览'**
+  String get infoCenterSubtitle;
+
+  /// No description provided for @updateStatusSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'系统版本与更新检查'**
+  String get updateStatusSubtitle;
+
+  /// No description provided for @externalAccessSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'DDNS 与远程连接'**
+  String get externalAccessSubtitle;
+
+  /// No description provided for @indexServiceSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'缩图质量与索引重建'**
+  String get indexServiceSubtitle;
+
+  /// No description provided for @taskSchedulerSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'定时任务与执行管理'**
+  String get taskSchedulerSubtitle;
+
+  /// No description provided for @externalDevicesSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'USB 与存储设备管理'**
+  String get externalDevicesSubtitle;
+
+  /// No description provided for @sharedFoldersSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'文件共享与权限设置'**
+  String get sharedFoldersSubtitle;
+
+  /// No description provided for @userGroupsSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'账户与权限管理'**
+  String get userGroupsSubtitle;
+
+  /// No description provided for @fileServicesSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'SMB / NFS / FTP / SFTP'**
+  String get fileServicesSubtitle;
+
+  /// No description provided for @networkSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'接口、代理与网关'**
+  String get networkSubtitle;
+
+  /// No description provided for @updateStatus.
+  ///
+  /// In zh, this message translates to:
+  /// **'更新状态'**
+  String get updateStatus;
 }
 
 class _AppLocalizationsDelegate

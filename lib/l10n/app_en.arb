@@ -687,5 +687,18 @@
   "interface": "Interface",
   "address": "Address",
   "enabled": "Enabled",
-  "disabled": "Disabled"
+  "disabled": "Disabled",
+  "coreFeatures": "Core Features",
+  "systemManagement": "System Management",
+  "infoCenterSubtitle": "System info and status overview",
+  "updateStatusSubtitle": "System version and update check",
+  "externalAccessSubtitle": "DDNS and remote connection",
+  "indexServiceSubtitle": "Thumbnail quality and index rebuild",
+  "taskSchedulerSubtitle": "Scheduled tasks and execution",
+  "externalDevicesSubtitle": "USB and storage device management",
+  "sharedFoldersSubtitle": "File sharing and permissions",
+  "userGroupsSubtitle": "Accounts and permission management",
+  "fileServicesSubtitle": "SMB / NFS / FTP / SFTP",
+  "networkSubtitle": "Interfaces, proxy and gateway",
+  "updateStatus": "Update Status"
 }

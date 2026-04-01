@@ -1326,4 +1326,43 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get disabled => 'Disabled';
+
+  @override
+  String get coreFeatures => 'Core Features';
+
+  @override
+  String get systemManagement => 'System Management';
+
+  @override
+  String get infoCenterSubtitle => 'System info and status overview';
+
+  @override
+  String get updateStatusSubtitle => 'System version and update check';
+
+  @override
+  String get externalAccessSubtitle => 'DDNS and remote connection';
+
+  @override
+  String get indexServiceSubtitle => 'Thumbnail quality and index rebuild';
+
+  @override
+  String get taskSchedulerSubtitle => 'Scheduled tasks and execution';
+
+  @override
+  String get externalDevicesSubtitle => 'USB and storage device management';
+
+  @override
+  String get sharedFoldersSubtitle => 'File sharing and permissions';
+
+  @override
+  String get userGroupsSubtitle => 'Accounts and permission management';
+
+  @override
+  String get fileServicesSubtitle => 'SMB / NFS / FTP / SFTP';
+
+  @override
+  String get networkSubtitle => 'Interfaces, proxy and gateway';
+
+  @override
+  String get updateStatus => 'Update Status';
 }
