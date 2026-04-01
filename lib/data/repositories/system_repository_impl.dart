@@ -6,6 +6,7 @@ import '../../domain/entities/external_device.dart';
 import '../../domain/entities/file_service.dart';
 import '../../domain/entities/index_service.dart';
 import '../../domain/entities/information_center.dart';
+import '../../domain/entities/network.dart';
 import '../../domain/entities/shared_folder.dart';
 import '../../domain/entities/system_status.dart';
 import '../../domain/entities/task_scheduler.dart';
@@ -360,5 +361,10 @@ class SystemRepositoryImpl implements SystemRepository {
   @override
   Future<FileServicesModel> fetchFileServices() {
     return _systemApi.fetchFileServices();
+  }
+
+  @override
+  Future<NetworkModel> fetchNetwork() {
+    return _systemApi.fetchNetwork();
   }
 }

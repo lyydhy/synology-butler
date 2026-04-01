@@ -953,7 +953,7 @@ abstract class AppLocalizations {
   /// No description provided for @ipAddress.
   ///
   /// In zh, this message translates to:
-  /// **'IP'**
+  /// **'IP 地址'**
   String get ipAddress;
 
   /// No description provided for @lastUpdated.
@@ -2359,6 +2359,138 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'原因：{message}'**
   String reasonLabel(Object message);
+
+  /// No description provided for @networkTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'网络'**
+  String get networkTitle;
+
+  /// No description provided for @networkInterfaces.
+  ///
+  /// In zh, this message translates to:
+  /// **'网络接口'**
+  String get networkInterfaces;
+
+  /// No description provided for @proxySettings.
+  ///
+  /// In zh, this message translates to:
+  /// **'代理设置'**
+  String get proxySettings;
+
+  /// No description provided for @gatewayInfo.
+  ///
+  /// In zh, this message translates to:
+  /// **'网关信息'**
+  String get gatewayInfo;
+
+  /// No description provided for @networkGeneral.
+  ///
+  /// In zh, this message translates to:
+  /// **'常规'**
+  String get networkGeneral;
+
+  /// No description provided for @noNetworkInfo.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂无网络信息'**
+  String get noNetworkInfo;
+
+  /// No description provided for @hostname.
+  ///
+  /// In zh, this message translates to:
+  /// **'主机名'**
+  String get hostname;
+
+  /// No description provided for @defaultGateway.
+  ///
+  /// In zh, this message translates to:
+  /// **'默认网关'**
+  String get defaultGateway;
+
+  /// No description provided for @ipv6Gateway.
+  ///
+  /// In zh, this message translates to:
+  /// **'IPv6 网关'**
+  String get ipv6Gateway;
+
+  /// No description provided for @dnsPrimary.
+  ///
+  /// In zh, this message translates to:
+  /// **'首选 DNS'**
+  String get dnsPrimary;
+
+  /// No description provided for @dnsSecondary.
+  ///
+  /// In zh, this message translates to:
+  /// **'备用 DNS'**
+  String get dnsSecondary;
+
+  /// No description provided for @manual.
+  ///
+  /// In zh, this message translates to:
+  /// **'手动'**
+  String get manual;
+
+  /// No description provided for @workgroup.
+  ///
+  /// In zh, this message translates to:
+  /// **'工作组'**
+  String get workgroup;
+
+  /// No description provided for @connected.
+  ///
+  /// In zh, this message translates to:
+  /// **'已连接'**
+  String get connected;
+
+  /// No description provided for @disconnected.
+  ///
+  /// In zh, this message translates to:
+  /// **'未连接'**
+  String get disconnected;
+
+  /// No description provided for @subnetMask.
+  ///
+  /// In zh, this message translates to:
+  /// **'子网掩码'**
+  String get subnetMask;
+
+  /// No description provided for @dhcp.
+  ///
+  /// In zh, this message translates to:
+  /// **'DHCP'**
+  String get dhcp;
+
+  /// No description provided for @ipv6Address.
+  ///
+  /// In zh, this message translates to:
+  /// **'IPv6 地址'**
+  String get ipv6Address;
+
+  /// No description provided for @interface.
+  ///
+  /// In zh, this message translates to:
+  /// **'接口'**
+  String get interface;
+
+  /// No description provided for @address.
+  ///
+  /// In zh, this message translates to:
+  /// **'地址'**
+  String get address;
+
+  /// No description provided for @enabled.
+  ///
+  /// In zh, this message translates to:
+  /// **'已启用'**
+  String get enabled;
+
+  /// No description provided for @disabled.
+  ///
+  /// In zh, this message translates to:
+  /// **'已禁用'**
+  String get disabled;
 }
 
 class _AppLocalizationsDelegate

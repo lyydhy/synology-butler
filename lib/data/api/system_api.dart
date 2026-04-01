@@ -9,6 +9,7 @@ import '../../core/constants/app_constants.dart';
 import '../../core/network/app_dio.dart';
 import '../../core/utils/dsm_logger.dart';
 import '../../domain/entities/file_service.dart';
+import '../../domain/entities/network.dart';
 import '../models/dsm_group_model.dart';
 import '../models/dsm_user_model.dart';
 import '../models/external_access_model.dart';
@@ -57,6 +58,9 @@ abstract class SystemApi {
 
   /// 获取文件服务状态（SMB、NFS、FTP、AFP、SFTP）
   Future<FileServicesModel> fetchFileServices();
+
+  /// 获取网络状态（常规、接口、代理、网关）
+  Future<NetworkModel> fetchNetwork();
 }
 
 class DsmSystemApi implements SystemApi {
@@ -2172,6 +2176,57 @@ class DsmSystemApi implements SystemApi {
       afpData: results[3],
       sftpData: results[4],
     );
+  }
+
+  @override
+  Future<NetworkModel> fetchNetwork() async {
+    final client = _dio;
+
+    // 使用 compound 请求并行获取所有网络信息
+    final apis = [
+      {'api': 'SYNO.Core.Network', 'method': 'get', 'version': 1},
+      {'api': 'SYNO.Core.Network.Ethernet', 'method': 'list', 'version': 2},
+      {'api': 'SYNO.Core.Network.PPPoE', 'method': 'list', 'version': 1},
+      {'api': 'SYNO.Core.Network.Proxy', 'method': 'get', 'version': 1},
+      {'api': 'SYNO.Core.Network.Router.Gateway.List', 'method': 'get', 'version': 1, 'iptype': 'ipv4', 'type': 'wan'},
+    ];
+
+    try {
+      final response = await client.post(
+        '/webapi/entry.cgi',
+        data: {
+          'stop_when_error': false,
+          'api': 'SYNO.Entry.Request',
+          'method': 'request',
+          'mode': '"sequential"',
+          'compound': jsonEncode(apis),
+          'version': 1,
+        },
+        options: Options(contentType: Headers.formUrlEncodedContentType),
+      );
+
+      if (response.data is Map && response.data['success'] == true) {
+        final result = response.data['data']?['result'] as List?;
+        if (result != null) {
+          return NetworkModel.fromApiResponse(result);
+        }
+      }
+
+      DsmLogger.failure(
+        module: 'Network',
+        action: 'fetchNetwork',
+        response: response.data,
+        reason: '网络状态获取失败',
+      );
+      return const NetworkModel();
+    } catch (e) {
+      DsmLogger.failure(
+        module: 'Network',
+        action: 'fetchNetwork',
+        reason: '获取网络状态异常: $e',
+      );
+      rethrow;
+    }
   }
 }
 

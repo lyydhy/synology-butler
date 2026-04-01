@@ -271,8 +271,8 @@ M  lib/features/auth/presentation/        # 登录页历史设备入口
 
 #### P2：控制面板第三阶段
 - [x] 用户与群组（第一版已接入：用户列表 / 群组列表 / 状态标签）
-- [ ] 文件服务（先只读状态，后配置修改）
-- [ ] 网络（优先只读，写操作最后再做）
+- [x] 文件服务（第一版已接入：SMB/NFS/FTP/AFP/SFTP 状态展示 / 版本 / 端口）
+- [x] 网络（第一版已接入：常规信息 / 网络接口 / 代理设置 / 网关信息）
 
 ### 三、明确不纳入当前范围
 - [x] 终端机和 SNMP（用户明确不需要，排除）
@@ -283,3 +283,76 @@ M  lib/features/auth/presentation/        # 登录页历史设备入口
 - `flutter analyze` 已执行并通过
 - 后续实现按 P0 → P1 → P2 顺序推进
 - 若某项在现有项目内已有基础能力，则在规划中标记为已完成/已有基础
+
+---
+
+## 2026-04-01 网络模块开发
+
+### 一、网络模块接入
+
+#### 1. 实体模型（`lib/domain/entities/network.dart`）
+
+创建网络状态相关实体：
+- `NetworkModel`：聚合所有网络信息
+- `NetworkGeneral`：常规网络信息（主机名、网关、DNS、工作组）
+- `NetworkInterface`：网络接口（以太网/PPPoE）
+- `ProxySettings`：代理设置
+- `GatewayInfo` / `GatewayRoute`：网关路由信息
+
+#### 2. API 接口（`lib/data/api/system_api.dart`）
+
+- 在 `SystemApi` 抽象类添加 `fetchNetwork()` 方法
+- 在 `DsmSystemApi` 实现类添加实现，使用 compound 请求并行获取：
+  - `SYNO.Core.Network`：常规网络信息
+  - `SYNO.Core.Network.Ethernet`：以太网接口列表
+  - `SYNO.Core.Network.PPPoE`：PPPoE 接口列表
+  - `SYNO.Core.Network.Proxy`：代理设置
+  - `SYNO.Core.Network.Router.Gateway.List`：网关信息
+
+#### 3. Repository 层
+
+- `SystemRepository` 添加 `fetchNetwork()` 抽象方法
+- `SystemRepositoryImpl` 添加实现
+
+#### 4. UI 页面（`lib/features/network/presentation/pages/network_page.dart`）
+
+- 使用单一 `FutureProvider` 获取网络数据
+- 展示内容：
+  - 常规信息卡片（主机名、默认网关、DNS、工作组）
+  - 网络接口列表（以太网/PPPoE，显示状态、IP、子网掩码、IPv6、速度、双工模式、MTU）
+  - 代理设置卡片（仅当启用时显示）
+  - 网关信息列表
+
+#### 5. 国际化
+
+添加网络相关字符串（中/英）：
+- `networkTitle`, `networkInterfaces`, `proxySettings`, `gatewayInfo`
+- `networkGeneral`, `noNetworkInfo`, `hostname`, `defaultGateway`
+- `ipv6Gateway`, `dnsPrimary`, `dnsSecondary`, `manual`, `workgroup`
+- `connected`, `disconnected`, `ipAddress`, `subnetMask`, `dhcp`
+- `ipv6Address`, `interface`, `address`, `enabled`, `disabled`
+
+#### 6. 路由与入口
+
+- 添加 `/network` 路由
+- 控制面板入口更新为"已接入"状态
+
+### 二、代码变更清单
+
+```
+M  lib/data/api/system_api.dart                 # 添加 fetchNetwork 方法
+M  lib/data/repositories/system_repository_impl.dart  # 添加 fetchNetwork 实现
+M  lib/domain/repositories/system_repository.dart     # 添加 fetchNetwork 抽象
+A  lib/domain/entities/network.dart             # 网络实体模型
+A  lib/features/network/presentation/pages/network_page.dart  # 网络页面
+M  lib/app/router.dart                          # 添加网络路由
+M  lib/features/control_panel/presentation/pages/control_panel_page.dart  # 更新入口
+M  lib/l10n/app_zh.arb                          # 中文国际化
+M  lib/l10n/app_en.arb                          # 英文国际化
+```
+
+### 三、状态更新
+
+- 控制面板 P0-P2 功能已全部完成
+- 所有规划的控制面板模块均已接入第一版
+- `flutter analyze` 通过，无错误

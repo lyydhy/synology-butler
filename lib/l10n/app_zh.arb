@@ -665,5 +665,28 @@
     "placeholders": {
       "message": {}
     }
-  }
+  },
+  "networkTitle": "网络",
+  "networkInterfaces": "网络接口",
+  "proxySettings": "代理设置",
+  "gatewayInfo": "网关信息",
+  "networkGeneral": "常规",
+  "noNetworkInfo": "暂无网络信息",
+  "hostname": "主机名",
+  "defaultGateway": "默认网关",
+  "ipv6Gateway": "IPv6 网关",
+  "dnsPrimary": "首选 DNS",
+  "dnsSecondary": "备用 DNS",
+  "manual": "手动",
+  "workgroup": "工作组",
+  "connected": "已连接",
+  "disconnected": "未连接",
+  "ipAddress": "IP 地址",
+  "subnetMask": "子网掩码",
+  "dhcp": "DHCP",
+  "ipv6Address": "IPv6 地址",
+  "interface": "接口",
+  "address": "地址",
+  "enabled": "已启用",
+  "disabled": "已禁用"
 }

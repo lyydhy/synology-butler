@@ -5,6 +5,7 @@ import '../entities/external_device.dart';
 import '../entities/file_service.dart';
 import '../entities/index_service.dart';
 import '../entities/information_center.dart';
+import '../entities/network.dart';
 import '../entities/shared_folder.dart';
 import '../entities/system_status.dart';
 import '../entities/task_scheduler.dart';
@@ -43,4 +44,6 @@ abstract class SystemRepository {
   Future<List<DsmGroup>> fetchGroups();
 
   Future<FileServicesModel> fetchFileServices();
+
+  Future<NetworkModel> fetchNetwork();
 }

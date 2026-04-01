@@ -444,7 +444,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get nextAutoUpdateTime => 'Next auto update time';
 
   @override
-  String get ipAddress => 'IP';
+  String get ipAddress => 'IP Address';
 
   @override
   String get lastUpdated => 'Last updated';
@@ -1260,4 +1260,70 @@ class AppLocalizationsEn extends AppLocalizations {
   String reasonLabel(Object message) {
     return 'Reason: $message';
   }
+
+  @override
+  String get networkTitle => 'Network';
+
+  @override
+  String get networkInterfaces => 'Network Interfaces';
+
+  @override
+  String get proxySettings => 'Proxy Settings';
+
+  @override
+  String get gatewayInfo => 'Gateway Info';
+
+  @override
+  String get networkGeneral => 'General';
+
+  @override
+  String get noNetworkInfo => 'No network information available';
+
+  @override
+  String get hostname => 'Hostname';
+
+  @override
+  String get defaultGateway => 'Default Gateway';
+
+  @override
+  String get ipv6Gateway => 'IPv6 Gateway';
+
+  @override
+  String get dnsPrimary => 'Primary DNS';
+
+  @override
+  String get dnsSecondary => 'Secondary DNS';
+
+  @override
+  String get manual => 'Manual';
+
+  @override
+  String get workgroup => 'Workgroup';
+
+  @override
+  String get connected => 'Connected';
+
+  @override
+  String get disconnected => 'Disconnected';
+
+  @override
+  String get subnetMask => 'Subnet Mask';
+
+  @override
+  String get dhcp => 'DHCP';
+
+  @override
+  String get ipv6Address => 'IPv6 Address';
+
+  @override
+  String get interface => 'Interface';
+
+  @override
+  String get address => 'Address';
+
+  @override
+  String get enabled => 'Enabled';
+
+  @override
+  String get disabled => 'Disabled';
 }

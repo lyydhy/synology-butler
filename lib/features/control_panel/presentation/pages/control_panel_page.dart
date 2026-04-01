@@ -98,7 +98,14 @@ class ControlPanelPage extends StatelessWidget {
                 statusColor: Colors.green,
                 onTap: () => context.push('/file-services'),
               ),
-              const _StaticPanelItem(icon: Icons.lan_outlined, title: '网络', subtitle: '第三阶段'),
+              _PanelItem(
+                icon: Icons.lan_outlined,
+                title: '网络',
+                subtitle: '网络接口、代理、网关信息',
+                status: '已接入',
+                statusColor: Colors.green,
+                onTap: () => context.push('/network'),
+              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -208,25 +215,6 @@ class _PanelItem extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _StaticPanelItem extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-
-  const _StaticPanelItem({required this.icon, required this.title, required this.subtitle});
-
-  @override
-  Widget build(BuildContext context) {
-    return _PanelItem(
-      icon: icon,
-      title: title,
-      subtitle: subtitle,
-      status: '未开始',
-      statusColor: Colors.grey,
     );
   }
 }

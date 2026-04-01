@@ -664,5 +664,28 @@
     "placeholders": {
       "message": {}
     }
-  }
+  },
+  "networkTitle": "Network",
+  "networkInterfaces": "Network Interfaces",
+  "proxySettings": "Proxy Settings",
+  "gatewayInfo": "Gateway Info",
+  "networkGeneral": "General",
+  "noNetworkInfo": "No network information available",
+  "hostname": "Hostname",
+  "defaultGateway": "Default Gateway",
+  "ipv6Gateway": "IPv6 Gateway",
+  "dnsPrimary": "Primary DNS",
+  "dnsSecondary": "Secondary DNS",
+  "manual": "Manual",
+  "workgroup": "Workgroup",
+  "connected": "Connected",
+  "disconnected": "Disconnected",
+  "ipAddress": "IP Address",
+  "subnetMask": "Subnet Mask",
+  "dhcp": "DHCP",
+  "ipv6Address": "IPv6 Address",
+  "interface": "Interface",
+  "address": "Address",
+  "enabled": "Enabled",
+  "disabled": "Disabled"
 }

@@ -441,7 +441,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get nextAutoUpdateTime => '下次自动更新时间';
 
   @override
-  String get ipAddress => 'IP';
+  String get ipAddress => 'IP 地址';
 
   @override
   String get lastUpdated => '上次更新';
@@ -1236,4 +1236,70 @@ class AppLocalizationsZh extends AppLocalizations {
   String reasonLabel(Object message) {
     return '原因：$message';
   }
+
+  @override
+  String get networkTitle => '网络';
+
+  @override
+  String get networkInterfaces => '网络接口';
+
+  @override
+  String get proxySettings => '代理设置';
+
+  @override
+  String get gatewayInfo => '网关信息';
+
+  @override
+  String get networkGeneral => '常规';
+
+  @override
+  String get noNetworkInfo => '暂无网络信息';
+
+  @override
+  String get hostname => '主机名';
+
+  @override
+  String get defaultGateway => '默认网关';
+
+  @override
+  String get ipv6Gateway => 'IPv6 网关';
+
+  @override
+  String get dnsPrimary => '首选 DNS';
+
+  @override
+  String get dnsSecondary => '备用 DNS';
+
+  @override
+  String get manual => '手动';
+
+  @override
+  String get workgroup => '工作组';
+
+  @override
+  String get connected => '已连接';
+
+  @override
+  String get disconnected => '未连接';
+
+  @override
+  String get subnetMask => '子网掩码';
+
+  @override
+  String get dhcp => 'DHCP';
+
+  @override
+  String get ipv6Address => 'IPv6 地址';
+
+  @override
+  String get interface => '接口';
+
+  @override
+  String get address => '地址';
+
+  @override
+  String get enabled => '已启用';
+
+  @override
+  String get disabled => '已禁用';
 }
