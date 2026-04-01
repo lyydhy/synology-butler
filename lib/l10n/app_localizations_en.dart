@@ -1365,4 +1365,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get updateStatus => 'Update Status';
+
+  @override
+  String get terminalTitle => 'Terminal Settings';
+
+  @override
+  String get terminalSubtitle => 'SSH and Telnet services';
 }

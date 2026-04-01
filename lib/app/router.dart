@@ -34,6 +34,7 @@ import '../features/performance/presentation/pages/performance_page.dart';
 import '../features/server-management/presentation/pages/server_management_page.dart';
 import '../features/shell/main_shell_page.dart';
 import '../features/task_scheduler/presentation/pages/task_scheduler_page.dart';
+import '../features/terminal/presentation/pages/terminal_page.dart';
 import '../features/transfers/presentation/pages/transfers_page.dart';
 import '../features/upgrade/presentation/pages/upgrade_page.dart';
 
@@ -60,6 +61,7 @@ GoRouter createAppRouter({required String initialLocation}) {
     GoRoute(path: '/user-groups', builder: (context, state) => const UserGroupsPage()),
     GoRoute(path: '/file-services', builder: (context, state) => const FileServicesPage()),
     GoRoute(path: '/network', builder: (context, state) => const NetworkPage()),
+    GoRoute(path: '/terminal', builder: (context, state) => const TerminalPage()),
     GoRoute(path: '/upgrade', builder: (context, state) => const UpgradePage()),
     GoRoute(path: '/packages', builder: (context, state) => const PackagesPage()),
     GoRoute(path: '/performance', builder: (context, state) => const PerformancePage()),

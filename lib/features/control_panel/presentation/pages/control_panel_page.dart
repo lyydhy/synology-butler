@@ -132,6 +132,12 @@ class ControlPanelPage extends ConsumerWidget {
                 subtitle: l10n.networkSubtitle,
                 onTap: () => context.push('/network'),
               ),
+              _PanelItem(
+                icon: Icons.terminal_rounded,
+                title: '终端设置',
+                subtitle: 'SSH 与 Telnet 服务',
+                onTap: () => context.push('/terminal'),
+              ),
             ],
           ),
         ],

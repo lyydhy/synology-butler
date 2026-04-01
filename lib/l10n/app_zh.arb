@@ -701,5 +701,7 @@
   "userGroupsSubtitle": "账户与权限管理",
   "fileServicesSubtitle": "SMB / NFS / FTP / SFTP",
   "networkSubtitle": "接口、代理与网关",
-  "updateStatus": "更新状态"
+  "updateStatus": "更新状态",
+  "terminalTitle": "终端设置",
+  "terminalSubtitle": "SSH 与 Telnet 服务"
 }

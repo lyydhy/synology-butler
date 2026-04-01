@@ -2569,6 +2569,18 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'更新状态'**
   String get updateStatus;
+
+  /// No description provided for @terminalTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'终端设置'**
+  String get terminalTitle;
+
+  /// No description provided for @terminalSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'SSH 与 Telnet 服务'**
+  String get terminalSubtitle;
 }
 
 class _AppLocalizationsDelegate

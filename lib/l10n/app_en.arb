@@ -700,5 +700,7 @@
   "userGroupsSubtitle": "Accounts and permission management",
   "fileServicesSubtitle": "SMB / NFS / FTP / SFTP",
   "networkSubtitle": "Interfaces, proxy and gateway",
-  "updateStatus": "Update Status"
+  "updateStatus": "Update Status",
+  "terminalTitle": "Terminal Settings",
+  "terminalSubtitle": "SSH and Telnet services"
 }

@@ -10,6 +10,7 @@ import '../../domain/entities/network.dart';
 import '../../domain/entities/shared_folder.dart';
 import '../../domain/entities/system_status.dart';
 import '../../domain/entities/task_scheduler.dart';
+import '../../domain/entities/terminal_settings.dart';
 import '../../domain/entities/upgrade_status.dart';
 import '../../domain/repositories/system_repository.dart';
 import '../api/system_api.dart';
@@ -372,5 +373,23 @@ class SystemRepositoryImpl implements SystemRepository {
   @override
   Future<UpgradeStatus> checkUpgrade() {
     return _systemApi.checkUpgrade();
+  }
+
+  @override
+  Future<TerminalSettings> fetchTerminalSettings() {
+    return _systemApi.fetchTerminalSettings();
+  }
+
+  @override
+  Future<void> setTerminalSettings({
+    required bool sshEnabled,
+    required bool telnetEnabled,
+    required int sshPort,
+  }) {
+    return _systemApi.setTerminalSettings(
+      sshEnabled: sshEnabled,
+      telnetEnabled: telnetEnabled,
+      sshPort: sshPort,
+    );
   }
 }

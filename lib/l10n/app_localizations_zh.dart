@@ -1341,4 +1341,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get updateStatus => '更新状态';
+
+  @override
+  String get terminalTitle => '终端设置';
+
+  @override
+  String get terminalSubtitle => 'SSH 与 Telnet 服务';
 }

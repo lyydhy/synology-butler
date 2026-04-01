@@ -9,6 +9,7 @@ import '../entities/network.dart';
 import '../entities/shared_folder.dart';
 import '../entities/system_status.dart';
 import '../entities/task_scheduler.dart';
+import '../entities/terminal_settings.dart';
 import '../entities/upgrade_status.dart';
 
 abstract class SystemRepository {
@@ -49,4 +50,12 @@ abstract class SystemRepository {
   Future<NetworkModel> fetchNetwork();
 
   Future<UpgradeStatus> checkUpgrade();
+
+  Future<TerminalSettings> fetchTerminalSettings();
+
+  Future<void> setTerminalSettings({
+    required bool sshEnabled,
+    required bool telnetEnabled,
+    required int sshPort,
+  });
 }
