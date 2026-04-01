@@ -7,6 +7,7 @@ import '../../domain/entities/file_service.dart';
 import '../../domain/entities/index_service.dart';
 import '../../domain/entities/information_center.dart';
 import '../../domain/entities/network.dart';
+import '../../domain/entities/power_status.dart';
 import '../../domain/entities/shared_folder.dart';
 import '../../domain/entities/system_status.dart';
 import '../../domain/entities/task_scheduler.dart';
@@ -401,5 +402,25 @@ class SystemRepositoryImpl implements SystemRepository {
   @override
   Future<void> reboot({bool force = false}) {
     return _systemApi.reboot(force: force);
+  }
+
+  @override
+  Future<PowerStatus> fetchPowerStatus() {
+    return _systemApi.fetchPowerStatus();
+  }
+
+  @override
+  Future<void> setPowerSettings({
+    int? ledBrightness,
+    String? fanSpeedMode,
+    bool? poweronBeep,
+    bool? poweroffBeep,
+  }) {
+    return _systemApi.setPowerSettings(
+      ledBrightness: ledBrightness,
+      fanSpeedMode: fanSpeedMode,
+      poweronBeep: poweronBeep,
+      poweroffBeep: poweroffBeep,
+    );
   }
 }

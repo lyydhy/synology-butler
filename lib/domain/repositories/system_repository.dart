@@ -6,6 +6,7 @@ import '../entities/file_service.dart';
 import '../entities/index_service.dart';
 import '../entities/information_center.dart';
 import '../entities/network.dart';
+import '../entities/power_status.dart';
 import '../entities/shared_folder.dart';
 import '../entities/system_status.dart';
 import '../entities/task_scheduler.dart';
@@ -64,4 +65,15 @@ abstract class SystemRepository {
 
   /// 重启
   Future<void> reboot({bool force = false});
+
+  /// 获取电源状态
+  Future<PowerStatus> fetchPowerStatus();
+
+  /// 设置电源选项
+  Future<void> setPowerSettings({
+    int? ledBrightness,
+    String? fanSpeedMode,
+    bool? poweronBeep,
+    bool? poweroffBeep,
+  });
 }
