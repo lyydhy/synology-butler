@@ -345,8 +345,6 @@ class _ComposeListTab extends StatefulWidget {
 }
 
 class _ComposeListTabState extends State<_ComposeListTab> {
-  String _searchQuery = '';
-
   @override
   Widget build(BuildContext context) {
     if (widget.isUnavailable) return const _UnavailablePlaceholder();
@@ -354,26 +352,13 @@ class _ComposeListTabState extends State<_ComposeListTab> {
     final items = _buildComposeProjects(
       projects: widget.projects,
       containers: widget.containers,
-      searchQuery: _searchQuery,
+      searchQuery: '',
     );
-    final normalizedQuery = _searchQuery.trim().toLowerCase();
 
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-          child: TextField(
-            decoration: const InputDecoration(
-              hintText: '搜索项目名',
-              prefixIcon: Icon(Icons.search_rounded),
-              border: OutlineInputBorder(),
-              isDense: true,
-            ),
-            onChanged: (value) => setState(() => _searchQuery = value),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
           child: Row(
             children: [
               Expanded(
@@ -399,7 +384,7 @@ class _ComposeListTabState extends State<_ComposeListTab> {
         ),
         Expanded(
           child: items.isEmpty
-              ? _EmptyState(label: normalizedQuery.isEmpty ? '暂无 Compose 项目' : '没有匹配的项目')
+              ? const _EmptyState(label: '暂无 Compose 项目')
               : ListView.separated(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                   itemBuilder: (context, index) => _ComposeCard(item: items[index]),
@@ -423,23 +408,13 @@ class _ImageListTab extends StatefulWidget {
 }
 
 class _ImageListTabState extends State<_ImageListTab> {
-  String _selectedFilter = 'all';
-  String _searchQuery = '';
   String _selectedSort = 'nameAsc';
 
   @override
   Widget build(BuildContext context) {
     if (widget.isUnavailable) return const _UnavailablePlaceholder();
 
-    final normalizedQuery = _searchQuery.trim().toLowerCase();
-    final items = widget.items.where((item) {
-      if (_selectedFilter == 'latest' && item.tag.toLowerCase() != 'latest') return false;
-      if (_selectedFilter == 'tagged' && item.tag.toLowerCase() == 'latest') return false;
-      if (normalizedQuery.isEmpty) return true;
-      return item.name.toLowerCase().contains(normalizedQuery) ||
-          item.tag.toLowerCase().contains(normalizedQuery) ||
-          item.id.toLowerCase().contains(normalizedQuery);
-    }).toList()
+    final items = widget.items.toList()
       ..sort((a, b) {
         switch (_selectedSort) {
           case 'nameDesc':
@@ -461,31 +436,7 @@ class _ImageListTabState extends State<_ImageListTab> {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-          child: SegmentedButton<String>(
-            segments: const [
-              ButtonSegment(value: 'all', label: Text('全部')),
-              ButtonSegment(value: 'latest', label: Text('latest')),
-              ButtonSegment(value: 'tagged', label: Text('其他标签')),
-            ],
-            selected: {_selectedFilter},
-            onSelectionChanged: (value) => setState(() => _selectedFilter = value.first),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-          child: TextField(
-            decoration: const InputDecoration(
-              hintText: '搜索镜像名 / 标签 / ID',
-              prefixIcon: Icon(Icons.search_rounded),
-              border: OutlineInputBorder(),
-              isDense: true,
-            ),
-            onChanged: (value) => setState(() => _searchQuery = value),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
           child: Row(
             children: [
               const Text('排序'),
@@ -514,7 +465,7 @@ class _ImageListTabState extends State<_ImageListTab> {
         ),
         Expanded(
           child: items.isEmpty
-              ? _EmptyState(label: normalizedQuery.isEmpty ? '暂无镜像数据' : '没有匹配的镜像')
+              ? const _EmptyState(label: '暂无镜像数据')
               : ListView.separated(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                   itemBuilder: (context, index) => _ImageCard(item: items[index]),
