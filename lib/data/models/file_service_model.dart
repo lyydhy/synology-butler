@@ -20,7 +20,7 @@ class FileServiceModel {
   static FileServiceStatus _parseSmb(Map<String, dynamic> data) {
     return FileServiceStatus(
       serviceName: 'SMB',
-      enabled: data['enable'] == true || data['smb_enable'] == true,
+      enabled: data['enable_samba'] == true || data['enable'] == true,
       version: _buildSmbVersion(data),
       port: 445,
       extraInfo: {
@@ -44,10 +44,11 @@ class FileServiceModel {
   static FileServiceStatus _parseNfs(Map<String, dynamic> data) {
     return FileServiceStatus(
       serviceName: 'NFS',
-      enabled: data['enable'] == true || data['nfs_enable'] == true,
+      enabled: data['enable_nfs'] == true || data['enable'] == true,
       port: 2049,
       extraInfo: {
-        'nfs_v4': data['enable_nfs_v4'],
+        'enable_nfs_v4': data['enable_nfs_v4'],
+        'nfs_v4_domain': data['nfs_v4_domain'],
       },
     );
   }
@@ -55,11 +56,13 @@ class FileServiceModel {
   static FileServiceStatus _parseFtp(Map<String, dynamic> data) {
     return FileServiceStatus(
       serviceName: 'FTP',
-      enabled: data['enable'] == true || data['ftp_enable'] == true,
-      port: data['ftp_port'] ?? 21,
+      enabled: data['enable_ftp'] == true || data['enable'] == true,
+      port: data['portnum'] ?? data['ftp_port'] ?? 21,
       extraInfo: {
+        'enable_ftps': data['enable_ftps'],
         'anonymous': data['anonymous'],
-        'chroot': data['chroot'],
+        'timeout': data['timeout'],
+        'utf8_mode': data['utf8_mode'],
       },
     );
   }
@@ -67,7 +70,7 @@ class FileServiceModel {
   static FileServiceStatus _parseAfp(Map<String, dynamic> data) {
     return FileServiceStatus(
       serviceName: 'AFP',
-      enabled: data['enable'] == true || data['afp_enable'] == true,
+      enabled: data['enable_afp'] == true || data['enable'] == true,
       port: 548,
       extraInfo: {
         'ddns': data['ddns_hostname'],
@@ -78,10 +81,10 @@ class FileServiceModel {
   static FileServiceStatus _parseSftp(Map<String, dynamic> data) {
     return FileServiceStatus(
       serviceName: 'SFTP',
-      enabled: data['enable'] == true || data['sftp_enable'] == true,
-      port: data['sftp_port'] ?? 22,
+      enabled: data['enable'] == true,
+      port: data['portnum'] ?? data['sftp_portnum'] ?? 22,
       extraInfo: {
-        'ssh_port': data['ssh_port'],
+        'sftp_portnum': data['sftp_portnum'],
       },
     );
   }

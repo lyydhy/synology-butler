@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/utils/l10n.dart';
-import '../../../../core/utils/toast.dart';
 import '../../../../core/widgets/app_error_state.dart';
 import '../../../../domain/entities/file_service.dart';
 import '../../../dashboard/presentation/providers/dashboard_providers.dart';
@@ -160,6 +159,11 @@ class _ServiceCard extends ConsumerWidget {
         icon = Icons.dns_rounded;
     }
 
+    // 从 extraInfo 获取更多信息
+    final workgroup = service.extraInfo['workgroup'] as String?;
+    final nfsV4Domain = service.extraInfo['nfs_v4_domain'] as String?;
+    final ftpsEnabled = service.extraInfo['enable_ftps'] as bool?;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -204,15 +208,24 @@ class _ServiceCard extends ConsumerWidget {
                           enabled: value,
                         );
                     ref.invalidate(fileServicesProvider);
-                    showSuccessToast('${service.serviceName} 已${value ? "启用" : "禁用"}');
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('${service.serviceName} 已${value ? "启用" : "禁用"}')),
+                      );
+                    }
                   } catch (e) {
-                    showErrorToast('操作失败: $e');
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('操作失败: $e')),
+                      );
+                    }
                   }
                 },
               ),
             ],
           ),
-          if (service.version != null || service.port != null) ...[
+          // 显示详细信息
+          if (service.version != null || service.port != null || workgroup != null && workgroup.isNotEmpty || nfsV4Domain != null && nfsV4Domain.isNotEmpty) ...[
             const SizedBox(height: 12),
             Wrap(
               spacing: 16,
@@ -222,6 +235,12 @@ class _ServiceCard extends ConsumerWidget {
                   _MetaItem(label: '版本', value: service.version!),
                 if (service.port != null)
                   _MetaItem(label: '端口', value: service.port.toString()),
+                if (workgroup != null && workgroup.isNotEmpty)
+                  _MetaItem(label: '工作组', value: workgroup),
+                if (nfsV4Domain != null && nfsV4Domain.isNotEmpty)
+                  _MetaItem(label: 'NFSv4 域', value: nfsV4Domain),
+                if (ftpsEnabled == true)
+                  _MetaItem(label: 'FTPS', value: '已启用'),
               ],
             ),
           ],
@@ -258,4 +277,12 @@ class _MetaItem extends StatelessWidget {
       ],
     );
   }
+}
+
+void showSuccessToast(String message) {
+  // TODO: 实现全局 toast
+}
+
+void showErrorToast(String message) {
+  // TODO: 实现全局 toast
 }
