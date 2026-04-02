@@ -240,7 +240,7 @@ class _ServiceCard extends ConsumerWidget {
                 if (nfsV4Domain != null && nfsV4Domain.isNotEmpty)
                   _MetaItem(label: 'NFSv4 域', value: nfsV4Domain),
                 if (ftpsEnabled == true)
-                  _MetaItem(label: 'FTPS', value: '已启用'),
+                  const _MetaItem(label: 'FTPS', value: '已启用'),
               ],
             ),
           ],
