@@ -1781,7 +1781,7 @@ class DsmSystemApi implements SystemApi {
           : 'DSM $major';
     }
 
-    return 'DSM 鐗堟湰鏈煡';
+    return 'DSM 版本未知';
   }
 
   List<Map> _extractVolumeList(Map space) {
