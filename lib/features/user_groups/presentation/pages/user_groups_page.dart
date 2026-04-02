@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/widgets/app_error_state.dart';
 import '../../../../domain/entities/dsm_group.dart';
 import '../../../../domain/entities/dsm_user.dart';
+import '../../../dashboard/presentation/providers/dashboard_providers.dart';
 import '../providers/user_groups_providers.dart';
 
 class UserGroupsPage extends ConsumerStatefulWidget {
@@ -354,20 +355,204 @@ class _GroupCard extends StatelessWidget {
   }
 }
 
-class _UserDetailSheet extends StatelessWidget {
+class _UserDetailSheet extends ConsumerStatefulWidget {
   final DsmUser user;
 
   const _UserDetailSheet({required this.user});
 
   @override
+  ConsumerState<_UserDetailSheet> createState() => _UserDetailSheetState();
+}
+
+class _UserDetailSheetState extends ConsumerState<_UserDetailSheet> {
+  late TextEditingController _descriptionController;
+  late TextEditingController _emailController;
+  bool _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _descriptionController = TextEditingController(text: widget.user.description);
+    _emailController = TextEditingController(text: widget.user.email);
+  }
+
+  @override
+  void dispose() {
+    _descriptionController.dispose();
+    _emailController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _saveChanges() async {
+    if (_saving) return;
+
+    setState(() => _saving = true);
+
+    try {
+      await ref.read(systemRepositoryProvider).updateUser(
+        name: widget.user.name,
+        description: _descriptionController.text,
+        email: _emailController.text,
+      );
+
+      ref.invalidate(usersProvider);
+
+      if (mounted) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('用户信息已更新')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('保存失败: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _saving = false);
+      }
+    }
+  }
+
+  Future<void> _toggleUserStatus(bool disable) async {
+    if (_saving) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(disable ? '禁用用户' : '启用用户'),
+        content: Text(disable
+          ? '确定要禁用用户 "${widget.user.name}" 吗？禁用后该用户将无法登录。'
+          : '确定要启用用户 "${widget.user.name}" 吗？'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('确定'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    setState(() => _saving = true);
+
+    try {
+      await ref.read(systemRepositoryProvider).setUserStatus(
+        name: widget.user.name,
+        disabled: disable,
+      );
+
+      ref.invalidate(usersProvider);
+
+      if (mounted) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(disable ? '用户已禁用' : '用户已启用')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('操作失败: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _saving = false);
+      }
+    }
+  }
+
+  Future<void> _resetPassword() async {
+    final passwordController = TextEditingController();
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('重置密码'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('为用户 "${widget.user.name}" 设置新密码：'),
+            const SizedBox(height: 12),
+            TextField(
+              controller: passwordController,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: '新密码',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('确定'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    final password = passwordController.text;
+    if (password.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('密码不能为空')),
+        );
+      }
+      return;
+    }
+
+    setState(() => _saving = true);
+
+    try {
+      await ref.read(systemRepositoryProvider).updateUser(
+        name: widget.user.name,
+        password: password,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('密码已重置')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('重置失败: $e')),
+        );
+      }
+    } finally {
+      passwordController.dispose();
+      if (mounted) {
+        setState(() => _saving = false);
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final statusColor = _getStatusColor(user.status, user.isExpired);
+    final statusColor = _getStatusColor(widget.user.status, widget.user.isExpired);
 
     return DraggableScrollableSheet(
-      initialChildSize: 0.5,
-      minChildSize: 0.3,
-      maxChildSize: 0.8,
+      initialChildSize: 0.6,
+      minChildSize: 0.4,
+      maxChildSize: 0.9,
       expand: false,
       builder: (context, scrollController) {
         return Container(
@@ -401,7 +586,7 @@ class _UserDetailSheet extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            user.name,
+                            widget.user.name,
                             style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
                           ),
                           const SizedBox(height: 4),
@@ -412,7 +597,7 @@ class _UserDetailSheet extends StatelessWidget {
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
-                              _getStatusText(user.status, user.isExpired),
+                              _getStatusText(widget.user.status, widget.user.isExpired),
                               style: theme.textTheme.labelSmall?.copyWith(color: statusColor, fontWeight: FontWeight.w600),
                             ),
                           ),
@@ -432,48 +617,70 @@ class _UserDetailSheet extends StatelessWidget {
                   controller: scrollController,
                   padding: const EdgeInsets.all(16),
                   children: [
-                    _DetailTile(
+                    // 用户名（只读）
+                    _buildReadOnlyField(
                       icon: Icons.person_outline_rounded,
                       label: '用户名',
-                      value: user.name,
+                      value: widget.user.name,
                     ),
-                    _DetailTile(
-                      icon: Icons.description_outlined,
-                      label: '描述',
-                      value: user.description.isNotEmpty ? user.description : '无',
+                    const SizedBox(height: 16),
+                    // 描述（可编辑）
+                    TextField(
+                      controller: _descriptionController,
+                      decoration: const InputDecoration(
+                        labelText: '描述',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.description_outlined),
+                      ),
                     ),
-                    _DetailTile(
-                      icon: Icons.email_outlined,
-                      label: '邮箱',
-                      value: user.email.isNotEmpty ? user.email : '无',
+                    const SizedBox(height: 16),
+                    // 邮箱（可编辑）
+                    TextField(
+                      controller: _emailController,
+                      decoration: const InputDecoration(
+                        labelText: '邮箱',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.email_outlined),
+                      ),
+                      keyboardType: TextInputType.emailAddress,
                     ),
-                    _DetailTile(
-                      icon: Icons.info_outline_rounded,
-                      label: '状态',
-                      value: _getStatusText(user.status, user.isExpired),
-                      valueColor: statusColor,
-                    ),
-                    if (user.isExpired)
-                      Container(
-                        margin: const EdgeInsets.only(top: 16),
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.red.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.red.withValues(alpha: 0.2)),
+                    const SizedBox(height: 24),
+                    // 操作按钮
+                    Row(
+                      children: [
+                        Expanded(
+                          child: FilledButton.icon(
+                            onPressed: _saving ? null : _saveChanges,
+                            icon: _saving
+                              ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                              : const Icon(Icons.save_rounded),
+                            label: const Text('保存'),
+                          ),
                         ),
-                        child: Row(
-                          children: [
-                            Icon(Icons.warning_amber_rounded, color: Colors.red.shade700, size: 20),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                '此用户账户已过期',
-                                style: theme.textTheme.bodySmall?.copyWith(color: Colors.red.shade900),
-                              ),
-                            ),
-                          ],
-                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    // 重置密码
+                    OutlinedButton.icon(
+                      onPressed: _saving ? null : _resetPassword,
+                      icon: const Icon(Icons.lock_reset_rounded),
+                      label: const Text('重置密码'),
+                    ),
+                    const SizedBox(height: 12),
+                    // 禁用/启用用户
+                    if (widget.user.isExpired || widget.user.status.toLowerCase() == 'disabled')
+                      OutlinedButton.icon(
+                        onPressed: _saving ? null : () => _toggleUserStatus(false),
+                        icon: const Icon(Icons.check_circle_outline_rounded),
+                        label: const Text('启用用户'),
+                        style: OutlinedButton.styleFrom(foregroundColor: Colors.green),
+                      )
+                    else
+                      OutlinedButton.icon(
+                        onPressed: _saving ? null : () => _toggleUserStatus(true),
+                        icon: const Icon(Icons.block_rounded),
+                        label: const Text('禁用用户'),
+                        style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
                       ),
                   ],
                 ),
@@ -482,6 +689,38 @@ class _UserDetailSheet extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildReadOnlyField({required IconData icon, required String label, required String value}) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: theme.colorScheme.onSurfaceVariant),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                ),
+                Text(
+                  value,
+                  style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -634,13 +873,11 @@ class _DetailTile extends StatelessWidget {
   final IconData icon;
   final String label;
   final String value;
-  final Color? valueColor;
 
   const _DetailTile({
     required this.icon,
     required this.label,
     required this.value,
-    this.valueColor,
   });
 
   @override
@@ -664,10 +901,7 @@ class _DetailTile extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   value,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w500,
-                    color: valueColor,
-                  ),
+                  style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
                 ),
               ],
             ),

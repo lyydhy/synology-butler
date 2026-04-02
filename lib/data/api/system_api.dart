@@ -104,6 +104,20 @@ abstract class SystemApi {
 
   /// 获取开关机计划
   Future<List<PowerScheduleTask>> fetchPowerSchedule();
+
+  /// 更新用户信息
+  Future<void> updateUser({
+    required String name,
+    String? description,
+    String? email,
+    String? password,
+  });
+
+  /// 设置用户状态（启用/禁用）
+  Future<void> setUserStatus({
+    required String name,
+    required bool disabled,
+  });
 }
 
 class DsmSystemApi implements SystemApi {
@@ -2812,6 +2826,93 @@ class DsmSystemApi implements SystemApi {
         module: 'Power',
         action: 'fetchPowerSchedule',
         reason: '获取开关机计划异常: $e',
+      );
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> updateUser({
+    required String name,
+    String? description,
+    String? email,
+    String? password,
+  }) async {
+    final client = _dio;
+
+    final data = <String, dynamic>{
+      'api': 'SYNO.Core.User',
+      'method': 'set',
+      'version': 1,
+      'name': name,
+    };
+
+    if (description != null) data['description'] = description;
+    if (email != null) data['email'] = email;
+    if (password != null && password.isNotEmpty) data['password'] = password;
+
+    try {
+      final response = await client.post(
+        '/webapi/entry.cgi',
+        data: data,
+        options: Options(contentType: Headers.formUrlEncodedContentType),
+      );
+
+      if (response.data is Map && response.data['success'] != true) {
+        final error = response.data['error']?['message'] ?? '更新用户失败';
+        throw Exception(error);
+      }
+
+      DsmLogger.success(
+        module: 'User',
+        action: 'updateUser',
+        response: {'name': name},
+      );
+    } catch (e) {
+      DsmLogger.failure(
+        module: 'User',
+        action: 'updateUser',
+        reason: '更新用户异常: $e',
+      );
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> setUserStatus({
+    required String name,
+    required bool disabled,
+  }) async {
+    final client = _dio;
+
+    try {
+      final response = await client.post(
+        '/webapi/entry.cgi',
+        data: {
+          'api': 'SYNO.Core.User',
+          'method': 'set',
+          'version': 1,
+          'name': name,
+          'expired': disabled ? 1 : 0,
+        },
+        options: Options(contentType: Headers.formUrlEncodedContentType),
+      );
+
+      if (response.data is Map && response.data['success'] != true) {
+        final error = response.data['error']?['message'] ?? '设置用户状态失败';
+        throw Exception(error);
+      }
+
+      DsmLogger.success(
+        module: 'User',
+        action: 'setUserStatus',
+        response: {'name': name, 'disabled': disabled},
+      );
+    } catch (e) {
+      DsmLogger.failure(
+        module: 'User',
+        action: 'setUserStatus',
+        reason: '设置用户状态异常: $e',
       );
       rethrow;
     }

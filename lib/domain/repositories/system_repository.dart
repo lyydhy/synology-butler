@@ -86,4 +86,18 @@ abstract class SystemRepository {
 
   /// 获取开关机计划
   Future<List<PowerScheduleTask>> fetchPowerSchedule();
+
+  /// 更新用户信息
+  Future<void> updateUser({
+    required String name,
+    String? description,
+    String? email,
+    String? password,
+  });
+
+  /// 设置用户状态（启用/禁用）
+  Future<void> setUserStatus({
+    required String name,
+    required bool disabled,
+  });
 }

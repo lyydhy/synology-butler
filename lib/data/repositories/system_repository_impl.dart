@@ -440,4 +440,30 @@ class SystemRepositoryImpl implements SystemRepository {
   Future<List<PowerScheduleTask>> fetchPowerSchedule() {
     return _systemApi.fetchPowerSchedule();
   }
+
+  @override
+  Future<void> updateUser({
+    required String name,
+    String? description,
+    String? email,
+    String? password,
+  }) {
+    return _systemApi.updateUser(
+      name: name,
+      description: description,
+      email: email,
+      password: password,
+    );
+  }
+
+  @override
+  Future<void> setUserStatus({
+    required String name,
+    required bool disabled,
+  }) {
+    return _systemApi.setUserStatus(
+      name: name,
+      disabled: disabled,
+    );
+  }
 }
