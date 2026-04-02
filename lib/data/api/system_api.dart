@@ -1759,11 +1759,13 @@ class DsmSystemApi implements SystemApi {
   }
 
   String _buildVersionText(Map infoData) {
+    // 优先使用 version_string
     final versionString = infoData['version_string']?.toString();
     if (versionString != null && versionString.trim().isNotEmpty) {
       return versionString.trim();
     }
 
+    // 其次使用 productversion + buildnumber
     final productVersion = infoData['productversion']?.toString();
     if (productVersion != null && productVersion.trim().isNotEmpty) {
       final build = infoData['buildnumber']?.toString();
@@ -1773,6 +1775,7 @@ class DsmSystemApi implements SystemApi {
       return 'DSM ${productVersion.trim()}';
     }
 
+    // 再次使用 productmajor + productminor
     final major = infoData['productmajor']?.toString();
     final minor = infoData['productminor']?.toString();
     if (major != null && major.isNotEmpty) {
@@ -1781,7 +1784,14 @@ class DsmSystemApi implements SystemApi {
           : 'DSM $major';
     }
 
-    return 'DSM 版本未知';
+    // 记录警告：无法获取版本信息
+    DsmLogger.failure(
+      module: 'System',
+      action: '_buildVersionText',
+      reason: '无法获取DSM版本，infoData keys: ${infoData.keys}',
+    );
+    
+    return 'DSM';
   }
 
   List<Map> _extractVolumeList(Map space) {
