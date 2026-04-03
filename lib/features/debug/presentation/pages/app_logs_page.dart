@@ -5,6 +5,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/utils/local_app_log_store.dart';
 import '../../../../core/utils/l10n.dart';
+import '../../../../core/utils/toast.dart';
 
 class AppLogsPage extends StatefulWidget {
   const AppLogsPage({super.key});
@@ -39,9 +40,7 @@ class _AppLogsPageState extends State<AppLogsPage> {
                   Navigator.of(dialogContext).pop();
                 }
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('错误内容已复制')),
-                  );
+                  Toast.show('错误内容已复制');
                 }
               },
               child: const Text('复制'),
@@ -96,9 +95,7 @@ class _AppLogsPageState extends State<AppLogsPage> {
     );
 
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.appLogsExported(exportedPath))),
-    );
+    Toast.show(l10n.appLogsExported(exportedPath));
   }
 
   Future<void> _shareSanitizedLog(LocalAppLogFileSummary file) async {
@@ -201,9 +198,7 @@ class _AppLogsPageState extends State<AppLogsPage> {
                         onPressed: () async {
                           await Clipboard.setData(ClipboardData(text: sanitizedText));
                           if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(l10n.appLogsCopied)),
-                            );
+                            Toast.show(l10n.appLogsCopied);
                           }
                         },
                         icon: const Icon(Icons.copy_all_outlined),
@@ -213,9 +208,7 @@ class _AppLogsPageState extends State<AppLogsPage> {
                         onPressed: () async {
                           final exportedPath = await LocalAppLogStore.exportSanitizedLogFile(file.path);
                           if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(l10n.appLogsExportedToInternal(exportedPath))),
-                            );
+                            Toast.show(l10n.appLogsExportedToInternal(exportedPath));
                           }
                           await refresh();
                         },
@@ -282,13 +275,10 @@ class _AppLogsPageState extends State<AppLogsPage> {
   }
 
   Future<void> clearAll() async {
-    
     await LocalAppLogStore.clearAllLogs();
     await refresh();
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.appLogsDeleteAll)),
-    );
+    Toast.show(l10n.appLogsDeleteAll);
   }
 
   @override

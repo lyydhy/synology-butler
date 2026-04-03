@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/error/error_mapper.dart';
 import '../../../../core/utils/download_status_helper.dart';
 import '../../../../core/utils/l10n.dart';
+import '../../../../core/utils/toast.dart';
 import '../../../../domain/entities/download_task.dart';
 import '../../../auth/presentation/providers/current_connection_readers.dart';
 import '../providers/download_providers.dart';
@@ -127,11 +128,11 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
       }
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.operationSuccess)));
+        Toast.success(l10n.operationSuccess);
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(ErrorMapper.map(e).message)));
+        Toast.error(ErrorMapper.map(e).message);
       }
     }
   }

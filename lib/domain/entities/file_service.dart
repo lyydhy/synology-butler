@@ -6,6 +6,7 @@ class FileServiceStatus {
     this.version,
     this.port,
     this.extraInfo = const {},
+    this.transferLogEnabled = false,
   });
 
   /// 服务名称（SMB、NFS、FTP、AFP 等）
@@ -23,12 +24,16 @@ class FileServiceStatus {
   /// 额外信息
   final Map<String, dynamic> extraInfo;
 
+  /// 是否启用传输日志
+  final bool transferLogEnabled;
+
   FileServiceStatus copyWith({
     String? serviceName,
     bool? enabled,
     String? version,
     int? port,
     Map<String, dynamic>? extraInfo,
+    bool? transferLogEnabled,
   }) {
     return FileServiceStatus(
       serviceName: serviceName ?? this.serviceName,
@@ -36,6 +41,7 @@ class FileServiceStatus {
       version: version ?? this.version,
       port: port ?? this.port,
       extraInfo: extraInfo ?? this.extraInfo,
+      transferLogEnabled: transferLogEnabled ?? this.transferLogEnabled,
     );
   }
 }

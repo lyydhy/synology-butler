@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/utils/l10n.dart';
+import '../../../../core/utils/toast.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../auth/presentation/providers/current_connection_readers.dart';
 import '../../../preferences/providers/preferences_providers.dart';
@@ -80,9 +81,7 @@ class SettingsPage extends ConsumerWidget {
                   if (selected == null || selected.isEmpty) return;
                   await ref.read(saveDownloadDirectoryProvider)(selected);
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(l10n.settingsDownloadDirUpdated)),
-                    );
+                    Toast.success(l10n.settingsDownloadDirUpdated);
                   }
                 },
               ),

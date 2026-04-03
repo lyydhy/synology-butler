@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/utils/toast.dart';
 import '../../../../core/widgets/app_error_state.dart';
 import '../../../../domain/entities/terminal_settings.dart';
 import '../../../dashboard/presentation/providers/dashboard_providers.dart';
@@ -50,9 +51,7 @@ class _TerminalPageState extends ConsumerState<TerminalPage> {
     final port = int.tryParse(_portController.text);
     if (port == null || port < 1 || port > 65535) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('请输入有效的端口号 (1-65535)')),
-        );
+        Toast.warning('请输入有效的端口号 (1-65535)');
       }
       return;
     }
@@ -73,16 +72,12 @@ class _TerminalPageState extends ConsumerState<TerminalPage> {
       });
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('设置已保存')),
-        );
+        Toast.success('设置已保存');
       }
     } catch (e) {
       setState(() => _saving = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('保存失败: $e')),
-        );
+        Toast.error('保存失败: $e');
       }
     }
   }

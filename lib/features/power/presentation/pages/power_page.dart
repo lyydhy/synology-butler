@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/utils/toast.dart';
 import '../../../../domain/entities/power_schedule_task.dart';
 import '../../../../domain/entities/power_status.dart';
 import '../../../dashboard/presentation/providers/dashboard_providers.dart';
@@ -75,16 +76,12 @@ class _PowerPageState extends ConsumerState<PowerPage> with SingleTickerProvider
       });
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('设置已保存')),
-        );
+        Toast.success('设置已保存');
       }
     } catch (e) {
       setState(() => _saving = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('保存失败: $e')),
-        );
+        Toast.error('保存失败: $e');
       }
     }
   }

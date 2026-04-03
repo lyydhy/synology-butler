@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/error/error_mapper.dart';
+import '../../../../core/utils/toast.dart';
 import '../providers/file_preview_providers.dart';
 import '../providers/media_save_providers.dart';
 
@@ -31,11 +32,11 @@ class ImagePreviewPage extends ConsumerWidget {
               try {
                 await ref.read(saveImageToGalleryProvider)(path, name);
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('已保存到相册')));
+                  Toast.success('已保存到相册');
                 }
               } catch (e) {
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(ErrorMapper.map(e).message)));
+                  Toast.error(ErrorMapper.map(e).message);
                 }
               }
             },

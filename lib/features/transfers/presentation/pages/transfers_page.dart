@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/error/error_mapper.dart';
 import '../../../../core/utils/file_launcher.dart';
+import '../../../../core/utils/toast.dart';
 import '../../../../core/widgets/sliding_tab_bar.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../domain/entities/transfer_task.dart';
@@ -239,30 +240,18 @@ class _TransferTaskCardState extends ConsumerState<_TransferTaskCard> {
                             : task.targetPath;
                         await Clipboard.setData(ClipboardData(text: text));
                         if (context.mounted) {
-                          final messenger = ScaffoldMessenger.of(context);
-                          messenger.hideCurrentSnackBar();
-                          messenger.showSnackBar(
-                            SnackBar(content: Text(task.status == TransferTaskStatus.failed ? l10n.errorCopied : l10n.pathCopied)),
-                          );
+                          Toast.show(task.status == TransferTaskStatus.failed ? l10n.errorCopied : l10n.pathCopied);
                         }
                         break;
                       case 'open':
                         try {
                           await FileLauncher.open(task.targetPath);
                           if (context.mounted) {
-                            final messenger = ScaffoldMessenger.of(context);
-                            messenger.hideCurrentSnackBar();
-                            messenger.showSnackBar(
-                              SnackBar(content: Text(l10n.openedWithSystem)),
-                            );
+                            Toast.show(l10n.openedWithSystem);
                           }
                         } catch (e) {
                           if (context.mounted) {
-                            final messenger = ScaffoldMessenger.of(context);
-                            messenger.hideCurrentSnackBar();
-                            messenger.showSnackBar(
-                              SnackBar(content: Text(ErrorMapper.map(e).message)),
-                            );
+                            Toast.error(ErrorMapper.map(e).message);
                           }
                         }
                         break;
@@ -272,11 +261,7 @@ class _TransferTaskCardState extends ConsumerState<_TransferTaskCard> {
                           await FileLauncher.open(parent);
                         } catch (_) {
                           if (context.mounted) {
-                            final messenger = ScaffoldMessenger.of(context);
-                            messenger.hideCurrentSnackBar();
-                            messenger.showSnackBar(
-                              SnackBar(content: Text(l10n.directory(parent))),
-                            );
+                            Toast.show(l10n.directory(parent));
                           }
                         }
                         break;
@@ -370,19 +355,11 @@ class _TransferTaskCardState extends ConsumerState<_TransferTaskCard> {
                         try {
                           await FileLauncher.open(task.targetPath);
                           if (context.mounted) {
-                            final messenger = ScaffoldMessenger.of(context);
-                            messenger.hideCurrentSnackBar();
-                            messenger.showSnackBar(
-                              SnackBar(content: Text(l10n.openedWithSystem)),
-                            );
+                            Toast.show(l10n.openedWithSystem);
                           }
                         } catch (e) {
                           if (context.mounted) {
-                            final messenger = ScaffoldMessenger.of(context);
-                            messenger.hideCurrentSnackBar();
-                            messenger.showSnackBar(
-                              SnackBar(content: Text(ErrorMapper.map(e).message)),
-                            );
+                            Toast.error(ErrorMapper.map(e).message);
                           }
                         }
                       },
@@ -397,11 +374,7 @@ class _TransferTaskCardState extends ConsumerState<_TransferTaskCard> {
                           await FileLauncher.open(parent);
                         } catch (_) {
                           if (context.mounted) {
-                            final messenger = ScaffoldMessenger.of(context);
-                            messenger.hideCurrentSnackBar();
-                            messenger.showSnackBar(
-                              SnackBar(content: Text(l10n.directory(parent))),
-                            );
+                            Toast.show(l10n.directory(parent));
                           }
                         }
                       },
@@ -421,11 +394,7 @@ class _TransferTaskCardState extends ConsumerState<_TransferTaskCard> {
                           : task.targetPath;
                       await Clipboard.setData(ClipboardData(text: text));
                       if (context.mounted) {
-                        final messenger = ScaffoldMessenger.of(context);
-                        messenger.hideCurrentSnackBar();
-                        messenger.showSnackBar(
-                          SnackBar(content: Text(task.status == TransferTaskStatus.failed ? l10n.errorCopied : l10n.pathCopied)),
-                        );
+                        Toast.show(task.status == TransferTaskStatus.failed ? l10n.errorCopied : l10n.pathCopied);
                       }
                     },
                     icon: const Icon(Icons.copy_all_outlined),

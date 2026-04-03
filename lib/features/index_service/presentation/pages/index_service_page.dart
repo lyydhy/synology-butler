@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/utils/l10n.dart';
-
+import '../../../../core/utils/toast.dart';
 import '../../../../core/widgets/app_error_state.dart';
 import '../../../../domain/entities/index_service.dart';
 import '../providers/index_service_providers.dart';
@@ -56,29 +56,25 @@ class IndexServicePage extends ConsumerWidget {
               _ThumbnailQualityCard(
                 currentQuality: data.thumbnailQuality,
                 busy: busy,
-                
                 onChanged: (value) async {
                   if (value == null) return;
-                  final messenger = ScaffoldMessenger.of(context);
                   try {
                     await ref.read(setThumbnailQualityProvider)(value);
-                    messenger.showSnackBar(SnackBar(content: Text(l10n.thumbnailQualityUpdated)));
+                    Toast.success(l10n.thumbnailQualityUpdated);
                   } catch (error) {
-                    messenger.showSnackBar(SnackBar(content: Text('${l10n.updateFailed}：$error')));
+                    Toast.error('${l10n.updateFailed}：$error');
                   }
                 },
               ),
               const SizedBox(height: 12),
               _ActionCard(
                 busy: busy,
-                
                 onRebuild: () async {
-                  final messenger = ScaffoldMessenger.of(context);
                   try {
                     await ref.read(rebuildIndexProvider)();
-                    messenger.showSnackBar(SnackBar(content: Text(l10n.rebuildSubmitted)));
+                    Toast.success(l10n.rebuildSubmitted);
                   } catch (error) {
-                    messenger.showSnackBar(SnackBar(content: Text('${l10n.rebuildFailed}：$error')));
+                    Toast.error('${l10n.rebuildFailed}：$error');
                   }
                 },
               ),

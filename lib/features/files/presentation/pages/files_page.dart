@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/error/error_mapper.dart';
 import '../../../../core/utils/l10n.dart';
 import '../../../../core/utils/server_url_helper.dart';
+import '../../../../core/utils/toast.dart';
 import '../../../../domain/entities/file_background_task.dart';
 import '../../../../domain/entities/file_item.dart';
 import '../../../auth/presentation/providers/current_connection_readers.dart';
@@ -102,15 +103,7 @@ class _FilesPageState extends ConsumerState<FilesPage> {
       if (notifyTasks.isNotEmpty) {
         final first = notifyTasks.first;
         final count = notifyTasks.length;
-        final messenger = ScaffoldMessenger.of(context);
-
-        messenger.hideCurrentSnackBar();
-        messenger.showSnackBar(
-          SnackBar(
-            duration: const Duration(seconds: 5),
-            content: Text(count > 1 ? l10n.taskCompleteMultiple(first.displayName, count) : l10n.taskComplete(first.displayName)),
-          ),
-        );
+        Toast.show(count > 1 ? l10n.taskCompleteMultiple(first.displayName, count) : l10n.taskComplete(first.displayName));
       }
     });
   }
@@ -267,15 +260,11 @@ class _FilesPageState extends ConsumerState<FilesPage> {
       await ref.read(fileDeleteProvider)(item.path);
       _refreshCurrentPath();
       if (context.mounted) {
-        final messenger = ScaffoldMessenger.of(context);
-        messenger.hideCurrentSnackBar();
-        messenger.showSnackBar(SnackBar(content: Text(l10n.deleteSuccess)));
+        Toast.success(l10n.deleteSuccess);
       }
     } catch (e) {
       if (context.mounted) {
-        final messenger = ScaffoldMessenger.of(context);
-        messenger.hideCurrentSnackBar();
-        messenger.showSnackBar(SnackBar(content: Text(ErrorMapper.map(e).message)));
+        Toast.error(ErrorMapper.map(e).message);
       }
     }
   }
@@ -298,9 +287,7 @@ class _FilesPageState extends ConsumerState<FilesPage> {
       );
     } catch (e) {
       if (context.mounted) {
-        final messenger = ScaffoldMessenger.of(context);
-        messenger.hideCurrentSnackBar();
-        messenger.showSnackBar(SnackBar(content: Text(ErrorMapper.map(e).message)));
+        Toast.error(ErrorMapper.map(e).message);
       }
     }
   }
@@ -317,11 +304,7 @@ class _FilesPageState extends ConsumerState<FilesPage> {
 
     await ref.read(saveDownloadDirectoryProvider)(selected);
     if (context.mounted) {
-      final messenger = ScaffoldMessenger.of(context);
-      messenger.hideCurrentSnackBar();
-      messenger.showSnackBar(
-        SnackBar(content: Text(l10n.downloadDirSetTo(selected))),
-      );
+      Toast.show(l10n.downloadDirSetTo(selected));
     }
     return true;
   }
@@ -384,9 +367,7 @@ class _FilesPageState extends ConsumerState<FilesPage> {
                 final ready = await _ensureDownloadDirectorySelected(context, ref);
                 if (!ready) return;
                 if (context.mounted) {
-                  final messenger = ScaffoldMessenger.of(context);
-                  messenger.hideCurrentSnackBar();
-                  messenger.showSnackBar(SnackBar(content: Text(l10n.startDownloadingName(item.name))));
+                  Toast.show(l10n.startDownloadingName(item.name));
                 }
                 await ref.read(transferControllerProvider.notifier).enqueueDownload(
                       remotePath: item.path,
@@ -403,11 +384,7 @@ class _FilesPageState extends ConsumerState<FilesPage> {
                   final ready = await _ensureDownloadDirectorySelected(context, ref);
                   if (!ready) return;
                   if (context.mounted) {
-                    final messenger = ScaffoldMessenger.of(context);
-                    messenger.hideCurrentSnackBar();
-                    messenger.showSnackBar(
-                      SnackBar(content: Text(l10n.downloadCompleteOpen(item.name))),
-                    );
+                    Toast.show(l10n.downloadCompleteOpen(item.name));
                   }
                   await ref.read(transferControllerProvider.notifier).enqueueDownload(
                         remotePath: item.path,

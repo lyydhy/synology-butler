@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/error/error_mapper.dart';
 import '../../../../core/utils/l10n.dart';
+import '../../../../core/utils/toast.dart';
 import '../../../../domain/entities/file_item.dart';
 import '../../../transfers/presentation/providers/transfer_providers.dart';
 import 'file_providers.dart';
@@ -51,7 +52,7 @@ class FilePageActions {
     final selectedItems = files.where((item) => selectedPaths.contains(item.path) && !item.isDirectory).toList();
     if (selectedItems.isEmpty) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.selectOneFile)));
+        Toast.warning(l10n.selectOneFile);
       }
       return;
     }
@@ -62,7 +63,7 @@ class FilePageActions {
 
     onSelectionCleared();
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.addedDownloadTasks(selectedItems.length))));
+      Toast.show(l10n.addedDownloadTasks(selectedItems.length));
     }
   }
 
@@ -96,11 +97,11 @@ class FilePageActions {
       await ref.read(fileBatchDeleteProvider)(paths);
       onSelectionCleared();
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.deletedCount(paths.length))));
+        Toast.success(l10n.deletedCount(paths.length));
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(ErrorMapper.map(e).message)));
+        Toast.error(ErrorMapper.map(e).message);
       }
     }
   }
@@ -222,7 +223,7 @@ class FilePageActions {
                       });
                       try {
                         if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.uploadTaskAdded)));
+                          Toast.show(l10n.uploadTaskAdded);
                         }
                         await ref.read(transferControllerProvider.notifier).enqueueUpload(
                               parentPath: currentPath,

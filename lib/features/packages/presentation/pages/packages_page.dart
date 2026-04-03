@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/utils/l10n.dart';
+import '../../../../core/utils/toast.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../core/widgets/app_error_state.dart';
 import '../../../../core/widgets/app_status_chip.dart';
@@ -290,9 +291,7 @@ class _PackageCard extends ConsumerWidget {
                       onPressed: () async {
                         await ref.read(packageStartProvider)(item);
                         if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(l10n.startRequestSent(item.displayName))),
-                          );
+                          Toast.show(l10n.startRequestSent(item.displayName));
                         }
                       },
                       icon: const Icon(Icons.play_arrow_rounded),
@@ -303,9 +302,7 @@ class _PackageCard extends ConsumerWidget {
                       onPressed: () async {
                         await ref.read(packageStopProvider)(item);
                         if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(l10n.stopRequestSent(item.displayName))),
-                          );
+                          Toast.show(l10n.stopRequestSent(item.displayName));
                         }
                       },
                       icon: const Icon(Icons.stop_rounded),
@@ -331,9 +328,7 @@ class _PackageCard extends ConsumerWidget {
 
                         await ref.read(packageUninstallProvider)(item);
                         if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(l10n.uninstallRequestSent(item.displayName))),
-                          );
+                          Toast.show(l10n.uninstallRequestSent(item.displayName));
                         }
                       },
                       icon: const Icon(Icons.delete_outline),
@@ -372,15 +367,11 @@ class _PackageCard extends ConsumerWidget {
                             try {
                               await ref.read(packageInstallProvider)(item, volumePath);
                               if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text(l10n.packageTaskComplete(item.displayName))),
-                                );
+                                Toast.success(l10n.packageTaskComplete(item.displayName));
                               }
                             } catch (e) {
                               if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text(l10n.packageInstallFailed(e.toString()))),
-                                );
+                                Toast.error(l10n.packageInstallFailed(e.toString()));
                               }
                             }
                           },

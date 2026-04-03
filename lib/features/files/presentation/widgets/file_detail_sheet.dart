@@ -3,8 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/utils/file_size_formatter.dart';
-import '../../../../domain/entities/file_item.dart';
 import '../../../../core/utils/l10n.dart';
+import '../../../../core/utils/toast.dart';
+import '../../../../domain/entities/file_item.dart';
 import 'file_type_helper.dart';
 
 class FileDetailSheet extends StatelessWidget {
@@ -87,9 +88,7 @@ class FileDetailSheet extends StatelessWidget {
                   onPressed: () async {
                     await Clipboard.setData(ClipboardData(text: item.path));
                     if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('路径已复制')),
-                      );
+                      Toast.show('路径已复制');
                     }
                   },
                   icon: const Icon(Icons.copy_all_outlined),

@@ -1,5 +1,6 @@
 ﻿import 'dart:async';
 import 'dart:convert';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
@@ -9,6 +10,8 @@ import '../../core/constants/app_constants.dart';
 import '../../core/network/app_dio.dart';
 import '../../core/utils/dsm_logger.dart';
 import '../../domain/entities/file_service.dart';
+import '../../domain/entities/shared_folder.dart';
+import '../models/shared_folder_model.dart';
 import '../../domain/entities/network.dart';
 import '../../domain/entities/power_schedule_task.dart';
 import '../../domain/entities/power_status.dart';
@@ -54,7 +57,7 @@ abstract class SystemApi {
 
   Future<void> ejectExternalDevice({required String id, required String bus});
 
-  Future<List<SharedFolderModel>> fetchSharedFolders();
+  Future<List<SharedFolder>> fetchSharedFolders();
 
   Future<List<DsmUserModel>> fetchUsers();
 
@@ -68,6 +71,27 @@ abstract class SystemApi {
     required String serviceName,
     required bool enabled,
   });
+
+  /// 获取传输日志状态
+  Future<Map<String, bool>> fetchTransferLogStatus();
+
+  /// 设置传输日志状态
+  Future<void> setTransferLogStatus({bool? cifsEnabled, bool? afpEnabled});
+
+  /// 获取传输日志级别设置
+  Future<Map<String, bool>> fetchTransferLogLevel(String protocol);
+
+  /// 设置传输日志级别
+  Future<void> setTransferLogLevel(String protocol, Map<String, bool> levels);
+
+  /// 创建共享文件夹
+  Future<void> createSharedFolder(SharedFolderEditRequest request);
+
+  /// 更新共享文件夹
+  Future<void> updateSharedFolder(SharedFolderEditRequest request);
+
+  /// 删除共享文件夹
+  Future<void> deleteSharedFolder(String name);
 
   /// 获取网络状态（常规、接口、代理、网关）
   Future<NetworkModel> fetchNetwork();
@@ -433,7 +457,7 @@ class DsmSystemApi implements SystemApi {
   }
 
   @override
-  Future<List<SharedFolderModel>> fetchSharedFolders() async {
+  Future<List<SharedFolder>> fetchSharedFolders() async {
     final client = _dio;
     final response = await client.post(
       '/webapi/entry.cgi',
@@ -460,20 +484,7 @@ class DsmSystemApi implements SystemApi {
     final data = response.data['data'] as Map? ?? const {};
     final shares = ((data['shares'] as List?) ?? (data['list'] as List?) ?? const [])
         .whereType<Map>()
-        .map(
-          (item) => SharedFolderModel(
-            name: (item['name'] ?? '').toString(),
-            description: (item['desc'] ?? item['description'] ?? '').toString(),
-            volumePath: (item['vol_path'] ?? item['volume_path'] ?? '').toString(),
-            fileSystem: (item['fstype'] ?? item['file_system'] ?? '').toString(),
-            isReadOnly: item['readonly'] == true || item['is_read_only'] == true,
-            isHidden: item['hidden'] == true,
-            recycleBinEnabled: item['enable_recycle_bin'] == true || item['recyclebin'] == true,
-            encrypted: item['encryption'] == true || item['is_encrypted'] == true,
-            usageText: (item['usage_str'] ?? item['used'] ?? item['usage'] ?? '').toString(),
-          ),
-        )
-        .where((item) => item.name.isNotEmpty)
+        .map((item) => SharedFolderModel.parseItem(item as Map<String, dynamic>))
         .toList();
 
     return shares;
@@ -2401,6 +2412,79 @@ class DsmSystemApi implements SystemApi {
     }
   }
 
+  @override
+
+  @override
+  Future<Map<String, bool>> fetchTransferLogStatus() async {
+    final client = _dio;
+    final response = await client.post('/webapi/entry.cgi',
+      data: {'api': 'SYNO.Core.SyslogClient.FileTransfer', 'method': 'get', 'version': '1'},
+      options: Options(contentType: Headers.formUrlEncodedContentType));
+    if (!(response.data is Map && response.data['success'] == true)) {
+      throw Exception(response.data is Map ? response.data['error']?.toString() ?? '获取传输日志状态失败' : '获取传输日志状态失败');
+    }
+    final data = response.data['data'] as Map? ?? const {};
+    return {'cifs': data['cifs'] == '1', 'afp': data['afp'] == '1'};
+  }
+
+  @override
+  Future<void> setTransferLogStatus({bool? cifsEnabled, bool? afpEnabled}) async {
+    final client = _dio;
+    final setData = <String, String>{};
+    if (cifsEnabled != null) setData['cifs'] = cifsEnabled ? '1' : '0';
+    if (afpEnabled != null) setData['afp'] = afpEnabled ? '1' : '0';
+    final response = await client.post('/webapi/entry.cgi',
+      data: {'api': 'SYNO.Core.SyslogClient.FileTransfer', 'method': 'set', 'version': '1', ...setData},
+      options: Options(contentType: Headers.formUrlEncodedContentType));
+    if (!(response.data is Map && response.data['success'] == true)) {
+      throw Exception(response.data is Map ? response.data['error']?.toString() ?? '设置传输日志状态失败' : '设置传输日志状态失败');
+    }
+  }
+
+  @override
+  Future<Map<String, bool>> fetchTransferLogLevel(String protocol) async {
+    final client = _dio;
+    final response = await client.post('/webapi/entry.cgi',
+      data: {'api': 'SYNO.Core.SyslogClient.FileTransfer', 'method': 'get_level', 'version': '1', 'protocol': protocol},
+      options: Options(contentType: Headers.formUrlEncodedContentType));
+    if (!(response.data is Map && response.data['success'] == true)) {
+      throw Exception(response.data is Map ? response.data['error']?.toString() ?? '获取日志级别失败' : '获取日志级别失败');
+    }
+    final data = response.data['data'] as Map? ?? const {};
+    final levels = data['level'] as Map? ?? const {};
+    return {'create': levels['create'] == '1', 'write': levels['write'] == '1', 'move': levels['move'] == '1',
+            'delete': levels['delete'] == '1', 'read': levels['read'] == '1', 'rename': levels['rename'] == '1'};
+  }
+
+  @override
+  Future<void> setTransferLogLevel(String protocol, Map<String, bool> levels) async {
+    final client = _dio;
+    final levelMap = {'create': levels['create'] == true ? '1' : '0', 'write': levels['write'] == true ? '1' : '0',
+                      'move': levels['move'] == true ? '1' : '0', 'delete': levels['delete'] == true ? '1' : '0',
+                      'read': levels['read'] == true ? '1' : '0', 'rename': levels['rename'] == true ? '1' : '0'};
+    final response = await client.post('/webapi/entry.cgi',
+      data: {'api': 'SYNO.Core.SyslogClient.FileTransfer', 'method': 'set_level', 'version': '1',
+             'protocol': protocol, 'level': jsonEncode(levelMap)},
+      options: Options(contentType: Headers.formUrlEncodedContentType));
+    if (!(response.data is Map && response.data['success'] == true)) {
+      throw Exception(response.data is Map ? response.data['error']?.toString() ?? '设置日志级别失败' : '设置日志级别失败');
+    }
+  }
+
+  @override
+  Future<void> createSharedFolder(SharedFolderEditRequest request) async {
+    throw UnimplementedError('createSharedFolder 待实现');
+  }
+
+  @override
+  Future<void> updateSharedFolder(SharedFolderEditRequest request) async {
+    throw UnimplementedError('updateSharedFolder 待实现');
+  }
+
+  @override
+  Future<void> deleteSharedFolder(String name) async {
+    throw UnimplementedError('deleteSharedFolder 待实现');
+  }
   @override
   Future<NetworkModel> fetchNetwork() async {
     final client = _dio;

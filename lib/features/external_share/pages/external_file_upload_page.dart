@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/error/error_mapper.dart';
 import '../../../core/utils/l10n.dart';
+import '../../../core/utils/toast.dart';
 import '../../transfers/presentation/providers/transfer_providers.dart';
 import '../models/shared_incoming_file.dart';
 
@@ -62,9 +63,7 @@ class _ExternalFileUploadPageState extends ConsumerState<ExternalFileUploadPage>
           );
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('已加入上传任务')),
-      );
+      Toast.success('已加入上传任务');
       context.pop();
     } catch (e) {
       if (!mounted) return;

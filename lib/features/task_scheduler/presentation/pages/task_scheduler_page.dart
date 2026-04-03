@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/utils/l10n.dart';
-
+import '../../../../core/utils/toast.dart';
 import '../../../../core/widgets/app_error_state.dart';
 import '../../../../domain/entities/task_scheduler.dart';
 import '../providers/task_scheduler_providers.dart';
@@ -61,23 +61,20 @@ class TaskSchedulerPage extends ConsumerWidget {
               return _TaskCard(
                 task: task,
                 busy: busy,
-                
                 onRun: () async {
-                  final messenger = ScaffoldMessenger.of(context);
                   try {
                     await ref.read(runScheduledTaskProvider)(task);
-                    messenger.showSnackBar(SnackBar(content: Text(l10n.taskSubmitted)));
+                    Toast.success(l10n.taskSubmitted);
                   } catch (error) {
-                    messenger.showSnackBar(SnackBar(content: Text('${l10n.executeFailed}：$error')));
+                    Toast.error('${l10n.executeFailed}：$error');
                   }
                 },
                 onToggle: () async {
-                  final messenger = ScaffoldMessenger.of(context);
                   try {
                     await ref.read(toggleScheduledTaskProvider)(task);
-                    messenger.showSnackBar(SnackBar(content: Text(task.enabled ? '任务已停用' : '任务已启用')));
+                    Toast.success(task.enabled ? '任务已停用' : '任务已启用');
                   } catch (error) {
-                    messenger.showSnackBar(SnackBar(content: Text('${l10n.updateFailed}：$error')));
+                    Toast.error('${l10n.updateFailed}：$error');
                   }
                 },
               );

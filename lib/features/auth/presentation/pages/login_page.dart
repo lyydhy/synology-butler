@@ -9,6 +9,7 @@ import '../../../../core/error/error_mapper.dart';
 import '../../../../core/utils/l10n.dart';
 import '../../../../core/utils/local_app_logger.dart';
 import '../../../../core/utils/server_url_helper.dart';
+import '../../../../core/utils/toast.dart';
 import '../../../../domain/entities/nas_server.dart';
 import '../../../../core/network/app_dio.dart';
 import '../providers/auth_providers.dart';
@@ -130,9 +131,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       });
     }
 
-    final messenger = ScaffoldMessenger.of(context);
-    messenger.hideCurrentSnackBar();
-    messenger.showSnackBar(SnackBar(content: Text(l10n.historyDeleted(server.name))));
+    Toast.show(l10n.historyDeleted(server.name));
   }
 
   void _validateFields() {
@@ -445,9 +444,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             if (!https) ignoreBadCertificate = false;
           });
           if (!https) {
-            final messenger = ScaffoldMessenger.of(context);
-            messenger.hideCurrentSnackBar();
-            messenger.showSnackBar(SnackBar(content: Text(l10n.switchedToHttp)));
+            Toast.show(l10n.switchedToHttp);
           }
         },
         child: Container(

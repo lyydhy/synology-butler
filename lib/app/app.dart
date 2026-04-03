@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import '../core/utils/l10n.dart';
+import '../core/utils/toast.dart';
 import '../core/constants/app_constants.dart';
 import '../core/services/download_notification_service.dart';
 import '../domain/entities/transfer_task.dart';
@@ -92,9 +93,7 @@ class _QunhuiManagerAppState extends ConsumerState<QunhuiManagerApp> {
               // await FileLauncher.open(event.filePath);
             } catch (e) {
               if (!mounted) return;
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(e.toString())),
-              );
+              Toast.error(e.toString());
             }
           },
         ),

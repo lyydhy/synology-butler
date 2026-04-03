@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/utils/toast.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../auth/presentation/providers/current_connection_readers.dart';
@@ -38,9 +39,7 @@ class ServerManagementPage extends ConsumerWidget {
 
     await ref.read(updateServerProvider)(updated);
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.deviceUpdated)),
-      );
+      Toast.success(l10n.deviceUpdated);
     }
   }
 
@@ -123,9 +122,7 @@ class ServerManagementPage extends ConsumerWidget {
                             onSelect: () async {
                               await ref.read(switchCurrentServerProvider)(server);
                               if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text(l10n.switchDeviceRelogin)),
-                                );
+                                Toast.show(l10n.switchDeviceRelogin);
                                 context.go('/login');
                               }
                             },
@@ -135,9 +132,7 @@ class ServerManagementPage extends ConsumerWidget {
                               if (!confirmed) return;
                               await ref.read(deleteServerProvider)(server);
                               if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text(l10n.deviceDeleted)),
-                                );
+                                Toast.success(l10n.deviceDeleted);
                               }
                             },
                           ),

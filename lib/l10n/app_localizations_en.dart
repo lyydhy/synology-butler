@@ -390,6 +390,81 @@ class AppLocalizationsEn extends AppLocalizations {
   String get userGroupsTitle => 'Users & Groups';
 
   @override
+  String get userAccountTab => 'User Accounts';
+
+  @override
+  String get userGroupTab => 'User Groups';
+
+  @override
+  String get noUsers => 'No users';
+
+  @override
+  String get noGroups => 'No groups';
+
+  @override
+  String get userStatusNormal => 'Active';
+
+  @override
+  String get userStatusDisabled => 'Disabled';
+
+  @override
+  String get userStatusExpired => 'Expired';
+
+  @override
+  String memberCount(int count) => '$count members';
+
+  @override
+  String get userDetailTitle => 'User Details';
+
+  @override
+  String get groupDetailTitle => 'Group Details';
+
+  @override
+  String get saveChanges => 'Save Changes';
+
+  @override
+  String get resetPassword => 'Reset Password';
+
+  @override
+  String get disableUser => 'Disable User';
+
+  @override
+  String get enableUser => 'Enable User';
+
+  @override
+  String confirmDisableUser(String name) => 'Are you sure you want to disable user "$name"? The user will not be able to log in.';
+
+  @override
+  String confirmEnableUser(String name) => 'Are you sure you want to enable user "$name"?';
+
+  @override
+  String confirmResetPassword(String name) => 'Set new password for user "$name":';
+
+  @override
+  String get newPassword => 'New Password';
+
+  @override
+  String get passwordCannotBeEmpty => 'Password cannot be empty';
+
+  @override
+  String get userInfoUpdated => 'User information updated';
+
+  @override
+  String get userDisabled => 'User disabled';
+
+  @override
+  String get userEnabled => 'User enabled';
+
+  @override
+  String get passwordReset => 'Password reset';
+
+  @override
+  String get groupMembersTitle => 'Group Members';
+
+  @override
+  String get viewMembersInDsm => 'View group member list in DSM web interface';
+
+  @override
   String get informationCenterTitle => 'Information Center';
 
   @override
@@ -1172,6 +1247,84 @@ class AppLocalizationsEn extends AppLocalizations {
   String get savedConnections => 'Saved Connections';
 
   @override
+  String get transferLogTitle => 'Transfer Log';
+
+  @override
+  String get transferLogSubtitle => 'Record file transfer operations';
+
+  @override
+  String get transferLogLevel => 'Log Level';
+
+  @override
+  String get logLevelCreate => 'Create';
+
+  @override
+  String get logLevelWrite => 'Write';
+
+  @override
+  String get logLevelMove => 'Move';
+
+  @override
+  String get logLevelDelete => 'Delete';
+
+  @override
+  String get logLevelRead => 'Read';
+
+  @override
+  String get logLevelRename => 'Rename';
+
+  @override
+  String get applyChanges => 'Apply Changes';
+
+  @override
+  String get saving => 'Saving...';
+
+  @override
+  String get logLevelSettingsSaved => 'Log level settings saved';
+
+  @override
+  String get failedToGetLogLevel => 'Failed to get log level';
+
+  @override
+  String get failedToSave => 'Failed to save';
+
+  @override
+  String get noData => 'No data';
+
+  @override
+  String get failedToGetLogSettings => 'Failed to get log settings';
+
+  @override
+  String get setLogLevel => 'Set Log Level';
+
+  @override
+  String get smbTransferLogEnabled => 'SMB transfer log enabled';
+
+  @override
+  String get smbTransferLogDisabled => 'SMB transfer log disabled';
+
+  @override
+  String get afpTransferLogEnabled => 'AFP transfer log enabled';
+
+  @override
+  String get afpTransferLogDisabled => 'AFP transfer log disabled';
+
+  @override
+  String get smbTransferLog => 'SMB Transfer Log';
+
+  @override
+  String get afpTransferLog => 'AFP Transfer Log';
+
+  @override
+  String get smbTransferLogSubtitle => 'Windows file transfer log';
+
+  @override
+  String get afpTransferLogSubtitle => 'Apple file transfer log';
+
+  @override
+  String get needEnableServiceFirst => 'Need to enable service first';
+
+  @override
   String get noCurrentDevice => 'No device connected';
 
   @override
@@ -1359,6 +1512,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fileServicesSubtitle => 'SMB / NFS / FTP / SFTP';
+
+  @override
+  String get fileServicesStatusSummary => 'File Services Status';
+
+  @override
+  String fileServicesEnabledCount(int enabledCount, int totalCount) {
+    return 'Enabled $enabledCount / $totalCount';
+  }
+
+  @override
+  String get serviceVersion => 'Version';
+
+  @override
+  String get servicePort => 'Port';
+
+  @override
+  String get nfsV4Domain => 'NFSv4 Domain';
+
+  @override
+  String get ftpsEnabled => 'FTPS';
 
   @override
   String get networkSubtitle => 'Interfaces, proxy and gateway';

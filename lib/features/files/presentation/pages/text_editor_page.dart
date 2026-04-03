@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/error/error_mapper.dart';
 import '../../../../core/utils/l10n.dart';
+import '../../../../core/utils/toast.dart';
 import '../providers/text_editor_providers.dart';
 
 class TextEditorPage extends ConsumerStatefulWidget {
@@ -45,7 +46,6 @@ class _TextEditorPageState extends ConsumerState<TextEditorPage> {
     });
 
     final navigator = Navigator.of(context);
-    final messenger = ScaffoldMessenger.of(context);
 
     return PopScope(
       canPop: !_dirty,
@@ -86,11 +86,11 @@ class _TextEditorPageState extends ConsumerState<TextEditorPage> {
                   await ref.read(saveTextFileProvider)(widget.path, _controller.text);
                   if (!mounted) return;
                   setState(() => _dirty = false);
-                  messenger.showSnackBar(SnackBar(content: Text(l10n.saveSuccess)));
+                  Toast.success(l10n.saveSuccess);
                   ref.invalidate(textFileProvider(widget.path));
                 } catch (e) {
                   if (!mounted) return;
-                  messenger.showSnackBar(SnackBar(content: Text(ErrorMapper.map(e).message)));
+                  Toast.error(ErrorMapper.map(e).message);
                 }
               },
               child: Text(l10n.save),

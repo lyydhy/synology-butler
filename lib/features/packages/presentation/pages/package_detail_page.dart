@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/utils/file_size_formatter.dart';
+import '../../../../core/utils/toast.dart';
 import '../../../../domain/entities/package_item.dart';
 import '../../../../domain/entities/package_volume.dart';
 import '../providers/package_providers.dart';
@@ -211,9 +212,7 @@ class PackageDetailPage extends ConsumerWidget {
                   onPressed: () async {
                     await ref.read(packageStartProvider)(item);
                     if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('已发送启动请求：${item.displayName}')),
-                      );
+                      Toast.success('已发送启动请求：${item.displayName}');
                     }
                   },
                   icon: const Icon(Icons.play_arrow_rounded),
@@ -224,9 +223,7 @@ class PackageDetailPage extends ConsumerWidget {
                   onPressed: () async {
                     await ref.read(packageStopProvider)(item);
                     if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('已发送停止请求：${item.displayName}')),
-                      );
+                      Toast.success('已发送停止请求：${item.displayName}');
                     }
                   },
                   icon: const Icon(Icons.stop_rounded),
@@ -277,15 +274,11 @@ class PackageDetailPage extends ConsumerWidget {
                         try {
                           await ref.read(packageInstallProvider)(item, volumePath);
                           if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('${item.displayName} 安装/更新任务已完成或已提交')),
-                            );
+                            Toast.success('${item.displayName} 安装/更新任务已完成或已提交');
                           }
                         } catch (e) {
                           if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('套件安装失败：$e')),
-                            );
+                            Toast.error('套件安装失败：$e');
                           }
                         }
                       },

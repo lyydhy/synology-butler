@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/utils/l10n.dart';
+import '../../../../core/utils/toast.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../core/widgets/app_error_state.dart';
 import '../../../../core/widgets/app_status_chip.dart';
@@ -83,15 +84,11 @@ class _ContainerManagementPageState extends ConsumerState<ContainerManagementPag
       final api = DsmDockerApi();
       await action(api);
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(l10n.containerSuccess(successVerb, item.name))));
+      Toast.success(l10n.containerSuccess(successVerb, item.name));
       _refreshOverview();
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(l10n.containerFailed(successVerb, error.toString()))));
+      Toast.error(l10n.containerFailed(successVerb, error.toString()));
     } finally {
       if (mounted) {
         setState(() {

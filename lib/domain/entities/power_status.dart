@@ -89,8 +89,19 @@ class PowerRecoverySettings {
   });
 
   factory PowerRecoverySettings.fromJson(Map<String, dynamic> json) {
+    // 处理 rc_power_config 可能的类型问题（API 可能返回 bool 或 int）
+    int? rcPowerConfig;
+    final rcValue = json['rc_power_config'];
+    if (rcValue is int) {
+      rcPowerConfig = rcValue;
+    } else if (rcValue is bool) {
+      rcPowerConfig = rcValue ? 1 : 0;
+    } else if (rcValue != null) {
+      rcPowerConfig = int.tryParse(rcValue.toString());
+    }
+
     return PowerRecoverySettings(
-      rcPowerConfig: json['rc_power_config'] as int?,
+      rcPowerConfig: rcPowerConfig,
       wol1: json['wol1'] as bool? ?? false,
       wol2: json['wol2'] as bool? ?? false,
     );
@@ -133,8 +144,10 @@ class FanSpeedSettings {
   });
 
   factory FanSpeedSettings.fromJson(Map<String, dynamic> json) {
+    // API 可能返回 fan_speed 或 fanSpeedMode
+    final value = json['fan_speed'] ?? json['fan_speed_mode'];
     return FanSpeedSettings(
-      fanSpeedMode: json['fan_speed'] as String?,
+      fanSpeedMode: value?.toString(),
     );
   }
 }
@@ -148,9 +161,18 @@ class LedBrightnessSettings {
   });
 
   factory LedBrightnessSettings.fromJson(Map<String, dynamic> json) {
-    return LedBrightnessSettings(
-      brightness: json['brightness'] as int? ?? 3,
-    );
+    // API 可能返回 led_brightness 或 brightness
+    final value = json['led_brightness'] ?? json['brightness'];
+    int brightness = 3;
+    if (value is int) {
+      brightness = value;
+    } else if (value is bool) {
+      // 某些情况下 API 可能返回 bool
+      brightness = value ? 1 : 0;
+    } else if (value != null) {
+      brightness = int.tryParse(value.toString()) ?? 3;
+    }
+    return LedBrightnessSettings(brightness: brightness);
   }
 }
 
@@ -169,10 +191,31 @@ class HibernationSettings {
   });
 
   factory HibernationSettings.fromJson(Map<String, dynamic> json) {
+    // 处理整数类型可能的类型问题（API 可能返回 bool 或 int）
+    int internalHdIdletime = 0;
+    final internalHdValue = json['internal_hd_idletime'];
+    if (internalHdValue is int) {
+      internalHdIdletime = internalHdValue;
+    } else if (internalHdValue is bool) {
+      internalHdIdletime = internalHdValue ? 1 : 0;
+    } else if (internalHdValue != null) {
+      internalHdIdletime = int.tryParse(internalHdValue.toString()) ?? 0;
+    }
+
+    int usbIdletime = 0;
+    final usbValue = json['usb_idletime'];
+    if (usbValue is int) {
+      usbIdletime = usbValue;
+    } else if (usbValue is bool) {
+      usbIdletime = usbValue ? 1 : 0;
+    } else if (usbValue != null) {
+      usbIdletime = int.tryParse(usbValue.toString()) ?? 0;
+    }
+
     return HibernationSettings(
-      internalHdIdletime: json['internal_hd_idletime'] as int? ?? 0,
+      internalHdIdletime: internalHdIdletime,
       sataDeepSleep: json['sata_deep_sleep'] as bool? ?? false,
-      usbIdletime: json['usb_idletime'] as int? ?? 0,
+      usbIdletime: usbIdletime,
       enableLog: json['enable_log'] as bool? ?? false,
     );
   }

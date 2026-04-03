@@ -43,6 +43,15 @@ abstract class SystemRepository {
 
   Future<List<SharedFolder>> fetchSharedFolders();
 
+  /// 创建共享文件夹
+  Future<void> createSharedFolder(SharedFolderEditRequest request);
+
+  /// 编辑共享文件夹
+  Future<void> updateSharedFolder(SharedFolderEditRequest request);
+
+  /// 删除共享文件夹
+  Future<void> deleteSharedFolder(String name);
+
   Future<List<DsmUser>> fetchUsers();
 
   Future<List<DsmGroup>> fetchGroups();
@@ -54,6 +63,24 @@ abstract class SystemRepository {
     required String serviceName,
     required bool enabled,
   });
+
+  /// 获取文件传输日志状态
+  Future<Map<String, bool>> fetchTransferLogStatus();
+
+  /// 设置文件传输日志状态
+  Future<void> setTransferLogStatus({
+    bool? smbEnabled,
+    bool? afpEnabled,
+  });
+
+  /// 获取传输日志级别设置
+  /// [protocol] 协议名称: cifs, afp
+  Future<Map<String, bool>> fetchTransferLogLevel(String protocol);
+
+  /// 设置传输日志级别
+  /// [protocol] 协议名称: cifs, afp
+  /// [levels] 日志级别: create, write, move, delete, read, rename
+  Future<void> setTransferLogLevel(String protocol, Map<String, bool> levels);
 
   Future<NetworkModel> fetchNetwork();
 

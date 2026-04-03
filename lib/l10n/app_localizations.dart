@@ -842,6 +842,156 @@ abstract class AppLocalizations {
   /// **'用户与群组'**
   String get userGroupsTitle;
 
+  /// No description provided for @userAccountTab.
+  ///
+  /// In zh, this message translates to:
+  /// **'用户账号'**
+  String get userAccountTab;
+
+  /// No description provided for @userGroupTab.
+  ///
+  /// In zh, this message translates to:
+  /// **'用户群组'**
+  String get userGroupTab;
+
+  /// No description provided for @noUsers.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂无用户'**
+  String get noUsers;
+
+  /// No description provided for @noGroups.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂无群组'**
+  String get noGroups;
+
+  /// No description provided for @userStatusNormal.
+  ///
+  /// In zh, this message translates to:
+  /// **'正常'**
+  String get userStatusNormal;
+
+  /// No description provided for @userStatusDisabled.
+  ///
+  /// In zh, this message translates to:
+  /// **'已禁用'**
+  String get userStatusDisabled;
+
+  /// No description provided for @userStatusExpired.
+  ///
+  /// In zh, this message translates to:
+  /// **'已过期'**
+  String get userStatusExpired;
+
+  /// No description provided for @memberCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count} 个成员'**
+  String memberCount(int count);
+
+  /// No description provided for @userDetailTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'用户详情'**
+  String get userDetailTitle;
+
+  /// No description provided for @groupDetailTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'群组详情'**
+  String get groupDetailTitle;
+
+  /// No description provided for @saveChanges.
+  ///
+  /// In zh, this message translates to:
+  /// **'保存修改'**
+  String get saveChanges;
+
+  /// No description provided for @resetPassword.
+  ///
+  /// In zh, this message translates to:
+  /// **'重置密码'**
+  String get resetPassword;
+
+  /// No description provided for @disableUser.
+  ///
+  /// In zh, this message translates to:
+  /// **'禁用用户'**
+  String get disableUser;
+
+  /// No description provided for @enableUser.
+  ///
+  /// In zh, this message translates to:
+  /// **'启用用户'**
+  String get enableUser;
+
+  /// No description provided for @confirmDisableUser.
+  ///
+  /// In zh, this message translates to:
+  /// **'确定要禁用用户 "{name}" 吗？禁用后该用户将无法登录。'**
+  String confirmDisableUser(String name);
+
+  /// No description provided for @confirmEnableUser.
+  ///
+  /// In zh, this message translates to:
+  /// **'确定要启用用户 "{name}" 吗？'**
+  String confirmEnableUser(String name);
+
+  /// No description provided for @confirmResetPassword.
+  ///
+  /// In zh, this message translates to:
+  /// **'为用户 "{name}" 设置新密码：'**
+  String confirmResetPassword(String name);
+
+  /// No description provided for @newPassword.
+  ///
+  /// In zh, this message translates to:
+  /// **'新密码'**
+  String get newPassword;
+
+  /// No description provided for @passwordCannotBeEmpty.
+  ///
+  /// In zh, this message translates to:
+  /// **'密码不能为空'**
+  String get passwordCannotBeEmpty;
+
+  /// No description provided for @userInfoUpdated.
+  ///
+  /// In zh, this message translates to:
+  /// **'用户信息已更新'**
+  String get userInfoUpdated;
+
+  /// No description provided for @userDisabled.
+  ///
+  /// In zh, this message translates to:
+  /// **'用户已禁用'**
+  String get userDisabled;
+
+  /// No description provided for @userEnabled.
+  ///
+  /// In zh, this message translates to:
+  /// **'用户已启用'**
+  String get userEnabled;
+
+  /// No description provided for @passwordReset.
+  ///
+  /// In zh, this message translates to:
+  /// **'密码已重置'**
+  String get passwordReset;
+
+  /// No description provided for @groupMembersTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'群组成员'**
+  String get groupMembersTitle;
+
+  /// No description provided for @viewMembersInDsm.
+  ///
+  /// In zh, this message translates to:
+  /// **'查看群组成员列表需要在 DSM Web 界面中操作'**
+  String get viewMembersInDsm;
+
   /// No description provided for @informationCenterTitle.
   ///
   /// In zh, this message translates to:
@@ -2210,6 +2360,162 @@ abstract class AppLocalizations {
   /// **'已保存的连接'**
   String get savedConnections;
 
+  /// No description provided for @transferLogTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'传输日志'**
+  String get transferLogTitle;
+
+  /// No description provided for @transferLogSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'记录文件传输操作'**
+  String get transferLogSubtitle;
+
+  /// No description provided for @transferLogLevel.
+  ///
+  /// In zh, this message translates to:
+  /// **'日志级别'**
+  String get transferLogLevel;
+
+  /// No description provided for @logLevelCreate.
+  ///
+  /// In zh, this message translates to:
+  /// **'创建'**
+  String get logLevelCreate;
+
+  /// No description provided for @logLevelWrite.
+  ///
+  /// In zh, this message translates to:
+  /// **'写入'**
+  String get logLevelWrite;
+
+  /// No description provided for @logLevelMove.
+  ///
+  /// In zh, this message translates to:
+  /// **'移动'**
+  String get logLevelMove;
+
+  /// No description provided for @logLevelDelete.
+  ///
+  /// In zh, this message translates to:
+  /// **'删除'**
+  String get logLevelDelete;
+
+  /// No description provided for @logLevelRead.
+  ///
+  /// In zh, this message translates to:
+  /// **'读取'**
+  String get logLevelRead;
+
+  /// No description provided for @logLevelRename.
+  ///
+  /// In zh, this message translates to:
+  /// **'重命名'**
+  String get logLevelRename;
+
+  /// No description provided for @applyChanges.
+  ///
+  /// In zh, this message translates to:
+  /// **'应用更改'**
+  String get applyChanges;
+
+  /// No description provided for @saving.
+  ///
+  /// In zh, this message translates to:
+  /// **'保存中...'**
+  String get saving;
+
+  /// No description provided for @logLevelSettingsSaved.
+  ///
+  /// In zh, this message translates to:
+  /// **'日志级别设置已保存'**
+  String get logLevelSettingsSaved;
+
+  /// No description provided for @failedToGetLogLevel.
+  ///
+  /// In zh, this message translates to:
+  /// **'获取日志级别失败'**
+  String get failedToGetLogLevel;
+
+  /// No description provided for @failedToSave.
+  ///
+  /// In zh, this message translates to:
+  /// **'保存失败'**
+  String get failedToSave;
+
+  /// No description provided for @noData.
+  ///
+  /// In zh, this message translates to:
+  /// **'无数据'**
+  String get noData;
+
+  /// No description provided for @failedToGetLogSettings.
+  ///
+  /// In zh, this message translates to:
+  /// **'未能获取日志级别设置'**
+  String get failedToGetLogSettings;
+
+  /// No description provided for @setLogLevel.
+  ///
+  /// In zh, this message translates to:
+  /// **'设置日志级别'**
+  String get setLogLevel;
+
+  /// No description provided for @smbTransferLogEnabled.
+  ///
+  /// In zh, this message translates to:
+  /// **'SMB 传输日志已启用'**
+  String get smbTransferLogEnabled;
+
+  /// No description provided for @smbTransferLogDisabled.
+  ///
+  /// In zh, this message translates to:
+  /// **'SMB 传输日志已禁用'**
+  String get smbTransferLogDisabled;
+
+  /// No description provided for @afpTransferLogEnabled.
+  ///
+  /// In zh, this message translates to:
+  /// **'AFP 传输日志已启用'**
+  String get afpTransferLogEnabled;
+
+  /// No description provided for @afpTransferLogDisabled.
+  ///
+  /// In zh, this message translates to:
+  /// **'AFP 传输日志已禁用'**
+  String get afpTransferLogDisabled;
+
+  /// No description provided for @smbTransferLog.
+  ///
+  /// In zh, this message translates to:
+  /// **'SMB 传输日志'**
+  String get smbTransferLog;
+
+  /// No description provided for @afpTransferLog.
+  ///
+  /// In zh, this message translates to:
+  /// **'AFP 传输日志'**
+  String get afpTransferLog;
+
+  /// No description provided for @smbTransferLogSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'Windows 文件传输日志'**
+  String get smbTransferLogSubtitle;
+
+  /// No description provided for @afpTransferLogSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'Apple 文件传输日志'**
+  String get afpTransferLogSubtitle;
+
+  /// No description provided for @needEnableServiceFirst.
+  ///
+  /// In zh, this message translates to:
+  /// **'需要先启用服务'**
+  String get needEnableServiceFirst;
+
   /// No description provided for @noCurrentDevice.
   ///
   /// In zh, this message translates to:
@@ -2557,6 +2863,42 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'SMB / NFS / FTP / SFTP'**
   String get fileServicesSubtitle;
+
+  /// No description provided for @fileServicesStatusSummary.
+  ///
+  /// In zh, this message translates to:
+  /// **'文件服务状态'**
+  String get fileServicesStatusSummary;
+
+  /// No description provided for @fileServicesEnabledCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'已启用 {enabledCount} / {totalCount} 项服务'**
+  String fileServicesEnabledCount(int enabledCount, int totalCount);
+
+  /// No description provided for @serviceVersion.
+  ///
+  /// In zh, this message translates to:
+  /// **'版本'**
+  String get serviceVersion;
+
+  /// No description provided for @servicePort.
+  ///
+  /// In zh, this message translates to:
+  /// **'端口'**
+  String get servicePort;
+
+  /// No description provided for @nfsV4Domain.
+  ///
+  /// In zh, this message translates to:
+  /// **'NFSv4 域'**
+  String get nfsV4Domain;
+
+  /// No description provided for @ftpsEnabled.
+  ///
+  /// In zh, this message translates to:
+  /// **'FTPS'**
+  String get ftpsEnabled;
 
   /// No description provided for @networkSubtitle.
   ///

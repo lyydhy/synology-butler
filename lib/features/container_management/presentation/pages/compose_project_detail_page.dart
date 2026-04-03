@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/utils/toast.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../core/widgets/app_error_state.dart';
 import '../../../../core/widgets/app_status_chip.dart';
@@ -96,15 +97,11 @@ class _ComposeProjectDetailPageState extends State<ComposeProjectDetailPage>
     try {
       await DsmDockerApi().deleteProject(id: widget.id);
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(const SnackBar(content: Text('删除 Compose 项目成功')));
+      Toast.success('删除 Compose 项目成功');
       context.pop(true);
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text('删除 Compose 项目失败：$error')));
+      Toast.error('删除 Compose 项目失败：$error');
     } finally {
       if (mounted) setState(() => _deleting = false);
     }

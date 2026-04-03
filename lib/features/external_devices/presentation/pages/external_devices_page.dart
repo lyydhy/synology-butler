@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/utils/l10n.dart';
-
+import '../../../../core/utils/toast.dart';
 import '../../../../core/widgets/app_error_state.dart';
 import '../../../../domain/entities/external_device.dart';
 import '../providers/external_devices_providers.dart';
@@ -61,16 +61,12 @@ class ExternalDevicesPage extends ConsumerWidget {
               return _DeviceCard(
                 device: device,
                 busy: busy,
-                
                 onEject: () async {
-                  final messenger = ScaffoldMessenger.of(context);
                   try {
                     await ref.read(ejectExternalDeviceProvider)(device);
-                    messenger.hideCurrentSnackBar();
-                    messenger.showSnackBar(SnackBar(content: Text(l10n.ejectSubmitted)));
+                    Toast.success(l10n.ejectSubmitted);
                   } catch (error) {
-                    messenger.hideCurrentSnackBar();
-                    messenger.showSnackBar(SnackBar(content: Text('${l10n.ejectFailed}：$error')));
+                    Toast.error('${l10n.ejectFailed}：$error');
                   }
                 },
               );

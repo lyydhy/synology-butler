@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/utils/l10n.dart';
+import '../../../../core/utils/toast.dart';
 import '../../../../core/widgets/app_error_state.dart';
 import '../../../../domain/entities/dsm_group.dart';
 import '../../../../domain/entities/dsm_user.dart';
@@ -37,10 +39,10 @@ class _UserGroupsPageState extends ConsumerState<UserGroupsPage> with SingleTick
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('用户与群组'),
+        title: Text(l10n.userGroupsTitle),
         actions: [
           IconButton(
-            tooltip: '刷新',
+            tooltip: l10n.retry,
             onPressed: () {
               ref.invalidate(usersProvider);
               ref.invalidate(groupsProvider);
@@ -68,9 +70,9 @@ class _UserGroupsPageState extends ConsumerState<UserGroupsPage> with SingleTick
               labelColor: theme.colorScheme.onPrimaryContainer,
               unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
               labelStyle: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
-              tabs: const [
-                Tab(text: '用户账号'),
-                Tab(text: '用户群组'),
+              tabs: [
+                Tab(text: l10n.userAccountTab),
+                Tab(text: l10n.userGroupTab),
               ],
             ),
           ),
@@ -97,20 +99,20 @@ class _UsersTab extends ConsumerWidget {
     return usersAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, _) => AppErrorState(
-        title: '用户列表加载失败',
+        title: l10n.loadFailed(error),
         message: '$error',
         onRetry: () => ref.invalidate(usersProvider),
         actionLabel: '重试',
       ),
       data: (users) {
         if (users.isEmpty) {
-          return const Center(
+          return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.people_outline_rounded, size: 52),
-                SizedBox(height: 12),
-                Text('暂无用户'),
+                const Icon(Icons.people_outline_rounded, size: 52),
+                const SizedBox(height: 12),
+                Text(l10n.noUsers),
               ],
             ),
           );
@@ -139,20 +141,20 @@ class _GroupsTab extends ConsumerWidget {
     return groupsAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, _) => AppErrorState(
-        title: '群组列表加载失败',
+        title: l10n.loadFailed(error),
         message: '$error',
         onRetry: () => ref.invalidate(groupsProvider),
         actionLabel: '重试',
       ),
       data: (groups) {
         if (groups.isEmpty) {
-          return const Center(
+          return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.group_outlined, size: 52),
-                SizedBox(height: 12),
-                Text('暂无群组'),
+                const Icon(Icons.group_outlined, size: 52),
+                const SizedBox(height: 12),
+                Text(l10n.noGroups),
               ],
             ),
           );
@@ -313,7 +315,7 @@ class _GroupCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        group.description.isNotEmpty ? group.description : '${group.memberCount} 个成员',
+                        group.description.isNotEmpty ? group.description : '',
                         style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -321,21 +323,7 @@ class _GroupCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primaryContainer.withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    '${group.memberCount}',
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
+                
                 Icon(Icons.chevron_right_rounded, color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5)),
               ],
             ),
@@ -399,15 +387,11 @@ class _UserDetailSheetState extends ConsumerState<_UserDetailSheet> {
 
       if (mounted) {
         Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('用户信息已更新')),
-        );
+        Toast.success('用户信息已更新');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('保存失败: $e')),
-        );
+        Toast.error('保存失败: $e');
       }
     } finally {
       if (mounted) {
@@ -453,15 +437,11 @@ class _UserDetailSheetState extends ConsumerState<_UserDetailSheet> {
 
       if (mounted) {
         Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(disable ? '用户已禁用' : '用户已启用')),
-        );
+        Toast.show(disable ? '用户已禁用' : '用户已启用');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('操作失败: $e')),
-        );
+        Toast.error('操作失败: $e');
       }
     } finally {
       if (mounted) {
@@ -510,9 +490,7 @@ class _UserDetailSheetState extends ConsumerState<_UserDetailSheet> {
     final password = passwordController.text;
     if (password.isEmpty) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('密码不能为空')),
-        );
+        Toast.warning('密码不能为空');
       }
       return;
     }
@@ -526,15 +504,11 @@ class _UserDetailSheetState extends ConsumerState<_UserDetailSheet> {
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('密码已重置')),
-        );
+        Toast.success('密码已重置');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('重置失败: $e')),
-        );
+        Toast.error('重置失败: $e');
       }
     } finally {
       passwordController.dispose();
@@ -833,11 +807,7 @@ class _GroupDetailSheet extends StatelessWidget {
                       label: '描述',
                       value: group.description.isNotEmpty ? group.description : '无',
                     ),
-                    _DetailTile(
-                      icon: Icons.people_outline_rounded,
-                      label: '成员数量',
-                      value: '${group.memberCount} 人',
-                    ),
+                    
                     Container(
                       margin: const EdgeInsets.only(top: 16),
                       padding: const EdgeInsets.all(12),

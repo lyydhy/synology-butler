@@ -258,23 +258,8 @@ class SystemRepositoryImpl implements SystemRepository {
   }
 
   @override
-  Future<List<SharedFolder>> fetchSharedFolders() async {
-    final models = await _systemApi.fetchSharedFolders();
-    return models
-        .map(
-          (item) => SharedFolder(
-            name: item.name,
-            description: item.description,
-            volumePath: item.volumePath,
-            fileSystem: item.fileSystem,
-            isReadOnly: item.isReadOnly,
-            isHidden: item.isHidden,
-            recycleBinEnabled: item.recycleBinEnabled,
-            encrypted: item.encrypted,
-            usageText: item.usageText,
-          ),
-        )
-        .toList();
+  Future<List<SharedFolder>> fetchSharedFolders() {
+    return _systemApi.fetchSharedFolders();
   }
 
   @override
@@ -466,4 +451,27 @@ class SystemRepositoryImpl implements SystemRepository {
       disabled: disabled,
     );
   }
+
+  @override
+  Future<void> createSharedFolder(SharedFolderEditRequest request) => _systemApi.createSharedFolder(request);
+
+  @override
+  Future<void> updateSharedFolder(SharedFolderEditRequest request) => _systemApi.updateSharedFolder(request);
+
+  @override
+  Future<void> deleteSharedFolder(String name) => _systemApi.deleteSharedFolder(name);
+
+  @override
+  Future<Map<String, bool>> fetchTransferLogStatus() => _systemApi.fetchTransferLogStatus();
+
+  @override
+  Future<void> setTransferLogStatus({bool? smbEnabled, bool? afpEnabled}) =>
+      _systemApi.setTransferLogStatus(cifsEnabled: smbEnabled, afpEnabled: afpEnabled);
+
+  @override
+  Future<Map<String, bool>> fetchTransferLogLevel(String protocol) => _systemApi.fetchTransferLogLevel(protocol);
+
+  @override
+  Future<void> setTransferLogLevel(String protocol, Map<String, bool> levels) =>
+      _systemApi.setTransferLogLevel(protocol, levels);
 }

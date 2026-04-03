@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/utils/toast.dart';
 import '../../../../data/api/docker_api.dart';
 
 class ComposeProjectCreatePage extends StatefulWidget {
@@ -47,9 +48,7 @@ class _ComposeProjectCreatePageState extends State<ComposeProjectCreatePage> {
       );
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text('创建 Compose 项目失败：$error')));
+      Toast.error('创建 Compose 项目失败：$error');
     } finally {
       if (mounted) setState(() => _submitting = false);
     }

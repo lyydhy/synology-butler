@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/utils/local_app_log_store.dart';
+import '../../../../core/utils/toast.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../core/widgets/app_error_state.dart';
 import '../../../../core/widgets/sliding_tab_bar.dart';
@@ -29,9 +30,7 @@ class _ContainerDetailPageState extends State<ContainerDetailPage> with SingleTi
   Future<void> _copyLogs(String text) async {
     await Clipboard.setData(ClipboardData(text: text));
     if (!mounted) return;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(const SnackBar(content: Text('日志已复制')));
+    Toast.show('日志已复制');
   }
 
   Future<File> _writeLogsToTxtFile(String text) async {
@@ -47,9 +46,7 @@ class _ContainerDetailPageState extends State<ContainerDetailPage> with SingleTi
     final file = await _writeLogsToTxtFile(text);
 
     if (!mounted) return;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text('日志已导出：${file.path}')));
+    Toast.show('日志已导出：${file.path}');
   }
 
   Future<void> _shareLogs(String text) async {
