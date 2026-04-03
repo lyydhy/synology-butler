@@ -1,5 +1,6 @@
 ﻿import 'dart:async';
 import 'dart:convert';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
@@ -8,6 +9,9 @@ import 'package:flutter/foundation.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/network/app_dio.dart';
 import '../../core/utils/dsm_logger.dart';
+import '../../domain/entities/file_service.dart';
+import '../../domain/entities/shared_folder.dart';
+import '../models/shared_folder_model.dart';
 import '../../domain/entities/network.dart';
 import '../../domain/entities/power_schedule_task.dart';
 import '../../domain/entities/power_status.dart';
@@ -17,8 +21,10 @@ import '../models/dsm_group_model.dart';
 import '../models/dsm_user_model.dart';
 import '../models/external_access_model.dart';
 import '../models/external_device_model.dart';
+import '../models/file_service_model.dart';
 import '../models/index_service_model.dart';
 import '../models/information_center_model.dart';
+import '../models/shared_folder_model.dart';
 import '../models/system_status_model.dart';
 import '../models/task_scheduler_model.dart';
 
@@ -51,9 +57,41 @@ abstract class SystemApi {
 
   Future<void> ejectExternalDevice({required String id, required String bus});
 
+  Future<List<SharedFolder>> fetchSharedFolders();
+
   Future<List<DsmUserModel>> fetchUsers();
 
   Future<List<DsmGroupModel>> fetchGroups();
+
+  /// 获取文件服务状态（SMB、NFS、FTP、AFP、SFTP）
+  Future<FileServicesModel> fetchFileServices();
+
+  /// 设置文件服务启用状态
+  Future<void> setFileServiceEnabled({
+    required String serviceName,
+    required bool enabled,
+  });
+
+  /// 获取传输日志状态
+  Future<Map<String, bool>> fetchTransferLogStatus();
+
+  /// 设置传输日志状态
+  Future<void> setTransferLogStatus({bool? cifsEnabled, bool? afpEnabled});
+
+  /// 获取传输日志级别设置
+  Future<Map<String, bool>> fetchTransferLogLevel(String protocol);
+
+  /// 设置传输日志级别
+  Future<void> setTransferLogLevel(String protocol, Map<String, bool> levels);
+
+  /// 创建共享文件夹
+  Future<void> createSharedFolder(SharedFolderEditRequest request);
+
+  /// 更新共享文件夹
+  Future<void> updateSharedFolder(SharedFolderEditRequest request);
+
+  /// 删除共享文件夹
+  Future<void> deleteSharedFolder(String name);
 
   /// 获取网络状态（常规、接口、代理、网关）
   Future<NetworkModel> fetchNetwork();
@@ -416,6 +454,40 @@ class DsmSystemApi implements SystemApi {
     if (!(response.data is Map && response.data['success'] == true)) {
       throw Exception(response.data is Map ? response.data['error']?.toString() ?? '弹出外接设备失败' : '弹出外接设备失败');
     }
+  }
+
+  @override
+  Future<List<SharedFolder>> fetchSharedFolders() async {
+    final client = _dio;
+    final response = await client.post(
+      '/webapi/entry.cgi',
+      data: {
+        'api': 'SYNO.Core.Share',
+        'method': 'list',
+        'version': '1',
+        'shareType': 'all',
+        'additional': jsonEncode([
+          'hidden',
+          'recyclebin',
+          'encryption',
+          'volume_status',
+          'usage',
+        ]),
+      },
+      options: Options(contentType: Headers.formUrlEncodedContentType),
+    );
+
+    if (!(response.data is Map && response.data['success'] == true)) {
+      throw Exception(response.data is Map ? response.data['error']?.toString() ?? '加载共享文件夹失败' : '加载共享文件夹失败');
+    }
+
+    final data = response.data['data'] as Map? ?? const {};
+    final shares = ((data['shares'] as List?) ?? (data['list'] as List?) ?? const [])
+        .whereType<Map>()
+        .map((item) => SharedFolderModel.parseItem(item as Map<String, dynamic>))
+        .toList();
+
+    return shares;
   }
 
   @override
@@ -2137,6 +2209,282 @@ class DsmSystemApi implements SystemApi {
     return parts.join(' ');
   }
 
+  @override
+  Future<FileServicesModel> fetchFileServices() async {
+    final client = _dio;
+
+    Future<Map<String, dynamic>?> fetchService(String api, String method) async {
+      try {
+        final response = await client.post(
+          '/webapi/entry.cgi',
+          data: {
+            'api': api,
+            'method': method,
+            'version': 1,
+          },
+          options: Options(contentType: Headers.formUrlEncodedContentType),
+        );
+        if (response.data is Map && response.data['success'] == true) {
+          return response.data['data'] as Map<String, dynamic>?;
+        }
+        return null;
+      } catch (_) {
+        return null;
+      }
+    }
+
+    // 并行请求所有文件服务状态
+    final results = await Future.wait([
+      fetchService('SYNO.Core.FileServ.SMB', 'get'),
+      fetchService('SYNO.Core.FileServ.NFS', 'get'),
+      fetchService('SYNO.Core.FileServ.FTP', 'get'),
+      fetchService('SYNO.Core.FileServ.AFP', 'get'),
+      fetchService('SYNO.Core.FileServ.FTP.SFTP', 'get'),
+    ]);
+
+    return FileServiceModel.fromApiResponses(
+      smbData: results[0],
+      nfsData: results[1],
+      ftpData: results[2],
+      afpData: results[3],
+      sftpData: results[4],
+    );
+  }
+
+  @override
+  Future<void> setFileServiceEnabled({
+    required String serviceName,
+    required bool enabled,
+  }) async {
+    final client = _dio;
+
+    // 服务名称到 API 的映射（参考 dsm_helper）
+    final apiConfigs = {
+      'SMB': {
+        'api': 'SYNO.Core.FileServ.SMB',
+        'version': 3,
+        'enable_key': 'enable_samba',
+        'extra_keys': ['workgroup', 'disable_shadow_copy'],
+      },
+      'NFS': {
+        'api': 'SYNO.Core.FileServ.NFS',
+        'version': 2,
+        'enable_key': 'enable_nfs',
+        'extra_keys': ['enable_nfs_v4', 'enable_nfs_v4_1', 'nfs_v4_domain'],
+      },
+      'FTP': {
+        'api': 'SYNO.Core.FileServ.FTP',
+        'version': 3,
+        'enable_key': 'enable_ftp',
+        'extra_keys': ['enable_ftps', 'timeout', 'portnum', 'enable_fxp', 'enable_fips', 'enable_ascii', 'utf8_mode'],
+      },
+      'AFP': {
+        'api': 'SYNO.Core.FileServ.AFP',
+        'version': 1,
+        'enable_key': 'enable_afp',
+        'extra_keys': <String>[],
+      },
+      'SFTP': {
+        'api': 'SYNO.Core.FileServ.FTP.SFTP',
+        'version': 1,
+        'enable_key': 'enable',
+        'extra_keys': ['portnum', 'sftp_portnum'],
+      },
+    };
+
+    final config = apiConfigs[serviceName.toUpperCase()];
+    if (config == null) {
+      throw Exception('未知的服务名称: $serviceName');
+    }
+
+    final apiName = config['api'] as String;
+    final version = config['version'] as int;
+    final enableKey = config['enable_key'] as String;
+    final extraKeys = (config['extra_keys'] as List).cast<String>();
+
+    DsmLogger.request(
+      module: 'FileService',
+      action: 'setFileServiceEnabled',
+      method: 'POST',
+      path: _baseUrl,
+      sid: _sid,
+      synoToken: _synoToken,
+      cookieHeader: _cookieHeader,
+      extra: {
+        'serviceName': serviceName,
+        'enabled': enabled,
+        'api': apiName,
+        'enable_key': enableKey,
+      },
+    );
+
+    try {
+      // 1. 先获取当前配置
+      final getResponse = await client.post(
+        '/webapi/entry.cgi',
+        data: {
+          'api': apiName,
+          'method': 'get',
+          'version': version,
+        },
+        options: Options(contentType: Headers.formUrlEncodedContentType),
+      );
+
+      Map<String, dynamic> currentConfig = {};
+      if (getResponse.data is Map && getResponse.data['success'] == true) {
+        currentConfig = Map<String, dynamic>.from(getResponse.data['data'] ?? {});
+      }
+
+      // 2. 构建设置参数：当前配置 + 启用状态修改
+      final setData = <String, dynamic>{
+        'api': apiName,
+        'method': 'set',
+        'version': version,
+        enableKey: enabled,
+      };
+
+      // 保留必要字段
+      for (final key in extraKeys) {
+        if (currentConfig.containsKey(key)) {
+          setData[key] = currentConfig[key];
+        }
+      }
+
+      // SFTP 特殊处理：portnum 和 sftp_portnum 保持一致
+      if (serviceName.toUpperCase() == 'SFTP' && currentConfig.containsKey('portnum')) {
+        setData['portnum'] = currentConfig['portnum'];
+        setData['sftp_portnum'] = currentConfig['portnum'];
+      }
+
+      final response = await client.post(
+        '/webapi/entry.cgi',
+        data: setData,
+        options: Options(contentType: Headers.formUrlEncodedContentType),
+      );
+
+      final responseData = response.data;
+      
+      if (responseData is! Map || responseData['success'] != true) {
+        final errorData = responseData is Map ? responseData['error'] : null;
+        final errorMessage = errorData is Map 
+            ? (errorData['message'] ?? errorData['code'] ?? '设置服务状态失败')
+            : '设置服务状态失败';
+        
+        DsmLogger.failure(
+          module: 'FileService',
+          action: 'setFileServiceEnabled',
+          path: _baseUrl,
+          reason: errorMessage.toString(),
+          sid: _sid,
+          synoToken: _synoToken,
+          cookieHeader: _cookieHeader,
+          extra: {
+            'responseData': responseData,
+            'serviceName': serviceName,
+            'enabled': enabled,
+            'setData': setData,
+          },
+        );
+        
+        throw Exception(errorMessage.toString());
+      }
+
+      DsmLogger.success(
+        module: 'FileService',
+        action: 'setFileServiceEnabled',
+        path: _baseUrl,
+        response: {'serviceName': serviceName, 'enabled': enabled},
+      );
+    } catch (e) {
+      if (e is Exception && e.toString().contains('设置服务状态')) {
+        rethrow;
+      }
+      DsmLogger.failure(
+        module: 'FileService',
+        action: 'setFileServiceEnabled',
+        path: _baseUrl,
+        reason: '请求异常: $e',
+        sid: _sid,
+        synoToken: _synoToken,
+        cookieHeader: _cookieHeader,
+      );
+      rethrow;
+    }
+  }
+
+  @override
+
+  @override
+  Future<Map<String, bool>> fetchTransferLogStatus() async {
+    final client = _dio;
+    final response = await client.post('/webapi/entry.cgi',
+      data: {'api': 'SYNO.Core.SyslogClient.FileTransfer', 'method': 'get', 'version': '1'},
+      options: Options(contentType: Headers.formUrlEncodedContentType));
+    if (!(response.data is Map && response.data['success'] == true)) {
+      throw Exception(response.data is Map ? response.data['error']?.toString() ?? '获取传输日志状态失败' : '获取传输日志状态失败');
+    }
+    final data = response.data['data'] as Map? ?? const {};
+    return {'cifs': data['cifs'] == '1', 'afp': data['afp'] == '1'};
+  }
+
+  @override
+  Future<void> setTransferLogStatus({bool? cifsEnabled, bool? afpEnabled}) async {
+    final client = _dio;
+    final setData = <String, String>{};
+    if (cifsEnabled != null) setData['cifs'] = cifsEnabled ? '1' : '0';
+    if (afpEnabled != null) setData['afp'] = afpEnabled ? '1' : '0';
+    final response = await client.post('/webapi/entry.cgi',
+      data: {'api': 'SYNO.Core.SyslogClient.FileTransfer', 'method': 'set', 'version': '1', ...setData},
+      options: Options(contentType: Headers.formUrlEncodedContentType));
+    if (!(response.data is Map && response.data['success'] == true)) {
+      throw Exception(response.data is Map ? response.data['error']?.toString() ?? '设置传输日志状态失败' : '设置传输日志状态失败');
+    }
+  }
+
+  @override
+  Future<Map<String, bool>> fetchTransferLogLevel(String protocol) async {
+    final client = _dio;
+    final response = await client.post('/webapi/entry.cgi',
+      data: {'api': 'SYNO.Core.SyslogClient.FileTransfer', 'method': 'get_level', 'version': '1', 'protocol': protocol},
+      options: Options(contentType: Headers.formUrlEncodedContentType));
+    if (!(response.data is Map && response.data['success'] == true)) {
+      throw Exception(response.data is Map ? response.data['error']?.toString() ?? '获取日志级别失败' : '获取日志级别失败');
+    }
+    final data = response.data['data'] as Map? ?? const {};
+    final levels = data['level'] as Map? ?? const {};
+    return {'create': levels['create'] == '1', 'write': levels['write'] == '1', 'move': levels['move'] == '1',
+            'delete': levels['delete'] == '1', 'read': levels['read'] == '1', 'rename': levels['rename'] == '1'};
+  }
+
+  @override
+  Future<void> setTransferLogLevel(String protocol, Map<String, bool> levels) async {
+    final client = _dio;
+    final levelMap = {'create': levels['create'] == true ? '1' : '0', 'write': levels['write'] == true ? '1' : '0',
+                      'move': levels['move'] == true ? '1' : '0', 'delete': levels['delete'] == true ? '1' : '0',
+                      'read': levels['read'] == true ? '1' : '0', 'rename': levels['rename'] == true ? '1' : '0'};
+    final response = await client.post('/webapi/entry.cgi',
+      data: {'api': 'SYNO.Core.SyslogClient.FileTransfer', 'method': 'set_level', 'version': '1',
+             'protocol': protocol, 'level': jsonEncode(levelMap)},
+      options: Options(contentType: Headers.formUrlEncodedContentType));
+    if (!(response.data is Map && response.data['success'] == true)) {
+      throw Exception(response.data is Map ? response.data['error']?.toString() ?? '设置日志级别失败' : '设置日志级别失败');
+    }
+  }
+
+  @override
+  Future<void> createSharedFolder(SharedFolderEditRequest request) async {
+    throw UnimplementedError('createSharedFolder 待实现');
+  }
+
+  @override
+  Future<void> updateSharedFolder(SharedFolderEditRequest request) async {
+    throw UnimplementedError('updateSharedFolder 待实现');
+  }
+
+  @override
+  Future<void> deleteSharedFolder(String name) async {
+    throw UnimplementedError('deleteSharedFolder 待实现');
+  }
   @override
   Future<NetworkModel> fetchNetwork() async {
     final client = _dio;

@@ -16,11 +16,20 @@ import '../../domain/entities/terminal_settings.dart';
 import '../../domain/entities/upgrade_status.dart';
 import '../../domain/repositories/system_repository.dart';
 import '../api/system_api.dart';
+import '../api/transfer_log_api.dart';
+import '../api/shared_folder_api.dart';
+import '../api/file_service_api.dart';
 
 class SystemRepositoryImpl implements SystemRepository {
-  const SystemRepositoryImpl(this._systemApi);
+  SystemRepositoryImpl(this._systemApi, {TransferLogApi? transferLogApi, SharedFolderApi? sharedFolderApi, FileServiceApi? fileServiceApi})
+      : _transferLogApi = transferLogApi ?? TransferLogApi(),
+        _sharedFolderApi = sharedFolderApi ?? SharedFolderApi(),
+        _fileServiceApi = fileServiceApi ?? FileServiceApi();
 
   final SystemApi _systemApi;
+  final TransferLogApi _transferLogApi;
+  final SharedFolderApi _sharedFolderApi;
+  final FileServiceApi _fileServiceApi;
 
   @override
   Future<ExternalAccessData> fetchExternalAccess() async {
@@ -259,7 +268,7 @@ class SystemRepositoryImpl implements SystemRepository {
 
   @override
   Future<List<SharedFolder>> fetchSharedFolders() {
-    return _systemApi.fetchSharedFolders();
+    return _sharedFolderApi.fetchSharedFolders();
   }
 
   @override
@@ -349,7 +358,7 @@ class SystemRepositoryImpl implements SystemRepository {
 
   @override
   Future<FileServicesModel> fetchFileServices() {
-    return _systemApi.fetchFileServices();
+    return _fileServiceApi.fetchFileServices();
   }
 
   @override
@@ -357,7 +366,7 @@ class SystemRepositoryImpl implements SystemRepository {
     required String serviceName,
     required bool enabled,
   }) {
-    return _systemApi.setFileServiceEnabled(
+    return _fileServiceApi.setFileServiceEnabled(
       serviceName: serviceName,
       enabled: enabled,
     );
@@ -453,25 +462,25 @@ class SystemRepositoryImpl implements SystemRepository {
   }
 
   @override
-  Future<void> createSharedFolder(SharedFolderEditRequest request) => _systemApi.createSharedFolder(request);
+  Future<void> createSharedFolder(SharedFolderEditRequest request) => _sharedFolderApi.createSharedFolder(request);
 
   @override
-  Future<void> updateSharedFolder(SharedFolderEditRequest request) => _systemApi.updateSharedFolder(request);
+  Future<void> updateSharedFolder(SharedFolderEditRequest request) => _sharedFolderApi.updateSharedFolder(request);
 
   @override
-  Future<void> deleteSharedFolder(String name) => _systemApi.deleteSharedFolder(name);
+  Future<void> deleteSharedFolder(String name) => _sharedFolderApi.deleteSharedFolder(name);
 
   @override
-  Future<Map<String, bool>> fetchTransferLogStatus() => _systemApi.fetchTransferLogStatus();
+  Future<Map<String, bool>> fetchTransferLogStatus() => _transferLogApi.fetchTransferLogStatus();
 
   @override
   Future<void> setTransferLogStatus({bool? smbEnabled, bool? afpEnabled}) =>
-      _systemApi.setTransferLogStatus(cifsEnabled: smbEnabled, afpEnabled: afpEnabled);
+      _transferLogApi.setTransferLogStatus(cifsEnabled: smbEnabled, afpEnabled: afpEnabled);
 
   @override
-  Future<Map<String, bool>> fetchTransferLogLevel(String protocol) => _systemApi.fetchTransferLogLevel(protocol);
+  Future<Map<String, bool>> fetchTransferLogLevel(String protocol) => _transferLogApi.fetchTransferLogLevel(protocol);
 
   @override
   Future<void> setTransferLogLevel(String protocol, Map<String, bool> levels) =>
-      _systemApi.setTransferLogLevel(protocol, levels);
+      _transferLogApi.setTransferLogLevel(protocol, levels);
 }
