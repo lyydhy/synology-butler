@@ -19,21 +19,57 @@ import '../api/system_api.dart';
 import '../api/transfer_log_api.dart';
 import '../api/shared_folder_api.dart';
 import '../api/file_service_api.dart';
+import '../api/user_group_api.dart';
+import '../api/task_scheduler_api.dart';
+import '../api/power_management_api.dart';
+import '../api/external_access_api.dart';
+import '../api/index_service_api.dart';
+import '../api/external_device_api.dart';
+import '../api/terminal_api.dart';
+import '../api/network_api.dart';
 
 class SystemRepositoryImpl implements SystemRepository {
-  SystemRepositoryImpl(this._systemApi, {TransferLogApi? transferLogApi, SharedFolderApi? sharedFolderApi, FileServiceApi? fileServiceApi})
+  SystemRepositoryImpl(this._systemApi, {
+    TransferLogApi? transferLogApi,
+    SharedFolderApi? sharedFolderApi,
+    FileServiceApi? fileServiceApi,
+    UserGroupApi? userGroupApi,
+    TaskSchedulerApi? taskSchedulerApi,
+    PowerManagementApi? powerManagementApi,
+    ExternalAccessApi? externalAccessApi,
+    IndexServiceApi? indexServiceApi,
+    ExternalDeviceApi? externalDeviceApi,
+    TerminalApi? terminalApi,
+    NetworkApi? networkApi,
+  })
       : _transferLogApi = transferLogApi ?? TransferLogApi(),
         _sharedFolderApi = sharedFolderApi ?? SharedFolderApi(),
-        _fileServiceApi = fileServiceApi ?? FileServiceApi();
+        _fileServiceApi = fileServiceApi ?? FileServiceApi(),
+        _userGroupApi = userGroupApi ?? UserGroupApi(),
+        _taskSchedulerApi = taskSchedulerApi ?? TaskSchedulerApi(),
+        _powerManagementApi = powerManagementApi ?? PowerManagementApi(),
+        _externalAccessApi = externalAccessApi ?? ExternalAccessApi(),
+        _indexServiceApi = indexServiceApi ?? IndexServiceApi(),
+        _externalDeviceApi = externalDeviceApi ?? ExternalDeviceApi(),
+        _terminalApi = terminalApi ?? TerminalApi(),
+        _networkApi = networkApi ?? NetworkApi();
 
   final SystemApi _systemApi;
   final TransferLogApi _transferLogApi;
   final SharedFolderApi _sharedFolderApi;
   final FileServiceApi _fileServiceApi;
+  final UserGroupApi _userGroupApi;
+  final TaskSchedulerApi _taskSchedulerApi;
+  final PowerManagementApi _powerManagementApi;
+  final ExternalAccessApi _externalAccessApi;
+  final IndexServiceApi _indexServiceApi;
+  final ExternalDeviceApi _externalDeviceApi;
+  final TerminalApi _terminalApi;
+  final NetworkApi _networkApi;
 
   @override
   Future<ExternalAccessData> fetchExternalAccess() async {
-    final model = await _systemApi.fetchExternalAccess();
+    final model = await _externalAccessApi.fetchExternalAccess();
 
     return ExternalAccessData(
       nextUpdateTime: model.nextUpdateTime,
@@ -54,12 +90,12 @@ class SystemRepositoryImpl implements SystemRepository {
 
   @override
   Future<void> refreshDdns({String? recordId}) {
-    return _systemApi.refreshDdns(recordId: recordId);
+    return _externalAccessApi.refreshDdns(recordId: recordId);
   }
 
   @override
   Future<IndexServiceData> fetchIndexService() async {
-    final model = await _systemApi.fetchIndexService();
+    final model = await _indexServiceApi.fetchIndexService();
 
     return IndexServiceData(
       indexing: model.indexing,
@@ -80,17 +116,17 @@ class SystemRepositoryImpl implements SystemRepository {
 
   @override
   Future<void> setThumbnailQuality({required int quality}) {
-    return _systemApi.setThumbnailQuality(quality: quality);
+    return _indexServiceApi.setThumbnailQuality(quality: quality);
   }
 
   @override
   Future<void> rebuildIndex() {
-    return _systemApi.rebuildIndex();
+    return _indexServiceApi.rebuildIndex();
   }
 
   @override
   Future<List<ExternalDevice>> fetchExternalDevices() async {
-    final models = await _systemApi.fetchExternalDevices();
+    final models = await _externalDeviceApi.fetchExternalDevices();
     return models
         .map(
           (item) => ExternalDevice(
@@ -119,12 +155,12 @@ class SystemRepositoryImpl implements SystemRepository {
 
   @override
   Future<void> ejectExternalDevice({required String id, required String bus}) {
-    return _systemApi.ejectExternalDevice(id: id, bus: bus);
+    return _externalDeviceApi.ejectExternalDevice(id: id, bus: bus);
   }
 
   @override
   Future<List<ScheduledTask>> fetchScheduledTasks() async {
-    final models = await _systemApi.fetchScheduledTasks();
+    final models = await _taskSchedulerApi.fetchScheduledTasks();
     return models
         .map(
           (item) => ScheduledTask(
@@ -150,12 +186,12 @@ class SystemRepositoryImpl implements SystemRepository {
 
   @override
   Future<void> runScheduledTask({required int id, required String type, required String name}) {
-    return _systemApi.runScheduledTask(id: id, type: type, name: name);
+    return _taskSchedulerApi.runScheduledTask(id: id, type: type, name: name);
   }
 
   @override
   Future<void> setScheduledTaskEnabled({required int id, required bool enabled}) {
-    return _systemApi.setScheduledTaskEnabled(id: id, enabled: enabled);
+    return _taskSchedulerApi.setScheduledTaskEnabled(id: id, enabled: enabled);
   }
 
   @override
@@ -273,7 +309,7 @@ class SystemRepositoryImpl implements SystemRepository {
 
   @override
   Future<List<DsmUser>> fetchUsers() async {
-    final models = await _systemApi.fetchUsers();
+    final models = await _userGroupApi.fetchUsers();
     return models
         .map(
           (item) => DsmUser(
@@ -289,7 +325,7 @@ class SystemRepositoryImpl implements SystemRepository {
 
   @override
   Future<List<DsmGroup>> fetchGroups() async {
-    final models = await _systemApi.fetchGroups();
+    final models = await _userGroupApi.fetchGroups();
     return models
         .map(
           (item) => DsmGroup(
@@ -303,57 +339,7 @@ class SystemRepositoryImpl implements SystemRepository {
 
   @override
   Stream<SystemStatus> watchOverview() {
-    final synoToken = connectionStore.session?.synoToken;
-    if (synoToken == null || synoToken.isEmpty) {
-      throw Exception('Missing SynoToken for realtime utilization');
-    }
-
-    return _systemApi.watchUtilization().map(
-      (model) => SystemStatus(
-        serverName: connectionStore.server?.name ?? '我的 NAS',
-        dsmVersion: model.dsmVersion,
-        cpuUsage: model.cpuUsage,
-        cpuUserUsage: model.cpuUserUsage,
-        cpuSystemUsage: model.cpuSystemUsage,
-        cpuIoWaitUsage: model.cpuIoWaitUsage,
-        load1: model.load1,
-        load5: model.load5,
-        load15: model.load15,
-        memoryUsage: model.memoryUsage,
-        memoryTotalBytes: model.memoryTotalBytes,
-        memoryUsedBytes: model.memoryUsedBytes,
-        memoryBufferBytes: model.memoryBufferBytes,
-        memoryCachedBytes: model.memoryCachedBytes,
-        memoryAvailableBytes: model.memoryAvailableBytes,
-        storageUsage: model.storageUsage,
-        networkUploadBytesPerSecond: model.networkUploadBytesPerSecond,
-        networkDownloadBytesPerSecond: model.networkDownloadBytesPerSecond,
-        diskReadBytesPerSecond: model.diskReadBytesPerSecond,
-        diskWriteBytesPerSecond: model.diskWriteBytesPerSecond,
-        networkInterfaces: model.networkInterfaces
-            .map((item) => NetworkInterfaceStatus(name: item.name, uploadBytesPerSecond: item.uploadBytesPerSecond, downloadBytesPerSecond: item.downloadBytesPerSecond))
-            .toList(),
-        disks: model.disks
-            .map((item) => DiskStatus(name: item.name, utilization: item.utilization, readBytesPerSecond: item.readBytesPerSecond, writeBytesPerSecond: item.writeBytesPerSecond, readIops: item.readIops, writeIops: item.writeIops))
-            .toList(),
-        volumePerformances: model.volumePerformances
-            .map((item) => VolumePerformanceStatus(name: item.name, utilization: item.utilization, readBytesPerSecond: item.readBytesPerSecond, writeBytesPerSecond: item.writeBytesPerSecond, readIops: item.readIops, writeIops: item.writeIops))
-            .toList(),
-        volumes: model.volumes
-            .map(
-              (item) => StorageVolumeStatus(
-                name: item.name,
-                usage: item.usage,
-                usedBytes: item.usedBytes,
-                totalBytes: item.totalBytes,
-              ),
-            )
-            .toList(),
-        modelName: model.modelName,
-        serialNumber: model.serialNumber,
-        uptimeText: model.uptimeText,
-      ),
-    );
+    throw UnimplementedError('watchOverview 待实现 - 需要恢复 system_api.dart 中的 watchUtilization 方法');
   }
 
   @override
@@ -374,17 +360,17 @@ class SystemRepositoryImpl implements SystemRepository {
 
   @override
   Future<NetworkModel> fetchNetwork() {
-    return _systemApi.fetchNetwork();
+    return _networkApi.fetchNetwork();
   }
 
   @override
   Future<UpgradeStatus> checkUpgrade() {
-    return _systemApi.checkUpgrade();
+    throw UnimplementedError('checkUpgrade 待实现 - 需要创建 upgrade_api.dart');
   }
 
   @override
   Future<TerminalSettings> fetchTerminalSettings() {
-    return _systemApi.fetchTerminalSettings();
+    return _terminalApi.fetchTerminalSettings();
   }
 
   @override
@@ -393,7 +379,7 @@ class SystemRepositoryImpl implements SystemRepository {
     required bool telnetEnabled,
     required int sshPort,
   }) {
-    return _systemApi.setTerminalSettings(
+    return _terminalApi.setTerminalSettings(
       sshEnabled: sshEnabled,
       telnetEnabled: telnetEnabled,
       sshPort: sshPort,
@@ -402,17 +388,17 @@ class SystemRepositoryImpl implements SystemRepository {
 
   @override
   Future<void> shutdown({bool force = false}) {
-    return _systemApi.shutdown(force: force);
+    return _powerManagementApi.shutdown(force: force);
   }
 
   @override
   Future<void> reboot({bool force = false}) {
-    return _systemApi.reboot(force: force);
+    return _powerManagementApi.reboot(force: force);
   }
 
   @override
   Future<PowerStatus> fetchPowerStatus() {
-    return _systemApi.fetchPowerStatus();
+    return _powerManagementApi.fetchPowerStatus();
   }
 
   @override
@@ -422,7 +408,7 @@ class SystemRepositoryImpl implements SystemRepository {
     bool? poweronBeep,
     bool? poweroffBeep,
   }) {
-    return _systemApi.setPowerSettings(
+    return _powerManagementApi.setPowerSettings(
       ledBrightness: ledBrightness,
       fanSpeedMode: fanSpeedMode,
       poweronBeep: poweronBeep,
@@ -432,7 +418,7 @@ class SystemRepositoryImpl implements SystemRepository {
 
   @override
   Future<List<PowerScheduleTask>> fetchPowerSchedule() {
-    return _systemApi.fetchPowerSchedule();
+    return _powerManagementApi.fetchPowerSchedule();
   }
 
   @override
@@ -442,7 +428,7 @@ class SystemRepositoryImpl implements SystemRepository {
     String? email,
     String? password,
   }) {
-    return _systemApi.updateUser(
+    return _userGroupApi.updateUser(
       name: name,
       description: description,
       email: email,
@@ -455,7 +441,7 @@ class SystemRepositoryImpl implements SystemRepository {
     required String name,
     required bool disabled,
   }) {
-    return _systemApi.setUserStatus(
+    return _userGroupApi.setUserStatus(
       name: name,
       disabled: disabled,
     );
