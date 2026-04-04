@@ -1,5 +1,8 @@
-﻿import '../models/information_center_model.dart';
+import 'information_center_api.dart';
+import 'upgrade_api.dart';
+import '../models/information_center_model.dart';
 import '../models/system_status_model.dart';
+import '../../domain/entities/upgrade_status.dart';
 
 abstract class SystemApi {
   Future<SystemStatusModel> fetchOverview();
@@ -9,9 +12,11 @@ abstract class SystemApi {
   });
 }
 
-// TODO: 实现 DsmSystemApi - 需要恢复 fetchOverview 和 fetchInformationCenter 方法及其辅助方法
 class DsmSystemApi implements SystemApi {
   DsmSystemApi({bool ignoreBadCertificate = false});
+
+  final _informationCenterApi = InformationCenterApi();
+  final _upgradeApi = UpgradeApi();
 
   @override
   Future<SystemStatusModel> fetchOverview() {
@@ -20,6 +25,10 @@ class DsmSystemApi implements SystemApi {
 
   @override
   Future<InformationCenterModel> fetchInformationCenter({required String serverName}) {
-    throw UnimplementedError('fetchInformationCenter 待实现 - 需要创建 information_center_api.dart');
+    return _informationCenterApi.fetchInformationCenter(serverName: serverName);
+  }
+
+  Future<UpgradeStatus> checkUpgrade() {
+    return _upgradeApi.checkUpgrade();
   }
 }

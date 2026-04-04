@@ -27,6 +27,7 @@ import '../api/index_service_api.dart';
 import '../api/external_device_api.dart';
 import '../api/terminal_api.dart';
 import '../api/network_api.dart';
+import '../api/upgrade_api.dart';
 
 class SystemRepositoryImpl implements SystemRepository {
   SystemRepositoryImpl(this._systemApi, {
@@ -41,6 +42,7 @@ class SystemRepositoryImpl implements SystemRepository {
     ExternalDeviceApi? externalDeviceApi,
     TerminalApi? terminalApi,
     NetworkApi? networkApi,
+    UpgradeApi? upgradeApi,
   })
       : _transferLogApi = transferLogApi ?? TransferLogApi(),
         _sharedFolderApi = sharedFolderApi ?? SharedFolderApi(),
@@ -52,7 +54,8 @@ class SystemRepositoryImpl implements SystemRepository {
         _indexServiceApi = indexServiceApi ?? IndexServiceApi(),
         _externalDeviceApi = externalDeviceApi ?? ExternalDeviceApi(),
         _terminalApi = terminalApi ?? TerminalApi(),
-        _networkApi = networkApi ?? NetworkApi();
+        _networkApi = networkApi ?? NetworkApi(),
+        _upgradeApi = upgradeApi ?? UpgradeApi();
 
   final SystemApi _systemApi;
   final TransferLogApi _transferLogApi;
@@ -66,6 +69,7 @@ class SystemRepositoryImpl implements SystemRepository {
   final ExternalDeviceApi _externalDeviceApi;
   final TerminalApi _terminalApi;
   final NetworkApi _networkApi;
+  final UpgradeApi _upgradeApi;
 
   @override
   Future<ExternalAccessData> fetchExternalAccess() async {
@@ -365,7 +369,7 @@ class SystemRepositoryImpl implements SystemRepository {
 
   @override
   Future<UpgradeStatus> checkUpgrade() {
-    throw UnimplementedError('checkUpgrade 待实现 - 需要创建 upgrade_api.dart');
+    return _upgradeApi.checkUpgrade();
   }
 
   @override
