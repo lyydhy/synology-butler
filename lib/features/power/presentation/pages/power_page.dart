@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/utils/toast.dart';
+import '../../../../core/widgets/sliding_tab_bar.dart';
 import '../../../../domain/entities/power_schedule_task.dart';
 import '../../../../domain/entities/power_status.dart';
 import '../../../dashboard/presentation/providers/dashboard_providers.dart';
@@ -104,13 +105,21 @@ class _PowerPageState extends ConsumerState<PowerPage> with SingleTickerProvider
                   : const Text('保存'),
             ),
         ],
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(text: '电源设置'),
-            Tab(text: '开关机计划'),
-          ],
-          onTap: (_) => setState(() {}),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(64),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+            child: SlidingTabBar(
+              tabController: _tabController,
+              height: 54,
+              iconSize: 18,
+              fontSize: 13,
+              tabs: const [
+                SlidingTabItem(icon: Icons.settings_rounded, label: '电源设置'),
+                SlidingTabItem(icon: Icons.schedule_rounded, label: '开关机计划'),
+              ],
+            ),
+          ),
         ),
       ),
       body: TabBarView(
