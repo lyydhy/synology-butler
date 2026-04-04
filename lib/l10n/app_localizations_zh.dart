@@ -387,81 +387,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get userGroupsTitle => '用户与群组';
 
   @override
-  String get userAccountTab => '用户账号';
-
-  @override
-  String get userGroupTab => '用户群组';
-
-  @override
-  String get noUsers => '暂无用户';
-
-  @override
-  String get noGroups => '暂无群组';
-
-  @override
-  String get userStatusNormal => '正常';
-
-  @override
-  String get userStatusDisabled => '已禁用';
-
-  @override
-  String get userStatusExpired => '已过期';
-
-  @override
-  String memberCount(int count) => '$count 个成员';
-
-  @override
-  String get userDetailTitle => '用户详情';
-
-  @override
-  String get groupDetailTitle => '群组详情';
-
-  @override
-  String get saveChanges => '保存修改';
-
-  @override
-  String get resetPassword => '重置密码';
-
-  @override
-  String get disableUser => '禁用用户';
-
-  @override
-  String get enableUser => '启用用户';
-
-  @override
-  String confirmDisableUser(String name) => '确定要禁用用户 "$name" 吗？禁用后该用户将无法登录。';
-
-  @override
-  String confirmEnableUser(String name) => '确定要启用用户 "$name" 吗？';
-
-  @override
-  String confirmResetPassword(String name) => '为用户 "$name" 设置新密码：';
-
-  @override
-  String get newPassword => '新密码';
-
-  @override
-  String get passwordCannotBeEmpty => '密码不能为空';
-
-  @override
-  String get userInfoUpdated => '用户信息已更新';
-
-  @override
-  String get userDisabled => '用户已禁用';
-
-  @override
-  String get userEnabled => '用户已启用';
-
-  @override
-  String get passwordReset => '密码已重置';
-
-  @override
-  String get groupMembersTitle => '群组成员';
-
-  @override
-  String get viewMembersInDsm => '查看群组成员列表需要在 DSM Web 界面中操作';
-
-  @override
   String get informationCenterTitle => '信息中心';
 
   @override
@@ -1226,84 +1151,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get savedConnections => '已保存的连接';
 
   @override
-  String get transferLogTitle => '传输日志';
-
-  @override
-  String get transferLogSubtitle => '记录文件传输操作';
-
-  @override
-  String get transferLogLevel => '日志级别';
-
-  @override
-  String get logLevelCreate => '创建';
-
-  @override
-  String get logLevelWrite => '写入';
-
-  @override
-  String get logLevelMove => '移动';
-
-  @override
-  String get logLevelDelete => '删除';
-
-  @override
-  String get logLevelRead => '读取';
-
-  @override
-  String get logLevelRename => '重命名';
-
-  @override
-  String get applyChanges => '应用更改';
-
-  @override
-  String get saving => '保存中...';
-
-  @override
-  String get logLevelSettingsSaved => '日志级别设置已保存';
-
-  @override
-  String get failedToGetLogLevel => '获取日志级别失败';
-
-  @override
-  String get failedToSave => '保存失败';
-
-  @override
-  String get noData => '无数据';
-
-  @override
-  String get failedToGetLogSettings => '未能获取日志级别设置';
-
-  @override
-  String get setLogLevel => '设置日志级别';
-
-  @override
-  String get smbTransferLogEnabled => 'SMB 传输日志已启用';
-
-  @override
-  String get smbTransferLogDisabled => 'SMB 传输日志已禁用';
-
-  @override
-  String get afpTransferLogEnabled => 'AFP 传输日志已启用';
-
-  @override
-  String get afpTransferLogDisabled => 'AFP 传输日志已禁用';
-
-  @override
-  String get smbTransferLog => 'SMB 传输日志';
-
-  @override
-  String get afpTransferLog => 'AFP 传输日志';
-
-  @override
-  String get smbTransferLogSubtitle => 'Windows 文件传输日志';
-
-  @override
-  String get afpTransferLogSubtitle => 'Apple 文件传输日志';
-
-  @override
-  String get needEnableServiceFirst => '需要先启用服务';
-
-  @override
   String get noCurrentDevice => '当前未连接设备';
 
   @override
@@ -1490,26 +1337,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get fileServicesSubtitle => 'SMB / NFS / FTP / SFTP';
 
   @override
-  String get fileServicesStatusSummary => '文件服务状态';
-
-  @override
-  String fileServicesEnabledCount(int enabledCount, int totalCount) {
-    return '已启用 $enabledCount / $totalCount 项服务';
-  }
-
-  @override
-  String get serviceVersion => '版本';
-
-  @override
-  String get servicePort => '端口';
-
-  @override
-  String get nfsV4Domain => 'NFSv4 域';
-
-  @override
-  String get ftpsEnabled => 'FTPS';
-
-  @override
   String get networkSubtitle => '接口、代理与网关';
 
   @override
@@ -1520,4 +1347,114 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get terminalSubtitle => 'SSH 与 Telnet 服务';
+
+  @override
+  String get fileServicesStatusSummary => '文件服务状态总览';
+
+  @override
+  String fileServicesEnabledCount(Object enabledCount, Object totalCount) {
+    return '已启用 $enabledCount / 共 $totalCount';
+  }
+
+  @override
+  String get serviceVersion => '服务版本';
+
+  @override
+  String get servicePort => '服务端口';
+
+  @override
+  String get nfsV4Domain => 'NFSv4 域名';
+
+  @override
+  String get ftpsEnabled => 'FTPS 已启用';
+
+  @override
+  String get smbTransferLogEnabled => 'SMB 传输日志已启用';
+
+  @override
+  String get smbTransferLogDisabled => 'SMB 传输日志已禁用';
+
+  @override
+  String get smbTransferLog => 'SMB 传输日志';
+
+  @override
+  String get smbTransferLogSubtitle => '记录 SMB 文件访问与操作';
+
+  @override
+  String get afpTransferLogEnabled => 'AFP 传输日志已启用';
+
+  @override
+  String get afpTransferLogDisabled => 'AFP 传输日志已禁用';
+
+  @override
+  String get afpTransferLog => 'AFP 传输日志';
+
+  @override
+  String get afpTransferLogSubtitle => '记录 AFP 文件访问与操作';
+
+  @override
+  String get transferLogTitle => '传输日志设置';
+
+  @override
+  String get transferLogSubtitle => '配置各协议的日志记录级别';
+
+  @override
+  String get needEnableServiceFirst => '请先启用该服务';
+
+  @override
+  String get setLogLevel => '设置日志级别';
+
+  @override
+  String get userAccountTab => '用户账户';
+
+  @override
+  String get userGroupTab => '用户组';
+
+  @override
+  String get noUsers => '暂无用户';
+
+  @override
+  String get noGroups => '暂无用户组';
+
+  @override
+  String get failedToGetLogLevel => '获取日志级别失败';
+
+  @override
+  String get logLevelSettingsSaved => '日志级别设置已保存';
+
+  @override
+  String get failedToSave => '保存失败';
+
+  @override
+  String get transferLogLevel => '传输日志级别';
+
+  @override
+  String get applyChanges => '应用更改';
+
+  @override
+  String get noData => '暂无数据';
+
+  @override
+  String get failedToGetLogSettings => '获取日志设置失败';
+
+  @override
+  String get saving => '保存中…';
+
+  @override
+  String get logLevelCreate => '创建';
+
+  @override
+  String get logLevelWrite => '写入';
+
+  @override
+  String get logLevelMove => '移动';
+
+  @override
+  String get logLevelDelete => '删除';
+
+  @override
+  String get logLevelRead => '读取';
+
+  @override
+  String get logLevelRename => '重命名';
 }
