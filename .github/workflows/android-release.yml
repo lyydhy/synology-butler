@@ -68,15 +68,18 @@ jobs:
         with:
           name: android-apk-release
           path: build/app/outputs/flutter-apk/*.apk
+          retention-days: 1
 
       - name: 上传混淆符号
         uses: actions/upload-artifact@v4
         with:
           name: android-obfuscation-symbols
           path: build/app/outputs/symbols/**
+          retention-days: 1
 
       - name: 上传 R8 mapping
         uses: actions/upload-artifact@v4
         with:
           name: android-r8-mapping
           path: android/app/build/outputs/mapping/release/**
+          retention-days: 1
