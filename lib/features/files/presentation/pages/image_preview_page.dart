@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -50,7 +48,7 @@ class ImagePreviewPage extends ConsumerWidget {
           child: InteractiveViewer(
             minScale: 0.5,
             maxScale: 4,
-            child: Image.memory(Uint8List.fromList(bytes), fit: BoxFit.contain),
+            child: Image.memory(bytes, fit: BoxFit.contain),
           ),
         ),
         loading: () => const Center(

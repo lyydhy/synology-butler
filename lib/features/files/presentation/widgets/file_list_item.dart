@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -131,7 +129,10 @@ class _LeadingVisual extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (FileTypeHelper.isImage(item)) {
-      final imageAsync = ref.watch(fileBytesProvider(item.path));
+      // 使用 select 避免不必要的重建
+      final imageAsync = ref.watch(
+        fileBytesProvider(item.path).select((value) => value),
+      );
       return Container(
         width: 42,
         height: 42,
@@ -141,7 +142,10 @@ class _LeadingVisual extends ConsumerWidget {
         ),
         clipBehavior: Clip.antiAlias,
         child: imageAsync.when(
-          data: (bytes) => Image.memory(Uint8List.fromList(bytes), fit: BoxFit.cover),
+          data: (bytes) {
+            // bytes 已经是 Uint8List，不需要再转换
+            return Image.memory(bytes, fit: BoxFit.cover);
+          },
           loading: () => Icon(Icons.image_outlined, color: color),
           error: (error, _) => Tooltip(
             message: ErrorMapper.map(error).message,
