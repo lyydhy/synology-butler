@@ -16,6 +16,7 @@ import '../../domain/entities/terminal_settings.dart';
 import '../../domain/entities/upgrade_status.dart';
 import '../../domain/repositories/system_repository.dart';
 import '../api/system_api.dart';
+import '../api/realtime_api.dart';
 import '../api/transfer_log_api.dart';
 import '../api/shared_folder_api.dart';
 import '../api/file_service_api.dart';
@@ -31,6 +32,7 @@ import '../api/upgrade_api.dart';
 
 class SystemRepositoryImpl implements SystemRepository {
   SystemRepositoryImpl(this._systemApi, {
+    RealtimeApi? realtimeApi,
     TransferLogApi? transferLogApi,
     SharedFolderApi? sharedFolderApi,
     FileServiceApi? fileServiceApi,
@@ -44,7 +46,8 @@ class SystemRepositoryImpl implements SystemRepository {
     NetworkApi? networkApi,
     UpgradeApi? upgradeApi,
   })
-      : _transferLogApi = transferLogApi ?? TransferLogApi(),
+      : _realtimeApi = realtimeApi ?? DsmRealtimeApi(),
+        _transferLogApi = transferLogApi ?? TransferLogApi(),
         _sharedFolderApi = sharedFolderApi ?? SharedFolderApi(),
         _fileServiceApi = fileServiceApi ?? FileServiceApi(),
         _userGroupApi = userGroupApi ?? UserGroupApi(),
@@ -58,6 +61,7 @@ class SystemRepositoryImpl implements SystemRepository {
         _upgradeApi = upgradeApi ?? UpgradeApi();
 
   final SystemApi _systemApi;
+  final RealtimeApi _realtimeApi;
   final TransferLogApi _transferLogApi;
   final SharedFolderApi _sharedFolderApi;
   final FileServiceApi _fileServiceApi;
@@ -343,7 +347,68 @@ class SystemRepositoryImpl implements SystemRepository {
 
   @override
   Stream<SystemStatus> watchOverview() {
-    throw UnimplementedError('watchOverview 待实现 - 需要恢复 system_api.dart 中的 watchUtilization 方法');
+    return _realtimeApi.watchUtilization().map((model) => SystemStatus(
+          serverName: model.serverName,
+          dsmVersion: model.dsmVersion,
+          cpuUsage: model.cpuUsage,
+          cpuUserUsage: model.cpuUserUsage,
+          cpuSystemUsage: model.cpuSystemUsage,
+          cpuIoWaitUsage: model.cpuIoWaitUsage,
+          load1: model.load1,
+          load5: model.load5,
+          load15: model.load15,
+          memoryUsage: model.memoryUsage,
+          memoryTotalBytes: model.memoryTotalBytes,
+          memoryUsedBytes: model.memoryUsedBytes,
+          memoryBufferBytes: model.memoryBufferBytes,
+          memoryCachedBytes: model.memoryCachedBytes,
+          memoryAvailableBytes: model.memoryAvailableBytes,
+          storageUsage: model.storageUsage,
+          networkUploadBytesPerSecond: model.networkUploadBytesPerSecond,
+          networkDownloadBytesPerSecond: model.networkDownloadBytesPerSecond,
+          diskReadBytesPerSecond: model.diskReadBytesPerSecond,
+          diskWriteBytesPerSecond: model.diskWriteBytesPerSecond,
+          networkInterfaces: model.networkInterfaces
+              .map((item) => NetworkInterfaceStatus(
+                    name: item.name,
+                    uploadBytesPerSecond: item.uploadBytesPerSecond,
+                    downloadBytesPerSecond: item.downloadBytesPerSecond,
+                  ))
+              .toList(),
+          disks: model.disks
+              .map((item) => DiskStatus(
+                    name: item.name,
+                    utilization: item.utilization,
+                    readBytesPerSecond: item.readBytesPerSecond,
+                    writeBytesPerSecond: item.writeBytesPerSecond,
+                    readIops: item.readIops,
+                    writeIops: item.writeIops,
+                  ))
+              .toList(),
+          volumePerformances: model.volumePerformances
+              .map((item) => VolumePerformanceStatus(
+                    name: item.name,
+                    utilization: item.utilization,
+                    readBytesPerSecond: item.readBytesPerSecond,
+                    writeBytesPerSecond: item.writeBytesPerSecond,
+                    readIops: item.readIops,
+                    writeIops: item.writeIops,
+                  ))
+              .toList(),
+          volumes: model.volumes
+              .map(
+                (item) => StorageVolumeStatus(
+                  name: item.name,
+                  usage: item.usage,
+                  usedBytes: item.usedBytes,
+                  totalBytes: item.totalBytes,
+                ),
+              )
+              .toList(),
+          modelName: model.modelName,
+          serialNumber: model.serialNumber,
+          uptimeText: model.uptimeText,
+        ));
   }
 
   @override
