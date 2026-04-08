@@ -1,0 +1,19 @@
+name: Cleanup Old Artifacts
+
+on:
+  schedule:
+    - cron: '0 18 * * *'  # 每天北京时间 2:00 执行（UTC 18:00）
+  workflow_dispatch:      # 也支持手动触发
+
+permissions:
+  actions: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete artifacts older than 1 day
+        uses: kolpav/purge-artifacts-action@v1
+        with:
+          token: ${{ github.token }}
+          expire-in: 1d
