@@ -14,16 +14,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Delete old artifacts
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          # 删除所有 android 相关的旧 artifact（保留最近3个版本）
-          for artifact in android-apk-release android-obfuscation-symbols android-r8-mapping; do
-            # 列出所有版本的 artifact，保留最新3个，删除其余
-            ids=$(gh api --paginate repos/${{ github.repository }}/actions/artifacts \
-              --jq "[.artifacts[] | select(.name == \"$artifact\") | .id] | .[3:]" 2>/dev/null)
-            for id in $ids; do
-              echo "Deleting $artifact id=$id"
-              gh api -X DELETE repos/${{ github.repository }}/actions/artifacts/$id
-            done
-          done
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const artifacts = await github.rest.actions.listArtifactsForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              per_page: 100,
+            });
+            
+            const keepNames = ['android-apk-release', 'android-obfuscation-symbols', 'android-r8-mapping'];
+            
+            for (const name of keepNames) {
+              const matched = artifacts.data.artifacts.filter(a => a.name === name);
+              // 按 created_at 倒序，保留最新3个
+              const toDelete = matched.slice(3);
+              for (const artifact of toDelete) {
+                console.log(`Deleting ${artifact.id} (${artifact.name})`);
+                await github.rest.actions.deleteArtifact({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  artifact_id: artifact.id,
+                });
+              }
+            }
