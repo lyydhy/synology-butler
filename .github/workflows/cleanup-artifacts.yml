@@ -7,13 +7,23 @@ on:
 
 permissions:
   actions: write
+  contents: read
 
 jobs:
   cleanup:
     runs-on: ubuntu-latest
     steps:
-      - name: Delete artifacts older than 1 day
-        uses: kolpav/purge-artifacts-action@v1
-        with:
-          token: ${{ github.token }}
-          expire-in: 1d
+      - name: Delete old artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # 删除所有 android 相关的旧 artifact（保留最近3个版本）
+          for artifact in android-apk-release android-obfuscation-symbols android-r8-mapping; do
+            # 列出所有版本的 artifact，保留最新3个，删除其余
+            ids=$(gh api --paginate repos/${{ github.repository }}/actions/artifacts \
+              --jq "[.artifacts[] | select(.name == \"$artifact\") | .id] | .[3:]" 2>/dev/null)
+            for id in $ids; do
+              echo "Deleting $artifact id=$id"
+              gh api -X DELETE repos/${{ github.repository }}/actions/artifacts/$id
+            done
+          done
