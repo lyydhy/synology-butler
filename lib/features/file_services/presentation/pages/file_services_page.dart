@@ -63,22 +63,30 @@ class FileServicesPage extends ConsumerWidget {
           final transferLogStatus = transferLogAsync.valueOrNull ?? {'smb': false, 'afp': false};
 
           return ListView.builder(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-            itemCount: allServices.length + 2, // +1 for summary, +1 for transfer log
+            padding: const EdgeInsets.fromLTRB(16, 12, 24),
+            itemCount: allServices.length + 1, // +1 for summary
             itemBuilder: (context, index) {
               if (index == 0) {
                 return _SummaryCard(services: services);
               }
-              if (index == allServices.length + 1) {
-                return _TransferLogCard(
-                  smbEnabled: transferLogStatus['smb'] ?? false,
-                  afpEnabled: transferLogStatus['afp'] ?? false,
-                  smbServiceEnabled: services.smb?.enabled ?? false,
-                  afpServiceEnabled: services.afp?.enabled ?? false,
-                );
-              }
               final service = allServices[index - 1];
-              return _ServiceCard(service: service);
+              final isSmb = service.serviceName == 'SMB';
+              final isAfp = service.serviceName == 'AFP';
+              return _ServiceCard(
+                service: service,
+                isSmb: isSmb,
+                isAfp: isAfp,
+                smbLogEnabled: isSmb ? (transferLogStatus['smb'] ?? false) : false,
+                afpLogEnabled: isAfp ? (transferLogStatus['afp'] ?? false) : false,
+                onSmbLogChanged: (enabled) async {
+                  await ref.read(systemRepositoryProvider).setTransferLogStatus(smbEnabled: enabled);
+                  ref.invalidate(transferLogStatusProvider);
+                },
+                onAfpLogChanged: (enabled) async {
+                  await ref.read(systemRepositoryProvider).setTransferLogStatus(afpEnabled: enabled);
+                  ref.invalidate(transferLogStatusProvider);
+                },
+              );
             },
           );
         },
@@ -149,8 +157,22 @@ class _SummaryCard extends StatelessWidget {
 
 class _ServiceCard extends ConsumerStatefulWidget {
   final FileServiceStatus service;
+  final bool isSmb;
+  final bool isAfp;
+  final bool smbLogEnabled;
+  final bool afpLogEnabled;
+  final ValueChanged<bool>? onSmbLogChanged;
+  final ValueChanged<bool>? onAfpLogChanged;
 
-  const _ServiceCard({required this.service});
+  const _ServiceCard({
+    required this.service,
+    this.isSmb = false,
+    this.isAfp = false,
+    this.smbLogEnabled = false,
+    this.afpLogEnabled = false,
+    this.onSmbLogChanged,
+    this.onAfpLogChanged,
+  });
 
   @override
   ConsumerState<_ServiceCard> createState() => _ServiceCardState();
@@ -158,6 +180,8 @@ class _ServiceCard extends ConsumerStatefulWidget {
 
 class _ServiceCardState extends ConsumerState<_ServiceCard> {
   bool _loading = false;
+  bool _smbLogLoading = false;
+  bool _afpLogLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -279,8 +303,150 @@ class _ServiceCardState extends ConsumerState<_ServiceCard> {
               ],
             ),
           ],
+          // SMB 传输日志控制（与 dsm_helper 一致：服务启用后显示开关，启用后显示"日志设置"和"查看日志"）
+          if (widget.isSmb && service.enabled) ...[
+            const SizedBox(height: 16),
+            const Divider(height: 1),
+            const SizedBox(height: 12),
+            _LogToggleRow(
+              title: l10n.smbTransferLog,
+              subtitle: l10n.smbTransferLogSubtitle,
+              value: widget.smbLogEnabled,
+              loading: _smbLogLoading,
+              onChanged: (value) async {
+                if (_smbLogLoading) return;
+                setState(() => _smbLogLoading = true);
+                try {
+                  widget.onSmbLogChanged?.call(value);
+                  if (mounted) Toast.success(value ? l10n.smbTransferLogEnabled : l10n.smbTransferLogDisabled);
+                } catch (e) {
+                  if (mounted) Toast.error('设置失败: $e');
+                } finally {
+                  if (mounted) setState(() => _smbLogLoading = false);
+                }
+              },
+            ),
+            if (widget.smbLogEnabled) ...[
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => const TransferLogLevelPage(
+                              protocol: 'cifs',
+                              protocolName: 'SMB',
+                            ),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.tune_rounded, size: 18),
+                      label: Text(l10n.setLogLevel),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        // TODO: 跳转到日志查看页
+                        Toast.show('日志查看功能开发中');
+                      },
+                      icon: const Icon(Icons.history_rounded, size: 18),
+                      label: const Text('查看日志'),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ],
+          // AFP 传输日志控制
+          if (widget.isAfp && service.enabled) ...[
+            const SizedBox(height: 16),
+            const Divider(height: 1),
+            const SizedBox(height: 12),
+            _LogToggleRow(
+              title: l10n.afpTransferLog,
+              subtitle: l10n.afpTransferLogSubtitle,
+              value: widget.afpLogEnabled,
+              loading: _afpLogLoading,
+              onChanged: (value) async {
+                if (_afpLogLoading) return;
+                setState(() => _afpLogLoading = true);
+                try {
+                  widget.onAfpLogChanged?.call(value);
+                  if (mounted) Toast.success(value ? l10n.afpTransferLogEnabled : l10n.afpTransferLogDisabled);
+                } catch (e) {
+                  if (mounted) Toast.error('设置失败: $e');
+                } finally {
+                  if (mounted) setState(() => _afpLogLoading = false);
+                }
+              },
+            ),
+          ],
         ],
       ),
+    );
+  }
+}
+
+class _LogToggleRow extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final bool value;
+  final bool loading;
+  final ValueChanged<bool> onChanged;
+
+  const _LogToggleRow({
+    required this.title,
+    required this.subtitle,
+    required this.value,
+    required this.loading,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (loading)
+          const SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          )
+        else
+          Switch(
+            value: value,
+            onChanged: onChanged,
+          ),
+      ],
     );
   }
 }
@@ -314,233 +480,3 @@ class _MetaItem extends StatelessWidget {
   }
 }
 
-class _TransferLogCard extends ConsumerStatefulWidget {
-  final bool smbEnabled;
-  final bool afpEnabled;
-  final bool smbServiceEnabled;
-  final bool afpServiceEnabled;
-
-  const _TransferLogCard({
-    required this.smbEnabled,
-    required this.afpEnabled,
-    required this.smbServiceEnabled,
-    required this.afpServiceEnabled,
-  });
-
-  @override
-  ConsumerState<_TransferLogCard> createState() => _TransferLogCardState();
-}
-
-class _TransferLogCardState extends ConsumerState<_TransferLogCard> {
-  late bool _smbLogEnabled;
-  late bool _afpLogEnabled;
-  bool _smbLoading = false;
-  bool _afpLoading = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _smbLogEnabled = widget.smbEnabled;
-    _afpLogEnabled = widget.afpEnabled;
-  }
-
-  @override
-  void didUpdateWidget(_TransferLogCard oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.smbEnabled != widget.smbEnabled) {
-      _smbLogEnabled = widget.smbEnabled;
-    }
-    if (oldWidget.afpEnabled != widget.afpEnabled) {
-      _afpLogEnabled = widget.afpEnabled;
-    }
-  }
-
-  Future<void> _toggleSmbLog(bool value) async {
-    if (_smbLoading) return;
-    setState(() => _smbLoading = true);
-    try {
-      await ref.read(systemRepositoryProvider).setTransferLogStatus(smbEnabled: value);
-      setState(() => _smbLogEnabled = value);
-      if (mounted) {
-        Toast.success(value ? l10n.smbTransferLogEnabled : l10n.smbTransferLogDisabled);
-      }
-    } catch (e) {
-      if (mounted) {
-        Toast.error('设置失败: $e');
-      }
-    } finally {
-      if (mounted) setState(() => _smbLoading = false);
-    }
-  }
-
-  Future<void> _toggleAfpLog(bool value) async {
-    if (_afpLoading) return;
-    setState(() => _afpLoading = true);
-    try {
-      await ref.read(systemRepositoryProvider).setTransferLogStatus(afpEnabled: value);
-      setState(() => _afpLogEnabled = value);
-      if (mounted) {
-        Toast.success(value ? l10n.afpTransferLogEnabled : l10n.afpTransferLogDisabled);
-      }
-    } catch (e) {
-      if (mounted) {
-        Toast.error('设置失败: $e');
-      }
-    } finally {
-      if (mounted) setState(() => _afpLoading = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Container(
-      margin: const EdgeInsets.only(top: 16, bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.45)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: Colors.purple.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(Icons.history_rounded, color: Colors.purple),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l10n.transferLogTitle,
-                      style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      l10n.transferLogSubtitle,
-                      style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          // SMB 传输日志
-          _buildLogToggle(
-            context: context,
-            title: l10n.smbTransferLog,
-            subtitle: l10n.smbTransferLogSubtitle,
-            value: _smbLogEnabled,
-            loading: _smbLoading,
-            serviceEnabled: widget.smbServiceEnabled,
-            onChanged: _toggleSmbLog,
-            onSettingsPressed: widget.smbServiceEnabled
-                ? () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => const TransferLogLevelPage(
-                          protocol: 'cifs',
-                          protocolName: 'SMB',
-                        ),
-                      ),
-                    );
-                  }
-                : null,
-          ),
-          const Divider(height: 24),
-          // AFP 传输日志
-          _buildLogToggle(
-            context: context,
-            title: l10n.afpTransferLog,
-            subtitle: l10n.afpTransferLogSubtitle,
-            value: _afpLogEnabled,
-            loading: _afpLoading,
-            serviceEnabled: widget.afpServiceEnabled,
-            onChanged: _toggleAfpLog,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLogToggle({
-    required BuildContext context,
-    required String title,
-    required String subtitle,
-    required bool value,
-    required bool loading,
-    required bool serviceEnabled,
-    required ValueChanged<bool> onChanged,
-    VoidCallback? onSettingsPressed,
-  }) {
-    final theme = Theme.of(context);
-    final bool canToggle = serviceEnabled;
-
-    return Row(
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          title,
-                          style: theme.textTheme.bodyLarge?.copyWith(
-                            color: canToggle ? null : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          canToggle ? subtitle : l10n.needEnableServiceFirst,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant.withValues(alpha: canToggle ? 1 : 0.5),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (onSettingsPressed != null)
-                    IconButton(
-                      icon: const Icon(Icons.settings_outlined, size: 22),
-                      onPressed: onSettingsPressed,
-                      tooltip: l10n.setLogLevel,
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-                    ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        if (loading)
-          const SizedBox(
-            width: 20,
-            height: 20,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          )
-        else
-          Switch(
-            value: value,
-            onChanged: canToggle ? onChanged : null,
-          ),
-      ],
-    );
-  }
-}
