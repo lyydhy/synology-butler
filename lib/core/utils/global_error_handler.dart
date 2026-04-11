@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/foundation.dart';
 
 import 'local_app_logger.dart';
@@ -9,15 +7,13 @@ import 'local_app_logger.dart';
 void registerGlobalErrorHandlers() {
   // 1. Flutter 框架级错误（widget 构建、渲染、类型转换等）
   FlutterError.onError = (FlutterErrorDetails details) {
-    // 避免递归
-    FlutterError.presentError(details);
+    FlutterError.presentError(details); // 避免递归
 
     final message = details.exceptionAsString();
+    if (_isNoiseError(message)) return;
+
     final stack = details.stack ?? StackTrace.current;
     final errorType = message.split('\n').first.split(':').first;
-
-    // 过滤 Flutter 内部噪音
-    if (_isNoiseError(message)) return;
 
     _logError(
       level: 'error',
@@ -37,24 +33,25 @@ void registerGlobalErrorHandlers() {
     }
   };
 
-  // 2. 未被任何 catch 捕获的异步错误兜底
-  //    通过 Timer 定期检查（简单有效，避免 Isolate 复杂度）
-  _startBackgroundErrorChecker();
-}
+  // 2. Dart 异步未捕获错误兜底（Zone 内未处理、Future 拒绝等）
+  PlatformDispatcher.instance.onError = (Object error, StackTrace stack) {
+    final errorMessage = error.toString();
+    if (_isNoiseError(errorMessage)) return true;
 
-/// 定期后台检查，确保异步错误被记录
-Timer? _backgroundTimer;
+    _logError(
+      level: 'error',
+      module: 'app',
+      event: 'unhandled_async_error',
+      message: '[AsyncError] ${error.runtimeType}: $errorMessage\n$stack',
+      extra: {'errorType': error.runtimeType.toString()},
+      stack: stack,
+    );
 
-void _startBackgroundErrorChecker() {
-  _backgroundTimer?.cancel();
-  _backgroundTimer = Timer.periodic(const Duration(seconds: 30), (_) {
-    // nothing to check - Dart doesn't expose pending unhandled errors
-    // This periodic tick keeps the error handler infrastructure alive
-    // and serves as a heartbeat in debug mode
-    if (kDebugMode && _backgroundTimer != null) {
-      // debugPrint('[GlobalError] heartbeat — handler active');
+    if (kDebugMode) {
+      debugPrint('[AsyncError] ${error.runtimeType}: $errorMessage');
     }
-  });
+    return true; // 已处理，不向上传播
+  };
 }
 
 /// 同步安全记录（使用 Fire-and-forget）
