@@ -392,9 +392,10 @@ class DsmSystemApi implements SystemApi {
       final disks = _extractDisks(diskData);
       final versionText = _buildVersionText(infoData);
 
-      int cpuCores = int.tryParse(infoData['cpu_cores'] ?? '') ?? 0;
-      double cpuClockSpeed = (_toInt(infoData['cpu_clock_speed']) ?? 0) / 1000;
-      String cpuClockSpeedStr = (cpuClockSpeed / 1000).toStringAsFixed(2);
+      int cpuCores = _toInt(infoData['cpu_cores']) ?? int.tryParse(infoData['cpu_cores']?.toString() ?? '') ?? 0;
+      // cpu_clock_speed 单位为 kHz，转 GHz 需除以 1000000；为兼容显示，仍除以 1000 转 MHz 后显示
+      double cpuClockSpeed = (_toDouble(infoData['cpu_clock_speed']) ?? 0) / 1000;
+      String cpuClockSpeedStr = cpuClockSpeed.toStringAsFixed(2);
       final model = InformationCenterModel(
           serverName:
               (infoData['hostname'] ?? infoData['server_name'] ?? serverName)
@@ -403,7 +404,7 @@ class DsmSystemApi implements SystemApi {
               (infoData['serial'] ?? infoData['serial_number'])?.toString(),
           modelName: (infoData['model'] ?? infoData['modelname'])?.toString(),
           cpuName:
-              "${infoData['cpu_vendor']} ${infoData['cpu_family']} ${infoData['cpu_series']}",
+              [infoData['cpu_vendor'], infoData['cpu_family'], infoData['cpu_series']].where((s) => s != null && s.toString().trim().isNotEmpty).join(' '),
           cpuCores: cpuCores,
           cpuClockSpeedStr: "$cpuCores核 @ ${cpuClockSpeedStr}GHz",
           ramSize: _toInt(infoData['ram_size']),
