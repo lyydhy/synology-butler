@@ -356,31 +356,45 @@ class _FolderDetailSheet extends StatelessWidget {
                         value: '${_formatSize((folder.quotaValue! * 1024 * 1024).toDouble())}（已用 ${_formatSize((folder.shareQuotaUsed ?? 0) * 1024 * 1024)}）',
                       ),
                     const SizedBox(height: 16),
-                    Text(
-                      '特性设置',
-                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-                    ),
-                    const SizedBox(height: 12),
-                    _FeatureTile(
-                      icon: Icons.lock_rounded,
-                      label: '文件夹加密',
-                      enabled: folder.encrypted,
-                    ),
-                    _FeatureTile(
-                      icon: Icons.visibility_off_rounded,
-                      label: '隐藏文件夹',
-                      enabled: folder.isHidden,
-                    ),
-                    _FeatureTile(
-                      icon: Icons.delete_outline_rounded,
-                      label: '回收站',
-                      enabled: folder.recycleBinEnabled,
-                    ),
-                    _FeatureTile(
-                      icon: Icons.lock_outline_rounded,
-                      label: '只读访问',
-                      enabled: folder.isReadOnly,
-                    ),
+                    // 特性标签（与卡片一致）
+                    if (folder.encrypted || folder.isHidden || folder.recycleBinEnabled || folder.isReadOnly ||
+                        folder.enableShareCompress == true || folder.enableShareCow == true ||
+                        folder.unitePermission == true || folder.supportSnapshot == true ||
+                        folder.isShareMoving == true)
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '特性',
+                            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                          ),
+                          const SizedBox(height: 10),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 6,
+                            children: [
+                              if (folder.encrypted)
+                                const _FeatureTag(icon: Icons.lock_rounded, label: '加密', color: Colors.amber),
+                              if (folder.isHidden)
+                                const _FeatureTag(icon: Icons.visibility_off_rounded, label: '隐藏', color: Colors.grey),
+                              if (folder.recycleBinEnabled)
+                                const _FeatureTag(icon: Icons.delete_outline_rounded, label: '回收站', color: Colors.green),
+                              if (folder.isReadOnly)
+                                const _FeatureTag(icon: Icons.lock_outline_rounded, label: '只读', color: Colors.orange),
+                              if (folder.enableShareCompress == true)
+                                const _FeatureTag(icon: Icons.compress_rounded, label: '文件压缩', color: Colors.blue),
+                              if (folder.enableShareCow == true)
+                                const _FeatureTag(icon: Icons.shield_rounded, label: '数据完整性保护', color: Colors.teal),
+                              if (folder.unitePermission == true)
+                                const _FeatureTag(icon: Icons.admin_panel_settings_rounded, label: '高级权限', color: Colors.purple),
+                              if (folder.supportSnapshot == true)
+                                const _FeatureTag(icon: Icons.history_rounded, label: '快照', color: Colors.indigo),
+                              if (folder.isShareMoving == true)
+                                const _FeatureTag(icon: Icons.drive_file_move_rounded, label: '移动中', color: Colors.cyan),
+                            ],
+                          ),
+                        ],
+                      ),
                   ],
                 ),
               ),
@@ -428,51 +442,6 @@ class _DetailTile extends StatelessWidget {
                 ),
               ],
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _FeatureTile extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final bool enabled;
-
-  const _FeatureTile({
-    required this.icon,
-    required this.label,
-    required this.enabled,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final color = enabled ? Colors.green : Colors.grey;
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 20, color: color),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              label,
-              style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
-            ),
-          ),
-          Icon(
-            enabled ? Icons.check_circle_rounded : Icons.cancel_rounded,
-            color: color,
-            size: 20,
           ),
         ],
       ),
