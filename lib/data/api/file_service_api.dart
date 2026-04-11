@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:dio/dio.dart';
 
 import '../../core/network/app_dio.dart';
@@ -18,50 +16,105 @@ class FileServiceApi {
   /// 获取文件服务状态（SMB、NFS、FTP、AFP、SFTP）
   Future<FileServicesModel> fetchFileServices() async {
     final client = _dio;
-    final response = await client.post(
-      '$_baseUrl/query.cgi',
-      data: {
-        'api': 'SYNO.Core.QueryRequest',
-        'method': 'request',
-        'version': '1',
-        'mode': 'parallel',
-        'compound': jsonEncode([
-          {'api': 'SYNO.Core.FileService.SMB', 'method': 'get', 'version': 1, 'additional': ['all']},
-          {'api': 'SYNO.Core.FileService.NFS', 'method': 'get', 'version': 1, 'additional': ['all']},
-          {'api': 'SYNO.Core.FileService.FTP', 'method': 'get', 'version': 1, 'additional': ['all']},
-          {'api': 'SYNO.Core.FileService.AFP', 'method': 'get', 'version': 1, 'additional': ['all']},
-          {'api': 'SYNO.Core.FileService.SFTP', 'method': 'get', 'version': 1, 'additional': ['all']},
-        ]),
-      },
-      options: Options(contentType: Headers.formUrlEncodedContentType),
-    );
 
-    if (!(response.data is Map && response.data['success'] == true)) {
-      throw Exception(response.data is Map ? response.data['error']?.toString() ?? '加载文件服务失败' : '加载文件服务失败');
+    Future<Map<String, dynamic>?> fetchService(String api, String method) async {
+      try {
+        final response = await client.post(
+          '$_baseUrl/entry.cgi',
+          data: {
+            'api': api,
+            'method': method,
+            'version': 1,
+          },
+          options: Options(contentType: Headers.formUrlEncodedContentType),
+        );
+        if (response.data is Map && response.data['success'] == true) {
+          return response.data['data'] as Map<String, dynamic>?;
+        }
+        return null;
+      } catch (_) {
+        return null;
+      }
     }
 
-    final data = response.data['data'] as Map? ?? const {};
-    final result = (data['result'] as List?) ?? const [];
+    // 并行请求所有文件服务状态
+    final results = await Future.wait([
+      fetchService('SYNO.Core.FileServ.SMB', 'get'),
+      fetchService('SYNO.Core.FileServ.NFS', 'get'),
+      fetchService('SYNO.Core.FileServ.FTP', 'get'),
+      fetchService('SYNO.Core.FileServ.AFP', 'get'),
+      fetchService('SYNO.Core.FileServ.FTP.SFTP', 'get'),
+    ]);
 
-    FileServicesModel? model;
+    return _parseFileServicesResults(results);
+  }
 
-    for (final item in result.whereType<Map>()) {
-      final api = item['api'] as String?;
-      final apiData = item['data'] as Map?;
-      if (apiData == null) continue;
+  FileServicesModel _parseFileServicesResults(List<Map<String, dynamic>?> results) {
+    FileServiceStatus? smb;
+    FileServiceStatus? nfs;
+    FileServiceStatus? ftp;
+    FileServiceStatus? afp;
+    FileServiceStatus? sftp;
 
-      final config = apiData['config'] as Map?;
-      if (config == null) continue;
-
-      final smb = api == 'SYNO.Core.FileService.SMB' ? FileServiceStatus(serviceName: 'SMB', enabled: config['enable'] == true, version: apiData['version']?.toString(), port: config['port'] as int?, extraInfo: {'workgroup': config['workgroup']?.toString() ?? ''}) : model?.smb;
-      final nfs = api == 'SYNO.Core.FileService.NFS' ? FileServiceStatus(serviceName: 'NFS', enabled: config['enable'] == true, version: apiData['version']?.toString(), port: config['port'] as int?, extraInfo: {'nfs_v4_domain': config['v4_domain']?.toString() ?? ''}) : model?.nfs;
-      final ftp = api == 'SYNO.Core.FileService.FTP' ? FileServiceStatus(serviceName: 'FTP', enabled: config['enable'] == true, version: apiData['version']?.toString(), port: config['port'] as int?, extraInfo: {'enable_ftps': config['enable_ftps'] == true}) : model?.ftp;
-      final afp = api == 'SYNO.Core.FileService.AFP' ? FileServiceStatus(serviceName: 'AFP', enabled: config['enable'] == true, version: apiData['version']?.toString(), port: config['port'] as int?) : model?.afp;
-      final sftp = api == 'SYNO.Core.FileService.SFTP' ? FileServiceStatus(serviceName: 'SFTP', enabled: config['enable'] == true, version: apiData['version']?.toString(), port: config['port'] as int?) : model?.sftp;
-      model = FileServicesModel(smb: smb, nfs: nfs, ftp: ftp, afp: afp, sftp: sftp);
+    if (results[0] != null) {
+      final data = results[0]!;
+      final config = data['config'] as Map? ?? {};
+      smb = FileServiceStatus(
+        serviceName: 'SMB',
+        enabled: config['enable_samba'] == true || config['enable'] == true,
+        version: data['version']?.toString(),
+        port: config['port'] as int?,
+        extraInfo: {'workgroup': config['workgroup']?.toString() ?? ''},
+      );
     }
 
-    return model ?? const FileServicesModel(smb: null, nfs: null, ftp: null, afp: null, sftp: null);
+    if (results[1] != null) {
+      final data = results[1]!;
+      final config = data['config'] as Map? ?? {};
+      nfs = FileServiceStatus(
+        serviceName: 'NFS',
+        enabled: config['enable_nfs'] == true || config['enable'] == true,
+        version: data['version']?.toString(),
+        port: config['port'] as int?,
+        extraInfo: {'nfs_v4_domain': config['nfs_v4_domain']?.toString() ?? ''},
+      );
+    }
+
+    if (results[2] != null) {
+      final data = results[2]!;
+      final config = data['config'] as Map? ?? {};
+      ftp = FileServiceStatus(
+        serviceName: 'FTP',
+        enabled: config['enable_ftp'] == true || config['enable'] == true,
+        version: data['version']?.toString(),
+        port: config['port'] as int?,
+        extraInfo: {'enable_ftps': config['enable_ftps'] == true},
+      );
+    }
+
+    if (results[3] != null) {
+      final data = results[3]!;
+      final config = data['config'] as Map? ?? {};
+      afp = FileServiceStatus(
+        serviceName: 'AFP',
+        enabled: config['enable_afp'] == true || config['enable'] == true,
+        version: data['version']?.toString(),
+        port: config['port'] as int?,
+      );
+    }
+
+    if (results[4] != null) {
+      final data = results[4]!;
+      final config = data['config'] as Map? ?? {};
+      sftp = FileServiceStatus(
+        serviceName: 'SFTP',
+        enabled: config['enable'] == true,
+        version: data['version']?.toString(),
+        port: config['port'] as int?,
+      );
+    }
+
+    return FileServicesModel(smb: smb, nfs: nfs, ftp: ftp, afp: afp, sftp: sftp);
   }
 
   /// 设置文件服务启用状态
