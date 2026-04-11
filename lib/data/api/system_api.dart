@@ -636,10 +636,30 @@ class DsmSystemApi implements SystemApi {
   }
 
   String _buildVersionText(Map infoData) {
-    final version = infoData['version'];
-    final build = infoData['build'];
-    if (version == null && build == null) return '未知';
-    return '${version ?? ''} (${build ?? ''})'.trim().replaceAll(RegExp(r'^\s*\(|\)\s*$'), '');
+    // 优先使用 version_string
+    final versionString = infoData['version_string']?.toString();
+    if (versionString != null && versionString.trim().isNotEmpty) {
+      return versionString.trim();
+    }
+
+    // 其次使用 productversion + buildnumber
+    final productVersion = infoData['productversion']?.toString();
+    if (productVersion != null && productVersion.trim().isNotEmpty) {
+      final build = infoData['buildnumber']?.toString();
+      if (build != null && build.trim().isNotEmpty) {
+        return 'DSM ${productVersion.trim()}-$build';
+      }
+      return 'DSM ${productVersion.trim()}';
+    }
+
+    // Fallback: version + build
+    final version = infoData['version']?.toString();
+    final build = infoData['build']?.toString();
+    if (version != null || build != null) {
+      return 'DSM ${version ?? ''} (${build ?? ''})'.trim().replaceAll(RegExp(r'^\s*\(|\)\s*$'), '');
+    }
+
+    return '未知';
   }
 
   String _formatUptime(dynamic uptime) {
