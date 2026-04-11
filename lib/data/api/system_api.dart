@@ -317,6 +317,12 @@ class DsmSystemApi implements SystemApi {
         'method': 'get',
         'version': '1',
       });
+      final networkSystemData = await postEntry({
+        'api': 'SYNO.Core.System',
+        'method': 'info',
+        'version': '1',
+        'type': 'network',
+      });
       final networkCompoundData = await postEntry({
         'api': 'SYNO.Entry.Request',
         'method': 'request',
@@ -387,7 +393,7 @@ class DsmSystemApi implements SystemApi {
       final esataData = _extractCompoundApiData(
           externalDeviceCompoundData, 'SYNO.Core.ExternalDevice.Storage.eSATA');
       final networks =
-          _extractLanNetworks(networkData, ethernetData, gatewayListData);
+          _extractLanNetworks(networkSystemData, networkData, ethernetData, gatewayListData);
       final externalDevices = _extractExternalDevices(usbData, esataData);
       final disks = _extractDisks(diskData);
       final versionText = _buildVersionText(infoData);
@@ -417,9 +423,9 @@ class DsmSystemApi implements SystemApi {
               _formatUptime(infoData['uptime'] ?? infoData['uptime_seconds']),
           thermalStatus: _resolveThermalStatus(systemHealthData),
           timezone: infoData['time_zone_desc'],
-          dnsServer: _resolveDns(networkData),
-          gateway: _resolveGateway(networkData, gatewayListData),
-          workgroup: _resolveWorkgroup(networkData),
+          dnsServer: _resolveDns(networkSystemData),
+          gateway: _resolveGateway(networkSystemData, gatewayListData),
+          workgroup: _resolveWorkgroup(networkSystemData),
           externalDevices: externalDevices,
           lanNetworks: networks,
           disks: disks,
@@ -574,22 +580,40 @@ class DsmSystemApi implements SystemApi {
   }
 
   List<InformationCenterLanNetworkModel> _extractLanNetworks(
+    Map networkSystemData,
     Map networkData,
     Map ethernetData,
     Map gatewayListData,
   ) {
     final interfaces = <InformationCenterLanNetworkModel>[];
 
-    final ethernetList = ethernetData['eth'] as List? ?? const [];
-    for (final eth in ethernetList.whereType<Map>()) {
-      final name = (eth['name'] ?? eth['device'] ?? '').toString();
-      if (name.isEmpty) continue;
+    // dsm_helper style: SYNO.Core.System type=network returns nif list with mac/addr/mask
+    final nifList = networkData['nif'] as List? ?? const [];
+    for (final nif in nifList.whereType<Map>()) {
+      final mac = (nif['mac'] ?? '').toString();
+      if (mac.isEmpty) continue;
+      final addr = (nif['addr'] ?? '').toString();
       interfaces.add(InformationCenterLanNetworkModel(
-        name: name,
-        macAddress: (eth['mac'] ?? '').toString(),
-        ipAddress: (eth['ip'] ?? '').toString(),
-        subnetMask: '',
+        name: '局域网 ${interfaces.length + 1}',
+        macAddress: mac,
+        ipAddress: addr,
+        subnetMask: (nif['mask'] ?? nif['subnet_mask'] ?? '').toString(),
       ));
+    }
+
+    // Fallback: try SYNO.Core.Network.Ethernet eth list
+    if (interfaces.isEmpty) {
+      final ethernetList = ethernetData['eth'] as List? ?? const [];
+      for (final eth in ethernetList.whereType<Map>()) {
+        final name = (eth['name'] ?? eth['device'] ?? '').toString();
+        if (name.isEmpty) continue;
+        interfaces.add(InformationCenterLanNetworkModel(
+          name: name,
+          macAddress: (eth['mac'] ?? '').toString(),
+          ipAddress: (eth['ip'] ?? '').toString(),
+          subnetMask: (eth['mask'] ?? eth['subnet_mask'] ?? '').toString(),
+        ));
+      }
     }
 
     return interfaces;
@@ -699,9 +723,16 @@ class DsmSystemApi implements SystemApi {
   }
 
   String? _resolveDns(Map networkData) {
-    final dns = networkData['dns'] as List?;
-    if (dns == null || dns.isEmpty) return null;
-    return dns.map((e) => e.toString()).take(2).join(', ');
+    // dsm_helper style: dns can be a string or list
+    final dns = networkData['dns'];
+    if (dns == null) return null;
+    if (dns is String && dns.trim().isNotEmpty) return dns.trim();
+    if (dns is List) {
+      final nonEmpty = dns.where((e) => e.toString().trim().isNotEmpty).take(2);
+      return nonEmpty.map((e) => e.toString().trim()).join(', ');
+    }
+    final dnsStr = dns.toString().trim();
+    return dnsStr.isEmpty ? null : dnsStr;
   }
 
   String? _resolveGateway(Map networkData, Map gatewayListData) {
