@@ -40,16 +40,16 @@ class _AppLogsPageState extends State<AppLogsPage> {
                   Navigator.of(dialogContext).pop();
                 }
                 if (mounted) {
-                  Toast.show('错误内容已复制');
+                  Toast.show(l10n.errorContentCopied);
                 }
               },
-              child: const Text('复制'),
+              child: Text(l10n.copy),
             ),
             FilledButton(
               onPressed: () {
                 Navigator.of(dialogContext).pop();
               },
-              child: const Text('关闭'),
+              child: Text(l10n.close),
             ),
           ],
         );
@@ -100,7 +100,7 @@ class _AppLogsPageState extends State<AppLogsPage> {
 
   Future<void> _shareSanitizedLog(LocalAppLogFileSummary file) async {
     final exportedPath = await LocalAppLogStore.exportSanitizedLogFile(file.path);
-    await Share.shareXFiles([XFile(exportedPath)], text: '应用日志：${file.name}');
+    await Share.shareXFiles([XFile(exportedPath)], text: l10n.appLogFileLabel(file.name));
   }
 
   Future<void> openLog(LocalAppLogFileSummary file) async {
@@ -227,7 +227,7 @@ class _AppLogsPageState extends State<AppLogsPage> {
                           await _shareSanitizedLog(file);
                         },
                         icon: const Icon(Icons.share_outlined),
-                        label: const Text('分享'),
+                        label: Text(l10n.share),
                       ),
                       OutlinedButton.icon(
                         onPressed: () async {
@@ -305,7 +305,7 @@ class _AppLogsPageState extends State<AppLogsPage> {
                       children: [
                         const Icon(Icons.error_outline, size: 40),
                         const SizedBox(height: 12),
-                        const Text('日志中心加载失败', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                        const Text(l10n.logCenterLoadFailed, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
                         const SizedBox(height: 8),
                         Text(errorMessage!, textAlign: TextAlign.center),
                         const SizedBox(height: 16),
@@ -315,9 +315,9 @@ class _AppLogsPageState extends State<AppLogsPage> {
                           alignment: WrapAlignment.center,
                           children: [
                             OutlinedButton.icon(
-                              onPressed: () => _showCopyableErrorDialog('日志中心加载失败', errorMessage!),
+                              onPressed: () => _showCopyableErrorDialog(l10n.logCenterLoadFailed, errorMessage!),
                               icon: const Icon(Icons.copy_all_outlined),
-                              label: const Text('复制错误'),
+                              label: Text(l10n.copyError),
                             ),
                             FilledButton.icon(
                               onPressed: refresh,

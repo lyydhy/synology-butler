@@ -1606,4 +1606,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get systemVersionNotAvailable => 'System version not available';
+
+  @override
+  String get share => 'Share';
+
+  @override
+  String get errorContentCopied => 'Error content copied';
+
+  @override
+  String get logCenterLoadFailed => 'Failed to load log center';
+
+  @override
+  String get copyError => 'Copy Error';
+
+  @override
+  String appLogFileLabel(String fileName) {
+    return 'App log: $fileName';
+  }
 }

@@ -3076,6 +3076,36 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'暂未获取到系统版本'**
   String get systemVersionNotAvailable;
+
+  /// 分享按钮
+  ///
+  /// In zh, this message translates to:
+  /// **'分享'**
+  String get share;
+
+  /// 错误内容已复制提示
+  ///
+  /// In zh, this message translates to:
+  /// **'错误内容已复制'**
+  String get errorContentCopied;
+
+  /// 日志中心加载失败错误状态标题
+  ///
+  /// In zh, this message translates to:
+  /// **'日志中心加载失败'**
+  String get logCenterLoadFailed;
+
+  /// 复制错误按钮
+  ///
+  /// In zh, this message translates to:
+  /// **'复制错误'**
+  String get copyError;
+
+  /// 应用日志文件名标签
+  ///
+  /// In zh, this message translates to:
+  /// **'应用日志：{fileName}'**
+  String appLogFileLabel(String fileName);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

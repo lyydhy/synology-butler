@@ -792,5 +792,10 @@
   "realtimeConnecting": "Realtime connecting",
   "realtimeReconnecting": "Realtime reconnecting",
   "realtimeConnected": "Realtime connected",
-  "systemVersionNotAvailable": "System version not available"
+  "systemVersionNotAvailable": "System version not available",
+  "share": "Share",
+  "errorContentCopied": "Error content copied",
+  "logCenterLoadFailed": "Failed to load log center",
+  "copyError": "Copy Error",
+  "appLogFileLabel": "App log: {fileName}"
 }

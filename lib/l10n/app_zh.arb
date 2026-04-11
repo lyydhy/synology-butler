@@ -957,5 +957,30 @@
   "systemVersionNotAvailable": "暂未获取到系统版本",
   "@systemVersionNotAvailable": {
     "description": "系统版本不可用占位"
+  },
+  "share": "分享",
+  "@share": {
+    "description": "分享按钮"
+  },
+  "errorContentCopied": "错误内容已复制",
+  "@errorContentCopied": {
+    "description": "错误内容已复制提示"
+  },
+  "logCenterLoadFailed": "日志中心加载失败",
+  "@logCenterLoadFailed": {
+    "description": "日志中心加载失败错误状态标题"
+  },
+  "copyError": "复制错误",
+  "@copyError": {
+    "description": "复制错误按钮"
+  },
+  "appLogFileLabel": "应用日志：{fileName}",
+  "@appLogFileLabel": {
+    "description": "应用日志文件名标签",
+    "placeholders": {
+      "fileName": {
+        "type": "String"
+      }
+    }
   }
 }

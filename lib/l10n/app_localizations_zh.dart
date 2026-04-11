@@ -1606,4 +1606,21 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get systemVersionNotAvailable => '暂未获取到系统版本';
+
+  @override
+  String get share => '分享';
+
+  @override
+  String get errorContentCopied => '错误内容已复制';
+
+  @override
+  String get logCenterLoadFailed => '日志中心加载失败';
+
+  @override
+  String get copyError => '复制错误';
+
+  @override
+  String appLogFileLabel(String fileName) {
+    return '应用日志：$fileName';
+  }
 }
