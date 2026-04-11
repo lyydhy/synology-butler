@@ -3244,6 +3244,30 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'更多操作'**
   String get moreOptions;
+
+  /// 外部访问加载失败
+  ///
+  /// In zh, this message translates to:
+  /// **'外部访问加载失败'**
+  String get externalAccessLoadFailed;
+
+  /// 未命名设备
+  ///
+  /// In zh, this message translates to:
+  /// **'未命名设备'**
+  String get unnamedDevice;
+
+  /// 未识别型号
+  ///
+  /// In zh, this message translates to:
+  /// **'未识别型号'**
+  String get unrecognizedModel;
+
+  /// 当前不可弹出
+  ///
+  /// In zh, this message translates to:
+  /// **'当前不可弹出'**
+  String get currentlyNotEjectable;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

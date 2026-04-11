@@ -44,10 +44,10 @@ class ExternalAccessPage extends ConsumerWidget {
       body: dataAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => AppErrorState(
-          title: '外部访问加载失败',
+          title: l10n.externalAccessLoadFailed,
           message: '$error',
           onRetry: () => ref.invalidate(externalAccessProvider),
-          actionLabel: '重新加载',
+          actionLabel: l10n.reload,
         ),
         data: (data) {
           if (data.records.isEmpty) {

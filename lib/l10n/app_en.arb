@@ -821,5 +821,9 @@
   "imageId": "Image ID",
   "containerCount": "{count} containers",
   "noDsmComposeProjects": "No DSM Compose projects fetched.",
-  "moreOptions": "More Options"
+  "moreOptions": "More Options",
+  "externalAccessLoadFailed": "Failed to load external access",
+  "unnamedDevice": "Unnamed Device",
+  "unrecognizedModel": "Unrecognized Model",
+  "currentlyNotEjectable": "Currently Not Ejectable"
 }

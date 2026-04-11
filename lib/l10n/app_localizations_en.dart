@@ -1694,4 +1694,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get moreOptions => 'More Options';
+
+  @override
+  String get externalAccessLoadFailed => 'Failed to load external access';
+
+  @override
+  String get unnamedDevice => 'Unnamed Device';
+
+  @override
+  String get unrecognizedModel => 'Unrecognized Model';
+
+  @override
+  String get currentlyNotEjectable => 'Currently Not Ejectable';
 }

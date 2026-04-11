@@ -1694,4 +1694,16 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get moreOptions => '更多操作';
+
+  @override
+  String get externalAccessLoadFailed => '外部访问加载失败';
+
+  @override
+  String get unnamedDevice => '未命名设备';
+
+  @override
+  String get unrecognizedModel => '未识别型号';
+
+  @override
+  String get currentlyNotEjectable => '当前不可弹出';
 }

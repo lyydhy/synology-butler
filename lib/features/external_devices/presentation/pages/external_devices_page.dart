@@ -33,7 +33,7 @@ class ExternalDevicesPage extends ConsumerWidget {
           title: '外接设备加载失败',
           message: '$error',
           onRetry: () => ref.invalidate(externalDevicesProvider),
-          actionLabel: '重新加载',
+          actionLabel: l10n.reload,
         ),
         data: (devices) {
           if (devices.isEmpty) {
@@ -90,7 +90,7 @@ class _DeviceCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final color = device.bus == 'esata' ? Colors.deepPurple : Colors.blue;
-    final title = device.name.isNotEmpty ? device.name : (device.model.isNotEmpty ? device.model : '未命名设备');
+    final title = device.name.isNotEmpty ? device.name : (device.model.isNotEmpty ? device.model : l10n.unnamedDevice);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -118,7 +118,7 @@ class _DeviceCard extends StatelessWidget {
                     Text(title, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
                     const SizedBox(height: 4),
                     Text(
-                      [device.vendor, device.model].where((item) => item.isNotEmpty).join(' · ').ifEmpty('未识别型号'),
+                      [device.vendor, device.model].where((item) => item.isNotEmpty).join(' · ').ifEmpty(l10n.unrecognizedModel),
                       style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                     ),
                   ],
@@ -175,7 +175,7 @@ class _DeviceCard extends StatelessWidget {
               icon: busy
                   ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                   : const Icon(Icons.eject_rounded),
-              label: Text(device.canEject ? l10n.ejectDevice : '当前不可弹出'),
+              label: Text(device.canEject ? l10n.ejectDevice : l10n.currentlyNotEjectable),
             ),
           ),
         ],

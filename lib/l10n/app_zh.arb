@@ -1083,5 +1083,21 @@
   "moreOptions": "更多操作",
   "@moreOptions": {
     "description": "更多操作菜单提示"
+  },
+  "externalAccessLoadFailed": "外部访问加载失败",
+  "@externalAccessLoadFailed": {
+    "description": "外部访问加载失败"
+  },
+  "unnamedDevice": "未命名设备",
+  "@unnamedDevice": {
+    "description": "未命名设备"
+  },
+  "unrecognizedModel": "未识别型号",
+  "@unrecognizedModel": {
+    "description": "未识别型号"
+  },
+  "currentlyNotEjectable": "当前不可弹出",
+  "@currentlyNotEjectable": {
+    "description": "当前不可弹出"
   }
 }
