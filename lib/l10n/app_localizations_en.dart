@@ -1706,4 +1706,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get currentlyNotEjectable => 'Currently Not Ejectable';
+
+  @override
+  String get updateAvailable => 'Update Available';
+
+  @override
+  String get terminalSettings => 'Terminal Settings';
+
+  @override
+  String get terminalSettingsSubtitle => 'SSH & Telnet Services';
+
+  @override
+  String get powerManagement => 'Power Management';
+
+  @override
+  String get powerManagementSubtitle => 'Shutdown & Restart';
 }

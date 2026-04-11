@@ -1099,5 +1099,25 @@
   "currentlyNotEjectable": "当前不可弹出",
   "@currentlyNotEjectable": {
     "description": "当前不可弹出"
+  },
+  "updateAvailable": "有更新",
+  "@updateAvailable": {
+    "description": "有更新徽章"
+  },
+  "terminalSettings": "终端设置",
+  "@terminalSettings": {
+    "description": "终端设置"
+  },
+  "terminalSettingsSubtitle": "SSH 与 Telnet 服务",
+  "@terminalSettingsSubtitle": {
+    "description": "终端设置副标题"
+  },
+  "powerManagement": "电源管理",
+  "@powerManagement": {
+    "description": "电源管理"
+  },
+  "powerManagementSubtitle": "关机与重启",
+  "@powerManagementSubtitle": {
+    "description": "电源管理副标题"
   }
 }

@@ -43,7 +43,7 @@ class ControlPanelPage extends ConsumerWidget {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        '有更新',
+                        l10n.updateAvailable,
                         style: TextStyle(
                           color: Colors.red.shade700,
                           fontSize: 13,
@@ -134,14 +134,14 @@ class ControlPanelPage extends ConsumerWidget {
               ),
               _PanelItem(
                 icon: Icons.terminal_rounded,
-                title: '终端设置',
-                subtitle: 'SSH 与 Telnet 服务',
+                title: l10n.terminalSettings,
+                subtitle: l10n.terminalSettingsSubtitle,
                 onTap: () => context.push('/terminal'),
               ),
               _PanelItem(
                 icon: Icons.power_settings_new_rounded,
-                title: '电源管理',
-                subtitle: '关机与重启',
+                title: l10n.powerManagement,
+                subtitle: l10n.powerManagementSubtitle,
                 onTap: () => context.push('/power'),
               ),
             ],

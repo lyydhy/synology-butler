@@ -1706,4 +1706,19 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get currentlyNotEjectable => '当前不可弹出';
+
+  @override
+  String get updateAvailable => '有更新';
+
+  @override
+  String get terminalSettings => '终端设置';
+
+  @override
+  String get terminalSettingsSubtitle => 'SSH 与 Telnet 服务';
+
+  @override
+  String get powerManagement => '电源管理';
+
+  @override
+  String get powerManagementSubtitle => '关机与重启';
 }

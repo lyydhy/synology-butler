@@ -3268,6 +3268,36 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'当前不可弹出'**
   String get currentlyNotEjectable;
+
+  /// 有更新徽章
+  ///
+  /// In zh, this message translates to:
+  /// **'有更新'**
+  String get updateAvailable;
+
+  /// 终端设置
+  ///
+  /// In zh, this message translates to:
+  /// **'终端设置'**
+  String get terminalSettings;
+
+  /// 终端设置副标题
+  ///
+  /// In zh, this message translates to:
+  /// **'SSH 与 Telnet 服务'**
+  String get terminalSettingsSubtitle;
+
+  /// 电源管理
+  ///
+  /// In zh, this message translates to:
+  /// **'电源管理'**
+  String get powerManagement;
+
+  /// 电源管理副标题
+  ///
+  /// In zh, this message translates to:
+  /// **'关机与重启'**
+  String get powerManagementSubtitle;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

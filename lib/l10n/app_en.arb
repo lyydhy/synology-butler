@@ -825,5 +825,10 @@
   "externalAccessLoadFailed": "Failed to load external access",
   "unnamedDevice": "Unnamed Device",
   "unrecognizedModel": "Unrecognized Model",
-  "currentlyNotEjectable": "Currently Not Ejectable"
+  "currentlyNotEjectable": "Currently Not Ejectable",
+  "updateAvailable": "Update Available",
+  "terminalSettings": "Terminal Settings",
+  "terminalSettingsSubtitle": "SSH & Telnet Services",
+  "powerManagement": "Power Management",
+  "powerManagementSubtitle": "Shutdown & Restart"
 }
