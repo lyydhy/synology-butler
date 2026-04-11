@@ -830,5 +830,7 @@
   "terminalSettings": "Terminal Settings",
   "terminalSettingsSubtitle": "SSH & Telnet Services",
   "powerManagement": "Power Management",
-  "powerManagementSubtitle": "Shutdown & Restart"
+  "powerManagementSubtitle": "Shutdown & Restart",
+  "confirmDeleteDownloadTask": "Delete \"{title}\"?",
+  "downloadTasksLoadFailed": "Failed to load download tasks"
 }

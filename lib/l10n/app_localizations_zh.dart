@@ -1721,4 +1721,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get powerManagementSubtitle => '关机与重启';
+
+  @override
+  String confirmDeleteDownloadTask(String title) {
+    return '确定要删除 \"$title\" 吗？';
+  }
+
+  @override
+  String get downloadTasksLoadFailed => '加载下载任务失败';
 }

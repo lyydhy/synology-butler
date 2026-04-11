@@ -115,7 +115,7 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
               context: context,
               builder: (context) => AlertDialog(
                 title: Text(l10n.deleteTask),
-                content: Text('确定要删除“${task.title}”吗？'),
+                content: Text('l10n.confirmDeleteDownloadTask(task.title)'),
                 actions: [
                   TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n.cancel)),
                   FilledButton(onPressed: () => Navigator.of(context).pop(true), child: Text(l10n.deleteConfirm)),
@@ -216,7 +216,7 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('状态：${DownloadStatusHelper.toDisplayText(task.status)}'),
+                              Text('${l10n.status}：${DownloadStatusHelper.toDisplayText(task.status)}'),
                               const SizedBox(height: 6),
                               LinearProgressIndicator(value: task.progress.clamp(0, 1)),
                             ],
@@ -246,7 +246,7 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text('加载下载任务失败：${ErrorMapper.map(error).message}', style: const TextStyle(color: Colors.red)),
+                      Text('${l10n.downloadTasksLoadFailed}：${ErrorMapper.map(error).message}', style: const TextStyle(color: Colors.red)),
                       const SizedBox(height: 12),
                       FilledButton(onPressed: _refreshTasks, child: Text(l10n.retry)),
                     ],

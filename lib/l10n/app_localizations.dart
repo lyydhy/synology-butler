@@ -3298,6 +3298,18 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'关机与重启'**
   String get powerManagementSubtitle;
+
+  /// 确认删除下载任务
+  ///
+  /// In zh, this message translates to:
+  /// **'确定要删除 \"{title}\" 吗？'**
+  String confirmDeleteDownloadTask(String title);
+
+  /// 加载下载任务失败
+  ///
+  /// In zh, this message translates to:
+  /// **'加载下载任务失败'**
+  String get downloadTasksLoadFailed;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

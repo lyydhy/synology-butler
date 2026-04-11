@@ -1119,5 +1119,18 @@
   "powerManagementSubtitle": "关机与重启",
   "@powerManagementSubtitle": {
     "description": "电源管理副标题"
+  },
+  "confirmDeleteDownloadTask": "确定要删除 \"{title}\" 吗？",
+  "@confirmDeleteDownloadTask": {
+    "description": "确认删除下载任务",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadTasksLoadFailed": "加载下载任务失败",
+  "@downloadTasksLoadFailed": {
+    "description": "加载下载任务失败"
   }
 }

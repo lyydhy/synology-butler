@@ -1721,4 +1721,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get powerManagementSubtitle => 'Shutdown & Restart';
+
+  @override
+  String confirmDeleteDownloadTask(String title) {
+    return 'Delete \"$title\"?';
+  }
+
+  @override
+  String get downloadTasksLoadFailed => 'Failed to load download tasks';
 }
