@@ -63,7 +63,7 @@ class FileServicesPage extends ConsumerWidget {
           final transferLogStatus = transferLogAsync.valueOrNull ?? {'smb': false, 'afp': false};
 
           return ListView.builder(
-            padding: const EdgeInsets.fromLTRB(16, 12, 24),
+            padding: const EdgeInsets.fromLTRB(16, 12, 24, 0),
             itemCount: allServices.length + 1, // +1 for summary
             itemBuilder: (context, index) {
               if (index == 0) {

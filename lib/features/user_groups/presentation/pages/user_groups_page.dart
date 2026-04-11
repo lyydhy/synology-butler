@@ -455,9 +455,9 @@ class _UserDetailSheetState extends ConsumerState<_UserDetailSheet> {
             TextField(
               controller: passwordController,
               obscureText: true,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: l10n.newPassword,
-                border: OutlineInputBorder(),
+                border: const OutlineInputBorder(),
               ),
             ),
           ],
@@ -591,20 +591,20 @@ class _UserDetailSheetState extends ConsumerState<_UserDetailSheet> {
                     // 描述（可编辑）
                     TextField(
                       controller: _descriptionController,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: l10n.description,
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.description_outlined),
+                        border: const OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.description_outlined),
                       ),
                     ),
                     const SizedBox(height: 16),
                     // 邮箱（可编辑）
                     TextField(
                       controller: _emailController,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: l10n.email,
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.email_outlined),
+                        border: const OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.email_outlined),
                       ),
                       keyboardType: TextInputType.emailAddress,
                     ),

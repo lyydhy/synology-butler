@@ -120,7 +120,7 @@ class _ContainerManagementPageState extends ConsumerState<ContainerManagementPag
             icon: const Icon(Icons.refresh_rounded),
           ),
           IconButton(
-            tooltip: l10n.settings,
+            tooltip: l10n.settingsTitle,
             onPressed: () => context.push('/container-management/settings'),
             icon: const Icon(Icons.tune_rounded),
           ),
@@ -139,7 +139,7 @@ class _ContainerManagementPageState extends ConsumerState<ContainerManagementPag
               height: 54,
               iconSize: 18,
               fontSize: 13,
-              tabs: const [
+              tabs: [
                 SlidingTabItem(icon: Icons.view_list_rounded, label: l10n.containerTab),
                 SlidingTabItem(icon: Icons.account_tree_outlined, label: l10n.composeTab),
                 SlidingTabItem(icon: Icons.layers_outlined, label: l10n.imageTab),
@@ -307,7 +307,7 @@ class _ContainerListTabState extends State<_ContainerListTab> {
           child: widget.isUnavailable
               ? const _UnavailablePlaceholder()
               : items.isEmpty
-                  ? const _EmptyState(label: l10n.noContainerData)
+                  ? _EmptyState(label: l10n.noContainerData)
                   : ListView.separated(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                       itemBuilder: (context, index) => _ContainerCard(
@@ -381,7 +381,7 @@ class _ComposeListTabState extends State<_ComposeListTab> {
         ),
         Expanded(
           child: items.isEmpty
-              ? const _EmptyState(label: l10n.noComposeProjects)
+              ? _EmptyState(label: l10n.noComposeProjects)
               : ListView.separated(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                   itemBuilder: (context, index) => _ComposeCard(item: items[index]),
@@ -412,7 +412,7 @@ class _ImageListTabState extends State<_ImageListTab> {
     final items = widget.items.toList()..sort((a, b) => a.name.compareTo(b.name));
 
     return items.isEmpty
-        ? const _EmptyState(label: l10n.noImageData)
+        ? _EmptyState(label: l10n.noImageData)
         : ListView.separated(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
             itemBuilder: (context, index) => _ImageCard(item: items[index]),
@@ -488,7 +488,7 @@ class _ContainerCard extends StatelessWidget {
                       break;
                   }
                 },
-                itemBuilder: (context) => const [
+                itemBuilder: (context) => [
                   PopupMenuItem(value: 'restart', child: Text(l10n.restart)),
                   PopupMenuItem(value: 'forceStop', child: Text(l10n.forceStop)),
                 ],
@@ -676,7 +676,7 @@ class _UnavailablePlaceholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const AppEmptyState(
+    return AppEmptyState(
       icon: Icons.construction_rounded,
       message: l10n.dpanelDataSourceDeveloping,
     );

@@ -160,23 +160,23 @@ class _FolderCard extends StatelessWidget {
               runSpacing: 4,
               children: [
                 if (folder.encrypted)
-                  const _FeatureTag(icon: Icons.lock_rounded, label: l10n.statusEncrypted, color: Colors.amber),
+                  _FeatureTag(icon: Icons.lock_rounded, label: l10n.statusEncrypted, color: Colors.amber),
                 if (folder.isHidden)
-                  const _FeatureTag(icon: Icons.visibility_off_rounded, label: l10n.statusHidden, color: Colors.grey),
+                  _FeatureTag(icon: Icons.visibility_off_rounded, label: l10n.statusHidden, color: Colors.grey),
                 if (folder.recycleBinEnabled)
-                  const _FeatureTag(icon: Icons.delete_outline_rounded, label: l10n.featureRecycleBin, color: Colors.green),
+                  _FeatureTag(icon: Icons.delete_outline_rounded, label: l10n.featureRecycleBin, color: Colors.green),
                 if (folder.isReadOnly)
-                  const _FeatureTag(icon: Icons.lock_outline_rounded, label: l10n.featureReadOnly, color: Colors.orange),
+                  _FeatureTag(icon: Icons.lock_outline_rounded, label: l10n.featureReadOnly, color: Colors.orange),
                 if (folder.enableShareCompress == true)
-                  const _FeatureTag(icon: Icons.compress_rounded, label: l10n.featureFileCompression, color: Colors.blue),
+                  _FeatureTag(icon: Icons.compress_rounded, label: l10n.featureFileCompression, color: Colors.blue),
                 if (folder.enableShareCow == true)
-                  const _FeatureTag(icon: Icons.shield_rounded, label: l10n.featureDataIntegrityProtection, color: Colors.teal),
+                  _FeatureTag(icon: Icons.shield_rounded, label: l10n.featureDataIntegrityProtection, color: Colors.teal),
                 if (folder.unitePermission == true)
-                  const _FeatureTag(icon: Icons.admin_panel_settings_rounded, label: l10n.featureAdvancedPermissions, color: Colors.purple),
+                  _FeatureTag(icon: Icons.admin_panel_settings_rounded, label: l10n.featureAdvancedPermissions, color: Colors.purple),
                 if (folder.supportSnapshot == true)
-                  const _FeatureTag(icon: Icons.history_rounded, label: l10n.featureSnapshot, color: Colors.indigo),
+                  _FeatureTag(icon: Icons.history_rounded, label: l10n.featureSnapshot, color: Colors.indigo),
                 if (folder.isShareMoving == true)
-                  const _FeatureTag(icon: Icons.drive_file_move_rounded, label: l10n.featureMoving, color: Colors.cyan),
+                  _FeatureTag(icon: Icons.drive_file_move_rounded, label: l10n.featureMoving, color: Colors.cyan),
               ],
             ),
           ],
@@ -374,23 +374,23 @@ class _FolderDetailSheet extends StatelessWidget {
                             runSpacing: 6,
                             children: [
                               if (folder.encrypted)
-                                const _FeatureTag(icon: Icons.lock_rounded, label: l10n.statusEncrypted, color: Colors.amber),
+                                _FeatureTag(icon: Icons.lock_rounded, label: l10n.statusEncrypted, color: Colors.amber),
                               if (folder.isHidden)
-                                const _FeatureTag(icon: Icons.visibility_off_rounded, label: l10n.statusHidden, color: Colors.grey),
+                                _FeatureTag(icon: Icons.visibility_off_rounded, label: l10n.statusHidden, color: Colors.grey),
                               if (folder.recycleBinEnabled)
-                                const _FeatureTag(icon: Icons.delete_outline_rounded, label: l10n.featureRecycleBin, color: Colors.green),
+                                _FeatureTag(icon: Icons.delete_outline_rounded, label: l10n.featureRecycleBin, color: Colors.green),
                               if (folder.isReadOnly)
-                                const _FeatureTag(icon: Icons.lock_outline_rounded, label: l10n.featureReadOnly, color: Colors.orange),
+                                _FeatureTag(icon: Icons.lock_outline_rounded, label: l10n.featureReadOnly, color: Colors.orange),
                               if (folder.enableShareCompress == true)
-                                const _FeatureTag(icon: Icons.compress_rounded, label: l10n.featureFileCompression, color: Colors.blue),
+                                _FeatureTag(icon: Icons.compress_rounded, label: l10n.featureFileCompression, color: Colors.blue),
                               if (folder.enableShareCow == true)
-                                const _FeatureTag(icon: Icons.shield_rounded, label: l10n.featureDataIntegrityProtection, color: Colors.teal),
+                                _FeatureTag(icon: Icons.shield_rounded, label: l10n.featureDataIntegrityProtection, color: Colors.teal),
                               if (folder.unitePermission == true)
-                                const _FeatureTag(icon: Icons.admin_panel_settings_rounded, label: l10n.featureAdvancedPermissions, color: Colors.purple),
+                                _FeatureTag(icon: Icons.admin_panel_settings_rounded, label: l10n.featureAdvancedPermissions, color: Colors.purple),
                               if (folder.supportSnapshot == true)
-                                const _FeatureTag(icon: Icons.history_rounded, label: l10n.featureSnapshot, color: Colors.indigo),
+                                _FeatureTag(icon: Icons.history_rounded, label: l10n.featureSnapshot, color: Colors.indigo),
                               if (folder.isShareMoving == true)
-                                const _FeatureTag(icon: Icons.drive_file_move_rounded, label: l10n.featureMoving, color: Colors.cyan),
+                                _FeatureTag(icon: Icons.drive_file_move_rounded, label: l10n.featureMoving, color: Colors.cyan),
                             ],
                           ),
                         ],
