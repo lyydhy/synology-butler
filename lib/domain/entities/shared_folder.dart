@@ -15,6 +15,14 @@ class SharedFolder {
   final int? usedSize;
   final int? totalSize;
   final String usageText;
+  // 新增字段
+  final String? volumeName;
+  final String? volumeDesc;
+  final bool? unitePermission;
+  final bool? supportSnapshot;
+  final bool? isShareMoving;
+  final int? quotaValue;
+  final int? shareQuotaUsed;
 
   const SharedFolder({
     required this.name,
@@ -33,6 +41,13 @@ class SharedFolder {
     this.usedSize,
     this.totalSize,
     required this.usageText,
+    this.volumeName,
+    this.volumeDesc,
+    this.unitePermission,
+    this.supportSnapshot,
+    this.isShareMoving,
+    this.quotaValue,
+    this.shareQuotaUsed,
   });
 
   /// 使用率百分比（0-100）
@@ -61,6 +76,13 @@ class SharedFolder {
     int? usedSize,
     int? totalSize,
     String? usageText,
+    String? volumeName,
+    String? volumeDesc,
+    bool? unitePermission,
+    bool? supportSnapshot,
+    bool? isShareMoving,
+    int? quotaValue,
+    int? shareQuotaUsed,
   }) {
     return SharedFolder(
       name: name ?? this.name,
@@ -79,6 +101,13 @@ class SharedFolder {
       usedSize: usedSize ?? this.usedSize,
       totalSize: totalSize ?? this.totalSize,
       usageText: usageText ?? this.usageText,
+      volumeName: volumeName ?? this.volumeName,
+      volumeDesc: volumeDesc ?? this.volumeDesc,
+      unitePermission: unitePermission ?? this.unitePermission,
+      supportSnapshot: supportSnapshot ?? this.supportSnapshot,
+      isShareMoving: isShareMoving ?? this.isShareMoving,
+      quotaValue: quotaValue ?? this.quotaValue,
+      shareQuotaUsed: shareQuotaUsed ?? this.shareQuotaUsed,
     );
   }
 }

@@ -9,7 +9,7 @@ class SharedFolderModel {
     // 解析使用量
     final usedSize = data['size_used'] as int?;
     final totalSize = data['size_total'] as int?;
-    
+
     String usageText = '';
     if (usedSize != null && totalSize != null && totalSize > 0) {
       final usedGB = usedSize / (1024 * 1024 * 1024);
@@ -22,7 +22,7 @@ class SharedFolderModel {
       description: data['desc'] as String? ?? '',
       volumePath: data['vol_path'] as String? ?? '',
       fileSystem: data['file_system'] as String? ?? '',
-      isReadOnly: data['is_readonly'] == true,
+      isReadOnly: data['is_readonly'] == true || data['is_force_readonly'] == true,
       isHidden: data['hidden'] == true || data['is_hidden'] == true,
       recycleBinEnabled: data['enable_recycle_bin'] == true || data['recyclebin'] == true,
       recycleBinAdminOnly: data['recycle_bin_admin_only'] == true,
@@ -34,6 +34,14 @@ class SharedFolderModel {
       usedSize: usedSize,
       totalSize: totalSize,
       usageText: usageText,
+      // 新增字段
+      volumeName: data['volume_name'] as String?,
+      volumeDesc: data['volume_desc'] as String?,
+      unitePermission: data['unite_permission'] as bool?,
+      supportSnapshot: data['support_snapshot'] as bool?,
+      isShareMoving: data['is_share_moving'] as bool?,
+      quotaValue: data['quota_value'] as int?,
+      shareQuotaUsed: data['share_quota_used'] as int?,
     );
   }
 }

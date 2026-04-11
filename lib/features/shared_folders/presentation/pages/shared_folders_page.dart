@@ -63,6 +63,18 @@ class SharedFoldersPage extends ConsumerWidget {
   }
 }
 
+String _formatSize(double bytes) {
+  if (bytes <= 0) return '0 B';
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  int i = 0;
+  double size = bytes;
+  while (size >= 1024 && i < units.length - 1) {
+    size /= 1024;
+    i++;
+  }
+  return '${size.toStringAsFixed(1)} ${units[i]}';
+}
+
 class _FolderCard extends StatelessWidget {
   final SharedFolder folder;
 
@@ -155,6 +167,16 @@ class _FolderCard extends StatelessWidget {
                   const _FeatureTag(icon: Icons.delete_outline_rounded, label: '回收站', color: Colors.green),
                 if (folder.isReadOnly)
                   const _FeatureTag(icon: Icons.lock_outline_rounded, label: '只读', color: Colors.orange),
+                if (folder.enableShareCompress == true)
+                  const _FeatureTag(icon: Icons.compress_rounded, label: '文件压缩', color: Colors.blue),
+                if (folder.enableShareCow == true)
+                  const _FeatureTag(icon: Icons.shield_rounded, label: '数据完整性保护', color: Colors.teal),
+                if (folder.unitePermission == true)
+                  const _FeatureTag(icon: Icons.admin_panel_settings_rounded, label: '高级权限', color: Colors.purple),
+                if (folder.supportSnapshot == true)
+                  const _FeatureTag(icon: Icons.history_rounded, label: '快照', color: Colors.indigo),
+                if (folder.isShareMoving == true)
+                  const _FeatureTag(icon: Icons.drive_file_move_rounded, label: '移动中', color: Colors.cyan),
               ],
             ),
           ],
@@ -313,7 +335,9 @@ class _FolderDetailSheet extends StatelessWidget {
                     _DetailTile(
                       icon: Icons.folder_outlined,
                       label: '路径',
-                      value: folder.volumePath,
+                      value: folder.volumeName != null
+                          ? '${folder.volumeName}${folder.volumeDesc != null && folder.volumeDesc!.isNotEmpty ? ' (${folder.volumeDesc})' : ''}'
+                          : folder.volumePath,
                     ),
                     _DetailTile(
                       icon: Icons.storage_outlined,
@@ -325,6 +349,12 @@ class _FolderDetailSheet extends StatelessWidget {
                       label: '空间使用',
                       value: folder.usageText.isEmpty ? '未知' : folder.usageText,
                     ),
+                    if (folder.quotaValue != null && folder.quotaValue! > 0)
+                      _DetailTile(
+                        icon: Icons.data_usage_rounded,
+                        label: '配额',
+                        value: '${_formatSize((folder.quotaValue! * 1024 * 1024).toDouble())}（已用 ${_formatSize((folder.shareQuotaUsed ?? 0) * 1024 * 1024)}）',
+                      ),
                     const SizedBox(height: 16),
                     Text(
                       '特性设置',
