@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/l10n.dart';
 import '../../../../core/widgets/app_error_state.dart';
 import '../../../../domain/entities/upgrade_status.dart';
+import '../../../dashboard/presentation/providers/dashboard_providers.dart';
 import '../providers/upgrade_providers.dart';
 
 class UpgradePage extends ConsumerWidget {
@@ -38,14 +39,17 @@ class UpgradePage extends ConsumerWidget {
   }
 }
 
-class _UpgradeContent extends StatelessWidget {
+class _UpgradeContent extends ConsumerWidget {
   final UpgradeStatus status;
 
   const _UpgradeContent({required this.status});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+
+    final systemStatus = ref.watch(dashboardOverviewSafeProvider);
+    final systemData = systemStatus.valueOrNull;
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -98,11 +102,11 @@ class _UpgradeContent extends StatelessWidget {
                   color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: const Column(
+                child: Column(
                   children: [
-                    _InfoRow(label: '产品型号', value: '—'),
-                    SizedBox(height: 12),
-                    _InfoRow(label: 'DSM 版本', value: '—'),
+                    _InfoRow(label: '产品型号', value: systemData?.modelName ?? systemData?.serverName ?? '—'),
+                    const SizedBox(height: 12),
+                    _InfoRow(label: 'DSM 版本', value: systemData?.dsmVersion ?? '—'),
                   ],
                 ),
               ),
