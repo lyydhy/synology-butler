@@ -120,47 +120,56 @@ class FileServiceApi {
   /// 设置文件服务启用状态
   Future<void> setFileServiceEnabled({required String serviceName, required bool enabled}) async {
     final client = _dio;
-    final serviceConfig = _getServiceConfig(serviceName.toUpperCase());
-    final apiName = serviceConfig['api'] as String;
-    final config = serviceConfig['config'] as Map<String, dynamic>;
-    final version = config['version'] as int;
-    final enableKey = config['enable_key'] as String;
-    final extraKeys = (config['extra_keys'] as List).cast<String>();
+    final apiName = _getServiceApiName(serviceName.toUpperCase());
 
-    DsmLogger.request(module: 'FileService', action: 'setFileServiceEnabled', method: 'POST', path: _baseUrl, sid: _sid, synoToken: _synoToken, cookieHeader: _cookieHeader, extra: {'serviceName': serviceName, 'enabled': enabled, 'api': apiName, 'enable_key': enableKey});
+    DsmLogger.request(module: 'FileService', action: 'setFileServiceEnabled', method: 'POST', path: _baseUrl, sid: _sid, synoToken: _synoToken, cookieHeader: _cookieHeader, extra: {'serviceName': serviceName, 'enabled': enabled, 'api': apiName});
 
     try {
-      final getResponse = await client.post('$_baseUrl/query.cgi', data: {'api': 'SYNO.Core.QueryRequest', 'method': 'request', 'version': 1, 'mode': 'parallel', 'compound': jsonEncode([{'api': apiName, 'method': 'get', 'version': version, 'additional': jsonEncode(['all'])}])}, options: Options(contentType: Headers.formUrlEncodedContentType));
+      // 先获取当前配置
+      final getResponse = await client.post(
+        '$_baseUrl/entry.cgi',
+        data: {'api': apiName, 'method': 'get', 'version': 1},
+        options: Options(contentType: Headers.formUrlEncodedContentType),
+      );
 
-      if (getResponse.data is! Map || getResponse.data['success'] != true) throw Exception('获取服务配置失败');
+      if (getResponse.data is! Map || getResponse.data['success'] != true) {
+        throw Exception('获取服务配置失败');
+      }
 
-      final getResult = (getResponse.data['data']?['result'] as List?) ?? const [];
-      Map<String, dynamic>? currentConfig;
-      for (final item in getResult.whereType<Map>()) {
-        if (item['api'] == apiName) {
-          final data = item['data'] as Map?;
-          currentConfig = data?['config'] as Map<String, dynamic>?;
+      final data = getResponse.data['data'] as Map? ?? {};
+      final currentConfig = data['config'] as Map<String, dynamic>? ?? {};
+
+      // 构建设置请求
+      final setData = <String, dynamic>{
+        'api': apiName,
+        'method': 'set',
+        'version': 1,
+      };
+
+      // 根据服务类型设置 enable 字段
+      switch (serviceName.toUpperCase()) {
+        case 'SMB':
+          setData['enable_samba'] = enabled;
           break;
-        }
-      }
-      if (currentConfig == null) throw Exception('未找到服务配置');
-
-      final setData = <String, dynamic>{'api': apiName, 'method': 'set', 'version': version};
-      for (final key in currentConfig.keys) {
-        setData[key] = currentConfig[key];
-      }
-      setData[enableKey] = enabled;
-      for (final key in extraKeys) {
-        if (currentConfig.containsKey(key)) setData[key] = currentConfig[key];
-      }
-      if (serviceName.toUpperCase() == 'SFTP' && currentConfig.containsKey('portnum')) {
-        setData['portnum'] = currentConfig['portnum'];
-        setData['sftp_portnum'] = currentConfig['portnum'];
+        case 'NFS':
+          setData['enable_nfs'] = enabled;
+          break;
+        case 'FTP':
+          setData['enable_ftp'] = enabled;
+          break;
+        case 'AFP':
+          setData['enable_afp'] = enabled;
+          break;
+        case 'SFTP':
+          setData['enable'] = enabled;
+          break;
+        default:
+          throw Exception('不支持的服务：$serviceName');
       }
 
       final response = await client.post('/webapi/entry.cgi', data: setData, options: Options(contentType: Headers.formUrlEncodedContentType));
       final responseData = response.data;
-      
+
       if (responseData is! Map || responseData['success'] != true) {
         final errorData = responseData is Map ? responseData['error'] : null;
         final errorMessage = errorData is Map ? (errorData['message'] ?? errorData['code'] ?? '设置服务状态失败') : '设置服务状态失败';
@@ -176,13 +185,13 @@ class FileServiceApi {
     }
   }
 
-  Map<String, dynamic> _getServiceConfig(String serviceName) {
+  String _getServiceApiName(String serviceName) {
     switch (serviceName) {
-      case 'SMB': return {'api': 'SYNO.Core.FileService.SMB', 'config': {'version': 1, 'enable_key': 'enable', 'extra_keys': ['workgroup', 'port']}};
-      case 'NFS': return {'api': 'SYNO.Core.FileService.NFS', 'config': {'version': 1, 'enable_key': 'enable', 'extra_keys': ['v4_domain', 'port']}};
-      case 'FTP': return {'api': 'SYNO.Core.FileService.FTP', 'config': {'version': 1, 'enable_key': 'enable', 'extra_keys': ['enable_ftps', 'port']}};
-      case 'AFP': return {'api': 'SYNO.Core.FileService.AFP', 'config': {'version': 1, 'enable_key': 'enable', 'extra_keys': ['port']}};
-      case 'SFTP': return {'api': 'SYNO.Core.FileService.SFTP', 'config': {'version': 1, 'enable_key': 'enable', 'extra_keys': ['port', 'portnum']}};
+      case 'SMB': return 'SYNO.Core.FileServ.SMB';
+      case 'NFS': return 'SYNO.Core.FileServ.NFS';
+      case 'FTP': return 'SYNO.Core.FileServ.FTP';
+      case 'AFP': return 'SYNO.Core.FileServ.AFP';
+      case 'SFTP': return 'SYNO.Core.FileServ.FTP.SFTP';
       default: throw Exception('不支持的服务：$serviceName');
     }
   }
