@@ -746,5 +746,128 @@
   "logLevelMove": "移动",
   "logLevelDelete": "删除",
   "logLevelRead": "读取",
-  "logLevelRename": "重命名"
+  "logLevelRename": "重命名",
+  "@logLevelRename": {
+    "description": "日志级别-重命名"
+  },
+  "statusExpired": "已过期",
+  "@statusExpired": {
+    "description": "用户状态-已过期"
+  },
+  "statusNormal": "正常",
+  "@statusNormal": {
+    "description": "用户状态-正常"
+  },
+  "statusDisabled": "已禁用",
+  "@statusDisabled": {
+    "description": "用户状态-已禁用"
+  },
+  "userInfoUpdated": "用户信息已更新",
+  "@userInfoUpdated": {
+    "description": "用户信息更新成功提示"
+  },
+  "saveFailed": "保存失败",
+  "@saveFailed": {
+    "description": "保存失败提示"
+  },
+  "enableUser": "启用用户",
+  "@enableUser": {
+    "description": "启用用户按钮/标题"
+  },
+  "disableUser": "禁用用户",
+  "@disableUser": {
+    "description": "禁用用户按钮/标题"
+  },
+  "confirmDisableUser": "确定要禁用用户 \"{name}\" 吗？禁用后该用户将无法登录。",
+  "@confirmDisableUser": {
+    "description": "确认禁用用户对话框",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "confirmEnableUser": "确定要启用用户 \"{name}\" 吗？",
+  "@confirmEnableUser": {
+    "description": "确认启用用户对话框",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "userDisabled": "用户已禁用",
+  "@userDisabled": {
+    "description": "用户已禁用提示"
+  },
+  "userEnabled": "用户已启用",
+  "@userEnabled": {
+    "description": "用户已启用提示"
+  },
+  "operationFailed": "操作失败",
+  "@operationFailed": {
+    "description": "操作失败通用提示"
+  },
+  "resetPassword": "重置密码",
+  "@resetPassword": {
+    "description": "重置密码按钮/标题"
+  },
+  "resetPasswordDialogTitle": "为用户 \"{name}\" 设置新密码",
+  "@resetPasswordDialogTitle": {
+    "description": "重置密码对话框标题",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "newPassword": "新密码",
+  "@newPassword": {
+    "description": "新密码输入框标签"
+  },
+  "passwordCannotBeEmpty": "密码不能为空",
+  "@passwordCannotBeEmpty": {
+    "description": "密码为空提示"
+  },
+  "passwordResetSuccess": "密码已重置",
+  "@passwordResetSuccess": {
+    "description": "密码重置成功提示"
+  },
+  "resetPasswordFailed": "重置密码失败",
+  "@resetPasswordFailed": {
+    "description": "重置密码失败提示"
+  },
+  "userName": "用户名",
+  "@userName": {
+    "description": "用户名标签"
+  },
+  "description": "描述",
+  "@description": {
+    "description": "描述标签"
+  },
+  "email": "邮箱",
+  "@email": {
+    "description": "邮箱标签"
+  },
+  "groupName": "群组名称",
+  "@groupName": {
+    "description": "群组名称标签"
+  },
+  "memberCount": "{count} 个成员",
+  "@memberCount": {
+    "description": "群组成员数量",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "viewGroupMembersRequiresDsm": "查看群组成员列表需要在 DSM Web 界面中操作",
+  "@viewGroupMembersRequiresDsm": {
+    "description": "查看群组成员需在DSM中操作的提示"
+  },
+  "none": "无",
+  "@none": {
+    "description": "无数据占位"
+  }
 }

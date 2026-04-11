@@ -92,7 +92,7 @@ class _UsersTab extends ConsumerWidget {
         title: l10n.loadFailed(error),
         message: '$error',
         onRetry: () => ref.invalidate(usersProvider),
-        actionLabel: '重试',
+        actionLabel: l10n.retry,
       ),
       data: (users) {
         if (users.isEmpty) {
@@ -134,7 +134,7 @@ class _GroupsTab extends ConsumerWidget {
         title: l10n.loadFailed(error),
         message: '$error',
         onRetry: () => ref.invalidate(groupsProvider),
-        actionLabel: '重试',
+        actionLabel: l10n.retry,
       ),
       data: (groups) {
         if (groups.isEmpty) {
@@ -245,14 +245,14 @@ class _UserCard extends StatelessWidget {
   }
 
   String _getStatusText(String status, bool isExpired) {
-    if (isExpired) return '已过期';
+    if (isExpired) return l10n.statusExpired;
     switch (status.toLowerCase()) {
       case 'normal':
       case 'valid':
-        return '正常';
+        return l10n.statusNormal;
       case 'disabled':
       case 'suspended':
-        return '已禁用';
+        return l10n.statusDisabled;
       default:
         return status;
     }
@@ -377,11 +377,11 @@ class _UserDetailSheetState extends ConsumerState<_UserDetailSheet> {
 
       if (mounted) {
         Navigator.of(context).pop();
-        Toast.success('用户信息已更新');
+        Toast.success(l10n.userInfoUpdated);
       }
     } catch (e) {
       if (mounted) {
-        Toast.error('保存失败: $e');
+        Toast.error('${l10n.saveFailed}: $e');
       }
     } finally {
       if (mounted) {
@@ -396,18 +396,18 @@ class _UserDetailSheetState extends ConsumerState<_UserDetailSheet> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(disable ? '禁用用户' : '启用用户'),
+        title: Text(disable ? l10n.disableUser : l10n.enableUser),
         content: Text(disable
-          ? '确定要禁用用户 "${widget.user.name}" 吗？禁用后该用户将无法登录。'
-          : '确定要启用用户 "${widget.user.name}" 吗？'),
+          ? l10n.confirmDisableUser(widget.user.name)
+          : l10n.confirmEnableUser(widget.user.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
+            child: Text(l10n.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('确定'),
+            child: Text(l10n.confirm),
           ),
         ],
       ),
@@ -427,11 +427,11 @@ class _UserDetailSheetState extends ConsumerState<_UserDetailSheet> {
 
       if (mounted) {
         Navigator.of(context).pop();
-        Toast.show(disable ? '用户已禁用' : '用户已启用');
+        Toast.show(disable ? l10n.userDisabled : l10n.userEnabled);
       }
     } catch (e) {
       if (mounted) {
-        Toast.error('操作失败: $e');
+        Toast.error('${l10n.operationFailed}: $e');
       }
     } finally {
       if (mounted) {
@@ -446,17 +446,17 @@ class _UserDetailSheetState extends ConsumerState<_UserDetailSheet> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('重置密码'),
+        title: Text(l10n.resetPassword),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('为用户 "${widget.user.name}" 设置新密码：'),
+            Text(l10n.resetPasswordDialogTitle(widget.user.name)),
             const SizedBox(height: 12),
             TextField(
               controller: passwordController,
               obscureText: true,
               decoration: const InputDecoration(
-                labelText: '新密码',
+                labelText: l10n.newPassword,
                 border: OutlineInputBorder(),
               ),
             ),
@@ -465,11 +465,11 @@ class _UserDetailSheetState extends ConsumerState<_UserDetailSheet> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
+            child: Text(l10n.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('确定'),
+            child: Text(l10n.confirm),
           ),
         ],
       ),
@@ -480,7 +480,7 @@ class _UserDetailSheetState extends ConsumerState<_UserDetailSheet> {
     final password = passwordController.text;
     if (password.isEmpty) {
       if (mounted) {
-        Toast.warning('密码不能为空');
+        Toast.warning(l10n.passwordCannotBeEmpty);
       }
       return;
     }
@@ -494,11 +494,11 @@ class _UserDetailSheetState extends ConsumerState<_UserDetailSheet> {
       );
 
       if (mounted) {
-        Toast.success('密码已重置');
+        Toast.success(l10n.passwordResetSuccess);
       }
     } catch (e) {
       if (mounted) {
-        Toast.error('重置失败: $e');
+        Toast.error('${l10n.resetPasswordFailed}: $e');
       }
     } finally {
       passwordController.dispose();
@@ -584,7 +584,7 @@ class _UserDetailSheetState extends ConsumerState<_UserDetailSheet> {
                     // 用户名（只读）
                     _buildReadOnlyField(
                       icon: Icons.person_outline_rounded,
-                      label: '用户名',
+                      label: l10n.userName,
                       value: widget.user.name,
                     ),
                     const SizedBox(height: 16),
@@ -592,7 +592,7 @@ class _UserDetailSheetState extends ConsumerState<_UserDetailSheet> {
                     TextField(
                       controller: _descriptionController,
                       decoration: const InputDecoration(
-                        labelText: '描述',
+                        labelText: l10n.description,
                         border: OutlineInputBorder(),
                         prefixIcon: Icon(Icons.description_outlined),
                       ),
@@ -602,7 +602,7 @@ class _UserDetailSheetState extends ConsumerState<_UserDetailSheet> {
                     TextField(
                       controller: _emailController,
                       decoration: const InputDecoration(
-                        labelText: '邮箱',
+                        labelText: l10n.email,
                         border: OutlineInputBorder(),
                         prefixIcon: Icon(Icons.email_outlined),
                       ),
@@ -618,7 +618,7 @@ class _UserDetailSheetState extends ConsumerState<_UserDetailSheet> {
                             icon: _saving
                               ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
                               : const Icon(Icons.save_rounded),
-                            label: const Text('保存'),
+                            label: Text(l10n.save),
                           ),
                         ),
                       ],
@@ -628,7 +628,7 @@ class _UserDetailSheetState extends ConsumerState<_UserDetailSheet> {
                     OutlinedButton.icon(
                       onPressed: _saving ? null : _resetPassword,
                       icon: const Icon(Icons.lock_reset_rounded),
-                      label: const Text('重置密码'),
+                      label: Text(l10n.resetPassword),
                     ),
                     const SizedBox(height: 12),
                     // 禁用/启用用户
@@ -636,14 +636,14 @@ class _UserDetailSheetState extends ConsumerState<_UserDetailSheet> {
                       OutlinedButton.icon(
                         onPressed: _saving ? null : () => _toggleUserStatus(false),
                         icon: const Icon(Icons.check_circle_outline_rounded),
-                        label: const Text('启用用户'),
+                        label: Text(l10n.enableUser),
                         style: OutlinedButton.styleFrom(foregroundColor: Colors.green),
                       )
                     else
                       OutlinedButton.icon(
                         onPressed: _saving ? null : () => _toggleUserStatus(true),
                         icon: const Icon(Icons.block_rounded),
-                        label: const Text('禁用用户'),
+                        label: Text(l10n.disableUser),
                         style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
                       ),
                   ],
@@ -703,14 +703,14 @@ class _UserDetailSheetState extends ConsumerState<_UserDetailSheet> {
   }
 
   String _getStatusText(String status, bool isExpired) {
-    if (isExpired) return '已过期';
+    if (isExpired) return l10n.statusExpired;
     switch (status.toLowerCase()) {
       case 'normal':
       case 'valid':
-        return '正常';
+        return l10n.statusNormal;
       case 'disabled':
       case 'suspended':
-        return '已禁用';
+        return l10n.statusDisabled;
       default:
         return status;
     }
@@ -768,7 +768,7 @@ class _GroupDetailSheet extends StatelessWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '${group.memberCount} 个成员',
+                            l10n.memberCount(group.memberCount),
                             style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                           ),
                         ],
@@ -789,13 +789,13 @@ class _GroupDetailSheet extends StatelessWidget {
                   children: [
                     _DetailTile(
                       icon: Icons.group_outlined,
-                      label: '群组名称',
+                      label: l10n.groupName,
                       value: group.name,
                     ),
                     _DetailTile(
                       icon: Icons.description_outlined,
-                      label: '描述',
-                      value: group.description.isNotEmpty ? group.description : '无',
+                      label: l10n.description,
+                      value: group.description.isNotEmpty ? group.description : l10n.none,
                     ),
                     
                     Container(
@@ -811,7 +811,7 @@ class _GroupDetailSheet extends StatelessWidget {
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              '查看群组成员列表需要在 DSM Web 界面中操作',
+                              l10n.viewGroupMembersRequiresDsm,
                               style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                             ),
                           ),

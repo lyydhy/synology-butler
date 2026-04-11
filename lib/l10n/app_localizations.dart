@@ -62,8 +62,7 @@ import 'app_localizations_zh.dart';
 /// be consistent with the languages listed in the AppLocalizations.supportedLocales
 /// property.
 abstract class AppLocalizations {
-  AppLocalizations(String locale)
-      : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+  AppLocalizations(String locale) : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -71,8 +70,7 @@ abstract class AppLocalizations {
     return Localizations.of<AppLocalizations>(context, AppLocalizations)!;
   }
 
-  static const LocalizationsDelegate<AppLocalizations> delegate =
-      _AppLocalizationsDelegate();
+  static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
 
   /// A list of this localizations delegate along with the default localizations
   /// delegates.
@@ -84,8 +82,7 @@ abstract class AppLocalizations {
   /// Additional delegates can be added by appending to this list in
   /// MaterialApp. This list does not have to be used at all if a custom list
   /// of delegates is preferred or required.
-  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
-      <LocalizationsDelegate<dynamic>>[
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates = <LocalizationsDelegate<dynamic>>[
     delegate,
     GlobalMaterialLocalizations.delegate,
     GlobalCupertinoLocalizations.delegate,
@@ -2792,15 +2789,164 @@ abstract class AppLocalizations {
   /// **'读取'**
   String get logLevelRead;
 
-  /// No description provided for @logLevelRename.
+  /// 日志级别-重命名
   ///
   /// In zh, this message translates to:
   /// **'重命名'**
   String get logLevelRename;
+
+  /// 用户状态-已过期
+  ///
+  /// In zh, this message translates to:
+  /// **'已过期'**
+  String get statusExpired;
+
+  /// 用户状态-正常
+  ///
+  /// In zh, this message translates to:
+  /// **'正常'**
+  String get statusNormal;
+
+  /// 用户状态-已禁用
+  ///
+  /// In zh, this message translates to:
+  /// **'已禁用'**
+  String get statusDisabled;
+
+  /// 用户信息更新成功提示
+  ///
+  /// In zh, this message translates to:
+  /// **'用户信息已更新'**
+  String get userInfoUpdated;
+
+  /// 保存失败提示
+  ///
+  /// In zh, this message translates to:
+  /// **'保存失败'**
+  String get saveFailed;
+
+  /// 启用用户按钮/标题
+  ///
+  /// In zh, this message translates to:
+  /// **'启用用户'**
+  String get enableUser;
+
+  /// 禁用用户按钮/标题
+  ///
+  /// In zh, this message translates to:
+  /// **'禁用用户'**
+  String get disableUser;
+
+  /// 确认禁用用户对话框
+  ///
+  /// In zh, this message translates to:
+  /// **'确定要禁用用户 \"{name}\" 吗？禁用后该用户将无法登录。'**
+  String confirmDisableUser(String name);
+
+  /// 确认启用用户对话框
+  ///
+  /// In zh, this message translates to:
+  /// **'确定要启用用户 \"{name}\" 吗？'**
+  String confirmEnableUser(String name);
+
+  /// 用户已禁用提示
+  ///
+  /// In zh, this message translates to:
+  /// **'用户已禁用'**
+  String get userDisabled;
+
+  /// 用户已启用提示
+  ///
+  /// In zh, this message translates to:
+  /// **'用户已启用'**
+  String get userEnabled;
+
+  /// 操作失败通用提示
+  ///
+  /// In zh, this message translates to:
+  /// **'操作失败'**
+  String get operationFailed;
+
+  /// 重置密码按钮/标题
+  ///
+  /// In zh, this message translates to:
+  /// **'重置密码'**
+  String get resetPassword;
+
+  /// 重置密码对话框标题
+  ///
+  /// In zh, this message translates to:
+  /// **'为用户 \"{name}\" 设置新密码'**
+  String resetPasswordDialogTitle(String name);
+
+  /// 新密码输入框标签
+  ///
+  /// In zh, this message translates to:
+  /// **'新密码'**
+  String get newPassword;
+
+  /// 密码为空提示
+  ///
+  /// In zh, this message translates to:
+  /// **'密码不能为空'**
+  String get passwordCannotBeEmpty;
+
+  /// 密码重置成功提示
+  ///
+  /// In zh, this message translates to:
+  /// **'密码已重置'**
+  String get passwordResetSuccess;
+
+  /// 重置密码失败提示
+  ///
+  /// In zh, this message translates to:
+  /// **'重置密码失败'**
+  String get resetPasswordFailed;
+
+  /// 用户名标签
+  ///
+  /// In zh, this message translates to:
+  /// **'用户名'**
+  String get userName;
+
+  /// 描述标签
+  ///
+  /// In zh, this message translates to:
+  /// **'描述'**
+  String get description;
+
+  /// 邮箱标签
+  ///
+  /// In zh, this message translates to:
+  /// **'邮箱'**
+  String get email;
+
+  /// 群组名称标签
+  ///
+  /// In zh, this message translates to:
+  /// **'群组名称'**
+  String get groupName;
+
+  /// 群组成员数量
+  ///
+  /// In zh, this message translates to:
+  /// **'{count} 个成员'**
+  String memberCount(int count);
+
+  /// 查看群组成员需在DSM中操作的提示
+  ///
+  /// In zh, this message translates to:
+  /// **'查看群组成员列表需要在 DSM Web 界面中操作'**
+  String get viewGroupMembersRequiresDsm;
+
+  /// 无数据占位
+  ///
+  /// In zh, this message translates to:
+  /// **'无'**
+  String get none;
 }
 
-class _AppLocalizationsDelegate
-    extends LocalizationsDelegate<AppLocalizations> {
+class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
   const _AppLocalizationsDelegate();
 
   @override
@@ -2809,25 +2955,25 @@ class _AppLocalizationsDelegate
   }
 
   @override
-  bool isSupported(Locale locale) =>
-      <String>['en', 'zh'].contains(locale.languageCode);
+  bool isSupported(Locale locale) => <String>['en', 'zh'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
 }
 
 AppLocalizations lookupAppLocalizations(Locale locale) {
+
+
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
-    case 'en':
-      return AppLocalizationsEn();
-    case 'zh':
-      return AppLocalizationsZh();
+    case 'en': return AppLocalizationsEn();
+    case 'zh': return AppLocalizationsZh();
   }
 
   throw FlutterError(
-      'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
-      'an issue with the localizations generation tool. Please file an issue '
-      'on GitHub with a reproducible sample app and the gen-l10n configuration '
-      'that was used.');
+    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+    'an issue with the localizations generation tool. Please file an issue '
+    'on GitHub with a reproducible sample app and the gen-l10n configuration '
+    'that was used.'
+  );
 }

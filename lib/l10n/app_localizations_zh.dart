@@ -1457,4 +1457,87 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get logLevelRename => '重命名';
+
+  @override
+  String get statusExpired => '已过期';
+
+  @override
+  String get statusNormal => '正常';
+
+  @override
+  String get statusDisabled => '已禁用';
+
+  @override
+  String get userInfoUpdated => '用户信息已更新';
+
+  @override
+  String get saveFailed => '保存失败';
+
+  @override
+  String get enableUser => '启用用户';
+
+  @override
+  String get disableUser => '禁用用户';
+
+  @override
+  String confirmDisableUser(String name) {
+    return '确定要禁用用户 \"$name\" 吗？禁用后该用户将无法登录。';
+  }
+
+  @override
+  String confirmEnableUser(String name) {
+    return '确定要启用用户 \"$name\" 吗？';
+  }
+
+  @override
+  String get userDisabled => '用户已禁用';
+
+  @override
+  String get userEnabled => '用户已启用';
+
+  @override
+  String get operationFailed => '操作失败';
+
+  @override
+  String get resetPassword => '重置密码';
+
+  @override
+  String resetPasswordDialogTitle(String name) {
+    return '为用户 \"$name\" 设置新密码';
+  }
+
+  @override
+  String get newPassword => '新密码';
+
+  @override
+  String get passwordCannotBeEmpty => '密码不能为空';
+
+  @override
+  String get passwordResetSuccess => '密码已重置';
+
+  @override
+  String get resetPasswordFailed => '重置密码失败';
+
+  @override
+  String get userName => '用户名';
+
+  @override
+  String get description => '描述';
+
+  @override
+  String get email => '邮箱';
+
+  @override
+  String get groupName => '群组名称';
+
+  @override
+  String memberCount(int count) {
+    return '$count 个成员';
+  }
+
+  @override
+  String get viewGroupMembersRequiresDsm => '查看群组成员列表需要在 DSM Web 界面中操作';
+
+  @override
+  String get none => '无';
 }
