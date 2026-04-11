@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/utils/l10n.dart';
+import '../../../../core/widgets/sliding_tab_bar.dart';
 import '../../../../core/utils/toast.dart';
 import '../../../../core/widgets/app_error_state.dart';
 import '../../../../domain/entities/dsm_group.dart';
@@ -51,28 +52,17 @@ class _UserGroupsPageState extends ConsumerState<UserGroupsPage> with SingleTick
           ),
         ],
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(48),
-          child: Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: TabBar(
-              controller: _tabController,
-              indicator: BoxDecoration(
-                color: theme.colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              indicatorPadding: const EdgeInsets.all(4),
-              indicatorSize: TabBarIndicatorSize.tab,
-              dividerColor: Colors.transparent,
-              labelColor: theme.colorScheme.onPrimaryContainer,
-              unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
-              labelStyle: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
+          preferredSize: const Size.fromHeight(64),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+            child: SlidingTabBar(
+              tabController: _tabController,
+              height: 54,
+              iconSize: 18,
+              fontSize: 13,
               tabs: [
-                Tab(text: l10n.userAccountTab),
-                Tab(text: l10n.userGroupTab),
+                SlidingTabItem(icon: Icons.person_rounded, label: l10n.userAccountTab),
+                SlidingTabItem(icon: Icons.group_rounded, label: l10n.userGroupTab),
               ],
             ),
           ),
