@@ -1540,4 +1540,52 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get none => '无';
+
+  @override
+  String get reload => '重新加载';
+
+  @override
+  String get sharedFoldersLoadFailed => '共享文件夹加载失败';
+
+  @override
+  String get name => '名称';
+
+  @override
+  String get path => '路径';
+
+  @override
+  String get spaceUsage => '空间使用';
+
+  @override
+  String get quota => '配额';
+
+  @override
+  String get features => '特性';
+
+  @override
+  String get statusEncrypted => '加密';
+
+  @override
+  String get statusHidden => '隐藏';
+
+  @override
+  String get featureRecycleBin => '回收站';
+
+  @override
+  String get featureReadOnly => '只读';
+
+  @override
+  String get featureFileCompression => '文件压缩';
+
+  @override
+  String get featureDataIntegrityProtection => '数据完整性保护';
+
+  @override
+  String get featureAdvancedPermissions => '高级权限';
+
+  @override
+  String get featureSnapshot => '快照';
+
+  @override
+  String get featureMoving => '移动中';
 }

@@ -1540,4 +1540,52 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get none => 'None';
+
+  @override
+  String get reload => 'Reload';
+
+  @override
+  String get sharedFoldersLoadFailed => 'Failed to load shared folders';
+
+  @override
+  String get name => 'Name';
+
+  @override
+  String get path => 'Path';
+
+  @override
+  String get spaceUsage => 'Space Usage';
+
+  @override
+  String get quota => 'Quota';
+
+  @override
+  String get features => 'Features';
+
+  @override
+  String get statusEncrypted => 'Encrypted';
+
+  @override
+  String get statusHidden => 'Hidden';
+
+  @override
+  String get featureRecycleBin => 'Recycle Bin';
+
+  @override
+  String get featureReadOnly => 'Read Only';
+
+  @override
+  String get featureFileCompression => 'File Compression';
+
+  @override
+  String get featureDataIntegrityProtection => 'Data Integrity Protection';
+
+  @override
+  String get featureAdvancedPermissions => 'Advanced Permissions';
+
+  @override
+  String get featureSnapshot => 'Snapshot';
+
+  @override
+  String get featureMoving => 'Moving';
 }

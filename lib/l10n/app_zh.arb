@@ -869,5 +869,69 @@
   "none": "无",
   "@none": {
     "description": "无数据占位"
+  },
+  "reload": "重新加载",
+  "@reload": {
+    "description": "重新加载按钮"
+  },
+  "sharedFoldersLoadFailed": "共享文件夹加载失败",
+  "@sharedFoldersLoadFailed": {
+    "description": "共享文件夹加载失败错误状态标题"
+  },
+  "name": "名称",
+  "@name": {
+    "description": "名称标签"
+  },
+  "path": "路径",
+  "@path": {
+    "description": "路径标签"
+  },
+  "spaceUsage": "空间使用",
+  "@spaceUsage": {
+    "description": "空间使用标签"
+  },
+  "quota": "配额",
+  "@quota": {
+    "description": "配额标签"
+  },
+  "features": "特性",
+  "@features": {
+    "description": "特性标签"
+  },
+  "statusEncrypted": "加密",
+  "@statusEncrypted": {
+    "description": "加密状态标签"
+  },
+  "statusHidden": "隐藏",
+  "@statusHidden": {
+    "description": "隐藏状态标签"
+  },
+  "featureRecycleBin": "回收站",
+  "@featureRecycleBin": {
+    "description": "特性标签-回收站"
+  },
+  "featureReadOnly": "只读",
+  "@featureReadOnly": {
+    "description": "特性标签-只读"
+  },
+  "featureFileCompression": "文件压缩",
+  "@featureFileCompression": {
+    "description": "特性标签-文件压缩"
+  },
+  "featureDataIntegrityProtection": "数据完整性保护",
+  "@featureDataIntegrityProtection": {
+    "description": "特性标签-数据完整性保护"
+  },
+  "featureAdvancedPermissions": "高级权限",
+  "@featureAdvancedPermissions": {
+    "description": "特性标签-高级权限"
+  },
+  "featureSnapshot": "快照",
+  "@featureSnapshot": {
+    "description": "特性标签-快照"
+  },
+  "featureMoving": "移动中",
+  "@featureMoving": {
+    "description": "特性标签-移动中"
   }
 }

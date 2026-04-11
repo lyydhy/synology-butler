@@ -2944,6 +2944,102 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'无'**
   String get none;
+
+  /// 重新加载按钮
+  ///
+  /// In zh, this message translates to:
+  /// **'重新加载'**
+  String get reload;
+
+  /// 共享文件夹加载失败错误状态标题
+  ///
+  /// In zh, this message translates to:
+  /// **'共享文件夹加载失败'**
+  String get sharedFoldersLoadFailed;
+
+  /// 名称标签
+  ///
+  /// In zh, this message translates to:
+  /// **'名称'**
+  String get name;
+
+  /// 路径标签
+  ///
+  /// In zh, this message translates to:
+  /// **'路径'**
+  String get path;
+
+  /// 空间使用标签
+  ///
+  /// In zh, this message translates to:
+  /// **'空间使用'**
+  String get spaceUsage;
+
+  /// 配额标签
+  ///
+  /// In zh, this message translates to:
+  /// **'配额'**
+  String get quota;
+
+  /// 特性标签
+  ///
+  /// In zh, this message translates to:
+  /// **'特性'**
+  String get features;
+
+  /// 加密状态标签
+  ///
+  /// In zh, this message translates to:
+  /// **'加密'**
+  String get statusEncrypted;
+
+  /// 隐藏状态标签
+  ///
+  /// In zh, this message translates to:
+  /// **'隐藏'**
+  String get statusHidden;
+
+  /// 特性标签-回收站
+  ///
+  /// In zh, this message translates to:
+  /// **'回收站'**
+  String get featureRecycleBin;
+
+  /// 特性标签-只读
+  ///
+  /// In zh, this message translates to:
+  /// **'只读'**
+  String get featureReadOnly;
+
+  /// 特性标签-文件压缩
+  ///
+  /// In zh, this message translates to:
+  /// **'文件压缩'**
+  String get featureFileCompression;
+
+  /// 特性标签-数据完整性保护
+  ///
+  /// In zh, this message translates to:
+  /// **'数据完整性保护'**
+  String get featureDataIntegrityProtection;
+
+  /// 特性标签-高级权限
+  ///
+  /// In zh, this message translates to:
+  /// **'高级权限'**
+  String get featureAdvancedPermissions;
+
+  /// 特性标签-快照
+  ///
+  /// In zh, this message translates to:
+  /// **'快照'**
+  String get featureSnapshot;
+
+  /// 特性标签-移动中
+  ///
+  /// In zh, this message translates to:
+  /// **'移动中'**
+  String get featureMoving;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

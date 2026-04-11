@@ -27,10 +27,10 @@ class SharedFoldersPage extends ConsumerWidget {
       body: foldersAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => AppErrorState(
-          title: '共享文件夹加载失败',
+          title: l10n.sharedFoldersLoadFailed,
           message: '$error',
           onRetry: () => ref.invalidate(sharedFoldersProvider),
-          actionLabel: '重新加载',
+          actionLabel: l10n.reload,
         ),
         data: (folders) {
           if (folders.isEmpty) {
@@ -160,23 +160,23 @@ class _FolderCard extends StatelessWidget {
               runSpacing: 4,
               children: [
                 if (folder.encrypted)
-                  const _FeatureTag(icon: Icons.lock_rounded, label: '加密', color: Colors.amber),
+                  const _FeatureTag(icon: Icons.lock_rounded, label: l10n.statusEncrypted, color: Colors.amber),
                 if (folder.isHidden)
-                  const _FeatureTag(icon: Icons.visibility_off_rounded, label: '隐藏', color: Colors.grey),
+                  const _FeatureTag(icon: Icons.visibility_off_rounded, label: l10n.statusHidden, color: Colors.grey),
                 if (folder.recycleBinEnabled)
-                  const _FeatureTag(icon: Icons.delete_outline_rounded, label: '回收站', color: Colors.green),
+                  const _FeatureTag(icon: Icons.delete_outline_rounded, label: l10n.featureRecycleBin, color: Colors.green),
                 if (folder.isReadOnly)
-                  const _FeatureTag(icon: Icons.lock_outline_rounded, label: '只读', color: Colors.orange),
+                  const _FeatureTag(icon: Icons.lock_outline_rounded, label: l10n.featureReadOnly, color: Colors.orange),
                 if (folder.enableShareCompress == true)
-                  const _FeatureTag(icon: Icons.compress_rounded, label: '文件压缩', color: Colors.blue),
+                  const _FeatureTag(icon: Icons.compress_rounded, label: l10n.featureFileCompression, color: Colors.blue),
                 if (folder.enableShareCow == true)
-                  const _FeatureTag(icon: Icons.shield_rounded, label: '数据完整性保护', color: Colors.teal),
+                  const _FeatureTag(icon: Icons.shield_rounded, label: l10n.featureDataIntegrityProtection, color: Colors.teal),
                 if (folder.unitePermission == true)
-                  const _FeatureTag(icon: Icons.admin_panel_settings_rounded, label: '高级权限', color: Colors.purple),
+                  const _FeatureTag(icon: Icons.admin_panel_settings_rounded, label: l10n.featureAdvancedPermissions, color: Colors.purple),
                 if (folder.supportSnapshot == true)
-                  const _FeatureTag(icon: Icons.history_rounded, label: '快照', color: Colors.indigo),
+                  const _FeatureTag(icon: Icons.history_rounded, label: l10n.featureSnapshot, color: Colors.indigo),
                 if (folder.isShareMoving == true)
-                  const _FeatureTag(icon: Icons.drive_file_move_rounded, label: '移动中', color: Colors.cyan),
+                  const _FeatureTag(icon: Icons.drive_file_move_rounded, label: l10n.featureMoving, color: Colors.cyan),
               ],
             ),
           ],
@@ -191,13 +191,13 @@ class _FolderCard extends StatelessWidget {
     Color statusColor;
 
     if (folder.encrypted) {
-      status = '加密';
+      status = l10n.statusEncrypted;
       statusColor = Colors.amber;
     } else if (folder.isHidden) {
-      status = '隐藏';
+      status = l10n.statusHidden;
       statusColor = Colors.grey;
     } else {
-      status = '正常';
+      status = l10n.statusNormal;
       statusColor = Colors.green;
     }
 
@@ -324,35 +324,35 @@ class _FolderDetailSheet extends StatelessWidget {
                   children: [
                     _DetailTile(
                       icon: Icons.label_outline_rounded,
-                      label: '名称',
+                      label: l10n.name,
                       value: folder.name,
                     ),
                     _DetailTile(
                       icon: Icons.description_outlined,
-                      label: '描述',
-                      value: folder.description.isEmpty ? '无' : folder.description,
+                      label: l10n.description,
+                      value: folder.description.isEmpty ? l10n.none : folder.description,
                     ),
                     _DetailTile(
                       icon: Icons.folder_outlined,
-                      label: '路径',
+                      label: l10n.path,
                       value: folder.volumeName != null
                           ? '${folder.volumeName}${folder.volumeDesc != null && folder.volumeDesc!.isNotEmpty ? ' (${folder.volumeDesc})' : ''}'
                           : folder.volumePath,
                     ),
                     _DetailTile(
                       icon: Icons.storage_outlined,
-                      label: '文件系统',
+                      label: l10n.fileSystem,
                       value: folder.fileSystem,
                     ),
                     _DetailTile(
                       icon: Icons.pie_chart_outline_rounded,
-                      label: '空间使用',
-                      value: folder.usageText.isEmpty ? '未知' : folder.usageText,
+                      label: l10n.spaceUsage,
+                      value: folder.usageText.isEmpty ? l10n.unknown : folder.usageText,
                     ),
                     if (folder.quotaValue != null && folder.quotaValue! > 0)
                       _DetailTile(
                         icon: Icons.data_usage_rounded,
-                        label: '配额',
+                        label: l10n.quota,
                         value: '${_formatSize((folder.quotaValue! * 1024 * 1024).toDouble())}（已用 ${_formatSize((folder.shareQuotaUsed ?? 0) * 1024 * 1024)}）',
                       ),
                     const SizedBox(height: 16),
@@ -365,7 +365,7 @@ class _FolderDetailSheet extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '特性',
+                            l10n.features,
                             style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
                           ),
                           const SizedBox(height: 10),
@@ -374,23 +374,23 @@ class _FolderDetailSheet extends StatelessWidget {
                             runSpacing: 6,
                             children: [
                               if (folder.encrypted)
-                                const _FeatureTag(icon: Icons.lock_rounded, label: '加密', color: Colors.amber),
+                                const _FeatureTag(icon: Icons.lock_rounded, label: l10n.statusEncrypted, color: Colors.amber),
                               if (folder.isHidden)
-                                const _FeatureTag(icon: Icons.visibility_off_rounded, label: '隐藏', color: Colors.grey),
+                                const _FeatureTag(icon: Icons.visibility_off_rounded, label: l10n.statusHidden, color: Colors.grey),
                               if (folder.recycleBinEnabled)
-                                const _FeatureTag(icon: Icons.delete_outline_rounded, label: '回收站', color: Colors.green),
+                                const _FeatureTag(icon: Icons.delete_outline_rounded, label: l10n.featureRecycleBin, color: Colors.green),
                               if (folder.isReadOnly)
-                                const _FeatureTag(icon: Icons.lock_outline_rounded, label: '只读', color: Colors.orange),
+                                const _FeatureTag(icon: Icons.lock_outline_rounded, label: l10n.featureReadOnly, color: Colors.orange),
                               if (folder.enableShareCompress == true)
-                                const _FeatureTag(icon: Icons.compress_rounded, label: '文件压缩', color: Colors.blue),
+                                const _FeatureTag(icon: Icons.compress_rounded, label: l10n.featureFileCompression, color: Colors.blue),
                               if (folder.enableShareCow == true)
-                                const _FeatureTag(icon: Icons.shield_rounded, label: '数据完整性保护', color: Colors.teal),
+                                const _FeatureTag(icon: Icons.shield_rounded, label: l10n.featureDataIntegrityProtection, color: Colors.teal),
                               if (folder.unitePermission == true)
-                                const _FeatureTag(icon: Icons.admin_panel_settings_rounded, label: '高级权限', color: Colors.purple),
+                                const _FeatureTag(icon: Icons.admin_panel_settings_rounded, label: l10n.featureAdvancedPermissions, color: Colors.purple),
                               if (folder.supportSnapshot == true)
-                                const _FeatureTag(icon: Icons.history_rounded, label: '快照', color: Colors.indigo),
+                                const _FeatureTag(icon: Icons.history_rounded, label: l10n.featureSnapshot, color: Colors.indigo),
                               if (folder.isShareMoving == true)
-                                const _FeatureTag(icon: Icons.drive_file_move_rounded, label: '移动中', color: Colors.cyan),
+                                const _FeatureTag(icon: Icons.drive_file_move_rounded, label: l10n.featureMoving, color: Colors.cyan),
                             ],
                           ),
                         ],

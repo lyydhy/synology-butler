@@ -770,5 +770,21 @@
   "groupName": "Group Name",
   "memberCount": "{count} members",
   "viewGroupMembersRequiresDsm": "Viewing group members requires operation in DSM Web interface",
-  "none": "None"
+  "none": "None",
+  "reload": "Reload",
+  "sharedFoldersLoadFailed": "Failed to load shared folders",
+  "name": "Name",
+  "path": "Path",
+  "spaceUsage": "Space Usage",
+  "quota": "Quota",
+  "features": "Features",
+  "statusEncrypted": "Encrypted",
+  "statusHidden": "Hidden",
+  "featureRecycleBin": "Recycle Bin",
+  "featureReadOnly": "Read Only",
+  "featureFileCompression": "File Compression",
+  "featureDataIntegrityProtection": "Data Integrity Protection",
+  "featureAdvancedPermissions": "Advanced Permissions",
+  "featureSnapshot": "Snapshot",
+  "featureMoving": "Moving"
 }
