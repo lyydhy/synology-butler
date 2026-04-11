@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
 import 'local_app_logger.dart';
@@ -64,17 +66,25 @@ void _logError({
   StackTrace? stack,
 }) {
   try {
-    // 异步写入，不阻塞主线程
-    LocalAppLogger.log(
+    // 使用 unawaited 显式标记 fire-and-forget，避免 async gap 导致 Future 被丢弃
+    unawaited(LocalAppLogger.log(
       level: level,
       module: module,
       event: event,
       message: stack != null ? '$message\n$stack' : message,
       extra: extra,
-    );
+    ));
   } catch (_) {
     // 记录失败静默忽略，避免递归
   }
+}
+
+// ─── 内部工具 ───────────────────────────────────────────────────────────────
+
+/// Fire-and-forget helper：显式标记不等待的 Future，避免编译器警告
+void unawaited(Future<void>? f) {
+  if (f == null) return;
+  f.then((_) {}, onError: (_, __) {});
 }
 
 /// 过滤 Flutter/Dart 内部框架产生的噪音错误
