@@ -374,11 +374,11 @@ class DsmSystemApi implements SystemApi {
           },
         ]),
       });
-      final diskData = await postEntry({
-        'api': 'SYNO.Core.Storage.Disk',
-        'method': 'list',
+      // dsm_helper 使用 SYNO.Storage.CGI.Storage 获取硬盘和存储信息
+      final storageData = await postEntry({
+        'api': 'SYNO.Storage.CGI.Storage',
+        'method': 'load_info',
         'version': '1',
-        'additional': jsonEncode(['size_total', 'temp', 'serial']),
       });
 
       final memory = utilizationData['memory'] as Map? ?? const {};
@@ -395,7 +395,7 @@ class DsmSystemApi implements SystemApi {
       final networks =
           _extractLanNetworks(networkSystemData, networkData, ethernetData, gatewayListData);
       final externalDevices = _extractExternalDevices(usbData, esataData);
-      final disks = _extractDisks(diskData);
+      final disks = _extractDisks(storageData);
       final versionText = _buildVersionText(infoData);
 
       int cpuCores = _toInt(infoData['cpu_cores']) ?? int.tryParse(infoData['cpu_cores']?.toString() ?? '') ?? 0;
@@ -641,17 +641,19 @@ class DsmSystemApi implements SystemApi {
     return devices;
   }
 
-  List<InformationCenterDiskModel> _extractDisks(Map diskData) {
+  List<InformationCenterDiskModel> _extractDisks(Map storageData) {
+    // dsm_helper style: SYNO.Storage.CGI.Storage returns disks in data.disks
     final disks = <InformationCenterDiskModel>[];
-    final items = diskData['disks'] as List? ?? (diskData['items'] as List?) ?? (diskData['list'] as List?) ?? const [];
+    final items = storageData['disks'] as List? ?? const [];
 
     for (final item in items.whereType<Map>()) {
+      // 跳过空的或系统保留盘位
       final name = (item['name'] ?? item['device'] ?? item['diskno'] ?? '').toString();
-      if (name.isEmpty) continue;
+      if (name.isEmpty || name.toLowerCase() == 'empty' || name.toLowerCase() == 'reserved') continue;
 
       disks.add(InformationCenterDiskModel(
         name: name,
-        serialNumber: (item['serial'] ?? '').toString(),
+        serialNumber: (item['serial'] ?? item['serial_number'] ?? '').toString(),
         capacityBytes: _toDouble(item['size_total'] ?? item['size']),
         temperatureText: _toInt(item['temp'] ?? item['temperature'])?.toString(),
       ));
