@@ -636,7 +636,13 @@ class DsmSystemApi implements SystemApi {
   }
 
   String _buildVersionText(Map infoData) {
-    // 优先使用 version_string
+    // 优先使用 firmware_ver（dsm_helper 使用的字段，DSM 7 常见）
+    final firmwareVer = infoData['firmware_ver']?.toString();
+    if (firmwareVer != null && firmwareVer.trim().isNotEmpty) {
+      return firmwareVer.trim();
+    }
+
+    // 其次使用 version_string
     final versionString = infoData['version_string']?.toString();
     if (versionString != null && versionString.trim().isNotEmpty) {
       return versionString.trim();
