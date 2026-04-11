@@ -982,5 +982,106 @@
         "type": "String"
       }
     }
+  },
+  "containerTab": "容器",
+  "@containerTab": {
+    "description": "容器管理标签页"
+  },
+  "composeTab": "Compose",
+  "@composeTab": {
+    "description": "Compose项目标签页"
+  },
+  "imageTab": "镜像",
+  "@imageTab": {
+    "description": "镜像标签页"
+  },
+  "currentDataSource": "当前数据源",
+  "@currentDataSource": {
+    "description": "当前数据源标签"
+  },
+  "dsmDataSourceDescription": "第一版默认使用群晖原生容器数据源。",
+  "@dsmDataSourceDescription": {
+    "description": "群晖数据源描述"
+  },
+  "dpanelDataSourceDescription": "dpanel 适配预留中，当前先展示模块骨架。",
+  "@dpanelDataSourceDescription": {
+    "description": "dpanel数据源描述"
+  },
+  "dpanelDataSourceDeveloping": "dpanel 数据源开发中，当前先使用群晖数据源。",
+  "@dpanelDataSourceDeveloping": {
+    "description": "dpanel数据源开发中提示"
+  },
+  "containerDataLoadFailed": "容器数据加载失败",
+  "@containerDataLoadFailed": {
+    "description": "容器数据加载失败"
+  },
+  "pleaseRetryLater": "请稍后重试",
+  "@pleaseRetryLater": {
+    "description": "请稍后重试"
+  },
+  "noContainerData": "暂无容器数据",
+  "@noContainerData": {
+    "description": "暂无容器数据"
+  },
+  "noComposeProjects": "暂无 Compose 项目",
+  "@noComposeProjects": {
+    "description": "暂无Compose项目"
+  },
+  "usingDsmComposeProjects": "当前使用 DSM / Container Manager 原生 Compose 项目数据。",
+  "@usingDsmComposeProjects": {
+    "description": "使用DSM原生Compose项目"
+  },
+  "noImageData": "暂无镜像数据",
+  "@noImageData": {
+    "description": "暂无镜像数据"
+  },
+  "running": "运行中",
+  "@running": {
+    "description": "运行中状态"
+  },
+  "containerStopped": "已停止",
+  "@containerStopped": {
+    "description": "已停止状态"
+  },
+  "buildFailed": "构建失败",
+  "@buildFailed": {
+    "description": "构建失败状态"
+  },
+  "failed": "失败",
+  "@failed": {
+    "description": "失败状态"
+  },
+  "containerUnknown": "未知",
+  "@containerUnknown": {
+    "description": "未知状态"
+  },
+  "view": "查看",
+  "@view": {
+    "description": "查看按钮"
+  },
+  "create": "新建",
+  "@create": {
+    "description": "新建按钮"
+  },
+  "imageId": "镜像 ID",
+  "@imageId": {
+    "description": "镜像ID标签"
+  },
+  "containerCount": "{count} 个容器",
+  "@containerCount": {
+    "description": "容器数量",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noDsmComposeProjects": "当前未获取到 DSM Compose 项目。",
+  "@noDsmComposeProjects": {
+    "description": "未获取到DSM Compose项目"
+  },
+  "moreOptions": "更多操作",
+  "@moreOptions": {
+    "description": "更多操作菜单提示"
   }
 }

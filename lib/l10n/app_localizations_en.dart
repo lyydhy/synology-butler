@@ -1623,4 +1623,75 @@ class AppLocalizationsEn extends AppLocalizations {
   String appLogFileLabel(String fileName) {
     return 'App log: $fileName';
   }
+
+  @override
+  String get containerTab => 'Containers';
+
+  @override
+  String get composeTab => 'Compose';
+
+  @override
+  String get imageTab => 'Images';
+
+  @override
+  String get currentDataSource => 'Current Data Source';
+
+  @override
+  String get dsmDataSourceDescription => 'First version uses Synology native container data source by default.';
+
+  @override
+  String get dpanelDataSourceDescription => 'dpanel adapter reserved, showing module skeleton first.';
+
+  @override
+  String get dpanelDataSourceDeveloping => 'dpanel data source under development, using Synology data source for now.';
+
+  @override
+  String get containerDataLoadFailed => 'Failed to load container data';
+
+  @override
+  String get pleaseRetryLater => 'Please retry later';
+
+  @override
+  String get noContainerData => 'No container data';
+
+  @override
+  String get noComposeProjects => 'No Compose projects';
+
+  @override
+  String get usingDsmComposeProjects => 'Using DSM / Container Manager native Compose project data.';
+
+  @override
+  String get noImageData => 'No image data';
+
+  @override
+  String get running => 'Running';
+
+  @override
+  String get buildFailed => 'Build Failed';
+
+  @override
+  String get failed => 'Failed';
+
+  @override
+  String get containerUnknown => 'Unknown';
+
+  @override
+  String get view => 'View';
+
+  @override
+  String get create => 'Create';
+
+  @override
+  String get imageId => 'Image ID';
+
+  @override
+  String containerCount(int count) {
+    return '$count containers';
+  }
+
+  @override
+  String get noDsmComposeProjects => 'No DSM Compose projects fetched.';
+
+  @override
+  String get moreOptions => 'More Options';
 }

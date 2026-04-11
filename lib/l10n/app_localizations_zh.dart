@@ -1623,4 +1623,75 @@ class AppLocalizationsZh extends AppLocalizations {
   String appLogFileLabel(String fileName) {
     return '应用日志：$fileName';
   }
+
+  @override
+  String get containerTab => '容器';
+
+  @override
+  String get composeTab => 'Compose';
+
+  @override
+  String get imageTab => '镜像';
+
+  @override
+  String get currentDataSource => '当前数据源';
+
+  @override
+  String get dsmDataSourceDescription => '第一版默认使用群晖原生容器数据源。';
+
+  @override
+  String get dpanelDataSourceDescription => 'dpanel 适配预留中，当前先展示模块骨架。';
+
+  @override
+  String get dpanelDataSourceDeveloping => 'dpanel 数据源开发中，当前先使用群晖数据源。';
+
+  @override
+  String get containerDataLoadFailed => '容器数据加载失败';
+
+  @override
+  String get pleaseRetryLater => '请稍后重试';
+
+  @override
+  String get noContainerData => '暂无容器数据';
+
+  @override
+  String get noComposeProjects => '暂无 Compose 项目';
+
+  @override
+  String get usingDsmComposeProjects => '当前使用 DSM / Container Manager 原生 Compose 项目数据。';
+
+  @override
+  String get noImageData => '暂无镜像数据';
+
+  @override
+  String get running => '运行中';
+
+  @override
+  String get buildFailed => '构建失败';
+
+  @override
+  String get failed => '失败';
+
+  @override
+  String get containerUnknown => '未知';
+
+  @override
+  String get view => '查看';
+
+  @override
+  String get create => '新建';
+
+  @override
+  String get imageId => '镜像 ID';
+
+  @override
+  String containerCount(int count) {
+    return '$count 个容器';
+  }
+
+  @override
+  String get noDsmComposeProjects => '当前未获取到 DSM Compose 项目。';
+
+  @override
+  String get moreOptions => '更多操作';
 }

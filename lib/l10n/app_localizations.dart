@@ -2051,7 +2051,7 @@ abstract class AppLocalizations {
   /// **'运行中'**
   String get containerRunning;
 
-  /// No description provided for @containerStopped.
+  /// 已停止状态
   ///
   /// In zh, this message translates to:
   /// **'已停止'**
@@ -3106,6 +3106,144 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'应用日志：{fileName}'**
   String appLogFileLabel(String fileName);
+
+  /// 容器管理标签页
+  ///
+  /// In zh, this message translates to:
+  /// **'容器'**
+  String get containerTab;
+
+  /// Compose项目标签页
+  ///
+  /// In zh, this message translates to:
+  /// **'Compose'**
+  String get composeTab;
+
+  /// 镜像标签页
+  ///
+  /// In zh, this message translates to:
+  /// **'镜像'**
+  String get imageTab;
+
+  /// 当前数据源标签
+  ///
+  /// In zh, this message translates to:
+  /// **'当前数据源'**
+  String get currentDataSource;
+
+  /// 群晖数据源描述
+  ///
+  /// In zh, this message translates to:
+  /// **'第一版默认使用群晖原生容器数据源。'**
+  String get dsmDataSourceDescription;
+
+  /// dpanel数据源描述
+  ///
+  /// In zh, this message translates to:
+  /// **'dpanel 适配预留中，当前先展示模块骨架。'**
+  String get dpanelDataSourceDescription;
+
+  /// dpanel数据源开发中提示
+  ///
+  /// In zh, this message translates to:
+  /// **'dpanel 数据源开发中，当前先使用群晖数据源。'**
+  String get dpanelDataSourceDeveloping;
+
+  /// 容器数据加载失败
+  ///
+  /// In zh, this message translates to:
+  /// **'容器数据加载失败'**
+  String get containerDataLoadFailed;
+
+  /// 请稍后重试
+  ///
+  /// In zh, this message translates to:
+  /// **'请稍后重试'**
+  String get pleaseRetryLater;
+
+  /// 暂无容器数据
+  ///
+  /// In zh, this message translates to:
+  /// **'暂无容器数据'**
+  String get noContainerData;
+
+  /// 暂无Compose项目
+  ///
+  /// In zh, this message translates to:
+  /// **'暂无 Compose 项目'**
+  String get noComposeProjects;
+
+  /// 使用DSM原生Compose项目
+  ///
+  /// In zh, this message translates to:
+  /// **'当前使用 DSM / Container Manager 原生 Compose 项目数据。'**
+  String get usingDsmComposeProjects;
+
+  /// 暂无镜像数据
+  ///
+  /// In zh, this message translates to:
+  /// **'暂无镜像数据'**
+  String get noImageData;
+
+  /// 运行中状态
+  ///
+  /// In zh, this message translates to:
+  /// **'运行中'**
+  String get running;
+
+  /// 构建失败状态
+  ///
+  /// In zh, this message translates to:
+  /// **'构建失败'**
+  String get buildFailed;
+
+  /// 失败状态
+  ///
+  /// In zh, this message translates to:
+  /// **'失败'**
+  String get failed;
+
+  /// 未知状态
+  ///
+  /// In zh, this message translates to:
+  /// **'未知'**
+  String get containerUnknown;
+
+  /// 查看按钮
+  ///
+  /// In zh, this message translates to:
+  /// **'查看'**
+  String get view;
+
+  /// 新建按钮
+  ///
+  /// In zh, this message translates to:
+  /// **'新建'**
+  String get create;
+
+  /// 镜像ID标签
+  ///
+  /// In zh, this message translates to:
+  /// **'镜像 ID'**
+  String get imageId;
+
+  /// 容器数量
+  ///
+  /// In zh, this message translates to:
+  /// **'{count} 个容器'**
+  String containerCount(int count);
+
+  /// 未获取到DSM Compose项目
+  ///
+  /// In zh, this message translates to:
+  /// **'当前未获取到 DSM Compose 项目。'**
+  String get noDsmComposeProjects;
+
+  /// 更多操作菜单提示
+  ///
+  /// In zh, this message translates to:
+  /// **'更多操作'**
+  String get moreOptions;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

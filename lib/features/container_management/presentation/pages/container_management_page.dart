@@ -50,7 +50,7 @@ class _ContainerManagementPageState extends ConsumerState<ContainerManagementPag
     final isRunning = item.status == 'running';
     await _runContainerAction(
       item: item,
-      successVerb: isRunning ? '停止' : '启动',
+      successVerb: isRunning ? l10n.stop : l10n.start,
       action: (api) => isRunning ? api.stopContainer(name: item.name) : api.startContainer(name: item.name),
     );
   }
@@ -58,7 +58,7 @@ class _ContainerManagementPageState extends ConsumerState<ContainerManagementPag
   Future<void> _restartContainer(DockerContainerSummary item) async {
     await _runContainerAction(
       item: item,
-      successVerb: '重启',
+      successVerb: l10n.restart,
       action: (api) => api.restartContainer(name: item.name),
     );
   }
@@ -66,7 +66,7 @@ class _ContainerManagementPageState extends ConsumerState<ContainerManagementPag
   Future<void> _forceStopContainer(DockerContainerSummary item) async {
     await _runContainerAction(
       item: item,
-      successVerb: '强制停止',
+      successVerb: l10n.forceStop,
       action: (api) => api.forceStopContainer(name: item.name),
     );
   }
@@ -115,12 +115,12 @@ class _ContainerManagementPageState extends ConsumerState<ContainerManagementPag
         title: Text(l10n.containerManagement),
         actions: [
           IconButton(
-            tooltip: '刷新',
+            tooltip: l10n.refresh,
             onPressed: _refreshOverview,
             icon: const Icon(Icons.refresh_rounded),
           ),
           IconButton(
-            tooltip: '设置',
+            tooltip: l10n.settings,
             onPressed: () => context.push('/container-management/settings'),
             icon: const Icon(Icons.tune_rounded),
           ),
@@ -140,9 +140,9 @@ class _ContainerManagementPageState extends ConsumerState<ContainerManagementPag
               iconSize: 18,
               fontSize: 13,
               tabs: const [
-                SlidingTabItem(icon: Icons.view_list_rounded, label: '容器'),
-                SlidingTabItem(icon: Icons.account_tree_outlined, label: 'Compose'),
-                SlidingTabItem(icon: Icons.layers_outlined, label: '镜像'),
+                SlidingTabItem(icon: Icons.view_list_rounded, label: l10n.containerTab),
+                SlidingTabItem(icon: Icons.account_tree_outlined, label: l10n.composeTab),
+                SlidingTabItem(icon: Icons.layers_outlined, label: l10n.imageTab),
               ],
             ),
           ),
@@ -240,12 +240,12 @@ class _SourceBanner extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '当前数据源：${isSynology ? '群晖 DSM / Container Manager' : 'dpanel'}',
+                  l10n.currentDataSource,
                   style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  isSynology ? '第一版默认使用群晖原生容器数据源。' : 'dpanel 适配预留中，当前先展示模块骨架。',
+                  isSynology ? l10n.dsmDataSourceDescription : l10n.dpanelDataSourceDescription,
                   style: theme.textTheme.bodyMedium,
                 ),
               ],
@@ -307,7 +307,7 @@ class _ContainerListTabState extends State<_ContainerListTab> {
           child: widget.isUnavailable
               ? const _UnavailablePlaceholder()
               : items.isEmpty
-                  ? const _EmptyState(label: '暂无容器数据')
+                  ? const _EmptyState(label: l10n.noContainerData)
                   : ListView.separated(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                       itemBuilder: (context, index) => _ContainerCard(
@@ -360,7 +360,7 @@ class _ComposeListTabState extends State<_ComposeListTab> {
             children: [
               Expanded(
                 child: Text(
-                  widget.projects.isEmpty ? '当前未获取到 DSM Compose 项目。' : '当前使用 DSM / Container Manager 原生 Compose 项目数据。',
+                  widget.projects.isEmpty ? l10n.noDsmComposeProjects : l10n.usingDsmComposeProjects,
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ),
@@ -374,14 +374,14 @@ class _ComposeListTabState extends State<_ComposeListTab> {
                   }
                 },
                 icon: const Icon(Icons.add_rounded),
-                label: const Text('新建'),
+                label: Text(l10n.create),
               ),
             ],
           ),
         ),
         Expanded(
           child: items.isEmpty
-              ? const _EmptyState(label: '暂无 Compose 项目')
+              ? const _EmptyState(label: l10n.noComposeProjects)
               : ListView.separated(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                   itemBuilder: (context, index) => _ComposeCard(item: items[index]),
@@ -412,7 +412,7 @@ class _ImageListTabState extends State<_ImageListTab> {
     final items = widget.items.toList()..sort((a, b) => a.name.compareTo(b.name));
 
     return items.isEmpty
-        ? const _EmptyState(label: '暂无镜像数据')
+        ? const _EmptyState(label: l10n.noImageData)
         : ListView.separated(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
             itemBuilder: (context, index) => _ImageCard(item: items[index]),
@@ -441,7 +441,7 @@ class _ContainerCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isRunning = item.status == 'running';
-    final statusText = isRunning ? '运行中' : item.status == 'stopped' ? '已停止' : item.status;
+    final statusText = isRunning ? l10n.running : item.status == 'stopped' ? l10n.containerStopped : item.status;
 
     return AppSurfaceCard(
       onTap: () => context.push('/container-management/detail', extra: {'name': item.name}),
@@ -477,7 +477,7 @@ class _ContainerCard extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               PopupMenuButton<String>(
-                tooltip: '更多操作',
+                tooltip: l10n.moreOptions,
                 onSelected: (value) {
                   switch (value) {
                     case 'restart':
@@ -489,8 +489,8 @@ class _ContainerCard extends StatelessWidget {
                   }
                 },
                 itemBuilder: (context) => const [
-                  PopupMenuItem(value: 'restart', child: Text('重启')),
-                  PopupMenuItem(value: 'forceStop', child: Text('强制停止')),
+                  PopupMenuItem(value: 'restart', child: Text(l10n.restart)),
+                  PopupMenuItem(value: 'forceStop', child: Text(l10n.forceStop)),
                 ],
               ),
             ],
@@ -509,7 +509,7 @@ class _ContainerCard extends StatelessWidget {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : Icon(isRunning ? Icons.stop_circle_outlined : Icons.play_circle_outline_rounded),
-              label: Text(loading ? '处理中' : (isRunning ? '停止' : '启动')),
+              label: Text(loading ? l10n.processingLabel : (isRunning ? l10n.stop : l10n.start)),
             ),
           ),
         ],
@@ -526,7 +526,7 @@ class _ComposeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isRunning = item.status == '运行中';
+    final isRunning = item.status == 'running';
 
     return AppSurfaceCard(
       onTap: () async {
@@ -558,7 +558,7 @@ class _ComposeCard extends StatelessWidget {
                 Text(item.name, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
                 const SizedBox(height: 4),
                 Text(
-                  item.path.isEmpty ? '容器数：${item.containerCount}' : '容器数：${item.containerCount} · ${item.path}',
+                  item.path.isEmpty ? l10n.containerCount(item.containerCount) : '${l10n.containerCount(item.containerCount)} · ${item.path}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.bodySmall,
@@ -587,7 +587,7 @@ class _ComposeCard extends StatelessWidget {
                   }
                 },
                 icon: const Icon(Icons.visibility_outlined),
-                label: const Text('查看'),
+                label: Text(l10n.view),
               ),
             ],
           ),
@@ -656,7 +656,7 @@ class _ImageCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '镜像 ID：${_shortImageId()}',
+                  '${l10n.imageId}：${_shortImageId()}',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -678,7 +678,7 @@ class _UnavailablePlaceholder extends StatelessWidget {
   Widget build(BuildContext context) {
     return const AppEmptyState(
       icon: Icons.construction_rounded,
-      message: 'dpanel 数据源开发中，当前先使用群晖数据源。',
+      message: l10n.dpanelDataSourceDeveloping,
     );
   }
 }
@@ -691,8 +691,8 @@ class _DockerErrorState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppErrorState(
-      title: '容器数据加载失败',
-      message: '请稍后重试。',
+      title: l10n.containerDataLoadFailed,
+      message: l10n.pleaseRetryLater,
       icon: Icons.cloud_off_rounded,
       onRetry: onRetry,
     );
@@ -774,14 +774,14 @@ List<_ComposeUiItem> _buildComposeProjects({
 String _composeStatusText(String status) {
   switch (status.toUpperCase()) {
     case 'RUNNING':
-      return '运行中';
+      return l10n.running;
     case 'STOPPED':
-      return '已停止';
+      return l10n.containerStopped;
     case 'BUILD_FAILED':
-      return '构建失败';
+      return l10n.buildFailed;
     case 'FAILED':
-      return '失败';
+      return l10n.failed;
     default:
-      return status.isEmpty ? '未知' : status;
+      return status.isEmpty ? l10n.unknown : status;
   }
 }
