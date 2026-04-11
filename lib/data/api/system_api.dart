@@ -11,7 +11,6 @@ import '../../core/utils/dsm_logger.dart';
 import '../../domain/entities/file_service.dart';
 import '../../domain/entities/shared_folder.dart';
 import '../models/shared_folder_model.dart';
-import '../../domain/entities/network.dart';
 import '../../domain/entities/power_schedule_task.dart';
 import '../../domain/entities/power_status.dart';
 import '../../domain/entities/terminal_settings.dart';
@@ -19,7 +18,6 @@ import '../../domain/entities/upgrade_status.dart';
 import '../models/dsm_group_model.dart';
 import '../models/dsm_user_model.dart';
 import '../models/external_access_model.dart';
-import '../models/external_device_model.dart';
 import '../models/file_service_model.dart';
 import '../models/index_service_model.dart';
 import '../models/information_center_model.dart';
@@ -571,95 +569,47 @@ class DsmSystemApi implements SystemApi {
 
   Map<String, dynamic> _extractCompoundApiData(Map compound, String api) {
     final result = compound[api] as Map?;
-    return result ?? const {};
+    return Map<String, dynamic>.from(result ?? const {});
   }
 
-  List<LanNetworkModel> _extractLanNetworks(
+  List<InformationCenterLanNetworkModel> _extractLanNetworks(
     Map networkData,
     Map ethernetData,
     Map gatewayListData,
   ) {
-    final interfaces = <LanNetworkModel>[];
+    final interfaces = <InformationCenterLanNetworkModel>[];
 
     final ethernetList = ethernetData['eth'] as List? ?? const [];
     for (final eth in ethernetList.whereType<Map>()) {
       final name = (eth['name'] ?? eth['device'] ?? '').toString();
       if (name.isEmpty) continue;
-      interfaces.add(LanNetworkModel(
+      interfaces.add(InformationCenterLanNetworkModel(
         name: name,
-        ip: (eth['ip'] ?? '').toString(),
         macAddress: (eth['mac'] ?? '').toString(),
-        connectionType: (eth['type'] ?? eth['conn_type'] ?? '').toString(),
-        speed: (eth['speed'] ?? eth['link'] ?? '').toString(),
-        status: (eth['status'] ?? '').toString(),
+        ipAddress: (eth['ip'] ?? '').toString(),
+        subnetMask: '',
       ));
     }
 
     return interfaces;
   }
 
-  List<ExternalDeviceModel> _extractExternalDevices(Map usbData, Map esataData) {
-    final devices = <ExternalDeviceModel>[];
+  List<InformationCenterExternalDeviceModel> _extractExternalDevices(Map usbData, Map esataData) {
+    final devices = <InformationCenterExternalDeviceModel>[];
 
     for (final item in (usbData['devices'] as List? ?? const []).whereType<Map>()) {
-      final volumes = ((item['partitions'] as List?) ?? const [])
-          .whereType<Map>()
-          .map((v) => ExternalDeviceVolumeModel(
-                name: (v['name'] ?? v['partition_name'] ?? '').toString(),
-                fileSystem: (v['fs_type'] ?? v['file_system'] ?? '').toString(),
-                mountPath: (v['mount_path'] ?? v['path'] ?? '').toString(),
-                totalSizeText:
-                    (v['total_size'] ?? v['total_size_str'] ?? v['size'] ?? '')
-                        .toString(),
-                usedSizeText:
-                    (v['used_size'] ?? v['used_size_str'] ?? '').toString(),
-              ))
-          .toList();
-
-      devices.add(ExternalDeviceModel(
-        id: (item['dev_id'] ?? item['id'] ?? '').toString(),
-        name: (item['display_name'] ??
-                item['name'] ??
-                item['device_name'] ??
-                '')
-            .toString(),
-        bus: 'usb',
-        vendor: (item['vendor'] ?? '').toString(),
-        model: (item['model'] ?? '').toString(),
+      devices.add(InformationCenterExternalDeviceModel(
+        name: (item['display_name'] ?? item['name'] ?? item['device_name'] ?? '').toString(),
+        type: 'usb',
         status: (item['status'] ?? item['device_status'] ?? '').toString(),
-        canEject: item['is_busy'] != true,
-        volumes: volumes,
       ));
     }
 
     for (final item in (esataData['devices'] as List? ?? const []).whereType<Map>()) {
-      final volumes = ((item['partitions'] as List?) ?? const [])
-          .whereType<Map>()
-          .map((v) => ExternalDeviceVolumeModel(
-                name: (v['name'] ?? v['partition_name'] ?? '').toString(),
-                fileSystem: (v['fs_type'] ?? v['file_system'] ?? '').toString(),
-                mountPath: (v['mount_path'] ?? v['path'] ?? '').toString(),
-                totalSizeText:
-                    (v['total_size'] ?? v['total_size_str'] ?? v['size'] ?? '')
-                        .toString(),
-                usedSizeText:
-                    (v['used_size'] ?? v['used_size_str'] ?? '').toString(),
-              ))
-          .toList();
-
-      devices.add(ExternalDeviceModel(
-        id: (item['dev_id'] ?? item['id'] ?? '').toString(),
-        name: (item['display_name'] ??
-                item['name'] ??
-                item['device_name'] ??
-                '')
-            .toString(),
-        bus: 'esata',
-        vendor: (item['vendor'] ?? '').toString(),
-        model: (item['model'] ?? '').toString(),
+      devices.add(InformationCenterExternalDeviceModel(
+        name: (item['display_name'] ?? item['name'] ?? item['device_name'] ?? '').toString(),
+        type: 'esata',
         status: (item['status'] ?? item['device_status'] ?? '').toString(),
-        canEject: item['is_busy'] != true,
-        volumes: volumes,
       ));
     }
 
@@ -676,10 +626,9 @@ class DsmSystemApi implements SystemApi {
 
       disks.add(InformationCenterDiskModel(
         name: name,
-        status: (item['status'] ?? item['disk_status'] ?? '').toString(),
-        model: (item['model'] ?? '').toString(),
-        temperature: _toInt(item['temp'] ?? item['temperature']),
-        sizeText: (item['size_total'] ?? item['size'] ?? '').toString(),
+        serialNumber: (item['serial'] ?? '').toString(),
+        capacityBytes: _toDouble(item['size_total'] ?? item['size']),
+        temperatureText: _toInt(item['temp'] ?? item['temperature'])?.toString(),
       ));
     }
 
