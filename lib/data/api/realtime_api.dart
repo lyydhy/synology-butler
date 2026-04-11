@@ -604,9 +604,18 @@ class DsmRealtimeApi implements RealtimeApi {
   }
 
   Map<String, dynamic> _extractDiskTotals(Map disk) {
+    // Try total aggregate first (DSM 7 primary)
+    final total = disk['total'] as Map?;
+    if (total != null) {
+      return {
+        'read_bytes_per_second': _toDouble(total['read_byte']) ?? 0,
+        'write_bytes_per_second': _toDouble(total['write_byte']) ?? 0,
+      };
+    }
+    // Fallback: sum from individual disks
     int read = 0;
     int write = 0;
-    final diskList = disk['disk'] as List? ?? const [];
+    final diskList = disk['disk'] as List? ?? (disk['disks'] as List?) ?? const [];
     for (final item in diskList) {
       if (item is Map) {
         read += (item['read_bytes_per_second'] as num?)?.toInt() ?? 0;
@@ -614,25 +623,26 @@ class DsmRealtimeApi implements RealtimeApi {
       }
     }
     return {
-      'read_bytes_per_second': read,
-      'write_bytes_per_second': write,
+      'read_bytes_per_second': read.toDouble(),
+      'write_bytes_per_second': write.toDouble(),
     };
   }
 
   List<DiskStatusModel> _extractDiskStatuses(Map disk) {
-    final diskList = disk['disk'] as List? ?? const [];
-    return diskList
+    // Try device list first (DSM 7)
+    List items = disk['disk'] as List? ?? (disk['disks'] as List?) ?? (disk['device'] as List?) ?? const [];
+    return items
         .whereType<Map>()
         .map(
           (item) => DiskStatusModel(
-            name: (item['name'] ?? '').toString(),
-            utilization: ((item['utilization'] as num?) ?? 0).toDouble(),
+            name: (item['display_name'] ?? item['name'] ?? item['device'] ?? item['diskno'] ?? '').toString(),
+            utilization: _toDouble(item['utilization']) ?? 0,
             readBytesPerSecond:
-                ((item['read_bytes_per_second'] as num?) ?? 0).toDouble(),
+                _toDouble(item['read_byte'] ?? item['read_bytes_per_second']) ?? 0,
             writeBytesPerSecond:
-                ((item['write_bytes_per_second'] as num?) ?? 0).toDouble(),
-            readIops: ((item['read_iops'] as num?) ?? 0).toDouble(),
-            writeIops: ((item['write_iops'] as num?) ?? 0).toDouble(),
+                _toDouble(item['write_byte'] ?? item['write_bytes_per_second']) ?? 0,
+            readIops: _toDouble(item['read_access'] ?? item['read_iops']) ?? 0,
+            writeIops: _toDouble(item['write_access'] ?? item['write_iops']) ?? 0,
           ),
         )
         .toList();
