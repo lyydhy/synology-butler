@@ -1,8 +1,13 @@
+import '../../core/utils/global_error_handler.dart';
 import '../../domain/entities/shared_folder.dart';
 
 class SharedFolderModel {
   static List<SharedFolder> parseList(List<dynamic> data) {
-    return data.map((item) => parseItem(item as Map<String, dynamic>)).toList();
+    return tryCatchSync(
+      () => data.map((item) => parseItem(item as Map<String, dynamic>)).toList(),
+      'SharedFolderModel.parseList',
+      logError: true,
+    ) ?? <SharedFolder>[];
   }
 
   static SharedFolder parseItem(Map<String, dynamic> data) {
