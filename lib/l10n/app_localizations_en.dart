@@ -1729,4 +1729,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get downloadTasksLoadFailed => 'Failed to load download tasks';
+
+  @override
+  String get logViewerComingSoon => 'Log viewer coming soon';
 }

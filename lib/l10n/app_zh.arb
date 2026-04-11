@@ -1132,5 +1132,9 @@
   "downloadTasksLoadFailed": "加载下载任务失败",
   "@downloadTasksLoadFailed": {
     "description": "加载下载任务失败"
+  },
+  "logViewerComingSoon": "日志查看功能开发中",
+  "@logViewerComingSoon": {
+    "description": "日志查看功能开发中提示"
   }
 }

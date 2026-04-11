@@ -832,5 +832,6 @@
   "powerManagement": "Power Management",
   "powerManagementSubtitle": "Shutdown & Restart",
   "confirmDeleteDownloadTask": "Delete \"{title}\"?",
-  "downloadTasksLoadFailed": "Failed to load download tasks"
+  "downloadTasksLoadFailed": "Failed to load download tasks",
+  "logViewerComingSoon": "Log viewer coming soon"
 }

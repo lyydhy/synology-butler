@@ -3310,6 +3310,12 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'加载下载任务失败'**
   String get downloadTasksLoadFailed;
+
+  /// 日志查看功能开发中提示
+  ///
+  /// In zh, this message translates to:
+  /// **'日志查看功能开发中'**
+  String get logViewerComingSoon;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

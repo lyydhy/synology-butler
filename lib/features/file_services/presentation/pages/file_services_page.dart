@@ -274,7 +274,7 @@ class _ServiceCardState extends ConsumerState<_ServiceCard> {
                     }
                   } catch (e) {
                     if (context.mounted) {
-                      Toast.error('操作失败: $e');
+                      Toast.error('${l10n.operationFailed}: $e');
                     }
                   } finally {
                     if (mounted) setState(() => _loading = false);
@@ -354,7 +354,7 @@ class _ServiceCardState extends ConsumerState<_ServiceCard> {
                     child: OutlinedButton.icon(
                       onPressed: () {
                         // TODO: 跳转到日志查看页
-                        Toast.show('日志查看功能开发中');
+                        Toast.show(l10n.logViewerComingSoon);
                       },
                       icon: const Icon(Icons.history_rounded, size: 18),
                       label: const Text('查看日志'),

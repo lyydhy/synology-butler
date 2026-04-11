@@ -1729,4 +1729,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get downloadTasksLoadFailed => '加载下载任务失败';
+
+  @override
+  String get logViewerComingSoon => '日志查看功能开发中';
 }
