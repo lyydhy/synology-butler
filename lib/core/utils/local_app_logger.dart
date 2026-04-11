@@ -37,8 +37,13 @@ class LocalAppLogger {
       buffer.writeln('---');
 
       final text = buffer.toString();
-      await file.writeAsString(text, mode: FileMode.append, flush: false);
-      debugPrint('[LOCAL_LOG]\n$text');
+      try {
+        await file.writeAsString(text, mode: FileMode.append, flush: false);
+        debugPrint('[LOCAL_LOG]\n$text');
+      } catch (e) {
+        // 写入失败时，至少把内容打印出来，不丢失
+        debugPrint('[LOCAL_LOG][WRITE_FAIL] $e\n$text');
+      }
     } catch (e) {
       debugPrint('[LOCAL_LOG][FAIL] $e');
     }
@@ -47,8 +52,13 @@ class LocalAppLogger {
   static Future<File> _resolveTodayLogFile() async {
     final baseDir = await getApplicationDocumentsDirectory();
     final logsDir = Directory('${baseDir.path}/app_logs');
-    if (!await logsDir.exists()) {
-      await logsDir.create(recursive: true);
+
+    try {
+      if (!await logsDir.exists()) {
+        await logsDir.create(recursive: true);
+      }
+    } catch (_) {
+      // 目录创建失败，尝试继续（后续 create 会再次尝试）
     }
 
     final now = DateTime.now().toUtc();
@@ -56,9 +66,15 @@ class LocalAppLogger {
         '${now.month.toString().padLeft(2, '0')}-'
         '${now.day.toString().padLeft(2, '0')}.txt';
     final file = File('${logsDir.path}/$fileName');
-    if (!await file.exists()) {
-      await file.create(recursive: true);
+
+    try {
+      if (!await file.exists()) {
+        await file.create(recursive: true);
+      }
+    } catch (_) {
+      // 文件创建失败，append 模式会自动创建，忽略即可
     }
+
     return file;
   }
 
