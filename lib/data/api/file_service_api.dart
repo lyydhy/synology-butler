@@ -58,59 +58,71 @@ class FileServiceApi {
 
     if (results[0] != null) {
       final data = results[0]!;
-      final config = data['config'] as Map? ?? {};
       smb = FileServiceStatus(
         serviceName: 'SMB',
-        enabled: config['enable_samba'] == true || config['enable'] == true,
-        version: data['version']?.toString(),
-        port: config['port'] as int?,
-        extraInfo: {'workgroup': config['workgroup']?.toString() ?? ''},
+        enabled: data['enable_samba'] == true || data['enable'] == true,
+        version: data['max_protocol'] != null || data['min_protocol'] != null
+            ? 'SMB ${data['min_protocol'] ?? '1'} - ${data['max_protocol'] ?? '3'}'
+            : 'SMB 1/2/3',
+        port: 445,
+        extraInfo: {
+          'workgroup': data['workgroup']?.toString() ?? '',
+          'netbios': data['netbios_name']?.toString() ?? '',
+          'max_protocol': data['max_protocol']?.toString() ?? '',
+          'min_protocol': data['min_protocol']?.toString() ?? '',
+        },
       );
     }
 
     if (results[1] != null) {
       final data = results[1]!;
-      final config = data['config'] as Map? ?? {};
       nfs = FileServiceStatus(
         serviceName: 'NFS',
-        enabled: config['enable_nfs'] == true || config['enable'] == true,
-        version: data['version']?.toString(),
-        port: config['port'] as int?,
-        extraInfo: {'nfs_v4_domain': config['nfs_v4_domain']?.toString() ?? ''},
+        enabled: data['enable_nfs'] == true || data['enable'] == true,
+        port: 2049,
+        extraInfo: {
+          'enable_nfs_v4': data['enable_nfs_v4'],
+          'nfs_v4_domain': data['nfs_v4_domain']?.toString() ?? '',
+        },
       );
     }
 
     if (results[2] != null) {
       final data = results[2]!;
-      final config = data['config'] as Map? ?? {};
       ftp = FileServiceStatus(
         serviceName: 'FTP',
-        enabled: config['enable_ftp'] == true || config['enable'] == true,
-        version: data['version']?.toString(),
-        port: config['port'] as int?,
-        extraInfo: {'enable_ftps': config['enable_ftps'] == true},
+        enabled: data['enable_ftp'] == true || data['enable'] == true,
+        port: data['portnum'] ?? data['ftp_port'] ?? 21,
+        extraInfo: {
+          'enable_ftps': data['enable_ftps'],
+          'anonymous': data['anonymous'],
+          'timeout': data['timeout'],
+          'utf8_mode': data['utf8_mode'],
+        },
       );
     }
 
     if (results[3] != null) {
       final data = results[3]!;
-      final config = data['config'] as Map? ?? {};
       afp = FileServiceStatus(
         serviceName: 'AFP',
-        enabled: config['enable_afp'] == true || config['enable'] == true,
-        version: data['version']?.toString(),
-        port: config['port'] as int?,
+        enabled: data['enable_afp'] == true || data['enable'] == true,
+        port: 548,
+        extraInfo: {
+          'ddns': data['ddns_hostname']?.toString() ?? '',
+        },
       );
     }
 
     if (results[4] != null) {
       final data = results[4]!;
-      final config = data['config'] as Map? ?? {};
       sftp = FileServiceStatus(
         serviceName: 'SFTP',
-        enabled: config['enable'] == true,
-        version: data['version']?.toString(),
-        port: config['port'] as int?,
+        enabled: data['enable'] == true,
+        port: data['portnum'] ?? data['sftp_portnum'] ?? 22,
+        extraInfo: {
+          'sftp_portnum': data['sftp_portnum'],
+        },
       );
     }
 
