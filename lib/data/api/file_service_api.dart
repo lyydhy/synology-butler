@@ -149,7 +149,6 @@ class FileServiceApi {
       }
 
       final data = getResponse.data['data'] as Map? ?? {};
-      final currentConfig = data['config'] as Map<String, dynamic>? ?? {};
 
       // 构建设置请求
       final setData = <String, dynamic>{
@@ -167,7 +166,16 @@ class FileServiceApi {
           setData['enable_nfs'] = enabled;
           break;
         case 'FTP':
+          // FTP 的 set 需要完整配置，与 dsm_helper 对齐
+          // version 改为 3（与 get 使用的版本一致）
+          setData['version'] = 3;
           setData['enable_ftp'] = enabled;
+          // 保留 FTP 现有配置字段
+          final ftpData = data['ftp'] as Map<String, dynamic>? ?? {};
+          if (ftpData['enable_ftps'] != null) setData['enable_ftps'] = ftpData['enable_ftps'];
+          if (ftpData['timeout'] != null) setData['timeout'] = ftpData['timeout'];
+          if (ftpData['portnum'] != null) setData['portnum'] = ftpData['portnum'];
+          if (ftpData['utf8_mode'] != null) setData['utf8_mode'] = ftpData['utf8_mode'];
           break;
         case 'AFP':
           setData['enable_afp'] = enabled;
