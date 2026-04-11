@@ -933,5 +933,29 @@
   "featureMoving": "移动中",
   "@featureMoving": {
     "description": "特性标签-移动中"
+  },
+  "searchDeviceOrPage": "搜索设备、功能或页面",
+  "@searchDeviceOrPage": {
+    "description": "仪表盘搜索框占位符"
+  },
+  "realtimePreparing": "实时服务准备中",
+  "@realtimePreparing": {
+    "description": "实时连接状态-准备中"
+  },
+  "realtimeConnecting": "实时连接中",
+  "@realtimeConnecting": {
+    "description": "实时连接状态-连接中"
+  },
+  "realtimeReconnecting": "实时重连中",
+  "@realtimeReconnecting": {
+    "description": "实时连接状态-重连中"
+  },
+  "realtimeConnected": "实时已连接",
+  "@realtimeConnected": {
+    "description": "实时连接状态-已连接"
+  },
+  "systemVersionNotAvailable": "暂未获取到系统版本",
+  "@systemVersionNotAvailable": {
+    "description": "系统版本不可用占位"
   }
 }

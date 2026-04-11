@@ -786,5 +786,11 @@
   "featureDataIntegrityProtection": "Data Integrity Protection",
   "featureAdvancedPermissions": "Advanced Permissions",
   "featureSnapshot": "Snapshot",
-  "featureMoving": "Moving"
+  "featureMoving": "Moving",
+  "searchDeviceOrPage": "Search devices, features or pages",
+  "realtimePreparing": "Realtime service preparing",
+  "realtimeConnecting": "Realtime connecting",
+  "realtimeReconnecting": "Realtime reconnecting",
+  "realtimeConnected": "Realtime connected",
+  "systemVersionNotAvailable": "System version not available"
 }

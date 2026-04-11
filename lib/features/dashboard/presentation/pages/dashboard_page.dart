@@ -106,12 +106,12 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with WidgetsBindi
             subtitle: _buildSystemVersionText(data),
             connection: ServerUrlHelper.buildBaseUrl(currentServer),
             realtimeText: currentSession.synoToken == null || currentSession.synoToken!.isEmpty
-                ? '实时服务准备中'
+                ? l10n.realtimePreparing
                 : realtimeLoading
-                    ? '实时连接中'
+                    ? l10n.realtimeConnecting
                     : realtimeFailed
-                        ? '实时重连中'
-                        : '实时已连接',
+                        ? l10n.realtimeReconnecting
+                        : l10n.realtimeConnected,
           ),
           const SizedBox(height: 16),
           _AppSection(
@@ -188,11 +188,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with WidgetsBindi
   }
 
   String _buildSystemVersionText(SystemStatus? data) {
-    if (data == null) return '暂未获取到系统版本';
+    if (data == null) return l10n.systemVersionNotAvailable;
 
     final version = data.dsmVersion.trim();
     if (version.isEmpty || version == 'DSM --' || version == 'DSM 版本未知') {
-      return '暂未获取到系统版本';
+      return l10n.systemVersionNotAvailable;
     }
 
     return version;
@@ -244,7 +244,7 @@ class _HeroCard extends StatelessWidget {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    '搜索设备、功能或页面',
+                    l10n.searchDeviceOrPage,
                     style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                   ),
                 ),

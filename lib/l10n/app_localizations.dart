@@ -3040,6 +3040,42 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'移动中'**
   String get featureMoving;
+
+  /// 仪表盘搜索框占位符
+  ///
+  /// In zh, this message translates to:
+  /// **'搜索设备、功能或页面'**
+  String get searchDeviceOrPage;
+
+  /// 实时连接状态-准备中
+  ///
+  /// In zh, this message translates to:
+  /// **'实时服务准备中'**
+  String get realtimePreparing;
+
+  /// 实时连接状态-连接中
+  ///
+  /// In zh, this message translates to:
+  /// **'实时连接中'**
+  String get realtimeConnecting;
+
+  /// 实时连接状态-重连中
+  ///
+  /// In zh, this message translates to:
+  /// **'实时重连中'**
+  String get realtimeReconnecting;
+
+  /// 实时连接状态-已连接
+  ///
+  /// In zh, this message translates to:
+  /// **'实时已连接'**
+  String get realtimeConnected;
+
+  /// 系统版本不可用占位
+  ///
+  /// In zh, this message translates to:
+  /// **'暂未获取到系统版本'**
+  String get systemVersionNotAvailable;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

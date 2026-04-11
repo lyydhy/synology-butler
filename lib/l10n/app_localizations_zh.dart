@@ -1588,4 +1588,22 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get featureMoving => '移动中';
+
+  @override
+  String get searchDeviceOrPage => '搜索设备、功能或页面';
+
+  @override
+  String get realtimePreparing => '实时服务准备中';
+
+  @override
+  String get realtimeConnecting => '实时连接中';
+
+  @override
+  String get realtimeReconnecting => '实时重连中';
+
+  @override
+  String get realtimeConnected => '实时已连接';
+
+  @override
+  String get systemVersionNotAvailable => '暂未获取到系统版本';
 }

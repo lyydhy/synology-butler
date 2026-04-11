@@ -1588,4 +1588,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get featureMoving => 'Moving';
+
+  @override
+  String get searchDeviceOrPage => 'Search devices, features or pages';
+
+  @override
+  String get realtimePreparing => 'Realtime service preparing';
+
+  @override
+  String get realtimeConnecting => 'Realtime connecting';
+
+  @override
+  String get realtimeReconnecting => 'Realtime reconnecting';
+
+  @override
+  String get realtimeConnected => 'Realtime connected';
+
+  @override
+  String get systemVersionNotAvailable => 'System version not available';
 }
