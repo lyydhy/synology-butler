@@ -32,7 +32,7 @@ class TransferController extends StateNotifier<List<TransferTask>> {
   /// background_downloader 状态更新订阅
   StreamSubscription<TaskUpdate>? _bdUpdatesSubscription;
 
-  /// 初始化 background_downloader：注册全局状态回调
+  /// 初始化 background_downloader：注册全局状态回调并启动
   void _initBgrDownloader() {
     // 注册任务状态/进度回调，所有下载任务共用
     FileDownloader().registerCallbacks(
@@ -52,6 +52,10 @@ class TransferController extends StateNotifier<List<TransferTask>> {
         _onBgrProgress(update);
       }
     });
+
+    // 启动 FileDownloader（关键！不调用则任务永远不开始）
+    // start() 会进行数据库跟踪、后台任务恢复等初始化
+    FileDownloader().start();
   }
 
   /// background_downloader 任务状态回调
