@@ -196,6 +196,7 @@ class TransferController extends StateNotifier<List<TransferTask>> {
     final conn = _ref.read(currentConnectionStoreProvider);
     final baseUrl = conn.server?.host ?? '';
     final sid = conn.session?.sid ?? '';
+    print('[Download] start id=$id url=$baseUrl/... sid=${sid.isNotEmpty ? "present" : "MISSING"}');
     final encodedPath = Uri.encodeComponent(jsonEncode([remotePath]));
     final downloadUrl = '$baseUrl/webapi/entry.cgi?api=SYNO.FileStation.Download&version=2&method=download&mode=download&path=$encodedPath&_sid=$sid';
 
@@ -226,7 +227,18 @@ class TransferController extends StateNotifier<List<TransferTask>> {
     await _persist();
 
     // enqueue 后 background_downloader 自动在后台下载，状态通过 stream 回调更新
-    await FileDownloader().enqueue(bdTask);
+    try {
+      final enqueued = await FileDownloader().enqueue(bdTask);
+      print('[Download] enqueue $id → $enqueued');
+      if (!enqueued) {
+        _update(id, status: TransferTaskStatus.failed, progress: 1, errorMessage: '任务入队失败', forcePersist: true);
+        return;
+      }
+    } catch (e) {
+      print('[Download] enqueue $id error: $e');
+      _update(id, status: TransferTaskStatus.failed, progress: 1, errorMessage: '下载启动失败: $e', forcePersist: true);
+      return;
+    }
     // 映射：我们的ID → DownloadTask 对象（pause/resume 需要完整 task 对象）
     _bdTaskMap[id] = bdTask;
     _update(id, status: TransferTaskStatus.running, forcePersist: true);
