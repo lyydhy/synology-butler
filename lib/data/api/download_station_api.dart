@@ -35,13 +35,21 @@ class DsmDownloadStationApi implements DownloadStationApi {
       final response = await _dio.post(
         '/webapi/entry.cgi',
         data: {
-          'api': 'SYNO.DownloadStation2.Info',
+          'api': 'SYNO.DownloadStation2.Task',
           'version': '2',
-          'method': 'getinfo',
+          'method': 'list',
+          'limit': 1,
         },
         options: Options(contentType: Headers.formUrlEncodedContentType),
       );
-      return response.data is Map && response.data['success'] == true;
+      // 102 表示未安装 DownloadStation，其余 success=false 也视为不可用
+      if (response.data is Map) {
+        final data = response.data as Map;
+        if (data['success'] == true) return true;
+        final error = data['error'] as Map?;
+        if (error?['code'] == 102) return false;
+      }
+      return false;
     } catch (_) {
       return false;
     }
