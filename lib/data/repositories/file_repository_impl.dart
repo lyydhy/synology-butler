@@ -98,7 +98,7 @@ class FileRepositoryImpl implements FileRepository {
   }
 
   @override
-  Future<void> downloadFileToPath({
+  Future<int> downloadFileToPath({
     required String path,
     required String localPath,
     void Function(int received, int total)? onReceiveProgress,

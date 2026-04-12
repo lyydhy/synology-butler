@@ -41,7 +41,8 @@ abstract class FileRepository {
     void Function(int received, int total)? onReceiveProgress,
   });
 
-  Future<void> downloadFileToPath({
+  /// 下载文件到本地路径，返回实际写入的总字节数（用于断点续传）
+  Future<int> downloadFileToPath({
     required String path,
     required String localPath,
     void Function(int received, int total)? onReceiveProgress,

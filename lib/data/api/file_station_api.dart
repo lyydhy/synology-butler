@@ -23,7 +23,8 @@ abstract class FileStationApi {
     void Function(int received, int total)? onReceiveProgress,
   });
 
-  Future<void> downloadFileToPath({
+  /// 下载文件到本地路径，返回实际写入的总字节数（用于断点续传）
+  Future<int> downloadFileToPath({
     required String path,
     required String localPath,
     void Function(int received, int total)? onReceiveProgress,
@@ -169,7 +170,7 @@ class DsmFileStationApi implements FileStationApi {
   }
 
   @override
-  Future<void> downloadFileToPath({
+  Future<int> downloadFileToPath({
     required String path,
     required String localPath,
     void Function(int received, int total)? onReceiveProgress,
@@ -245,8 +246,8 @@ class DsmFileStationApi implements FileStationApi {
 
     try {
       await for (final chunk in body.stream) {
-        received += chunk.length;
         sink.add(chunk);
+        received += chunk.length;
         onReceiveProgress?.call(received, totalBytes);
       }
       await sink.flush();
@@ -261,6 +262,7 @@ class DsmFileStationApi implements FileStationApi {
           'localPath': localPath,
         },
       );
+      return received;
     } catch (error) {
       await sink.close();
       // 取消时不删除部分文件（保留以便续传）

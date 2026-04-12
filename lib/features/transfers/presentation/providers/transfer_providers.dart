@@ -320,8 +320,9 @@ class TransferController extends StateNotifier<List<TransferTask>> {
     );
 
     _update(id, status: TransferTaskStatus.running, progress: resumeFromBytes > 0 ? 0.1 : 0.0, receivedBytes: resumeFromBytes);
+    int actualWritten = resumeFromBytes;
     try {
-      await _ref.read(fileRepositoryProvider).downloadFileToPath(
+      actualWritten = await _ref.read(fileRepositoryProvider).downloadFileToPath(
             path: remotePath,
             localPath: targetFile.path,
             resumeFromBytes: resumeFromBytes,
@@ -425,9 +426,12 @@ class TransferController extends StateNotifier<List<TransferTask>> {
     final token = _cancelTokens[id];
     if (token == null) return;
     token.cancel('paused');
-    // 获取当前进度用于续传
+    // 读取磁盘上的实际文件大小作为断点，
+    // 而不用流式回调里节流更新的 receivedBytes（可能滞后）
     final task = state.firstWhere((t) => t.id == id, orElse: () => throw StateError('Task not found'));
-    _update(id, status: TransferTaskStatus.paused, downloadedBytes: task.receivedBytes, forcePersist: true);
+    final file = File(task.targetPath);
+    final actualSize = await file.exists() ? await file.length() : 0;
+    _update(id, status: TransferTaskStatus.paused, downloadedBytes: actualSize, forcePersist: true);
   }
 
   /// 继续被暂停的下载
