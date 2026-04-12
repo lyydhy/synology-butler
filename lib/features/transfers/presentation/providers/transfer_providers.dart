@@ -376,6 +376,19 @@ class TransferController extends StateNotifier<List<TransferTask>> {
       // Dio 取消（暂停/取消）不标记为失败
       if (e is DioException && e.type == DioExceptionType.cancel) {
         _cancelTokens.remove(id);
+        // cancel() 后可能有少量数据残存在缓冲区写入文件，
+        // 用 truncate 截断到实际写入量，保持文件完整性
+        try {
+          final result = await Process.run(
+            'truncate',
+            ['-s', actualWritten.toString(), targetFile.path],
+          );
+          if (result.exitCode != 0) {
+            print('truncate failed: ${result.stderr}');
+          }
+        } catch (err) {
+          print('truncate error: $err');
+        }
         return;
       }
       _cancelTokens.remove(id);
