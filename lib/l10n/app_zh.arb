@@ -448,6 +448,48 @@
   "previewText": "预览文本",
   "previewNfo": "预览 NFO",
 
+  "settingsConnectionStorageSubtitle": "管理 NAS 连接和本地下载目录",
+  "@settingsConnectionStorageSubtitle": {
+    "description": "连接与存储副标题"
+  },
+  "serverManagementHint": "查看、切换、编辑和删除已保存设备",
+  "@serverManagementHint": {
+    "description": "服务器管理提示"
+  },
+  "settingsCurrentServer": "当前设备：{name}",
+  "@settingsCurrentServer": {
+    "description": "当前连接服务器",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "NAS-01"
+      }
+    }
+  },
+  "downloadDirectoryHint": "首次下载时选择，之后可在这里修改",
+  "@downloadDirectoryHint": {
+    "description": "下载目录提示"
+  },
+  "sharingLinksHint": "查看和复制已创建的分享链接",
+  "@sharingLinksHint": {
+    "description": "分享链接管理提示"
+  },
+  "themeColorGreen": "绿色",
+  "@themeColorGreen": {
+    "description": "绿色主题"
+  },
+  "themeColorOrange": "橙色",
+  "@themeColorOrange": {
+    "description": "橙色主题"
+  },
+  "themeColorPurple": "紫色",
+  "@themeColorPurple": {
+    "description": "紫色主题"
+  },
+  "themeColorBlue": "蓝色",
+  "@themeColorBlue": {
+    "description": "蓝色主题"
+  },
   "settingsConnectionStorage": "连接与存储",
   "settingsConnectionManagement": "连接管理",
   "settingsDownloadDirectory": "下载目录",

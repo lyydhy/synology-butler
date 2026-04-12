@@ -902,6 +902,38 @@ class AppLocalizationsEn extends AppLocalizations {
   String get previewNfo => 'Preview NFO';
 
   @override
+  String get settingsConnectionStorageSubtitle =>
+      'Manage NAS connections and local download directory';
+
+  @override
+  String get serverManagementHint =>
+      'View, switch, edit and delete saved devices';
+
+  @override
+  String settingsCurrentServer(String name) {
+    return 'Current: $name';
+  }
+
+  @override
+  String get downloadDirectoryHint =>
+      'Choose on first download, modify here later';
+
+  @override
+  String get sharingLinksHint => 'View and copy created share links';
+
+  @override
+  String get themeColorGreen => 'Green';
+
+  @override
+  String get themeColorOrange => 'Orange';
+
+  @override
+  String get themeColorPurple => 'Purple';
+
+  @override
+  String get themeColorBlue => 'Blue';
+
+  @override
   String get settingsConnectionStorage => 'Connection & Storage';
 
   @override

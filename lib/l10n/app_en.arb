@@ -458,6 +458,24 @@
   "settingsAppSupportSubtitle": "Keep common support entries, remove debug and low-frequency features",
   "settingsLogout": "Logout",
   "settingsLogoutSubtitle": "Clear current session and saved login state",
+  "settingsConnectionStorageSubtitle": "Manage NAS connections and local download directory",
+  "serverManagementHint": "View, switch, edit and delete saved devices",
+  "settingsCurrentServer": "Current: {name}",
+  "@settingsCurrentServer": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadDirectoryHint": "Choose on first download, modify here later",
+  "sharingLinksHint": "View and copy created share links",
+  "themeColorGreen": "Green",
+  "themeColorOrange": "Orange",
+  "themeColorPurple": "Purple",
+  "themeColorBlue": "Blue",
+  "aboutTitle": "About",
+  "aboutSubtitle": "Synology Butler v0.1",
   "settingsAbout": "About",
   "settingsAboutSubtitle": "Synology Manager v0.1",
 

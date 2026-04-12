@@ -1736,6 +1736,60 @@ abstract class AppLocalizations {
   /// **'预览 NFO'**
   String get previewNfo;
 
+  /// 连接与存储副标题
+  ///
+  /// In zh, this message translates to:
+  /// **'管理 NAS 连接和本地下载目录'**
+  String get settingsConnectionStorageSubtitle;
+
+  /// 服务器管理提示
+  ///
+  /// In zh, this message translates to:
+  /// **'查看、切换、编辑和删除已保存设备'**
+  String get serverManagementHint;
+
+  /// 当前连接服务器
+  ///
+  /// In zh, this message translates to:
+  /// **'当前设备：{name}'**
+  String settingsCurrentServer(String name);
+
+  /// 下载目录提示
+  ///
+  /// In zh, this message translates to:
+  /// **'首次下载时选择，之后可在这里修改'**
+  String get downloadDirectoryHint;
+
+  /// 分享链接管理提示
+  ///
+  /// In zh, this message translates to:
+  /// **'查看和复制已创建的分享链接'**
+  String get sharingLinksHint;
+
+  /// 绿色主题
+  ///
+  /// In zh, this message translates to:
+  /// **'绿色'**
+  String get themeColorGreen;
+
+  /// 橙色主题
+  ///
+  /// In zh, this message translates to:
+  /// **'橙色'**
+  String get themeColorOrange;
+
+  /// 紫色主题
+  ///
+  /// In zh, this message translates to:
+  /// **'紫色'**
+  String get themeColorPurple;
+
+  /// 蓝色主题
+  ///
+  /// In zh, this message translates to:
+  /// **'蓝色'**
+  String get themeColorBlue;
+
   /// No description provided for @settingsConnectionStorage.
   ///
   /// In zh, this message translates to:

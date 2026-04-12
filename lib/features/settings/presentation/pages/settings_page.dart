@@ -26,13 +26,13 @@ class SettingsPage extends ConsumerWidget {
   String _themeColorLabel(AppThemeColorOption option) {
     switch (option) {
       case AppThemeColorOption.green:
-        return 'Green';
+        return l10n.themeColorGreen;
       case AppThemeColorOption.orange:
-        return 'Orange';
+        return l10n.themeColorOrange;
       case AppThemeColorOption.purple:
-        return 'Purple';
+        return l10n.themeColorPurple;
       case AppThemeColorOption.blue:
-        return 'Blue';
+        return l10n.themeColorBlue;
     }
   }
 
@@ -125,7 +125,7 @@ class SettingsPage extends ConsumerWidget {
             _BottomSheetOption<AppThemeColorOption>(
               value: AppThemeColorOption.blue,
               groupValue: current,
-              label: 'Blue',
+              label: l10n.themeColorBlue,
               icon: Icons.circle,
               iconColor: Colors.blue,
               onTap: () => Navigator.pop(context, AppThemeColorOption.blue),
@@ -133,7 +133,7 @@ class SettingsPage extends ConsumerWidget {
             _BottomSheetOption<AppThemeColorOption>(
               value: AppThemeColorOption.green,
               groupValue: current,
-              label: 'Green',
+              label: l10n.themeColorGreen,
               icon: Icons.circle,
               iconColor: Colors.green,
               onTap: () => Navigator.pop(context, AppThemeColorOption.green),
@@ -141,7 +141,7 @@ class SettingsPage extends ConsumerWidget {
             _BottomSheetOption<AppThemeColorOption>(
               value: AppThemeColorOption.orange,
               groupValue: current,
-              label: 'Orange',
+              label: l10n.themeColorOrange,
               icon: Icons.circle,
               iconColor: Colors.orange,
               onTap: () => Navigator.pop(context, AppThemeColorOption.orange),
@@ -149,7 +149,7 @@ class SettingsPage extends ConsumerWidget {
             _BottomSheetOption<AppThemeColorOption>(
               value: AppThemeColorOption.purple,
               groupValue: current,
-              label: 'Purple',
+              label: l10n.themeColorPurple,
               icon: Icons.circle,
               iconColor: Colors.purple,
               onTap: () => Navigator.pop(context, AppThemeColorOption.purple),
@@ -234,18 +234,18 @@ class SettingsPage extends ConsumerWidget {
         children: [
           _SectionCard(
             title: l10n.settingsConnectionStorage,
-            subtitle: server == null ? l10n.noSessionPleaseLogin : '管理 NAS 连接和本地下载目录',
+            subtitle: server == null ? l10n.noSessionPleaseLogin : l10n.settingsConnectionStorageSubtitle,
             children: [
               _SettingsActionTile(
                 icon: Icons.dns_rounded,
                 title: l10n.settingsConnectionManagement,
-                subtitle: server == null ? '查看、切换、编辑和删除已保存设备' : '当前设备：${server.name}',
+                subtitle: server == null ? l10n.serverManagementHint : l10n.settingsCurrentServer(server.name),
                 onTap: () => context.push('/servers'),
               ),
               _SettingsActionTile(
                 icon: Icons.folder_open_rounded,
                 title: l10n.settingsDownloadDirectory,
-                subtitle: downloadDirectory ?? '首次下载时选择，之后可在这里修改',
+                subtitle: downloadDirectory ?? l10n.downloadDirectoryHint,
                 onTap: () async {
                   final selected = await FilePicker.platform.getDirectoryPath();
                   if (selected == null || selected.isEmpty) return;
@@ -257,8 +257,8 @@ class SettingsPage extends ConsumerWidget {
               ),
               _SettingsActionTile(
                 icon: Icons.link_rounded,
-                title: '分享链接管理',
-                subtitle: '查看和复制已创建的分享链接',
+                title: l10n.sharingLinksTitle,
+                subtitle: l10n.sharingLinksHint,
                 onTap: () => context.push('/sharing-links'),
               ),
             ],
@@ -310,10 +310,10 @@ class SettingsPage extends ConsumerWidget {
                   if (context.mounted) context.go('/login');
                 },
               ),
-              const _SettingsStaticTile(
+              _SettingsStaticTile(
                 icon: Icons.info_outline_rounded,
-                title: '关于',
-                subtitle: '群晖管家 v0.1',
+                title: l10n.settingsAbout,
+                subtitle: l10n.settingsAboutSubtitle,
               ),
             ],
           ),

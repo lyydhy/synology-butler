@@ -886,6 +886,35 @@ class AppLocalizationsZh extends AppLocalizations {
   String get previewNfo => '预览 NFO';
 
   @override
+  String get settingsConnectionStorageSubtitle => '管理 NAS 连接和本地下载目录';
+
+  @override
+  String get serverManagementHint => '查看、切换、编辑和删除已保存设备';
+
+  @override
+  String settingsCurrentServer(String name) {
+    return '当前设备：$name';
+  }
+
+  @override
+  String get downloadDirectoryHint => '首次下载时选择，之后可在这里修改';
+
+  @override
+  String get sharingLinksHint => '查看和复制已创建的分享链接';
+
+  @override
+  String get themeColorGreen => '绿色';
+
+  @override
+  String get themeColorOrange => '橙色';
+
+  @override
+  String get themeColorPurple => '紫色';
+
+  @override
+  String get themeColorBlue => '蓝色';
+
+  @override
   String get settingsConnectionStorage => '连接与存储';
 
   @override
