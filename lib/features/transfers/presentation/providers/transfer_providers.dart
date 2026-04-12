@@ -451,10 +451,22 @@ class TransferController extends StateNotifier<List<TransferTask>> {
   Future<void> resumeDownload(String id) async {
     final task = state.firstWhere((t) => t.id == id, orElse: () => throw StateError('Task not found'));
     if (task.status != TransferTaskStatus.paused) return;
+
+    // 读取磁盘实际大小作为断点（不用 UI 状态里的节流值）
+    final targetFile = File(task.targetPath);
+    final actualSize = await targetFile.exists() ? await targetFile.length() : 0;
+    // 如果实际文件大小明显超过记录的断点（超过 2MB），
+    // 说明 server 不支持 Range，之前的 resume 已经把完整文件追加到 partial file 里了。
+    // 此时删掉文件重新开始，否则会一直翻倍。
+    if (actualSize > task.downloadedBytes + 1024 * 1024 * 2) {
+      await targetFile.delete();
+      _update(id, status: TransferTaskStatus.paused, downloadedBytes: 0, forcePersist: true);
+      return;
+    }
+
     final newToken = CancelToken();
     _cancelTokens[id] = newToken;
-    final targetFile = File(task.targetPath);
-    _runDownload(id, remotePath: task.sourcePath, targetFile: targetFile, resumeFromBytes: task.downloadedBytes);
+    _runDownload(id, remotePath: task.sourcePath, targetFile: targetFile, resumeFromBytes: actualSize);
   }
 
   /// 取消下载（删除部分文件）
