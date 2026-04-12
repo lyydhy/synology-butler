@@ -1733,4 +1733,37 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get logViewerComingSoon => '日志查看功能开发中';
+
+  @override
+  String get shareLinkCreate => '创建分享链接';
+
+  @override
+  String get shareLinkCopied => '链接已复制';
+
+  @override
+  String get shareLinkExpireDate => '过期时间';
+
+  @override
+  String get shareLinkNoLimit => '永不过期';
+
+  @override
+  String get shareLinkAccessCount => '允许访问次数';
+
+  @override
+  String get shareLinkAccessCountHint => '0 = 无限制';
+
+  @override
+  String get shareLinkSaveChanges => '保存修改';
+
+  @override
+  String get shareLinkSaveSuccess => '分享链接设置已保存';
+
+  @override
+  String get shareLinkDelete => '删除链接';
+
+  @override
+  String get shareLinkDeleteConfirm => '确定要取消此分享链接吗？';
+
+  @override
+  String get shareLinkDeleted => '分享链接已取消';
 }

@@ -1761,4 +1761,37 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get logViewerComingSoon => 'Log viewer coming soon';
+
+  @override
+  String get shareLinkCreate => 'Create Share Link';
+
+  @override
+  String get shareLinkCopied => 'Link copied';
+
+  @override
+  String get shareLinkExpireDate => 'Expiration Date';
+
+  @override
+  String get shareLinkNoLimit => 'Never expires';
+
+  @override
+  String get shareLinkAccessCount => 'Access Count Limit';
+
+  @override
+  String get shareLinkAccessCountHint => '0 = unlimited';
+
+  @override
+  String get shareLinkSaveChanges => 'Save Changes';
+
+  @override
+  String get shareLinkSaveSuccess => 'Share link settings saved';
+
+  @override
+  String get shareLinkDelete => 'Delete Link';
+
+  @override
+  String get shareLinkDeleteConfirm => 'Delete this share link?';
+
+  @override
+  String get shareLinkDeleted => 'Share link deleted';
 }

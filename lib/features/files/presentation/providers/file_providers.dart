@@ -6,6 +6,7 @@ import '../../../../data/api/file_station_api.dart';
 import '../../../../data/repositories/file_repository_impl.dart';
 import '../../../../domain/entities/file_background_task.dart';
 import '../../../../domain/entities/file_item.dart';
+import '../../../../domain/entities/share_link.dart';
 import '../../../../domain/repositories/file_repository.dart';
 import '../widgets/file_type_helper.dart';
 
@@ -82,9 +83,13 @@ final fileBatchDeleteProvider = Provider<Future<void> Function(List<String>)>((r
   };
 });
 
-final fileShareProvider = Provider<Future<String> Function(String)>((ref) {
-  return (path) async {
-    return ref.read(fileRepositoryProvider).createShareLink(path: path);
+final fileShareProvider = Provider<Future<ShareLinkResult> Function(String, {String? dateExpired, int expireTimes})>((ref) {
+  return (path, {dateExpired, expireTimes = 0}) async {
+    return ref.read(fileRepositoryProvider).createShareLink(
+      path: path,
+      dateExpired: dateExpired,
+      expireTimes: expireTimes,
+    );
   };
 });
 

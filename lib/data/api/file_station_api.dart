@@ -10,6 +10,7 @@ import '../../core/network/app_dio.dart';
 import '../../core/utils/dsm_error_helper.dart';
 import '../../core/utils/dsm_logger.dart';
 import '../../domain/entities/file_background_task.dart';
+import '../../domain/entities/share_link.dart';
 import '../../domain/entities/file_item.dart';
 
 abstract class FileStationApi {
@@ -51,8 +52,18 @@ abstract class FileStationApi {
     required String path,
   });
 
-  Future<String> createShareLink({
+  Future<ShareLinkResult> createShareLink({
     required String path,
+    String? dateExpired,
+    int expireTimes = 0,
+  });
+
+  Future<void> editShareLink({
+    required String shareId,
+    required String url,
+    required String path,
+    String? dateExpired,
+    int expireTimes = 0,
   });
 
   Future<void> uploadFile({
@@ -493,8 +504,14 @@ class DsmFileStationApi implements FileStationApi {
   }
 
   @override
-  Future<String> createShareLink({
+  /// 创建分享链接
+  /// [path] 文件或文件夹路径
+  /// [dateExpired] 过期时间（ISO8601 格式，如 2025-12-31T23:59:59），null 表示不过期
+  /// [expireTimes] 允许访问次数，0 表示无限制
+  Future<ShareLinkResult> createShareLink({
     required String path,
+    String? dateExpired,
+    int expireTimes = 0,
   }) async {
     DsmLogger.request(
       module: 'FileStation',
@@ -503,29 +520,37 @@ class DsmFileStationApi implements FileStationApi {
       path: path,
     );
 
-    // DSM expects path as a JSON-encoded array
+    final data = <String, dynamic>{
+      'api': 'SYNO.FileStation.Sharing',
+      'version': '3',
+      'method': 'create',
+      'path': jsonEncode([path]),
+    };
+    if (dateExpired != null && dateExpired.isNotEmpty) {
+      data['date_expired'] = dateExpired;
+    }
+    if (expireTimes > 0) {
+      data['expire_times'] = expireTimes.toString();
+    }
+
     final response = await _dio.post(
       '/webapi/entry.cgi',
-      data: {
-        'api': 'SYNO.FileStation.Sharing',
-        'version': '3',
-        'method': 'create',
-        'path': jsonEncode([path]),
-      },
+      data: data,
       options: Options(contentType: Headers.formUrlEncodedContentType),
     );
 
     if (response.data is Map && response.data['success'] == true) {
-      final data = response.data['data'] as Map? ?? const {};
+      final resultData = response.data['data'] as Map? ?? const {};
+      final links = resultData['links'] as List? ?? [];
+      final linkMap = links.isNotEmpty ? (links.first as Map? ?? {}) : <String, dynamic>{};
+      final shareResult = ShareLinkResult.fromMap(linkMap.cast<String, dynamic>());
       DsmLogger.success(
         module: 'FileStation',
         action: 'createShareLink',
         path: path,
-        response: {
-          'url': data['links'] ?? data['url'],
-        },
+        response: {'url': shareResult.url},
       );
-      return data['links']?.toString() ?? data['url']?.toString() ?? '分享链接创建成功';
+      return shareResult;
     }
 
     DsmLogger.failure(
@@ -539,6 +564,45 @@ class DsmFileStationApi implements FileStationApi {
     throw DioException(
       requestOptions: response.requestOptions,
       error: DsmErrorHelper.mapErrorCode(errorCode) ?? '分享链接创建失败',
+      response: response,
+    );
+  }
+
+  /// 编辑分享链接（修改有效期等）
+  Future<void> editShareLink({
+    required String shareId,
+    required String url,
+    required String path,
+    String? dateExpired,
+    int expireTimes = 0,
+  }) async {
+    final data = <String, dynamic>{
+      'api': 'SYNO.FileStation.Sharing',
+      'version': '3',
+      'method': 'edit',
+      'id': jsonEncode([shareId]),
+      'url': jsonEncode([url]),
+      'path': path,
+    };
+    if (dateExpired != null && dateExpired.isNotEmpty) {
+      data['date_expired'] = dateExpired;
+    }
+    if (expireTimes > 0) {
+      data['expire_times'] = expireTimes.toString();
+    }
+
+    final response = await _dio.post(
+      '/webapi/entry.cgi',
+      data: data,
+      options: Options(contentType: Headers.formUrlEncodedContentType),
+    );
+
+    if (response.data is Map && response.data['success'] == true) return;
+
+    final errorCode = DsmErrorHelper.extractErrorCode(response.data);
+    throw DioException(
+      requestOptions: response.requestOptions,
+      error: DsmErrorHelper.mapErrorCode(errorCode) ?? '编辑分享链接失败',
       response: response,
     );
   }

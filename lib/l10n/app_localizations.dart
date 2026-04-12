@@ -3319,6 +3319,72 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'日志查看功能开发中'**
   String get logViewerComingSoon;
+
+  /// 创建分享链接页面标题
+  ///
+  /// In zh, this message translates to:
+  /// **'创建分享链接'**
+  String get shareLinkCreate;
+
+  /// 链接复制成功提示
+  ///
+  /// In zh, this message translates to:
+  /// **'链接已复制'**
+  String get shareLinkCopied;
+
+  /// 分享链接过期时间标签
+  ///
+  /// In zh, this message translates to:
+  /// **'过期时间'**
+  String get shareLinkExpireDate;
+
+  /// 永不过期选项
+  ///
+  /// In zh, this message translates to:
+  /// **'永不过期'**
+  String get shareLinkNoLimit;
+
+  /// 允许访问次数标签
+  ///
+  /// In zh, this message translates to:
+  /// **'允许访问次数'**
+  String get shareLinkAccessCount;
+
+  /// 允许访问次数提示
+  ///
+  /// In zh, this message translates to:
+  /// **'0 = 无限制'**
+  String get shareLinkAccessCountHint;
+
+  /// 保存修改按钮
+  ///
+  /// In zh, this message translates to:
+  /// **'保存修改'**
+  String get shareLinkSaveChanges;
+
+  /// 分享链接保存成功提示
+  ///
+  /// In zh, this message translates to:
+  /// **'分享链接设置已保存'**
+  String get shareLinkSaveSuccess;
+
+  /// 删除分享链接按钮
+  ///
+  /// In zh, this message translates to:
+  /// **'删除链接'**
+  String get shareLinkDelete;
+
+  /// 确认删除分享链接对话框
+  ///
+  /// In zh, this message translates to:
+  /// **'确定要取消此分享链接吗？'**
+  String get shareLinkDeleteConfirm;
+
+  /// 分享链接已删除提示
+  ///
+  /// In zh, this message translates to:
+  /// **'分享链接已取消'**
+  String get shareLinkDeleted;
 }
 
 class _AppLocalizationsDelegate

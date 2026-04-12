@@ -25,6 +25,7 @@ import '../features/files/presentation/pages/files_page.dart';
 import '../features/files/presentation/pages/image_preview_page.dart';
 import '../features/files/presentation/pages/text_editor_page.dart';
 import '../features/files/presentation/pages/text_preview_page.dart';
+import '../features/files/presentation/pages/share_link_page.dart';
 import '../features/files/presentation/pages/video_preview_page.dart';
 import '../features/index_service/presentation/pages/index_service_page.dart';
 import '../features/information_center/presentation/pages/information_center_page.dart';
@@ -190,6 +191,15 @@ GoRouter createAppRouter({required String initialLocation}) {
           path: extra['path']?.toString() ?? '',
           name: extra['name']?.toString() ?? '视频预览',
           synoToken: extra['synoToken']?.toString(),
+        );
+      },
+    ),
+    GoRoute(
+      path: '/share-link',
+      builder: (context, state) {
+        final extra = state.extra as Map<String, dynamic>? ?? const {};
+        return ShareLinkPage(
+          path: extra['path']?.toString() ?? '/',
         );
       },
     ),

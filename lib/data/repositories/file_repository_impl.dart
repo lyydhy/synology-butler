@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import '../../domain/entities/file_item.dart';
+import '../../domain/entities/share_link.dart';
 import '../../domain/repositories/file_repository.dart';
 import '../api/file_station_api.dart';
 
@@ -58,10 +59,16 @@ class FileRepositoryImpl implements FileRepository {
   }
 
   @override
-  Future<String> createShareLink({
+  Future<ShareLinkResult> createShareLink({
     required String path,
+    String? dateExpired,
+    int expireTimes = 0,
   }) {
-    return _api.createShareLink(path: path);
+    return _api.createShareLink(
+      path: path,
+      dateExpired: dateExpired,
+      expireTimes: expireTimes,
+    );
   }
 
   @override

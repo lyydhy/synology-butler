@@ -833,5 +833,16 @@
   "powerManagementSubtitle": "Shutdown & Restart",
   "confirmDeleteDownloadTask": "Delete \"{title}\"?",
   "downloadTasksLoadFailed": "Failed to load download tasks",
-  "logViewerComingSoon": "Log viewer coming soon"
+  "logViewerComingSoon": "Log viewer coming soon",
+  "shareLinkCreate": "Create Share Link",
+  "shareLinkCopied": "Link copied",
+  "shareLinkExpireDate": "Expiration Date",
+  "shareLinkNoLimit": "Never expires",
+  "shareLinkAccessCount": "Access Count Limit",
+  "shareLinkAccessCountHint": "0 = unlimited",
+  "shareLinkSaveChanges": "Save Changes",
+  "shareLinkSaveSuccess": "Share link settings saved",
+  "shareLinkDelete": "Delete Link",
+  "shareLinkDeleteConfirm": "Delete this share link?",
+  "shareLinkDeleted": "Share link deleted"
 }

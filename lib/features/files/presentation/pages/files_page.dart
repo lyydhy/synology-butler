@@ -269,29 +269,6 @@ class _FilesPageState extends ConsumerState<FilesPage> {
     }
   }
 
-  /// 展示分享链接。
-  Future<void> _showShareLink(BuildContext context, WidgetRef ref, FileItem item) async {
-
-    try {
-      final link = await ref.read(fileShareProvider)(item.path);
-      if (!context.mounted) return;
-      await showDialog<void>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text(l10n.shareLink),
-          content: SelectableText(link),
-          actions: [
-            FilledButton(onPressed: () => Navigator.of(context).pop(), child: Text(l10n.close)),
-          ],
-        ),
-      );
-    } catch (e) {
-      if (context.mounted) {
-        Toast.error(ErrorMapper.map(e).message);
-      }
-    }
-  }
-
   /// 确保本地下载目录已配置。
   Future<bool> _ensureDownloadDirectorySelected(BuildContext context, WidgetRef ref) async {
     final current = ref.read(downloadDirectoryProvider);
@@ -397,7 +374,7 @@ class _FilesPageState extends ConsumerState<FilesPage> {
               title: Text(l10n.generateShareLink),
               onTap: () {
                 Navigator.of(context).pop();
-                _showShareLink(context, ref, item);
+                context.push('/share-link', extra: {'path': item.path});
               },
             ),
             ListTile(

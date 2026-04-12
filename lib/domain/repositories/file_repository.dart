@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import '../entities/file_item.dart';
+import '../entities/share_link.dart';
 
 abstract class FileRepository {
   Future<List<FileItem>> listFiles({
@@ -21,8 +22,10 @@ abstract class FileRepository {
     required String path,
   });
 
-  Future<String> createShareLink({
+  Future<ShareLinkResult> createShareLink({
     required String path,
+    String? dateExpired,
+    int expireTimes = 0,
   });
 
   Future<void> uploadFile({
