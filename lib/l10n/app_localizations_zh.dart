@@ -345,6 +345,21 @@ class AppLocalizationsZh extends AppLocalizations {
   String get downloadStatusCaptchaNeeded => '需要验证码';
 
   @override
+  String get downloadStatusFinishing => '即将完成';
+
+  @override
+  String get downloadStatusPreSeeding => '等待做种';
+
+  @override
+  String get downloadStatusPreprocessing => '预处理中';
+
+  @override
+  String get downloadStatusDownloaded => '已下载';
+
+  @override
+  String get downloadStatusPostProcessing => '后处理中';
+
+  @override
   String get progress => '进度';
 
   @override

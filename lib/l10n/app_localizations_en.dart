@@ -345,6 +345,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get downloadStatusCaptchaNeeded => 'Captcha Needed';
 
   @override
+  String get downloadStatusFinishing => 'Finishing';
+
+  @override
+  String get downloadStatusPreSeeding => 'Pre-Seeding';
+
+  @override
+  String get downloadStatusPreprocessing => 'Preprocessing';
+
+  @override
+  String get downloadStatusDownloaded => 'Downloaded';
+
+  @override
+  String get downloadStatusPostProcessing => 'Post-Processing';
+
+  @override
   String get progress => 'Progress';
 
   @override

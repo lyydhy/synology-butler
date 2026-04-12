@@ -767,6 +767,36 @@ abstract class AppLocalizations {
   /// **'需要验证码'**
   String get downloadStatusCaptchaNeeded;
 
+  /// No description provided for @downloadStatusFinishing.
+  ///
+  /// In zh, this message translates to:
+  /// **'即将完成'**
+  String get downloadStatusFinishing;
+
+  /// No description provided for @downloadStatusPreSeeding.
+  ///
+  /// In zh, this message translates to:
+  /// **'等待做种'**
+  String get downloadStatusPreSeeding;
+
+  /// No description provided for @downloadStatusPreprocessing.
+  ///
+  /// In zh, this message translates to:
+  /// **'预处理中'**
+  String get downloadStatusPreprocessing;
+
+  /// No description provided for @downloadStatusDownloaded.
+  ///
+  /// In zh, this message translates to:
+  /// **'已下载'**
+  String get downloadStatusDownloaded;
+
+  /// No description provided for @downloadStatusPostProcessing.
+  ///
+  /// In zh, this message translates to:
+  /// **'后处理中'**
+  String get downloadStatusPostProcessing;
+
   /// No description provided for @progress.
   ///
   /// In zh, this message translates to:
