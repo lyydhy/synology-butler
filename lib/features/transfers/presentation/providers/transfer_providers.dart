@@ -55,6 +55,7 @@ class TransferController extends StateNotifier<List<TransferTask>> {
 
     // 启动 FileDownloader（关键！不调用则任务永远不开始）
     // start() 会进行数据库跟踪、后台任务恢复等初始化
+    // 重复调用 start() 是安全的，BD 内部有保护
     FileDownloader().start();
   }
 
@@ -191,6 +192,9 @@ class TransferController extends StateNotifier<List<TransferTask>> {
     required String displayName,
     int? estimatedSize,
   }) async {
+    // 确保 FileDownloader 已启动（重复调用无害）
+    await FileDownloader().start();
+
     final targetDir = await _resolveDownloadDirectory();
     final targetFile = await _resolveUniqueFile(targetDir, displayName);
 
