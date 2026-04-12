@@ -1180,5 +1180,147 @@
   "shareLinkDeleted": "分享链接已取消",
   "@shareLinkDeleted": {
     "description": "分享链接已删除提示"
+  },
+  "sharingLinksTitle": "分享链接",
+  "@sharingLinksTitle": {
+    "description": "分享链接管理页面标题"
+  },
+  "sharingLinksEmpty": "暂无分享链接",
+  "@sharingLinksEmpty": {
+    "description": "空状态提示"
+  },
+  "sharingLinksEmptyHint": "在文件页面创建分享链接后可在此管理",
+  "@sharingLinksEmptyHint": {
+    "description": "空状态副标题"
+  },
+  "sharingLinksLoadFailed": "加载失败",
+  "@sharingLinksLoadFailed": {
+    "description": "加载失败文字"
+  },
+  "sharingLinksRetry": "重试",
+  "@sharingLinksRetry": {
+    "description": "重试按钮"
+  },
+  "sharingLinksClearInvalid": "清除无效链接",
+  "@sharingLinksClearInvalid": {
+    "description": "清除无效链接按钮"
+  },
+  "sharingLinksClearInvalidConfirm": "确定要清除所有无效的分享链接吗？",
+  "@sharingLinksClearInvalidConfirm": {
+    "description": "确认清除无效链接对话框"
+  },
+  "sharingLinksClearSuccess": "已清除无效链接",
+  "@sharingLinksClearSuccess": {
+    "description": "清除成功提示"
+  },
+  "sharingLinksEdit": "编辑分享链接",
+  "@sharingLinksEdit": {
+    "description": "编辑分享链接标题"
+  },
+  "sharingLinksDelete": "删除分享链接",
+  "@sharingLinksDelete": {
+    "description": "删除分享链接标题"
+  },
+  "sharingLinksDeleteConfirm": "确定要删除「{name}」吗？",
+  "@sharingLinksDeleteConfirm": {
+    "description": "确认删除对话框",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "文件名.mp4"
+      }
+    }
+  },
+  "sharingLinksDeleted": "已删除",
+  "@sharingLinksDeleted": {
+    "description": "删除成功提示"
+  },
+  "sharingLinksSaveSuccess": "已保存",
+  "@sharingLinksSaveSuccess": {
+    "description": "保存成功提示"
+  },
+  "sharingLinksSaveFailed": "保存失败：{error}",
+  "@sharingLinksSaveFailed": {
+    "description": "保存失败提示",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "网络错误"
+      }
+    }
+  },
+  "sharingLinksClearFailed": "清除失败：{error}",
+  "@sharingLinksClearFailed": {
+    "description": "清除失败提示",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "网络错误"
+      }
+    }
+  },
+  "sharingLinksDeleteFailed": "删除失败：{error}",
+  "@sharingLinksDeleteFailed": {
+    "description": "删除失败提示",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "网络错误"
+      }
+    }
+  },
+  "sharingLinksCopied": "链接已复制",
+  "@sharingLinksCopied": {
+    "description": "复制成功提示"
+  },
+  "sharingLinksAccessCount": "访问次数",
+  "@sharingLinksAccessCount": {
+    "description": "访问次数标签"
+  },
+  "sharingLinksAccessCountUnlimited": "不限次数",
+  "@sharingLinksAccessCountUnlimited": {
+    "description": "不限次数"
+  },
+  "sharingLinksAccessCountRemaining": "剩余 {count} 次",
+  "@sharingLinksAccessCountRemaining": {
+    "description": "剩余次数",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "10"
+      }
+    }
+  },
+  "sharingLinksExpireDate": "有效期截止日期",
+  "@sharingLinksExpireDate": {
+    "description": "有效期截止日期标签"
+  },
+  "sharingLinksExpireDateNone": "不限制",
+  "@sharingLinksExpireDateNone": {
+    "description": "不限制日期"
+  },
+  "sharingLinksPermanent": "永久",
+  "@sharingLinksPermanent": {
+    "description": "永久有效"
+  },
+  "sharingLinksOwner": "所有者",
+  "@sharingLinksOwner": {
+    "description": "所有者标签"
+  },
+  "sharingLinksStatusValid": "有效",
+  "@sharingLinksStatusValid": {
+    "description": "状态：有效"
+  },
+  "sharingLinksStatusExpired": "已过期",
+  "@sharingLinksStatusExpired": {
+    "description": "状态：已过期"
+  },
+  "sharingLinksSecurityHint": "安全共享请到 Web 界面操作",
+  "@sharingLinksSecurityHint": {
+    "description": "安全提示"
+  },
+  "sharingLinksNoLimit": "不限制",
+  "@sharingLinksNoLimit": {
+    "description": "不限制"
   }
 }

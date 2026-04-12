@@ -1766,4 +1766,98 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get shareLinkDeleted => '分享链接已取消';
+
+  @override
+  String get sharingLinksTitle => '分享链接';
+
+  @override
+  String get sharingLinksEmpty => '暂无分享链接';
+
+  @override
+  String get sharingLinksEmptyHint => '在文件页面创建分享链接后可在此管理';
+
+  @override
+  String get sharingLinksLoadFailed => '加载失败';
+
+  @override
+  String get sharingLinksRetry => '重试';
+
+  @override
+  String get sharingLinksClearInvalid => '清除无效链接';
+
+  @override
+  String get sharingLinksClearInvalidConfirm => '确定要清除所有无效的分享链接吗？';
+
+  @override
+  String get sharingLinksClearSuccess => '已清除无效链接';
+
+  @override
+  String get sharingLinksEdit => '编辑分享链接';
+
+  @override
+  String get sharingLinksDelete => '删除分享链接';
+
+  @override
+  String sharingLinksDeleteConfirm(String name) {
+    return '确定要删除「$name」吗？';
+  }
+
+  @override
+  String get sharingLinksDeleted => '已删除';
+
+  @override
+  String get sharingLinksSaveSuccess => '已保存';
+
+  @override
+  String sharingLinksSaveFailed(String error) {
+    return '保存失败：$error';
+  }
+
+  @override
+  String sharingLinksClearFailed(String error) {
+    return '清除失败：$error';
+  }
+
+  @override
+  String sharingLinksDeleteFailed(String error) {
+    return '删除失败：$error';
+  }
+
+  @override
+  String get sharingLinksCopied => '链接已复制';
+
+  @override
+  String get sharingLinksAccessCount => '访问次数';
+
+  @override
+  String get sharingLinksAccessCountUnlimited => '不限次数';
+
+  @override
+  String sharingLinksAccessCountRemaining(int count) {
+    return '剩余 $count 次';
+  }
+
+  @override
+  String get sharingLinksExpireDate => '有效期截止日期';
+
+  @override
+  String get sharingLinksExpireDateNone => '不限制';
+
+  @override
+  String get sharingLinksPermanent => '永久';
+
+  @override
+  String get sharingLinksOwner => '所有者';
+
+  @override
+  String get sharingLinksStatusValid => '有效';
+
+  @override
+  String get sharingLinksStatusExpired => '已过期';
+
+  @override
+  String get sharingLinksSecurityHint => '安全共享请到 Web 界面操作';
+
+  @override
+  String get sharingLinksNoLimit => '不限制';
 }

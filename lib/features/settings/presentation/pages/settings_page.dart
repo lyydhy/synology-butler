@@ -47,6 +47,176 @@ class SettingsPage extends ConsumerWidget {
     }
   }
 
+  Future<void> _showThemeModeSheet(BuildContext context, WidgetRef ref, AppThemeModeOption current) async {
+    final result = await showModalBottomSheet<AppThemeModeOption>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 12),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Text(l10n.themeMode, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+            ),
+            const SizedBox(height: 8),
+            _BottomSheetOption<AppThemeModeOption>(
+              value: AppThemeModeOption.system,
+              groupValue: current,
+              label: l10n.followSystem,
+              icon: Icons.brightness_auto,
+              onTap: () => Navigator.pop(context, AppThemeModeOption.system),
+            ),
+            _BottomSheetOption<AppThemeModeOption>(
+              value: AppThemeModeOption.light,
+              groupValue: current,
+              label: l10n.lightMode,
+              icon: Icons.light_mode,
+              onTap: () => Navigator.pop(context, AppThemeModeOption.light),
+            ),
+            _BottomSheetOption<AppThemeModeOption>(
+              value: AppThemeModeOption.dark,
+              groupValue: current,
+              label: l10n.darkMode,
+              icon: Icons.dark_mode,
+              onTap: () => Navigator.pop(context, AppThemeModeOption.dark),
+            ),
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
+    if (result != null) {
+      ref.read(saveThemeModeProvider)(result);
+    }
+  }
+
+  Future<void> _showThemeColorSheet(BuildContext context, WidgetRef ref, AppThemeColorOption current) async {
+    final result = await showModalBottomSheet<AppThemeColorOption>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 12),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Text(l10n.themeColor, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+            ),
+            const SizedBox(height: 8),
+            _BottomSheetOption<AppThemeColorOption>(
+              value: AppThemeColorOption.blue,
+              groupValue: current,
+              label: 'Blue',
+              icon: Icons.circle,
+              iconColor: Colors.blue,
+              onTap: () => Navigator.pop(context, AppThemeColorOption.blue),
+            ),
+            _BottomSheetOption<AppThemeColorOption>(
+              value: AppThemeColorOption.green,
+              groupValue: current,
+              label: 'Green',
+              icon: Icons.circle,
+              iconColor: Colors.green,
+              onTap: () => Navigator.pop(context, AppThemeColorOption.green),
+            ),
+            _BottomSheetOption<AppThemeColorOption>(
+              value: AppThemeColorOption.orange,
+              groupValue: current,
+              label: 'Orange',
+              icon: Icons.circle,
+              iconColor: Colors.orange,
+              onTap: () => Navigator.pop(context, AppThemeColorOption.orange),
+            ),
+            _BottomSheetOption<AppThemeColorOption>(
+              value: AppThemeColorOption.purple,
+              groupValue: current,
+              label: 'Purple',
+              icon: Icons.circle,
+              iconColor: Colors.purple,
+              onTap: () => Navigator.pop(context, AppThemeColorOption.purple),
+            ),
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
+    if (result != null) {
+      ref.read(saveThemeColorProvider)(result);
+    }
+  }
+
+  Future<void> _showLocaleSheet(BuildContext context, WidgetRef ref, AppLocaleOption current) async {
+    final result = await showModalBottomSheet<AppLocaleOption>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 12),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Text(l10n.language, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+            ),
+            const SizedBox(height: 8),
+            _BottomSheetOption<AppLocaleOption>(
+              value: AppLocaleOption.system,
+              groupValue: current,
+              label: l10n.followSystem,
+              icon: Icons.settings_suggest,
+              onTap: () => Navigator.pop(context, AppLocaleOption.system),
+            ),
+            _BottomSheetOption<AppLocaleOption>(
+              value: AppLocaleOption.zh,
+              groupValue: current,
+              label: l10n.simplifiedChinese,
+              icon: Icons.language,
+              onTap: () => Navigator.pop(context, AppLocaleOption.zh),
+            ),
+            _BottomSheetOption<AppLocaleOption>(
+              value: AppLocaleOption.en,
+              groupValue: current,
+              label: l10n.english,
+              icon: Icons.language,
+              onTap: () => Navigator.pop(context, AppLocaleOption.en),
+            ),
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
+    if (result != null) {
+      ref.read(saveLocaleProvider)(result);
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     
@@ -98,48 +268,23 @@ class SettingsPage extends ConsumerWidget {
             title: l10n.settingsAppearanceLanguage,
             subtitle: l10n.settingsAppearanceSubtitle,
             children: [
-              _SettingsDropdownTile<AppThemeModeOption>(
+              _SettingsActionTile(
                 icon: Icons.brightness_6_rounded,
                 title: l10n.themeMode,
                 subtitle: _themeModeLabel(themeMode),
-                value: themeMode,
-                items: [
-                  DropdownMenuItem(value: AppThemeModeOption.system, child: Text(l10n.followSystem)),
-                  DropdownMenuItem(value: AppThemeModeOption.light, child: Text(l10n.lightMode)),
-                  DropdownMenuItem(value: AppThemeModeOption.dark, child: Text(l10n.darkMode)),
-                ],
-                onChanged: (value) {
-                  if (value != null) ref.read(saveThemeModeProvider)(value);
-                },
+                onTap: () => _showThemeModeSheet(context, ref, themeMode),
               ),
-              _SettingsDropdownTile<AppThemeColorOption>(
+              _SettingsActionTile(
                 icon: Icons.palette_rounded,
                 title: l10n.themeColor,
                 subtitle: _themeColorLabel(themeColor),
-                value: themeColor,
-                items: const [
-                  DropdownMenuItem(value: AppThemeColorOption.blue, child: Text('Blue')),
-                  DropdownMenuItem(value: AppThemeColorOption.green, child: Text('Green')),
-                  DropdownMenuItem(value: AppThemeColorOption.orange, child: Text('Orange')),
-                  DropdownMenuItem(value: AppThemeColorOption.purple, child: Text('Purple')),
-                ],
-                onChanged: (value) {
-                  if (value != null) ref.read(saveThemeColorProvider)(value);
-                },
+                onTap: () => _showThemeColorSheet(context, ref, themeColor),
               ),
-              _SettingsDropdownTile<AppLocaleOption>(
+              _SettingsActionTile(
                 icon: Icons.language_rounded,
                 title: l10n.language,
                 subtitle: _localeLabel(locale),
-                value: locale,
-                items: [
-                  DropdownMenuItem(value: AppLocaleOption.system, child: Text(l10n.followSystem)),
-                  DropdownMenuItem(value: AppLocaleOption.zh, child: Text(l10n.simplifiedChinese)),
-                  DropdownMenuItem(value: AppLocaleOption.en, child: Text(l10n.english)),
-                ],
-                onChanged: (value) {
-                  if (value != null) ref.read(saveLocaleProvider)(value);
-                },
+                onTap: () => _showLocaleSheet(context, ref, locale),
               ),
             ],
           ),
@@ -334,6 +479,45 @@ class _SettingsDropdownTile<T> extends StatelessWidget {
         onChanged: onChanged,
         items: items,
       ),
+    );
+  }
+}
+
+class _BottomSheetOption<T> extends StatelessWidget {
+  const _BottomSheetOption({
+    required this.value,
+    required this.groupValue,
+    required this.label,
+    required this.icon,
+    required this.onTap,
+    this.iconColor,
+  });
+
+  final T value;
+  final T groupValue;
+  final String label;
+  final IconData icon;
+  final VoidCallback onTap;
+  final Color? iconColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final isSelected = value == groupValue;
+    final theme = Theme.of(context);
+    return ListTile(
+      leading: Icon(
+        icon,
+        color: iconColor ?? (isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant),
+      ),
+      title: Text(
+        label,
+        style: TextStyle(
+          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+          color: isSelected ? theme.colorScheme.primary : null,
+        ),
+      ),
+      trailing: isSelected ? Icon(Icons.check, color: theme.colorScheme.primary) : null,
+      onTap: onTap,
     );
   }
 }

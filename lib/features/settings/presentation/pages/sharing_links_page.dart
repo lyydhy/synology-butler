@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/utils/l10n.dart';
 import '../../../../core/utils/toast.dart';
 import '../../../files/presentation/providers/file_providers.dart';
 import '../../../../domain/entities/share_link.dart';
@@ -16,7 +17,7 @@ class SharingLinksPage extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('分享链接'),
+        title: Text(l10n.sharingLinksTitle),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
@@ -24,14 +25,17 @@ class SharingLinksPage extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.cleaning_services_rounded),
-            tooltip: '清除无效链接',
-            onPressed: () => _showClearInvalidDialog(context, ref),
+            tooltip: l10n.sharingLinksClearInvalid,
+            onPressed: () => _showClearInvalidSheet(context, ref),
           ),
         ],
       ),
       body: linksAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => _ErrorView(error: error.toString(), onRetry: () => ref.invalidate(shareLinksProvider)),
+        error: (error, stack) => _ErrorView(
+          error: error.toString(),
+          onRetry: () => ref.invalidate(shareLinksProvider),
+        ),
         data: (links) {
           if (links.isEmpty) {
             return const _EmptyView();
@@ -42,22 +46,63 @@ class SharingLinksPage extends ConsumerWidget {
     );
   }
 
-  Future<void> _showClearInvalidDialog(BuildContext context, WidgetRef ref) async {
-    final confirmed = await showDialog<bool>(
+  Future<void> _showClearInvalidSheet(BuildContext context, WidgetRef ref) async {
+    final confirmed = await showModalBottomSheet<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('清除无效链接'),
-        content: const Text('确定要清除所有无效的分享链接吗？'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('取消'),
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Icon(
+                Icons.cleaning_services_rounded,
+                size: 48,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                l10n.sharingLinksClearInvalid,
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                l10n.sharingLinksClearInvalidConfirm,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 32),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: Text(l10n.cancel),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      child: Text(l10n.confirm),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('确定'),
-          ),
-        ],
+        ),
       ),
     );
 
@@ -65,9 +110,9 @@ class SharingLinksPage extends ConsumerWidget {
 
     try {
       await ref.read(clearInvalidShareLinksProvider)();
-      Toast.success('已清除无效链接');
+      Toast.success(l10n.sharingLinksClearSuccess);
     } catch (e) {
-      Toast.error('清除失败: $e');
+      Toast.error(l10n.sharingLinksClearFailed(e.toString()));
     }
   }
 }
@@ -79,37 +124,41 @@ class _EmptyView extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 96,
-            height: 96,
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest,
-              shape: BoxShape.circle,
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 96,
+              height: 96,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainerHighest,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.link_off_rounded,
+                size: 48,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
-            child: Icon(
-              Icons.link_off_rounded,
-              size: 48,
-              color: theme.colorScheme.onSurfaceVariant,
+            const SizedBox(height: 24),
+            Text(
+              l10n.sharingLinksEmpty,
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
-          ),
-          const SizedBox(height: 24),
-          Text(
-            '暂无分享链接',
-            style: theme.textTheme.titleMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
+            const SizedBox(height: 8),
+            Text(
+              l10n.sharingLinksEmptyHint,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+              ),
+              textAlign: TextAlign.center,
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '在文件页面创建分享链接后可在此管理',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -132,10 +181,7 @@ class _ErrorView extends StatelessWidget {
           children: [
             Icon(Icons.error_outline_rounded, size: 64, color: theme.colorScheme.error),
             const SizedBox(height: 16),
-            Text(
-              '加载失败',
-              style: theme.textTheme.titleMedium,
-            ),
+            Text(l10n.sharingLinksLoadFailed, style: theme.textTheme.titleMedium),
             const SizedBox(height: 8),
             Text(
               error,
@@ -146,7 +192,7 @@ class _ErrorView extends StatelessWidget {
             FilledButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh),
-              label: const Text('重试'),
+              label: Text(l10n.sharingLinksRetry),
             ),
           ],
         ),
@@ -162,18 +208,13 @@ class _LinksListView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return RefreshIndicator(
-      onRefresh: () async {
-        // Will be handled by invalidating the provider
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+      itemCount: links.length,
+      itemBuilder: (context, index) {
+        final link = links[index];
+        return _ShareLinkCard(link: link);
       },
-      child: ListView.builder(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-        itemCount: links.length,
-        itemBuilder: (context, index) {
-          final link = links[index];
-          return _ShareLinkCard(link: link);
-        },
-      ),
     );
   }
 }
@@ -186,27 +227,22 @@ class _ShareLinkCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final isExpired = link.status == 'expired';
-    final isValid = link.status == 'valid';
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: theme.dividerColor.withValues(alpha: 0.1),
-        ),
+        side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap: () => _showEditDialog(context, ref),
+        onTap: () => _showEditSheet(context, ref),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header row
               Row(
                 children: [
                   Container(
@@ -236,9 +272,7 @@ class _ShareLinkCard extends ConsumerWidget {
                         const SizedBox(height: 2),
                         Text(
                           link.url,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.primary,
-                          ),
+                          style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.primary),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -248,67 +282,60 @@ class _ShareLinkCard extends ConsumerWidget {
                   _StatusBadge(status: link.status),
                 ],
               ),
-
               const SizedBox(height: 12),
               Divider(height: 1, color: theme.dividerColor.withValues(alpha: 0.1)),
               const SizedBox(height: 12),
-
-              // Info row
               Row(
                 children: [
-                  _InfoChip(
-                    icon: Icons.folder_outlined,
-                    label: link.path.split('/').where((e) => e.isNotEmpty).lastOrNull ?? '/',
-                    flex: 2,
-                  ),
-                  const SizedBox(width: 8),
                   _InfoChip(
                     icon: Icons.person_outline,
                     label: link.linkOwner,
                     flex: 1,
                   ),
+                  const SizedBox(width: 8),
+                  _InfoChip(
+                    icon: Icons.folder_outlined,
+                    label: link.path.split('/').where((e) => e.isNotEmpty).lastOrNull ?? '/',
+                    flex: 2,
+                  ),
                 ],
               ),
-
               const SizedBox(height: 10),
-
-              // Expire info
               Row(
                 children: [
-                  if (link.dateExpired != null && link.dateExpired!.isNotEmpty) ...[
+                  if (link.dateExpired != null && link.dateExpired!.isNotEmpty)
                     _ExpireBadge(
                       icon: Icons.event,
                       label: _formatDate(link.dateExpired!),
                       color: Colors.blue,
                     ),
+                  if (link.dateExpired != null && link.dateExpired!.isNotEmpty && link.expireTimes > 0)
                     const SizedBox(width: 8),
-                  ],
                   if (link.expireTimes > 0)
                     _ExpireBadge(
                       icon: Icons.repeat,
-                      label: '${link.expireTimes}次',
+                      label: l10n.sharingLinksAccessCountRemaining(link.expireTimes),
                       color: Colors.orange,
                     )
                   else
                     _ExpireBadge(
                       icon: Icons.all_inclusive,
-                      label: '永久',
+                      label: l10n.sharingLinksPermanent,
                       color: Colors.green,
                     ),
                   const Spacer(),
-                  // Action buttons
                   _ActionButton(
                     icon: Icons.copy_rounded,
-                    tooltip: '复制链接',
+                    tooltip: l10n.sharingLinksCopied,
                     onPressed: () {
                       Clipboard.setData(ClipboardData(text: link.url));
-                      Toast.success('链接已复制');
+                      Toast.success(l10n.sharingLinksCopied);
                     },
                   ),
                   const SizedBox(width: 4),
                   _ActionButton(
                     icon: Icons.delete_outline_rounded,
-                    tooltip: '删除',
+                    tooltip: l10n.sharingLinksDelete,
                     color: theme.colorScheme.error,
                     onPressed: () => _confirmDelete(context, ref),
                   ),
@@ -328,21 +355,65 @@ class _ShareLinkCard extends ConsumerWidget {
   }
 
   Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showModalBottomSheet<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('删除分享链接'),
-        content: Text('确定要删除 "${link.name}" 吗？'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('取消'),
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Icon(
+                Icons.delete_outline_rounded,
+                size: 48,
+                color: Theme.of(context).colorScheme.error,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                l10n.sharingLinksDelete,
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                l10n.sharingLinksDeleteConfirm(link.name),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 32),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: Text(l10n.cancel),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: FilledButton(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: Theme.of(context).colorScheme.error,
+                      ),
+                      onPressed: () => Navigator.pop(context, true),
+                      child: Text(l10n.deleteConfirm),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text('删除', style: TextStyle(color: Theme.of(context).colorScheme.error)),
-          ),
-        ],
+        ),
       ),
     );
 
@@ -350,74 +421,133 @@ class _ShareLinkCard extends ConsumerWidget {
 
     try {
       await ref.read(deleteShareLinksProvider)([link.id]);
-      Toast.success('已删除');
+      Toast.success(l10n.sharingLinksDeleted);
     } catch (e) {
-      Toast.error('删除失败: $e');
+      Toast.error(l10n.sharingLinksDeleteFailed(e.toString()));
     }
   }
 
-  Future<void> _showEditDialog(BuildContext context, WidgetRef ref) async {
+  Future<void> _showEditSheet(BuildContext context, WidgetRef ref) async {
     int expireTimes = link.expireTimes;
     DateTime? dateExpired;
     if (link.dateExpired != null && link.dateExpired!.isNotEmpty) {
       dateExpired = DateTime.tryParse(link.dateExpired!);
     }
 
-    final result = await showDialog<bool>(
+    final result = await showModalBottomSheet<bool>(
       context: context,
+      isScrollControlled: true,
       builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: const Text('编辑分享链接'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.orange.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10),
+        builder: (context, setState) => DraggableScrollableSheet(
+          initialChildSize: 0.7,
+          minChildSize: 0.5,
+          maxChildSize: 0.9,
+          expand: false,
+          builder: (context, scrollController) => SafeArea(
+            child: Padding(
+              padding: EdgeInsets.only(
+                left: 24,
+                right: 24,
+                top: 12,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+              ),
+              child: ListView(
+                controller: scrollController,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
                   ),
-                  child: const Row(
+                  const SizedBox(height: 20),
+                  Row(
                     children: [
-                      Icon(Icons.info_outline, size: 18, color: Colors.orange),
-                      SizedBox(width: 8),
-                      Expanded(
-                        child: Text('安全共享请到 Web 界面操作', style: TextStyle(fontSize: 13, color: Colors.orange)),
+                      Text(
+                        l10n.sharingLinksEdit,
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.pop(context, false),
                       ),
                     ],
                   ),
-                ),
-                const SizedBox(height: 16),
-                Text(link.name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
-                const SizedBox(height: 4),
-                Text(link.url, style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 12)),
-                const SizedBox(height: 20),
-                _ExpireTimesSelector(
-                  value: expireTimes,
-                  onChanged: (v) => setState(() => expireTimes = v),
-                ),
-                const SizedBox(height: 16),
-                const Text('有效期截止日期', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
-                const SizedBox(height: 8),
-                _DateTimePicker(
-                  value: dateExpired,
-                  onChanged: (v) => setState(() => dateExpired = v),
-                ),
-              ],
+                  const SizedBox(height: 16),
+                  // Security hint
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.info_outline, size: 20, color: Colors.orange),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            l10n.sharingLinksSecurityHint,
+                            style: const TextStyle(fontSize: 13, color: Colors.orange),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  // File name
+                  Text(
+                    link.name,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    link.url,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 28),
+
+                  // Access count
+                  Text(
+                    l10n.sharingLinksAccessCount,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 12),
+                  _ExpireTimesSelector(
+                    value: expireTimes,
+                    onChanged: (v) => setState(() => expireTimes = v),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Expire date
+                  Text(
+                    l10n.sharingLinksExpireDate,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 12),
+                  _DateTimePicker(
+                    value: dateExpired,
+                    onChanged: (v) => setState(() => dateExpired = v),
+                  ),
+                  const SizedBox(height: 32),
+
+                  FilledButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    child: Text(l10n.save),
+                  ),
+                ],
+              ),
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('取消'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('保存'),
-            ),
-          ],
         ),
       ),
     );
@@ -432,9 +562,9 @@ class _ShareLinkCard extends ConsumerWidget {
         dateExpired: dateExpired?.toIso8601String(),
         expireTimes: expireTimes,
       );
-      Toast.success('已保存');
+      Toast.success(l10n.sharingLinksSaveSuccess);
     } catch (e) {
-      Toast.error('保存失败: $e');
+      Toast.error(l10n.sharingLinksSaveFailed(e.toString()));
     }
   }
 }
@@ -453,12 +583,12 @@ class _StatusBadge extends StatelessWidget {
     switch (status) {
       case 'valid':
         color = Colors.green;
-        label = '有效';
+        label = l10n.sharingLinksStatusValid;
         icon = Icons.check_circle_outline;
         break;
       case 'expired':
         color = Colors.grey;
-        label = '已过期';
+        label = l10n.sharingLinksStatusExpired;
         icon = Icons.cancel_outlined;
         break;
       default:
@@ -538,10 +668,7 @@ class _ExpireBadge extends StatelessWidget {
       children: [
         Icon(icon, size: 14, color: color),
         const SizedBox(width: 4),
-        Text(
-          label,
-          style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w500),
-        ),
+        Text(label, style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w500)),
       ],
     );
   }
@@ -585,40 +712,33 @@ class _ExpireTimesSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Row(
       children: [
-        const Text('访问次数', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            _StepButton(
-              icon: Icons.remove,
-              onPressed: value > 0 ? () => onChanged(value - 1) : null,
-            ),
-            Container(
-              width: 64,
-              alignment: Alignment.center,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                value == 0 ? '∞' : '$value',
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-              ),
-            ),
-            _StepButton(
-              icon: Icons.add,
-              onPressed: () => onChanged(value + 1),
-            ),
-            const SizedBox(width: 12),
-            Text(
-              value == 0 ? '不限次数' : '剩余 $value 次',
-              style: TextStyle(fontSize: 12, color: value == 0 ? Colors.green : Colors.orange),
-            ),
-          ],
+        _StepButton(
+          icon: Icons.remove,
+          onPressed: value > 0 ? () => onChanged(value - 1) : null,
+        ),
+        Container(
+          width: 64,
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            value == 0 ? '∞' : '$value',
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          ),
+        ),
+        _StepButton(
+          icon: Icons.add,
+          onPressed: () => onChanged(value + 1),
+        ),
+        const SizedBox(width: 16),
+        Text(
+          value == 0 ? l10n.sharingLinksAccessCountUnlimited : l10n.sharingLinksAccessCountRemaining(value),
+          style: TextStyle(fontSize: 13, color: value == 0 ? Colors.green : Colors.orange),
         ),
       ],
     );
@@ -679,7 +799,7 @@ class _DateTimePicker extends StatelessWidget {
                   Text(
                     value != null
                         ? '${value!.year}-${value!.month.toString().padLeft(2, '0')}-${value!.day.toString().padLeft(2, '0')} ${value!.hour.toString().padLeft(2, '0')}:${value!.minute.toString().padLeft(2, '0')}'
-                        : '不限制',
+                        : l10n.sharingLinksNoLimit,
                     style: TextStyle(
                       fontSize: 14,
                       color: value != null ? theme.colorScheme.onSurface : theme.colorScheme.onSurfaceVariant,
@@ -695,7 +815,6 @@ class _DateTimePicker extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.clear_rounded),
             onPressed: () => onChanged(null),
-            tooltip: '清除',
           ),
         ],
       ],

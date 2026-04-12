@@ -3385,6 +3385,174 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'分享链接已取消'**
   String get shareLinkDeleted;
+
+  /// 分享链接管理页面标题
+  ///
+  /// In zh, this message translates to:
+  /// **'分享链接'**
+  String get sharingLinksTitle;
+
+  /// 空状态提示
+  ///
+  /// In zh, this message translates to:
+  /// **'暂无分享链接'**
+  String get sharingLinksEmpty;
+
+  /// 空状态副标题
+  ///
+  /// In zh, this message translates to:
+  /// **'在文件页面创建分享链接后可在此管理'**
+  String get sharingLinksEmptyHint;
+
+  /// 加载失败文字
+  ///
+  /// In zh, this message translates to:
+  /// **'加载失败'**
+  String get sharingLinksLoadFailed;
+
+  /// 重试按钮
+  ///
+  /// In zh, this message translates to:
+  /// **'重试'**
+  String get sharingLinksRetry;
+
+  /// 清除无效链接按钮
+  ///
+  /// In zh, this message translates to:
+  /// **'清除无效链接'**
+  String get sharingLinksClearInvalid;
+
+  /// 确认清除无效链接对话框
+  ///
+  /// In zh, this message translates to:
+  /// **'确定要清除所有无效的分享链接吗？'**
+  String get sharingLinksClearInvalidConfirm;
+
+  /// 清除成功提示
+  ///
+  /// In zh, this message translates to:
+  /// **'已清除无效链接'**
+  String get sharingLinksClearSuccess;
+
+  /// 编辑分享链接标题
+  ///
+  /// In zh, this message translates to:
+  /// **'编辑分享链接'**
+  String get sharingLinksEdit;
+
+  /// 删除分享链接标题
+  ///
+  /// In zh, this message translates to:
+  /// **'删除分享链接'**
+  String get sharingLinksDelete;
+
+  /// 确认删除对话框
+  ///
+  /// In zh, this message translates to:
+  /// **'确定要删除「{name}」吗？'**
+  String sharingLinksDeleteConfirm(String name);
+
+  /// 删除成功提示
+  ///
+  /// In zh, this message translates to:
+  /// **'已删除'**
+  String get sharingLinksDeleted;
+
+  /// 保存成功提示
+  ///
+  /// In zh, this message translates to:
+  /// **'已保存'**
+  String get sharingLinksSaveSuccess;
+
+  /// 保存失败提示
+  ///
+  /// In zh, this message translates to:
+  /// **'保存失败：{error}'**
+  String sharingLinksSaveFailed(String error);
+
+  /// 清除失败提示
+  ///
+  /// In zh, this message translates to:
+  /// **'清除失败：{error}'**
+  String sharingLinksClearFailed(String error);
+
+  /// 删除失败提示
+  ///
+  /// In zh, this message translates to:
+  /// **'删除失败：{error}'**
+  String sharingLinksDeleteFailed(String error);
+
+  /// 复制成功提示
+  ///
+  /// In zh, this message translates to:
+  /// **'链接已复制'**
+  String get sharingLinksCopied;
+
+  /// 访问次数标签
+  ///
+  /// In zh, this message translates to:
+  /// **'访问次数'**
+  String get sharingLinksAccessCount;
+
+  /// 不限次数
+  ///
+  /// In zh, this message translates to:
+  /// **'不限次数'**
+  String get sharingLinksAccessCountUnlimited;
+
+  /// 剩余次数
+  ///
+  /// In zh, this message translates to:
+  /// **'剩余 {count} 次'**
+  String sharingLinksAccessCountRemaining(int count);
+
+  /// 有效期截止日期标签
+  ///
+  /// In zh, this message translates to:
+  /// **'有效期截止日期'**
+  String get sharingLinksExpireDate;
+
+  /// 不限制日期
+  ///
+  /// In zh, this message translates to:
+  /// **'不限制'**
+  String get sharingLinksExpireDateNone;
+
+  /// 永久有效
+  ///
+  /// In zh, this message translates to:
+  /// **'永久'**
+  String get sharingLinksPermanent;
+
+  /// 所有者标签
+  ///
+  /// In zh, this message translates to:
+  /// **'所有者'**
+  String get sharingLinksOwner;
+
+  /// 状态：有效
+  ///
+  /// In zh, this message translates to:
+  /// **'有效'**
+  String get sharingLinksStatusValid;
+
+  /// 状态：已过期
+  ///
+  /// In zh, this message translates to:
+  /// **'已过期'**
+  String get sharingLinksStatusExpired;
+
+  /// 安全提示
+  ///
+  /// In zh, this message translates to:
+  /// **'安全共享请到 Web 界面操作'**
+  String get sharingLinksSecurityHint;
+
+  /// 不限制
+  ///
+  /// In zh, this message translates to:
+  /// **'不限制'**
+  String get sharingLinksNoLimit;
 }
 
 class _AppLocalizationsDelegate

@@ -1794,4 +1794,101 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get shareLinkDeleted => 'Share link deleted';
+
+  @override
+  String get sharingLinksTitle => 'Sharing Links';
+
+  @override
+  String get sharingLinksEmpty => 'No sharing links';
+
+  @override
+  String get sharingLinksEmptyHint =>
+      'Create share links from the Files page to manage them here';
+
+  @override
+  String get sharingLinksLoadFailed => 'Failed to load';
+
+  @override
+  String get sharingLinksRetry => 'Retry';
+
+  @override
+  String get sharingLinksClearInvalid => 'Clear Invalid Links';
+
+  @override
+  String get sharingLinksClearInvalidConfirm =>
+      'Clear all invalid share links?';
+
+  @override
+  String get sharingLinksClearSuccess => 'Invalid links cleared';
+
+  @override
+  String get sharingLinksEdit => 'Edit Share Link';
+
+  @override
+  String get sharingLinksDelete => 'Delete Share Link';
+
+  @override
+  String sharingLinksDeleteConfirm(String name) {
+    return 'Delete \"$name\"?';
+  }
+
+  @override
+  String get sharingLinksDeleted => 'Deleted';
+
+  @override
+  String get sharingLinksSaveSuccess => 'Saved';
+
+  @override
+  String sharingLinksSaveFailed(String error) {
+    return 'Save failed: $error';
+  }
+
+  @override
+  String sharingLinksClearFailed(String error) {
+    return 'Clear failed: $error';
+  }
+
+  @override
+  String sharingLinksDeleteFailed(String error) {
+    return 'Delete failed: $error';
+  }
+
+  @override
+  String get sharingLinksCopied => 'Link copied';
+
+  @override
+  String get sharingLinksAccessCount => 'Access Count';
+
+  @override
+  String get sharingLinksAccessCountUnlimited => 'Unlimited';
+
+  @override
+  String sharingLinksAccessCountRemaining(int count) {
+    return '$count remaining';
+  }
+
+  @override
+  String get sharingLinksExpireDate => 'Expiration Date';
+
+  @override
+  String get sharingLinksExpireDateNone => 'No limit';
+
+  @override
+  String get sharingLinksPermanent => 'Permanent';
+
+  @override
+  String get sharingLinksOwner => 'Owner';
+
+  @override
+  String get sharingLinksStatusValid => 'Valid';
+
+  @override
+  String get sharingLinksStatusExpired => 'Expired';
+
+  @override
+  String get sharingLinksSecurityHint =>
+      'For secure sharing, use the Web interface';
+
+  @override
+  String get sharingLinksNoLimit => 'No limit';
 }
