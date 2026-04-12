@@ -1871,6 +1871,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sharingLinksExpireDate => 'Expiration Date';
 
   @override
+  String get sharingLinksAvailableDate => 'Available From';
+
+  @override
   String get sharingLinksExpireDateNone => 'No limit';
 
   @override

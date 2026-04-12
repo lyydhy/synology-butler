@@ -429,7 +429,11 @@ class _ShareLinkCard extends ConsumerWidget {
 
   Future<void> _showEditSheet(BuildContext context, WidgetRef ref) async {
     int expireTimes = link.expireTimes;
+    DateTime? dateAvailable;
     DateTime? dateExpired;
+    if (link.dateAvailable != null && link.dateAvailable!.isNotEmpty) {
+      dateAvailable = DateTime.tryParse(link.dateAvailable!);
+    }
     if (link.dateExpired != null && link.dateExpired!.isNotEmpty) {
       dateExpired = DateTime.tryParse(link.dateExpired!);
     }
@@ -528,6 +532,18 @@ class _ShareLinkCard extends ConsumerWidget {
                   ),
                   const SizedBox(height: 24),
 
+                  // Available date
+                  Text(
+                    l10n.sharingLinksAvailableDate,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 12),
+                  _DateTimePicker(
+                    value: dateAvailable,
+                    onChanged: (v) => setState(() => dateAvailable = v),
+                  ),
+                  const SizedBox(height: 24),
+
                   // Expire date
                   Text(
                     l10n.sharingLinksExpireDate,
@@ -559,6 +575,7 @@ class _ShareLinkCard extends ConsumerWidget {
         link.id,
         link.url,
         link.path,
+        dateAvailable: dateAvailable?.toIso8601String(),
         dateExpired: dateExpired?.toIso8601String(),
         expireTimes: expireTimes,
       );

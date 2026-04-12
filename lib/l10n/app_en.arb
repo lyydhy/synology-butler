@@ -866,6 +866,7 @@
   "sharingLinksAccessCountUnlimited": "Unlimited",
   "sharingLinksAccessCountRemaining": "{count} remaining",
   "sharingLinksExpireDate": "Expiration Date",
+  "sharingLinksAvailableDate": "Available From",
   "sharingLinksExpireDateNone": "No limit",
   "sharingLinksPermanent": "Permanent",
   "sharingLinksOwner": "Owner",

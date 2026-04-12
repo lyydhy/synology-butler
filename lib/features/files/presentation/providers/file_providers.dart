@@ -111,12 +111,13 @@ final deleteShareLinksProvider = Provider<Future<void> Function(List<String>)>((
   };
 });
 
-final editShareLinkProvider = Provider<Future<void> Function(String shareId, String url, String path, {String? dateExpired, int expireTimes})>((ref) {
-  return (shareId, url, path, {dateExpired, expireTimes = 0}) async {
+final editShareLinkProvider = Provider<Future<void> Function(String shareId, String url, String path, {String? dateAvailable, String? dateExpired, int expireTimes})>((ref) {
+  return (shareId, url, path, {dateAvailable, dateExpired, expireTimes = 0}) async {
     await ref.read(fileStationApiProvider).editShareLink(
       shareId: shareId,
       url: url,
       path: path,
+      dateAvailable: dateAvailable,
       dateExpired: dateExpired,
       expireTimes: expireTimes,
     );

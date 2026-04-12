@@ -1841,6 +1841,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sharingLinksExpireDate => '有效期截止日期';
 
   @override
+  String get sharingLinksAvailableDate => '生效开始日期';
+
+  @override
   String get sharingLinksExpireDateNone => '不限制';
 
   @override

@@ -1295,6 +1295,10 @@
   "@sharingLinksExpireDate": {
     "description": "有效期截止日期标签"
   },
+  "sharingLinksAvailableDate": "生效开始日期",
+  "@sharingLinksAvailableDate": {
+    "description": "生效开始日期标签"
+  },
   "sharingLinksExpireDateNone": "不限制",
   "@sharingLinksExpireDateNone": {
     "description": "不限制日期"

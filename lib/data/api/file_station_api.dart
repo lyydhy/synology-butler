@@ -62,6 +62,7 @@ abstract class FileStationApi {
     required String shareId,
     required String url,
     required String path,
+    String? dateAvailable,
     String? dateExpired,
     int expireTimes = 0,
   });
@@ -582,6 +583,7 @@ class DsmFileStationApi implements FileStationApi {
     required String shareId,
     required String url,
     required String path,
+    String? dateAvailable,
     String? dateExpired,
     int expireTimes = 0,
   }) async {
@@ -593,6 +595,9 @@ class DsmFileStationApi implements FileStationApi {
       'url': jsonEncode([url]),
       'path': path,
     };
+    if (dateAvailable != null && dateAvailable.isNotEmpty) {
+      data['date_available'] = dateAvailable;
+    }
     if (dateExpired != null && dateExpired.isNotEmpty) {
       data['date_expired'] = dateExpired;
     }

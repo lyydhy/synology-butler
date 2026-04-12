@@ -3512,6 +3512,12 @@ abstract class AppLocalizations {
   /// **'有效期截止日期'**
   String get sharingLinksExpireDate;
 
+  /// 生效开始日期标签
+  ///
+  /// In zh, this message translates to:
+  /// **'生效开始日期'**
+  String get sharingLinksAvailableDate;
+
   /// 不限制日期
   ///
   /// In zh, this message translates to:
