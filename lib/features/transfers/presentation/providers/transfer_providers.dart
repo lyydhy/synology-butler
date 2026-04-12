@@ -326,14 +326,19 @@ class TransferController extends StateNotifier<List<TransferTask>> {
               } else {
                 final progress = received / total;
                 _update(id, progress: progress.clamp(0.0, 0.98), receivedBytes: received, totalBytes: total);
-                _notificationService.showProgress(
-                  taskId: id,
-                  type: TransferType.download,
-                  fileName: fileName,
-                  receivedBytes: received,
-                  totalBytes: total,
-                  isRunning: true,
-                );
+                // 节流通知更新，避免通知栏频繁刷新导致 UI 卡顿
+                final now = DateTime.now();
+                if (now.difference(_lastProgressNotify).inMilliseconds >= _progressNotifyThrottleMs) {
+                  _lastProgressNotify = now;
+                  _notificationService.showProgress(
+                    taskId: id,
+                    type: TransferType.download,
+                    fileName: fileName,
+                    receivedBytes: received,
+                    totalBytes: total,
+                    isRunning: true,
+                  );
+                }
               }
             },
           );
@@ -393,9 +398,21 @@ class TransferController extends StateNotifier<List<TransferTask>> {
 
   /// 上次持久化的时间
   DateTime _lastPersist = DateTime.now();
-  
+
+  /// 上次 UI 状态更新的时间（用于节流）
+  DateTime _lastUiUpdate = DateTime.now();
+
   /// 持久化节流间隔（毫秒）
   static const int _persistThrottleMs = 1000;
+
+  /// UI 状态更新节流间隔（毫秒），避免频繁重建 UI
+  static const int _uiUpdateThrottleMs = 500;
+
+  /// 进度通知节流间隔（毫秒）
+  static const int _progressNotifyThrottleMs = 1000;
+
+  /// 上次进度通知的时间
+  DateTime _lastProgressNotify = DateTime.now();
 
   Future<void> _update(
     String id, {
@@ -406,26 +423,35 @@ class TransferController extends StateNotifier<List<TransferTask>> {
     String? errorMessage,
     bool forcePersist = false,
   }) async {
-    state = [
-      for (final task in state)
-        if (task.id == id)
-          task.copyWith(
-            status: status,
-            progress: progress,
-            receivedBytes: receivedBytes,
-            totalBytes: totalBytes,
-            errorMessage: errorMessage,
-          )
-        else
-          task,
-    ];
-    
-    // 节流持久化：只在状态变化或超过间隔时持久化
     final now = DateTime.now();
+
+    // 节流 UI 状态更新：仅在状态变化或超过间隔时触发 rebuild
+    final shouldNotifyUi = forcePersist ||
+        status != null ||
+        now.difference(_lastUiUpdate).inMilliseconds >= _uiUpdateThrottleMs;
+
+    if (shouldNotifyUi) {
+      _lastUiUpdate = now;
+      state = [
+        for (final task in state)
+          if (task.id == id)
+            task.copyWith(
+              status: status,
+              progress: progress,
+              receivedBytes: receivedBytes,
+              totalBytes: totalBytes,
+              errorMessage: errorMessage,
+            )
+          else
+            task,
+      ];
+    }
+
+    // 节流持久化：只在状态变化或超过间隔时持久化
     final shouldPersist = forcePersist ||
         status != null ||
         now.difference(_lastPersist).inMilliseconds >= _persistThrottleMs;
-    
+
     if (shouldPersist) {
       _lastPersist = now;
       await _persist();

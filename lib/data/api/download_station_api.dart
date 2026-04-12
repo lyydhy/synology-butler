@@ -135,10 +135,10 @@ class DsmDownloadStationApi implements DownloadStationApi {
     final response = await _dio.post(
       '/webapi/entry.cgi',
       data: {
-        'api': 'SYNO.DownloadStation.Task',
-        'version': '1',
+        'api': 'SYNO.DownloadStation2.Task',
+        'version': '2',
         'method': 'pause',
-        'id': id,
+        'id': [id],
       },
       options: Options(contentType: Headers.formUrlEncodedContentType),
     );
@@ -159,10 +159,10 @@ class DsmDownloadStationApi implements DownloadStationApi {
     final response = await _dio.post(
       '/webapi/entry.cgi',
       data: {
-        'api': 'SYNO.DownloadStation.Task',
-        'version': '1',
+        'api': 'SYNO.DownloadStation2.Task',
+        'version': '2',
         'method': 'resume',
-        'id': id,
+        'id': [id],
       },
       options: Options(contentType: Headers.formUrlEncodedContentType),
     );
@@ -183,10 +183,10 @@ class DsmDownloadStationApi implements DownloadStationApi {
     final response = await _dio.post(
       '/webapi/entry.cgi',
       data: {
-        'api': 'SYNO.DownloadStation.Task',
-        'version': '1',
+        'api': 'SYNO.DownloadStation2.Task',
+        'version': '2',
         'method': 'delete',
-        'id': id,
+        'id': [id],
         'force_complete': false,
       },
       options: Options(contentType: Headers.formUrlEncodedContentType),
