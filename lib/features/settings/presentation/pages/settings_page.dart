@@ -85,6 +85,12 @@ class SettingsPage extends ConsumerWidget {
                   }
                 },
               ),
+              _SettingsActionTile(
+                icon: Icons.link_rounded,
+                title: '分享链接管理',
+                subtitle: '查看和复制已创建的分享链接',
+                onTap: () => context.push('/sharing-links'),
+              ),
             ],
           ),
           const SizedBox(height: 16),

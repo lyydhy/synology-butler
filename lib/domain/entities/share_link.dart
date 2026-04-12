@@ -9,6 +9,9 @@ class ShareLinkResult {
   final String? dateExpired; // 过期时间，ISO8601
   final String? dateAvailable; // 生效时间，ISO8601
   final bool enableUpload;
+  final bool isFolder;
+  final String linkOwner;
+  final String status;
 
   ShareLinkResult({
     required this.url,
@@ -20,6 +23,9 @@ class ShareLinkResult {
     this.dateExpired,
     this.dateAvailable,
     this.enableUpload = false,
+    this.isFolder = false,
+    this.linkOwner = '',
+    this.status = 'valid',
   });
 
   factory ShareLinkResult.fromMap(Map<String, dynamic> map) {
@@ -33,6 +39,9 @@ class ShareLinkResult {
       dateExpired: map['date_expired'] as String?,
       dateAvailable: map['date_available'] as String?,
       enableUpload: map['enable_upload'] == true,
+      isFolder: map['isFolder'] == true,
+      linkOwner: map['link_owner'] as String? ?? '',
+      status: map['status'] as String? ?? 'valid',
     );
   }
 
@@ -54,6 +63,9 @@ class ShareLinkResult {
     String? dateExpired,
     String? dateAvailable,
     bool? enableUpload,
+    bool? isFolder,
+    String? linkOwner,
+    String? status,
   }) {
     return ShareLinkResult(
       url: url ?? this.url,
@@ -65,6 +77,9 @@ class ShareLinkResult {
       dateExpired: dateExpired ?? this.dateExpired,
       dateAvailable: dateAvailable ?? this.dateAvailable,
       enableUpload: enableUpload ?? this.enableUpload,
+      isFolder: isFolder ?? this.isFolder,
+      linkOwner: linkOwner ?? this.linkOwner,
+      status: status ?? this.status,
     );
   }
 }

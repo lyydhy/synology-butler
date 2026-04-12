@@ -9,6 +9,7 @@ import '../features/container_management/presentation/pages/compose_project_deta
 import '../features/container_management/presentation/pages/container_detail_page.dart';
 import '../features/container_management/presentation/pages/container_management_page.dart';
 import '../features/container_management/presentation/pages/container_management_settings_page.dart';
+import '../features/settings/presentation/pages/sharing_links_page.dart';
 import '../features/control_panel/presentation/pages/control_panel_page.dart';
 import '../features/debug/presentation/pages/app_logs_page.dart';
 import '../features/debug/presentation/pages/debug_info_page.dart';
@@ -53,6 +54,7 @@ GoRouter createAppRouter({required String initialLocation}) {
     GoRoute(path: '/servers', builder: (context, state) => const ServerManagementPage()),
     GoRoute(path: '/debug', builder: (context, state) => const DebugInfoPage()),
     GoRoute(path: '/app-logs', builder: (context, state) => const AppLogsPage()),
+    GoRoute(path: '/sharing-links', builder: (context, state) => const SharingLinksPage()),
     GoRoute(path: '/diagnostics', builder: (context, state) => const DiagnosticsPage()),
     GoRoute(path: '/transfers', builder: (context, state) => const TransfersPage()),
     GoRoute(path: '/external-access', builder: (context, state) => const ExternalAccessPage()),

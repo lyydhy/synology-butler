@@ -93,6 +93,37 @@ final fileShareProvider = Provider<Future<ShareLinkResult> Function(String, {Str
   };
 });
 
+final shareLinksProvider = FutureProvider.autoDispose<List<ShareLinkResult>>((ref) async {
+  return ref.read(fileStationApiProvider).listShareLinks();
+});
+
+final clearInvalidShareLinksProvider = Provider<Future<void> Function()>((ref) {
+  return () async {
+    await ref.read(fileStationApiProvider).clearInvalidShareLinks();
+    ref.invalidate(shareLinksProvider);
+  };
+});
+
+final deleteShareLinksProvider = Provider<Future<void> Function(List<String>)>((ref) {
+  return (ids) async {
+    await ref.read(fileStationApiProvider).deleteShareLinks(ids);
+    ref.invalidate(shareLinksProvider);
+  };
+});
+
+final editShareLinkProvider = Provider<Future<void> Function(String shareId, String url, String path, {String? dateExpired, int expireTimes})>((ref) {
+  return (shareId, url, path, {dateExpired, expireTimes = 0}) async {
+    await ref.read(fileStationApiProvider).editShareLink(
+      shareId: shareId,
+      url: url,
+      path: path,
+      dateExpired: dateExpired,
+      expireTimes: expireTimes,
+    );
+    ref.invalidate(shareLinksProvider);
+  };
+});
+
 final fileUploadProvider = Provider<Future<void> Function(String, String, Uint8List)>((ref) {
   return (parentPath, fileName, bytes) async {
     await ref.read(fileRepositoryProvider).uploadFile(

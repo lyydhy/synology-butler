@@ -66,6 +66,15 @@ abstract class FileStationApi {
     int expireTimes = 0,
   });
 
+  /// 列出所有分享链接
+  Future<List<ShareLinkResult>> listShareLinks({int offset = 0, int limit = 50});
+
+  /// 清除无效分享链接
+  Future<void> clearInvalidShareLinks();
+
+  /// 删除分享链接
+  Future<void> deleteShareLinks(List<String> ids);
+
   Future<void> uploadFile({
     required String parentPath,
     required String fileName,
@@ -603,6 +612,88 @@ class DsmFileStationApi implements FileStationApi {
     throw DioException(
       requestOptions: response.requestOptions,
       error: DsmErrorHelper.mapErrorCode(errorCode) ?? '编辑分享链接失败',
+      response: response,
+    );
+  }
+
+  @override
+  Future<List<ShareLinkResult>> listShareLinks({int offset = 0, int limit = 50}) async {
+    final data = <String, dynamic>{
+      'api': 'SYNO.FileStation.Sharing',
+      'version': '3',
+      'method': 'list',
+      'offset': offset.toString(),
+      'limit': limit.toString(),
+      'filter_type': 'SYNO.SDS.App.FileStation3.Instance,SYNO.SDS.App.SharingUpload.Application',
+    };
+
+    final response = await _dio.post(
+      '/webapi/entry.cgi',
+      data: data,
+      options: Options(contentType: Headers.formUrlEncodedContentType),
+    );
+
+    if (response.data is Map && response.data['success'] == true) {
+      final resultData = response.data['data'] as Map? ?? {};
+      final links = resultData['links'] as List? ?? [];
+      return links
+          .map((e) => ShareLinkResult.fromMap((e as Map).cast<String, dynamic>()))
+          .toList();
+    }
+
+    final errorCode = DsmErrorHelper.extractErrorCode(response.data);
+    throw DioException(
+      requestOptions: response.requestOptions,
+      error: DsmErrorHelper.mapErrorCode(errorCode) ?? '获取分享链接列表失败',
+      response: response,
+    );
+  }
+
+  @override
+  Future<void> clearInvalidShareLinks() async {
+    final data = <String, dynamic>{
+      'api': 'SYNO.FileStation.Sharing',
+      'version': '2',
+      'method': 'clear_invalid',
+    };
+
+    final response = await _dio.post(
+      '/webapi/entry.cgi',
+      data: data,
+      options: Options(contentType: Headers.formUrlEncodedContentType),
+    );
+
+    if (response.data is Map && response.data['success'] == true) return;
+
+    final errorCode = DsmErrorHelper.extractErrorCode(response.data);
+    throw DioException(
+      requestOptions: response.requestOptions,
+      error: DsmErrorHelper.mapErrorCode(errorCode) ?? '清除无效链接失败',
+      response: response,
+    );
+  }
+
+  @override
+  Future<void> deleteShareLinks(List<String> ids) async {
+    final data = <String, dynamic>{
+      'api': 'SYNO.FileStation.Sharing',
+      'version': '3',
+      'method': 'delete',
+      'id': jsonEncode(ids),
+    };
+
+    final response = await _dio.post(
+      '/webapi/entry.cgi',
+      data: data,
+      options: Options(contentType: Headers.formUrlEncodedContentType),
+    );
+
+    if (response.data is Map && response.data['success'] == true) return;
+
+    final errorCode = DsmErrorHelper.extractErrorCode(response.data);
+    throw DioException(
+      requestOptions: response.requestOptions,
+      error: DsmErrorHelper.mapErrorCode(errorCode) ?? '删除分享链接失败',
       response: response,
     );
   }
