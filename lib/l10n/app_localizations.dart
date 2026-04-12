@@ -344,6 +344,12 @@ abstract class AppLocalizations {
   /// **'下载'**
   String get downloadsTitle;
 
+  /// 套件未安装
+  ///
+  /// In zh, this message translates to:
+  /// **'未安装'**
+  String get notInstalled;
+
   /// No description provided for @currentPath.
   ///
   /// In zh, this message translates to:

@@ -4,6 +4,9 @@ import '../../core/network/app_dio.dart';
 import '../models/download_task_model.dart';
 
 abstract class DownloadStationApi {
+  /// 检查 Download Station 是否可用
+  Future<bool> isAvailable();
+
   Future<List<DownloadTaskModel>> listTasks();
 
   Future<void> createTask({
@@ -25,6 +28,24 @@ abstract class DownloadStationApi {
 
 class DsmDownloadStationApi implements DownloadStationApi {
   Dio get _dio => businessDio();
+
+  @override
+  Future<bool> isAvailable() async {
+    try {
+      final response = await _dio.post(
+        '/webapi/entry.cgi',
+        data: {
+          'api': 'SYNO.DownloadStation2.Info',
+          'version': '2',
+          'method': 'getinfo',
+        },
+        options: Options(contentType: Headers.formUrlEncodedContentType),
+      );
+      return response.data is Map && response.data['success'] == true;
+    } catch (_) {
+      return false;
+    }
+  }
 
   @override
   Future<List<DownloadTaskModel>> listTasks() async {

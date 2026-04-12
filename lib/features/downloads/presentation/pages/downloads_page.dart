@@ -26,12 +26,9 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
   static const String _pausedFilter = 'paused';
   static const String _finishedFilter = 'finished';
 
-  /// 当前页面使用的下载任务筛选条件。
   String _selectedFilter = _allFilter;
 
-  /// 弹出新建下载任务对话框。
   Future<void> _showAddTaskDialog(BuildContext context) async {
-    
     final controller = TextEditingController();
     String? errorText;
     bool isSubmitting = false;
@@ -88,7 +85,6 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
     );
   }
 
-  /// 展示下载任务详情面板。
   void _showTaskDetail(BuildContext context, DownloadTask task) {
     showModalBottomSheet<void>(
       context: context,
@@ -97,15 +93,12 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
     );
   }
 
-  /// 执行下载任务操作，例如暂停、恢复、删除。
   Future<void> _handleTaskAction(BuildContext context, DownloadTask task, String action) async {
-    
     try {
       if (action == 'detail') {
         _showTaskDetail(context, task);
         return;
       }
-
       if (action == 'pause') {
         await ref.read(downloadPauseProvider)(task.id);
       } else if (action == 'resume') {
@@ -126,7 +119,6 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
         if (!confirmed) return;
         await ref.read(downloadDeleteProvider)(task.id);
       }
-
       if (context.mounted) {
         Toast.success(l10n.operationSuccess);
       }
@@ -137,22 +129,17 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
     }
   }
 
-  /// 根据页面当前筛选条件过滤下载任务。
   List<DownloadTask> _filterTasks(List<DownloadTask> tasks) {
-    if (_selectedFilter == _allFilter) {
-      return tasks;
-    }
+    if (_selectedFilter == _allFilter) return tasks;
     return tasks.where((task) => task.status == _selectedFilter).toList();
   }
 
-  /// 刷新下载任务列表。
   Future<void> _refreshTasks() async {
     ref.invalidate(downloadListProvider);
   }
 
   @override
   Widget build(BuildContext context) {
-    
     final connection = ref.watch(currentConnectionProvider);
     final currentServer = connection.server;
     final currentSession = connection.session;
@@ -161,7 +148,83 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
       return Scaffold(appBar: AppBar(title: Text(l10n.downloadsTitle)), body: Center(child: Text(l10n.noSessionPleaseLogin)));
     }
 
-    final tasksAsync = ref.watch(downloadListProvider);
+    final availableAsync = ref.watch(downloadStationAvailableProvider);
+
+    return availableAsync.when(
+      loading: () => Scaffold(appBar: AppBar(title: Text(l10n.downloadsTitle)), body: const Center(child: CircularProgressIndicator())),
+      error: (_, __) => _NotInstalledView(onRetry: () => ref.invalidate(downloadStationAvailableProvider)),
+      data: (available) {
+        if (!available) {
+          return Scaffold(appBar: AppBar(title: Text(l10n.downloadsTitle)), body: _NotInstalledView(onRetry: () => ref.invalidate(downloadStationAvailableProvider)));
+        }
+        return _DownloadContent(
+          selectedFilter: _selectedFilter,
+          onFilterChanged: (f) => setState(() => _selectedFilter = f),
+          onRefresh: _refreshTasks,
+          onShowAddDialog: () => _showAddTaskDialog(context),
+          onHandleAction: (task, action) => _handleTaskAction(context, task, action),
+          tasksAsync: ref.watch(downloadListProvider),
+          filterTasks: _filterTasks,
+        );
+      },
+    );
+  }
+}
+
+class _NotInstalledView extends StatelessWidget {
+  const _NotInstalledView({required this.onRetry});
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.download_outlined, size: 72, color: theme.colorScheme.onSurfaceVariant),
+            const SizedBox(height: 24),
+            Text('Download Station ${l10n.notInstalled}', style: theme.textTheme.titleLarge),
+            const SizedBox(height: 8),
+            Text(
+              '请在群晖 NAS 上安装 Download Station 套件',
+              style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            FilledButton.icon(onPressed: onRetry, icon: const Icon(Icons.refresh), label: Text(l10n.retry)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DownloadContent extends StatelessWidget {
+  const _DownloadContent({
+    required this.selectedFilter,
+    required this.onFilterChanged,
+    required this.onRefresh,
+    required this.onShowAddDialog,
+    required this.onHandleAction,
+    
+    required this.tasksAsync,
+    required this.filterTasks,
+  });
+
+  final String selectedFilter;
+  final ValueChanged<String> onFilterChanged;
+  final Future<void> Function() onRefresh;
+  final VoidCallback onShowAddDialog;
+  final Future<void> Function(DownloadTask, String) onHandleAction;
+  final AsyncValue<List<DownloadTask>> tasksAsync;
+  final List<DownloadTask> Function(List<DownloadTask>) filterTasks;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.downloadsTitle)),
@@ -174,23 +237,23 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
               children: [
                 ChoiceChip(
                   label: Text(l10n.downloadFilterAll),
-                  selected: _selectedFilter == _allFilter,
-                  onSelected: (_) => setState(() => _selectedFilter = _allFilter),
+                  selected: selectedFilter == 'all',
+                  onSelected: (_) => onFilterChanged('all'),
                 ),
                 ChoiceChip(
                   label: Text(l10n.downloadFilterDownloading),
-                  selected: _selectedFilter == _downloadingFilter,
-                  onSelected: (_) => setState(() => _selectedFilter = _downloadingFilter),
+                  selected: selectedFilter == 'downloading',
+                  onSelected: (_) => onFilterChanged('downloading'),
                 ),
                 ChoiceChip(
                   label: Text(l10n.downloadFilterPaused),
-                  selected: _selectedFilter == _pausedFilter,
-                  onSelected: (_) => setState(() => _selectedFilter = _pausedFilter),
+                  selected: selectedFilter == 'paused',
+                  onSelected: (_) => onFilterChanged('paused'),
                 ),
                 ChoiceChip(
                   label: Text(l10n.downloadFilterFinished),
-                  selected: _selectedFilter == _finishedFilter,
-                  onSelected: (_) => setState(() => _selectedFilter = _finishedFilter),
+                  selected: selectedFilter == 'finished',
+                  onSelected: (_) => onFilterChanged('finished'),
                 ),
               ],
             ),
@@ -198,12 +261,12 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
           Expanded(
             child: tasksAsync.when(
               data: (tasks) {
-                final visibleTasks = _filterTasks(tasks);
+                final visibleTasks = filterTasks(tasks);
                 if (visibleTasks.isEmpty) {
                   return Center(child: Text(l10n.noTasksForFilter));
                 }
                 return RefreshIndicator(
-                  onRefresh: _refreshTasks,
+                  onRefresh: onRefresh,
                   child: ListView.builder(
                     itemCount: visibleTasks.length,
                     itemBuilder: (context, index) {
@@ -222,7 +285,7 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
                             ],
                           ),
                           trailing: PopupMenuButton<String>(
-                            onSelected: (value) => _handleTaskAction(context, task, value),
+                            onSelected: (value) => onHandleAction(task, value),
                             itemBuilder: (context) => [
                               PopupMenuItem(value: 'detail', child: Text(l10n.detail)),
                               PopupMenuItem(value: isPaused ? 'resume' : 'pause', child: Text(isPaused ? l10n.resume : l10n.pause)),
@@ -233,7 +296,7 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
                               child: Text('${(task.progress * 100).toStringAsFixed(0)}%'),
                             ),
                           ),
-                          onTap: () => _showTaskDetail(context, task),
+                          onTap: () => _showTaskDetailSheet(context, task),
                         ),
                       );
                     },
@@ -248,7 +311,7 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
                     children: [
                       Text('${l10n.downloadTasksLoadFailed}：${ErrorMapper.map(error).message}', style: const TextStyle(color: Colors.red)),
                       const SizedBox(height: 12),
-                      FilledButton(onPressed: _refreshTasks, child: Text(l10n.retry)),
+                      FilledButton(onPressed: onRefresh, child: Text(l10n.retry)),
                     ],
                   ),
                 ),
@@ -258,7 +321,15 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(onPressed: () => _showAddTaskDialog(context), child: const Icon(Icons.add)),
+      floatingActionButton: FloatingActionButton(onPressed: onShowAddDialog, child: const Icon(Icons.add)),
+    );
+  }
+
+  void _showTaskDetailSheet(BuildContext context, DownloadTask task) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => DownloadTaskDetailSheet(task: task),
     );
   }
 }

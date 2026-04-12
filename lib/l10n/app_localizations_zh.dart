@@ -132,6 +132,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get downloadsTitle => '下载';
 
   @override
+  String get notInstalled => '未安装';
+
+  @override
   String get currentPath => '当前路径';
 
   @override

@@ -133,6 +133,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get downloadsTitle => 'Downloads';
 
   @override
+  String get notInstalled => 'Not Installed';
+
+  @override
   String get currentPath => 'Current path';
 
   @override

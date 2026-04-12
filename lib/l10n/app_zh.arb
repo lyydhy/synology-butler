@@ -40,6 +40,10 @@
   "notLoggedIn": "未登录",
   "filesTitle": "文件",
   "downloadsTitle": "下载",
+  "notInstalled": "未安装",
+  "@notInstalled": {
+    "description": "套件未安装"
+  },
   "currentPath": "当前路径",
   "sortByName": "按名称排序",
   "sortBySize": "按大小排序",
