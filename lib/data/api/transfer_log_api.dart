@@ -27,8 +27,8 @@ class TransferLogApi {
 
     final data = response.data['data'] as Map? ?? const {};
     return {
-      'cifs': data['cifs'] == '1',
-      'afp': data['afp'] == '1',
+      'cifs': data['cifs'] == true || data['cifs'] == '1' || data['cifs'] == 1,
+      'afp': data['afp'] == true || data['afp'] == '1' || data['afp'] == 1,
     };
   }
 
