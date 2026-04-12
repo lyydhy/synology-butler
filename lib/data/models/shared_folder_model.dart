@@ -12,9 +12,12 @@ class SharedFolderModel {
   }
 
   static SharedFolder parseItem(Map<String, dynamic> data) {
+    // DSM API 将 additional 字段嵌套在 additional 对象中
+    final additional = data['additional'] as Map<String, dynamic>? ?? {};
+
     // size_used / size_total 在某些 DSM 版本可能是 double，需要安全转换
-    final usedSize = _toIntSafe(data['size_used']);
-    final totalSize = _toIntSafe(data['size_total']);
+    final usedSize = _toIntSafe(additional['size_used'] ?? data['size_used']);
+    final totalSize = _toIntSafe(additional['size_total'] ?? data['size_total']);
 
     String usageText = '';
     if (usedSize != null && totalSize != null && totalSize > 0) {
@@ -27,7 +30,7 @@ class SharedFolderModel {
       name: data['name'] as String? ?? '',
       description: data['desc'] as String? ?? '',
       volumePath: data['vol_path'] as String? ?? '',
-      fileSystem: data['file_system'] as String? ?? '',
+      fileSystem: (additional['file_system'] as String?) ?? (data['file_system'] as String?) ?? '',
       isReadOnly: data['is_readonly'] == true || data['is_force_readonly'] == true,
       isHidden: data['hidden'] == true || data['hidden'] == 1 || data['is_hidden'] == true,
       recycleBinEnabled: data['enable_recycle_bin'] == true || data['enable_recycle_bin'] == 1 || data['recyclebin'] == true || data['recyclebin'] == 1,

@@ -339,16 +339,18 @@ class _FolderDetailSheet extends StatelessWidget {
                           ? '${folder.volumeName}${folder.volumeDesc != null && folder.volumeDesc!.isNotEmpty ? ' (${folder.volumeDesc})' : ''}'
                           : folder.volumePath,
                     ),
-                    _DetailTile(
-                      icon: Icons.storage_outlined,
-                      label: l10n.fileSystem,
-                      value: folder.fileSystem,
-                    ),
-                    _DetailTile(
-                      icon: Icons.pie_chart_outline_rounded,
-                      label: l10n.spaceUsage,
-                      value: folder.usageText.isEmpty ? l10n.unknown : folder.usageText,
-                    ),
+                    if (folder.fileSystem.isNotEmpty)
+                      _DetailTile(
+                        icon: Icons.storage_outlined,
+                        label: l10n.fileSystem,
+                        value: folder.fileSystem,
+                      ),
+                    if (folder.usageText.isNotEmpty)
+                      _DetailTile(
+                        icon: Icons.pie_chart_outline_rounded,
+                        label: l10n.spaceUsage,
+                        value: folder.usageText,
+                      ),
                     if (folder.quotaValue != null && folder.quotaValue! > 0)
                       _DetailTile(
                         icon: Icons.data_usage_rounded,
