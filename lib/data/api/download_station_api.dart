@@ -28,25 +28,32 @@ class DsmDownloadStationApi implements DownloadStationApi {
 
   @override
   Future<List<DownloadTaskModel>> listTasks() async {
-    final response = await _dio.get(
-      '/webapi/DownloadStation/task.cgi',
-      queryParameters: {
-        'api': 'SYNO.DownloadStation.Task',
-        'version': '1',
+    final response = await _dio.post(
+      '/webapi/entry.cgi',
+      data: {
+        'api': 'SYNO.DownloadStation2.Task',
+        'version': '2',
         'method': 'list',
+        'sort_by': 'total_size',
+        'order': 'ASC',
+        'action': 'enum',
+        'type_inverse': true,
+        'limit': 25,
         'additional': 'detail,transfer',
       },
+      options: Options(contentType: Headers.formUrlEncodedContentType),
     );
 
     if (response.data is Map && response.data['success'] == true) {
       final data = response.data['data'] as Map? ?? const {};
-      final tasks = (data['tasks'] as List?) ?? const [];
+      // SYNO.DownloadStation2.Task returns 'task' array, not 'tasks'
+      final tasks = (data['task'] as List?) ?? const [];
       return tasks.map((item) {
         final map = item as Map;
         final additional = map['additional'] as Map? ?? const {};
         final transfer = additional['transfer'] as Map? ?? const {};
         final sizeDownloaded = (transfer['size_downloaded'] as num?)?.toDouble() ?? 0;
-        final sizeTotal = (transfer['size_total'] as num?)?.toDouble() ?? 0;
+        final sizeTotal = (map['size'] as num?)?.toDouble() ?? 0;
         final progress = sizeTotal > 0 ? (sizeDownloaded / sizeTotal) : 0.0;
 
         return DownloadTaskModel(
@@ -69,14 +76,15 @@ class DsmDownloadStationApi implements DownloadStationApi {
   Future<void> createTask({
     required String uri,
   }) async {
-    final response = await _dio.get(
-      '/webapi/DownloadStation/task.cgi',
-      queryParameters: {
+    final response = await _dio.post(
+      '/webapi/entry.cgi',
+      data: {
         'api': 'SYNO.DownloadStation.Task',
         'version': '1',
         'method': 'create',
         'uri': uri,
       },
+      options: Options(contentType: Headers.formUrlEncodedContentType),
     );
 
     if (response.data is Map && response.data['success'] == true) {
@@ -94,14 +102,15 @@ class DsmDownloadStationApi implements DownloadStationApi {
   Future<void> pauseTask({
     required String id,
   }) async {
-    final response = await _dio.get(
-      '/webapi/DownloadStation/task.cgi',
-      queryParameters: {
+    final response = await _dio.post(
+      '/webapi/entry.cgi',
+      data: {
         'api': 'SYNO.DownloadStation.Task',
         'version': '1',
         'method': 'pause',
         'id': id,
       },
+      options: Options(contentType: Headers.formUrlEncodedContentType),
     );
 
     if (response.data is Map && response.data['success'] == true) return;
@@ -117,14 +126,15 @@ class DsmDownloadStationApi implements DownloadStationApi {
   Future<void> resumeTask({
     required String id,
   }) async {
-    final response = await _dio.get(
-      '/webapi/DownloadStation/task.cgi',
-      queryParameters: {
+    final response = await _dio.post(
+      '/webapi/entry.cgi',
+      data: {
         'api': 'SYNO.DownloadStation.Task',
         'version': '1',
         'method': 'resume',
         'id': id,
       },
+      options: Options(contentType: Headers.formUrlEncodedContentType),
     );
 
     if (response.data is Map && response.data['success'] == true) return;
@@ -140,15 +150,16 @@ class DsmDownloadStationApi implements DownloadStationApi {
   Future<void> deleteTask({
     required String id,
   }) async {
-    final response = await _dio.get(
-      '/webapi/DownloadStation/task.cgi',
-      queryParameters: {
+    final response = await _dio.post(
+      '/webapi/entry.cgi',
+      data: {
         'api': 'SYNO.DownloadStation.Task',
         'version': '1',
         'method': 'delete',
         'id': id,
         'force_complete': false,
       },
+      options: Options(contentType: Headers.formUrlEncodedContentType),
     );
 
     if (response.data is Map && response.data['success'] == true) return;
