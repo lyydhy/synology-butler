@@ -7,6 +7,7 @@ import 'package:dayfl/dayfl.dart';
 import 'package:dio/dio.dart';
 
 import '../../core/network/app_dio.dart';
+import '../../core/utils/dsm_error_helper.dart';
 import '../../core/utils/dsm_logger.dart';
 import '../../domain/entities/file_background_task.dart';
 import '../../domain/entities/file_item.dart';
@@ -498,18 +499,20 @@ class DsmFileStationApi implements FileStationApi {
     DsmLogger.request(
       module: 'FileStation',
       action: 'createShareLink',
-      method: 'GET',
+      method: 'POST',
       path: path,
     );
 
-    final response = await _dio.get(
+    // DSM expects path as a JSON-encoded array
+    final response = await _dio.post(
       '/webapi/entry.cgi',
-      queryParameters: {
+      data: {
         'api': 'SYNO.FileStation.Sharing',
         'version': '3',
         'method': 'create',
-        'path': path,
+        'path': jsonEncode([path]),
       },
+      options: Options(contentType: Headers.formUrlEncodedContentType),
     );
 
     if (response.data is Map && response.data['success'] == true) {
@@ -532,9 +535,10 @@ class DsmFileStationApi implements FileStationApi {
       response: response.data,
     );
 
+    final errorCode = DsmErrorHelper.extractErrorCode(response.data);
     throw DioException(
       requestOptions: response.requestOptions,
-      error: _extractError(action: 'createShareLink', data: response.data),
+      error: DsmErrorHelper.mapErrorCode(errorCode) ?? '分享链接创建失败',
       response: response,
     );
   }

@@ -30,24 +30,17 @@ class _VideoPreviewPageState extends State<VideoPreviewPage> {
     _init();
   }
 
+  String get _streamUrl {
+    // DSM FileStation streaming API
+    // /webapi/entry.cgi?api=SYNO.FileStation.Streaming&method=stream&path=xxx&_sid=xxx
+    final encodedPath = Uri.encodeComponent(widget.path);
+    final sid = widget.synoToken ?? '';
+    return '${widget.baseUrl}/webapi/entry.cgi?api=SYNO.FileStation.Streaming&method=stream&path=$encodedPath&_sid=$sid';
+  }
+
   Future<void> _init() async {
     try {
-      final token = widget.synoToken;
-      if (token == null || token.isEmpty) {
-        throw Exception('缺少 SynoToken，无法远程播放');
-      }
-
-      final launchParam = 'ieMode=9&is_drive=false&path=${Uri.encodeComponent(widget.path)}&file_id=${Uri.encodeComponent(widget.path)}';
-      final uri = Uri.parse(widget.baseUrl).replace(
-        path: '/',
-        queryParameters: {
-          'launchApp': 'SYNO.SDS.VideoPlayer2.Application',
-          'SynoToken': token,
-          'launchParam': launchParam,
-          'ieMode': '9',
-        },
-      );
-
+      final uri = Uri.parse(_streamUrl);
       final controller = VideoPlayerController.networkUrl(uri);
       await controller.initialize();
       controller.play();
