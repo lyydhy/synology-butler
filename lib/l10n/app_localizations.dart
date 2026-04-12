@@ -62,8 +62,7 @@ import 'app_localizations_zh.dart';
 /// be consistent with the languages listed in the AppLocalizations.supportedLocales
 /// property.
 abstract class AppLocalizations {
-  AppLocalizations(String locale)
-      : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+  AppLocalizations(String locale) : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -71,8 +70,7 @@ abstract class AppLocalizations {
     return Localizations.of<AppLocalizations>(context, AppLocalizations)!;
   }
 
-  static const LocalizationsDelegate<AppLocalizations> delegate =
-      _AppLocalizationsDelegate();
+  static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
 
   /// A list of this localizations delegate along with the default localizations
   /// delegates.
@@ -84,8 +82,7 @@ abstract class AppLocalizations {
   /// Additional delegates can be added by appending to this list in
   /// MaterialApp. This list does not have to be used at all if a custom list
   /// of delegates is preferred or required.
-  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
-      <LocalizationsDelegate<dynamic>>[
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates = <LocalizationsDelegate<dynamic>>[
     delegate,
     GlobalMaterialLocalizations.delegate,
     GlobalCupertinoLocalizations.delegate,
@@ -703,6 +700,72 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'状态'**
   String get status;
+
+  /// No description provided for @downloadStatusWaiting.
+  ///
+  /// In zh, this message translates to:
+  /// **'等待中'**
+  String get downloadStatusWaiting;
+
+  /// No description provided for @downloadStatusDownloading.
+  ///
+  /// In zh, this message translates to:
+  /// **'下载中'**
+  String get downloadStatusDownloading;
+
+  /// No description provided for @downloadStatusPaused.
+  ///
+  /// In zh, this message translates to:
+  /// **'已暂停'**
+  String get downloadStatusPaused;
+
+  /// No description provided for @downloadStatusFinished.
+  ///
+  /// In zh, this message translates to:
+  /// **'已完成'**
+  String get downloadStatusFinished;
+
+  /// No description provided for @downloadStatusSeeding.
+  ///
+  /// In zh, this message translates to:
+  /// **'做种中'**
+  String get downloadStatusSeeding;
+
+  /// No description provided for @downloadStatusHashChecking.
+  ///
+  /// In zh, this message translates to:
+  /// **'校验中'**
+  String get downloadStatusHashChecking;
+
+  /// No description provided for @downloadStatusExtracting.
+  ///
+  /// In zh, this message translates to:
+  /// **'解压中'**
+  String get downloadStatusExtracting;
+
+  /// No description provided for @downloadStatusError.
+  ///
+  /// In zh, this message translates to:
+  /// **'出错'**
+  String get downloadStatusError;
+
+  /// No description provided for @downloadStatusUnknown.
+  ///
+  /// In zh, this message translates to:
+  /// **'未知'**
+  String get downloadStatusUnknown;
+
+  /// No description provided for @downloadStatusFileHostingWaiting.
+  ///
+  /// In zh, this message translates to:
+  /// **'等待资源'**
+  String get downloadStatusFileHostingWaiting;
+
+  /// No description provided for @downloadStatusCaptchaNeeded.
+  ///
+  /// In zh, this message translates to:
+  /// **'需要验证码'**
+  String get downloadStatusCaptchaNeeded;
 
   /// No description provided for @progress.
   ///
@@ -3621,8 +3684,7 @@ abstract class AppLocalizations {
   String get sharingLinksNoLimit;
 }
 
-class _AppLocalizationsDelegate
-    extends LocalizationsDelegate<AppLocalizations> {
+class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
   const _AppLocalizationsDelegate();
 
   @override
@@ -3631,25 +3693,25 @@ class _AppLocalizationsDelegate
   }
 
   @override
-  bool isSupported(Locale locale) =>
-      <String>['en', 'zh'].contains(locale.languageCode);
+  bool isSupported(Locale locale) => <String>['en', 'zh'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
 }
 
 AppLocalizations lookupAppLocalizations(Locale locale) {
+
+
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
-    case 'en':
-      return AppLocalizationsEn();
-    case 'zh':
-      return AppLocalizationsZh();
+    case 'en': return AppLocalizationsEn();
+    case 'zh': return AppLocalizationsZh();
   }
 
   throw FlutterError(
-      'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
-      'an issue with the localizations generation tool. Please file an issue '
-      'on GitHub with a reproducible sample app and the gen-l10n configuration '
-      'that was used.');
+    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+    'an issue with the localizations generation tool. Please file an issue '
+    'on GitHub with a reproducible sample app and the gen-l10n configuration '
+    'that was used.'
+  );
 }

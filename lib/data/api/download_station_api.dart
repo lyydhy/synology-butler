@@ -72,15 +72,19 @@ class DsmDownloadStationApi implements DownloadStationApi {
       return tasks.map((item) {
         final map = item as Map;
         final additional = map['additional'] as Map? ?? const {};
+        final detail = additional['detail'] as Map? ?? const {};
         final transfer = additional['transfer'] as Map? ?? const {};
         final sizeDownloaded = (transfer['size_downloaded'] as num?)?.toDouble() ?? 0;
         final sizeTotal = (map['size'] as num?)?.toDouble() ?? 0;
         final progress = sizeTotal > 0 ? (sizeDownloaded / sizeTotal) : 0.0;
 
+        // status 是数字代码，用 code 做映射而非 DSM 返回的 status_string（后者已做多语言，不一定与我们 l10n 对齐）
+        final statusCode = (detail['status'] ?? map['status'] ?? 99).toString();
+
         return DownloadTaskModel(
           id: (map['id'] ?? '').toString(),
           title: (map['title'] ?? '').toString(),
-          status: (map['status'] ?? 'unknown').toString(),
+          status: statusCode,
           progress: progress,
         );
       }).toList();

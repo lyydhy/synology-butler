@@ -312,6 +312,39 @@ class AppLocalizationsZh extends AppLocalizations {
   String get status => '状态';
 
   @override
+  String get downloadStatusWaiting => '等待中';
+
+  @override
+  String get downloadStatusDownloading => '下载中';
+
+  @override
+  String get downloadStatusPaused => '已暂停';
+
+  @override
+  String get downloadStatusFinished => '已完成';
+
+  @override
+  String get downloadStatusSeeding => '做种中';
+
+  @override
+  String get downloadStatusHashChecking => '校验中';
+
+  @override
+  String get downloadStatusExtracting => '解压中';
+
+  @override
+  String get downloadStatusError => '出错';
+
+  @override
+  String get downloadStatusUnknown => '未知';
+
+  @override
+  String get downloadStatusFileHostingWaiting => '等待资源';
+
+  @override
+  String get downloadStatusCaptchaNeeded => '需要验证码';
+
+  @override
   String get progress => '进度';
 
   @override
@@ -1690,8 +1723,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get noComposeProjects => '暂无 Compose 项目';
 
   @override
-  String get usingDsmComposeProjects =>
-      '当前使用 DSM / Container Manager 原生 Compose 项目数据。';
+  String get usingDsmComposeProjects => '当前使用 DSM / Container Manager 原生 Compose 项目数据。';
 
   @override
   String get noImageData => '暂无镜像数据';
