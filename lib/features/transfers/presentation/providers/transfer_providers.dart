@@ -32,9 +32,12 @@ class TransferController extends StateNotifier<List<TransferTask>> {
   /// background_downloader 状态更新订阅
   StreamSubscription<TaskUpdate>? _bdUpdatesSubscription;
 
-  /// 初始化 background_downloader：注册全局状态回调并启动
-  void _initBgrDownloader() {
-    // 注册任务状态/进度回调，所有下载任务共用
+  /// 标记 FileDownloader.start() 是否已完成
+  bool _bdStarted = false;
+
+  /// 初始化 background_downloader：注册回调并启动
+  Future<void> _initBgrDownloader() async {
+    // 注册任务状态/进度回调
     FileDownloader().registerCallbacks(
       taskStatusCallback: (TaskStatusUpdate update) {
         _onBgrStatus(update);
@@ -44,7 +47,7 @@ class TransferController extends StateNotifier<List<TransferTask>> {
       },
     );
 
-    // 监听所有任务状态变化，用于更新我们的 UI state
+    // 监听所有任务状态变化
     _bdUpdatesSubscription = FileDownloader().updates.listen((update) {
       if (update is TaskStatusUpdate) {
         _onBgrStatus(update);
@@ -54,9 +57,14 @@ class TransferController extends StateNotifier<List<TransferTask>> {
     });
 
     // 启动 FileDownloader（关键！不调用则任务永远不开始）
-    // start() 会进行数据库跟踪、后台任务恢复等初始化
-    // 重复调用 start() 是安全的，BD 内部有保护
-    FileDownloader().start();
+    print('[Download] calling FileDownloader.start()...');
+    try {
+      await FileDownloader().start();
+      _bdStarted = true;
+      print('[Download] FileDownloader.start() completed');
+    } catch (e) {
+      print('[Download] FileDownloader.start() error: $e');
+    }
   }
 
   /// background_downloader 任务状态回调
@@ -192,8 +200,15 @@ class TransferController extends StateNotifier<List<TransferTask>> {
     required String displayName,
     int? estimatedSize,
   }) async {
-    // 确保 FileDownloader 已启动（重复调用无害）
-    await FileDownloader().start();
+    // 确保 FileDownloader 已启动
+    if (!_bdStarted) {
+      print('[Download] _bdStarted=false, waiting for start...');
+      // 等到 _initBgrDownloader 的 start() 完成
+      while (!_bdStarted) {
+        await Future.delayed(const Duration(milliseconds: 200));
+      }
+      print('[Download] _bdStarted=true, continuing enqueue');
+    }
 
     final targetDir = await _resolveDownloadDirectory();
     final targetFile = await _resolveUniqueFile(targetDir, displayName);
