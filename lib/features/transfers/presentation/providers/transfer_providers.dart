@@ -376,6 +376,7 @@ class TransferController extends StateNotifier<List<TransferTask>> {
       // Dio 取消（暂停/取消）不标记为失败
       if (e is DioException && e.type == DioExceptionType.cancel) {
         _cancelTokens.remove(id);
+        print('[Download] CATCH cancel id=$id actualWritten=$actualWritten');
         // cancel() 后可能有少量数据残存在缓冲区写入文件，
         // 用 truncate 截断到实际写入量，保持文件完整性
         try {
@@ -384,10 +385,12 @@ class TransferController extends StateNotifier<List<TransferTask>> {
             ['-s', actualWritten.toString(), targetFile.path],
           );
           if (result.exitCode != 0) {
-            print('truncate failed: ${result.stderr}');
+            print('[Download] truncate failed: ${result.stderr}');
+          } else {
+            print('[Download] truncate success, file now at $actualWritten bytes');
           }
         } catch (err) {
-          print('truncate error: $err');
+          print('[Download] truncate error: $err');
         }
         return;
       }
@@ -444,6 +447,7 @@ class TransferController extends StateNotifier<List<TransferTask>> {
     final task = state.firstWhere((t) => t.id == id, orElse: () => throw StateError('Task not found'));
     final file = File(task.targetPath);
     final actualSize = await file.exists() ? await file.length() : 0;
+    print('[Download] PAUSE id=$id file=${task.title} actualFileSize=$actualSize stateDownloaded=${task.downloadedBytes}');
     _update(id, status: TransferTaskStatus.paused, downloadedBytes: actualSize, forcePersist: true);
   }
 
@@ -455,10 +459,12 @@ class TransferController extends StateNotifier<List<TransferTask>> {
     // 读取磁盘实际大小作为断点（不用 UI 状态里的节流值）
     final targetFile = File(task.targetPath);
     final actualSize = await targetFile.exists() ? await targetFile.length() : 0;
+    print('[Download] RESUME id=$id file=${task.title} actualFileSize=$actualSize stateDownloaded=${task.downloadedBytes}');
     // 如果实际文件大小明显超过记录的断点（超过 2MB），
     // 说明 server 不支持 Range，之前的 resume 已经把完整文件追加到 partial file 里了。
     // 此时删掉文件重新开始，否则会一直翻倍。
     if (actualSize > task.downloadedBytes + 1024 * 1024 * 2) {
+      print('[Download] RESUME DETECTED server ignored Range! actual=$actualSize > expected=${task.downloadedBytes + 2*1024*1024}, deleting and restarting');
       await targetFile.delete();
       _update(id, status: TransferTaskStatus.paused, downloadedBytes: 0, forcePersist: true);
       return;
@@ -466,6 +472,7 @@ class TransferController extends StateNotifier<List<TransferTask>> {
 
     final newToken = CancelToken();
     _cancelTokens[id] = newToken;
+    print('[Download] RESUME starting from byte=$actualSize');
     _runDownload(id, remotePath: task.sourcePath, targetFile: targetFile, resumeFromBytes: actualSize);
   }
 
