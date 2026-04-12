@@ -228,6 +228,15 @@ class _TransferTaskCardState extends ConsumerState<_TransferTaskCard> {
                       case 'retry':
                         controller.retryTask(task);
                         break;
+                      case 'pause':
+                        controller.pauseDownload(task.id);
+                        break;
+                      case 'resume':
+                        controller.resumeDownload(task.id);
+                        break;
+                      case 'cancel':
+                        controller.cancelDownload(task.id);
+                        break;
                       case 'remove':
                         controller.removeTask(task.id);
                         break;
@@ -275,6 +284,12 @@ class _TransferTaskCardState extends ConsumerState<_TransferTaskCard> {
                       PopupMenuItem(value: 'open_dir', child: Text(l10n.openDirectory)),
                     if (task.status == TransferTaskStatus.failed)
                       PopupMenuItem(value: 'retry', child: Text(l10n.retry)),
+                    if (task.type == TransferTaskType.download && task.status == TransferTaskStatus.running)
+                      PopupMenuItem(value: 'pause', child: Text(l10n.pause)),
+                    if (task.type == TransferTaskType.download && task.status == TransferTaskStatus.paused)
+                      PopupMenuItem(value: 'resume', child: Text(l10n.resume)),
+                    if (task.type == TransferTaskType.download && (task.status == TransferTaskStatus.running || task.status == TransferTaskStatus.paused))
+                      PopupMenuItem(value: 'cancel', child: Text(l10n.cancel)),
                     PopupMenuItem(
                       value: 'copy',
                       child: Text(task.status == TransferTaskStatus.failed ? l10n.copyErrorReason : l10n.copyPath),
@@ -452,6 +467,8 @@ class _TransferTaskCardState extends ConsumerState<_TransferTaskCard> {
         return l10n.statusQueued;
       case TransferTaskStatus.running:
         return l10n.statusRunning;
+      case TransferTaskStatus.paused:
+        return l10n.statusPaused;
       case TransferTaskStatus.success:
         return l10n.statusCompleted;
       case TransferTaskStatus.failed:
@@ -465,6 +482,8 @@ class _TransferTaskCardState extends ConsumerState<_TransferTaskCard> {
         return Icons.schedule_rounded;
       case TransferTaskStatus.running:
         return Icons.autorenew_rounded;
+      case TransferTaskStatus.paused:
+        return Icons.pause_circle_rounded;
       case TransferTaskStatus.success:
         return Icons.check_circle_rounded;
       case TransferTaskStatus.failed:
@@ -478,6 +497,8 @@ class _TransferTaskCardState extends ConsumerState<_TransferTaskCard> {
         return Colors.orange;
       case TransferTaskStatus.running:
         return Colors.blue;
+      case TransferTaskStatus.paused:
+        return Colors.amber;
       case TransferTaskStatus.success:
         return Colors.green;
       case TransferTaskStatus.failed:

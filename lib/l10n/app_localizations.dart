@@ -2432,6 +2432,12 @@ abstract class AppLocalizations {
   /// **'进行中'**
   String get statusRunning;
 
+  /// No description provided for @statusPaused.
+  ///
+  /// In zh, this message translates to:
+  /// **'已暂停'**
+  String get statusPaused;
+
   /// No description provided for @statusCompleted.
   ///
   /// In zh, this message translates to:

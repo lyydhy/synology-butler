@@ -1295,6 +1295,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statusRunning => 'Running';
 
   @override
+  String get statusPaused => 'Paused';
+
+  @override
   String get statusCompleted => 'Completed';
 
   @override

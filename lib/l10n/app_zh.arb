@@ -693,6 +693,7 @@
   "download": "下载",
   "statusQueued": "排队中",
   "statusRunning": "进行中",
+  "statusPaused": "已暂停",
   "statusCompleted": "已完成",
   "statusFailed": "失败",
   "uploadTo": "上传到 {path}",

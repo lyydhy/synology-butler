@@ -27,6 +27,8 @@ abstract class FileStationApi {
     required String path,
     required String localPath,
     void Function(int received, int total)? onReceiveProgress,
+    CancelToken? cancelToken,
+    int resumeFromBytes = 0,
   });
 
   Future<String> readTextFile({
@@ -171,6 +173,10 @@ class DsmFileStationApi implements FileStationApi {
     required String path,
     required String localPath,
     void Function(int received, int total)? onReceiveProgress,
+    CancelToken? cancelToken,
+    /// 从指定字节数开始下载（用于断点续传）。
+    /// 为 0 表示从头开始下载。
+    int resumeFromBytes = 0,
   }) async {
     DsmLogger.request(
       module: 'FileStation',
@@ -181,8 +187,15 @@ class DsmFileStationApi implements FileStationApi {
         'api': 'SYNO.FileStation.Download',
         'method': 'download',
         'localPath': localPath,
+        'resumeFrom': resumeFromBytes,
       },
     );
+
+    final options = Options(responseType: ResponseType.stream);
+    // 断点续传：发送 Range header
+    if (resumeFromBytes > 0) {
+      options.headers = {'Range': 'bytes=$resumeFromBytes-'};
+    }
 
     final response = await _dio.get<ResponseBody>(
       '/webapi/entry.cgi',
@@ -193,7 +206,8 @@ class DsmFileStationApi implements FileStationApi {
         'mode': 'download',
         'path': jsonEncode([path]),
       },
-      options: Options(responseType: ResponseType.stream),
+      options: options,
+      cancelToken: cancelToken,
     );
 
     final body = response.data;
@@ -207,10 +221,27 @@ class DsmFileStationApi implements FileStationApi {
 
     final file = File(localPath);
     await file.parent.create(recursive: true);
-    final sink = file.openWrite();
-    final totalHeader = body.headers[Headers.contentLengthHeader]?.first.trim();
-    final totalBytes = int.tryParse(totalHeader ?? '') ?? -1;
-    var received = 0;
+    // 断点续传时追加写入，否则覆盖
+    final sink = file.openWrite(mode: resumeFromBytes > 0 ? FileMode.append : FileMode.write);
+
+    // 计算实际总大小（如果支持断点续传，Content-Range 会告诉我们总大小）
+    int totalBytes = -1;
+    if (resumeFromBytes > 0) {
+      // 从响应头 Content-Range: bytes X-Y/TOTAL 中提取总大小
+      final rangeHeader = body.headers['content-range']?.first;
+      if (rangeHeader != null) {
+        final slashIdx = rangeHeader.lastIndexOf('/');
+        if (slashIdx >= 0) {
+          totalBytes = int.tryParse(rangeHeader.substring(slashIdx + 1)) ?? -1;
+        }
+      }
+    } else {
+      // 从 0 开始：直接用 Content-Length
+      final clHeader = body.headers[Headers.contentLengthHeader]?.first.trim();
+      totalBytes = int.tryParse(clHeader ?? '') ?? -1;
+    }
+
+    var received = resumeFromBytes;
 
     try {
       await for (final chunk in body.stream) {
@@ -225,13 +256,16 @@ class DsmFileStationApi implements FileStationApi {
         action: 'downloadToPath',
         path: path,
         extra: {
-          'bytes': received,
+          'bytes': received - resumeFromBytes,
+          'totalBytes': totalBytes,
           'localPath': localPath,
         },
       );
     } catch (error) {
       await sink.close();
-      if (await file.exists()) {
+      // 取消时不删除部分文件（保留以便续传）
+      final isCancel = error is DioException && error.type == DioExceptionType.cancel;
+      if (!isCancel && await file.exists()) {
         await file.delete();
       }
       rethrow;

@@ -1,6 +1,6 @@
 enum TransferTaskType { upload, download }
 
-enum TransferTaskStatus { queued, running, success, failed }
+enum TransferTaskStatus { queued, running, paused, success, failed }
 
 class TransferTask {
   final String id;
@@ -14,6 +14,8 @@ class TransferTask {
   final int totalBytes;
   final String? errorMessage;
   final DateTime createdAt;
+  /// 下载任务已下载的字节数（暂停/断点续传用）
+  final int downloadedBytes;
 
   const TransferTask({
     required this.id,
@@ -27,6 +29,7 @@ class TransferTask {
     this.receivedBytes = 0,
     this.totalBytes = 0,
     this.errorMessage,
+    this.downloadedBytes = 0,
   });
 
   factory TransferTask.fromJson(Map<String, dynamic> json) {
@@ -51,6 +54,7 @@ class TransferTask {
       totalBytes: (json['totalBytes'] as num?)?.toInt() ?? 0,
       errorMessage: json['errorMessage']?.toString(),
       createdAt: DateTime.tryParse(json['createdAt']?.toString() ?? '') ?? DateTime.now(),
+      downloadedBytes: (json['downloadedBytes'] as num?)?.toInt() ?? 0,
     );
   }
 
@@ -67,6 +71,7 @@ class TransferTask {
       'totalBytes': totalBytes,
       'errorMessage': errorMessage,
       'createdAt': createdAt.toIso8601String(),
+      'downloadedBytes': downloadedBytes,
     };
   }
 
@@ -80,6 +85,7 @@ class TransferTask {
     int? receivedBytes,
     int? totalBytes,
     String? errorMessage,
+    int? downloadedBytes,
   }) {
     return TransferTask(
       id: id,
@@ -93,6 +99,7 @@ class TransferTask {
       totalBytes: totalBytes ?? this.totalBytes,
       createdAt: createdAt,
       errorMessage: errorMessage ?? this.errorMessage,
+      downloadedBytes: downloadedBytes ?? this.downloadedBytes,
     );
   }
 }

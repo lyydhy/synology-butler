@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_constants.dart';
@@ -19,8 +20,11 @@ class TransferController extends StateNotifier<List<TransferTask>> {
   }
 
   final Ref _ref;
-  
+
   TransferNotificationService get _notificationService => _ref.read(transferNotificationServiceProvider);
+
+  /// 正在运行的下载任务对应的 CancelToken，用于暂停/取消
+  final Map<String, CancelToken> _cancelTokens = {};
 
   String _id() => '${DateTime.now().microsecondsSinceEpoch}_${Random().nextInt(9999)}';
 
@@ -105,8 +109,12 @@ class TransferController extends StateNotifier<List<TransferTask>> {
     final targetDir = await _resolveDownloadDirectory();
     final targetFile = await _resolveUniqueFile(targetDir, displayName);
 
+    final id = _id();
+    final cancelToken = CancelToken();
+    _cancelTokens[id] = cancelToken;
+
     final task = TransferTask(
-      id: _id(),
+      id: id,
       type: TransferTaskType.download,
       status: TransferTaskStatus.queued,
       title: displayName,
@@ -119,7 +127,7 @@ class TransferController extends StateNotifier<List<TransferTask>> {
     );
     state = [task, ...state];
     await _persist();
-    await _runDownload(task.id, remotePath: remotePath, targetFile: targetFile);
+    await _runDownload(id, remotePath: remotePath, targetFile: targetFile);
   }
 
   Future<void> enqueueBatchDownload(List<(String remotePath, String displayName)> items) async {
@@ -145,6 +153,9 @@ class TransferController extends StateNotifier<List<TransferTask>> {
 
     // 创建新任务
     final retryId = _id();
+    if (task.type == TransferTaskType.download) {
+      _cancelTokens[retryId] = CancelToken();
+    }
     final retryTask = TransferTask(
       id: retryId,
       type: task.type,
@@ -291,41 +302,44 @@ class TransferController extends StateNotifier<List<TransferTask>> {
     String id, {
     required String remotePath,
     required File targetFile,
+    int resumeFromBytes = 0,
   }) async {
     // 获取任务信息用于通知
     final task = state.firstWhere((t) => t.id == id, orElse: () => throw StateError('Task not found'));
     final fileName = task.title;
-    
+
     // 注册活跃下载并显示通知
     _notificationService.registerActive(id, TransferType.download);
     await _notificationService.showProgress(
       taskId: id,
       type: TransferType.download,
       fileName: fileName,
-      receivedBytes: 0,
+      receivedBytes: resumeFromBytes,
       totalBytes: 0,
       isRunning: true,
     );
-    
-    _update(id, status: TransferTaskStatus.running, progress: 0.1);
+
+    _update(id, status: TransferTaskStatus.running, progress: resumeFromBytes > 0 ? 0.1 : 0.0, receivedBytes: resumeFromBytes);
     try {
       await _ref.read(fileRepositoryProvider).downloadFileToPath(
             path: remotePath,
             localPath: targetFile.path,
+            resumeFromBytes: resumeFromBytes,
             onReceiveProgress: (received, total) {
+              final totalReceived = resumeFromBytes + received;
               if (total <= 0) {
-                _update(id, progress: 0.1, receivedBytes: received, totalBytes: 0);
+                _update(id, progress: 0.1, receivedBytes: totalReceived, totalBytes: 0);
                 _notificationService.showProgress(
                   taskId: id,
                   type: TransferType.download,
                   fileName: fileName,
-                  receivedBytes: received,
+                  receivedBytes: totalReceived,
                   totalBytes: 0,
                   isRunning: true,
                 );
               } else {
                 final progress = received / total;
-                _update(id, progress: progress.clamp(0.0, 0.98), receivedBytes: received, totalBytes: total);
+                _update(id, progress: progress.clamp(0.0, 0.98), receivedBytes: totalReceived, totalBytes: total);
                 // 节流通知更新，避免通知栏频繁刷新导致 UI 卡顿
                 final now = DateTime.now();
                 if (now.difference(_lastProgressNotify).inMilliseconds >= _progressNotifyThrottleMs) {
@@ -334,18 +348,22 @@ class TransferController extends StateNotifier<List<TransferTask>> {
                     taskId: id,
                     type: TransferType.download,
                     fileName: fileName,
-                    receivedBytes: received,
+                    receivedBytes: totalReceived,
                     totalBytes: total,
                     isRunning: true,
                   );
                 }
               }
             },
+            cancelToken: _cancelTokens[id],
           );
+
+      // 下载完成，清理 cancelToken
+      _cancelTokens.remove(id);
 
       _update(id, progress: 0.99);
       _update(id, status: TransferTaskStatus.success, progress: 1, errorMessage: '已保存到 ${targetFile.path}', forcePersist: true);
-      
+
       // 显示完成通知
       await _notificationService.showCompleted(
         taskId: id,
@@ -354,8 +372,14 @@ class TransferController extends StateNotifier<List<TransferTask>> {
         filePath: targetFile.path,
       );
     } catch (e) {
+      // Dio 取消（暂停/取消）不标记为失败
+      if (e is DioException && e.type == DioExceptionType.cancel) {
+        _cancelTokens.remove(id);
+        return;
+      }
+      _cancelTokens.remove(id);
       _update(id, status: TransferTaskStatus.failed, progress: 1, errorMessage: e.toString(), forcePersist: true);
-      
+
       // 显示失败通知
       await _notificationService.showFailed(
         taskId: id,
@@ -396,6 +420,45 @@ class TransferController extends StateNotifier<List<TransferTask>> {
     return '$baseName ($index)$ext';
   }
 
+  /// 暂停下载（不删除部分文件，可继续）
+  Future<void> pauseDownload(String id) async {
+    final token = _cancelTokens[id];
+    if (token == null) return;
+    token.cancel('paused');
+    // 获取当前进度用于续传
+    final task = state.firstWhere((t) => t.id == id, orElse: () => throw StateError('Task not found'));
+    _update(id, status: TransferTaskStatus.paused, downloadedBytes: task.receivedBytes, forcePersist: true);
+  }
+
+  /// 继续被暂停的下载
+  Future<void> resumeDownload(String id) async {
+    final task = state.firstWhere((t) => t.id == id, orElse: () => throw StateError('Task not found'));
+    if (task.status != TransferTaskStatus.paused) return;
+    final newToken = CancelToken();
+    _cancelTokens[id] = newToken;
+    final targetFile = File(task.targetPath);
+    _runDownload(id, remotePath: task.sourcePath, targetFile: targetFile, resumeFromBytes: task.downloadedBytes);
+  }
+
+  /// 取消下载（删除部分文件）
+  Future<void> cancelDownload(String id) async {
+    final token = _cancelTokens[id];
+    if (token != null) {
+      token.cancel('cancelled');
+    }
+    final task = state.firstWhere((t) => t.id == id, orElse: () => throw StateError('Task not found'));
+    // 删除部分文件
+    final file = File(task.targetPath);
+    if (await file.exists()) {
+      try {
+        await file.delete();
+      } catch (_) {}
+    }
+    _cancelTokens.remove(id);
+    state = state.where((t) => t.id != id).toList();
+    await _persist();
+  }
+
   /// 上次持久化的时间
   DateTime _lastPersist = DateTime.now();
 
@@ -421,6 +484,7 @@ class TransferController extends StateNotifier<List<TransferTask>> {
     int? receivedBytes,
     int? totalBytes,
     String? errorMessage,
+    int? downloadedBytes,
     bool forcePersist = false,
   }) async {
     final now = DateTime.now();
@@ -441,6 +505,7 @@ class TransferController extends StateNotifier<List<TransferTask>> {
               receivedBytes: receivedBytes,
               totalBytes: totalBytes,
               errorMessage: errorMessage,
+              downloadedBytes: downloadedBytes,
             )
           else
             task,

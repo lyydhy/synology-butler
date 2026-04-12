@@ -1,5 +1,7 @@
 import 'dart:typed_data';
 
+import 'package:dio/dio.dart';
+
 import '../../domain/entities/file_item.dart';
 import '../../domain/entities/share_link.dart';
 import '../../domain/repositories/file_repository.dart';
@@ -100,11 +102,15 @@ class FileRepositoryImpl implements FileRepository {
     required String path,
     required String localPath,
     void Function(int received, int total)? onReceiveProgress,
+    CancelToken? cancelToken,
+    int resumeFromBytes = 0,
   }) {
     return _api.downloadFileToPath(
       path: path,
       localPath: localPath,
       onReceiveProgress: onReceiveProgress,
+      cancelToken: cancelToken,
+      resumeFromBytes: resumeFromBytes,
     );
   }
 

@@ -665,6 +665,7 @@
   "download": "Download",
   "statusQueued": "Queued",
   "statusRunning": "Running",
+  "statusPaused": "Paused",
   "statusCompleted": "Completed",
   "statusFailed": "Failed",
   "uploadTo": "Upload to {path}",

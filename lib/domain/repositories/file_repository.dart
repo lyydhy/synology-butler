@@ -1,5 +1,7 @@
 import 'dart:typed_data';
 
+import 'package:dio/dio.dart';
+
 import '../entities/file_item.dart';
 import '../entities/share_link.dart';
 
@@ -43,6 +45,8 @@ abstract class FileRepository {
     required String path,
     required String localPath,
     void Function(int received, int total)? onReceiveProgress,
+    CancelToken? cancelToken,
+    int resumeFromBytes = 0,
   });
 
   Future<String> readTextFile({

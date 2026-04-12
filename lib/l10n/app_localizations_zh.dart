@@ -1268,6 +1268,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get statusRunning => '进行中';
 
   @override
+  String get statusPaused => '已暂停';
+
+  @override
   String get statusCompleted => '已完成';
 
   @override
