@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/utils/l10n.dart';
 import '../../../../core/utils/toast.dart';
@@ -352,10 +353,7 @@ class _ServiceCardState extends ConsumerState<_ServiceCard> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: () {
-                        // TODO: 跳转到日志查看页
-                        Toast.show(l10n.logViewerComingSoon);
-                      },
+                      onPressed: () => context.push('/app-logs'),
                       icon: const Icon(Icons.history_rounded, size: 18),
                       label: const Text('查看日志'),
                       style: OutlinedButton.styleFrom(
