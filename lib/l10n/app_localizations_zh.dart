@@ -1738,7 +1738,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get noComposeProjects => '暂无 Compose 项目';
 
   @override
-  String get usingDsmComposeProjects => '当前使用 DSM / Container Manager 原生 Compose 项目数据。';
+  String get usingDsmComposeProjects =>
+      '当前使用 DSM / Container Manager 原生 Compose 项目数据。';
 
   @override
   String get noImageData => '暂无镜像数据';

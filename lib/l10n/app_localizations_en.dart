@@ -99,7 +99,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get storage => 'Storage';
 
   @override
-  String get noSessionPleaseLogin => 'No active session. Please log in to your NAS first.';
+  String get noSessionPleaseLogin =>
+      'No active session. Please log in to your NAS first.';
 
   @override
   String get online => 'Online';
@@ -366,7 +367,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appLogsTitle => 'App logs';
 
   @override
-  String get appLogsSubtitle => 'View local log files, copy content, or clear them quickly';
+  String get appLogsSubtitle =>
+      'View local log files, copy content, or clear them quickly';
 
   @override
   String get appLogsEmpty => 'No log files yet';
@@ -414,7 +416,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appLogsRawBadge => 'Raw log';
 
   @override
-  String get appLogsViewerHint => 'You are viewing sanitized content, which is safer to copy or export for troubleshooting.';
+  String get appLogsViewerHint =>
+      'You are viewing sanitized content, which is safer to copy or export for troubleshooting.';
 
   @override
   String get controlPanelTitle => 'Control Panel';
@@ -510,7 +513,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rebuildIndex => 'Rebuild Index';
 
   @override
-  String get rebuildIndexDesc => 'Re-trigger media indexing. Useful for missing thumbnails or abnormal index status.';
+  String get rebuildIndexDesc =>
+      'Re-trigger media indexing. Useful for missing thumbnails or abnormal index status.';
 
   @override
   String get rebuildSubmitted => 'Rebuild index request submitted';
@@ -539,7 +543,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get copy => 'Copy';
 
   @override
-  String get switchedToHttp => 'Switched to HTTP. Only use in trusted local networks.';
+  String get switchedToHttp =>
+      'Switched to HTTP. Only use in trusted local networks.';
 
   @override
   String get selectFromHistory => 'Select from history';
@@ -569,7 +574,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ignoreSslCert => 'Ignore SSL Certificate';
 
   @override
-  String get ignoreSslCertHint => 'Only for self-signed or abnormal certificates';
+  String get ignoreSslCertHint =>
+      'Only for self-signed or abnormal certificates';
 
   @override
   String get httpsOnly => 'Only available for HTTPS';
@@ -593,7 +599,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quickRelogin => 'Quick Re-login';
 
   @override
-  String get quickReloginHint => 'Show this interface when history is available to reduce input.';
+  String get quickReloginHint =>
+      'Show this interface when history is available to reduce input.';
 
   @override
   String get loginToNas => 'Login to NAS';
@@ -602,7 +609,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loginToNasHint => 'Supports LAN IP, domain and port.';
 
   @override
-  String get noUsernameTapChange => 'No username recorded, tap to change account';
+  String get noUsernameTapChange =>
+      'No username recorded, tap to change account';
 
   @override
   String get fill => 'Fill';
@@ -651,7 +659,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get switchedToNewAccount => 'Switched to new account / device login';
 
   @override
-  String get sessionExpired => 'Session expired. Please login again to restore real-time connection.';
+  String get sessionExpired =>
+      'Session expired. Please login again to restore real-time connection.';
 
   @override
   String get enterNasAddress => 'Please enter NAS address or domain';
@@ -669,10 +678,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get enterPassword => 'Please enter password';
 
   @override
-  String get selectDeviceThenPassword => 'Select a device then enter password to login';
+  String get selectDeviceThenPassword =>
+      'Select a device then enter password to login';
 
   @override
-  String get deviceReadyEnterPassword => 'Device ready, enter password to login';
+  String get deviceReadyEnterPassword =>
+      'Device ready, enter password to login';
 
   @override
   String get previewImage => 'Preview Image';
@@ -728,7 +739,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get discardChanges => 'Discard changes?';
 
   @override
-  String get discardChangesHint => 'Current file has unsaved changes. Are you sure you want to go back?';
+  String get discardChangesHint =>
+      'Current file has unsaved changes. Are you sure you want to go back?';
 
   @override
   String get discard => 'Discard';
@@ -830,7 +842,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get splashSubtitleReady => 'Your DSM 7+ Assistant';
 
   @override
-  String get splashSubtitleRestoring => 'Restoring your connection and device status';
+  String get splashSubtitleRestoring =>
+      'Restoring your connection and device status';
 
   @override
   String get splashSubtitlePreparing => 'Preparing login screen';
@@ -854,7 +867,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dashboardContainerManagement => 'Containers';
 
   @override
-  String get dashboardContainerManagementDesc => 'View containers and Compose projects';
+  String get dashboardContainerManagementDesc =>
+      'View containers and Compose projects';
 
   @override
   String get dashboardTransfers => 'Transfers';
@@ -866,13 +880,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dashboardControlPanel => 'Control Panel';
 
   @override
-  String get dashboardControlPanelDesc => 'Access system configuration by priority';
+  String get dashboardControlPanelDesc =>
+      'Access system configuration by priority';
 
   @override
   String get dashboardInformationCenter => 'Info Center';
 
   @override
-  String get dashboardInformationCenterDesc => 'View system and storage details';
+  String get dashboardInformationCenterDesc =>
+      'View system and storage details';
 
   @override
   String get dashboardPerformance => 'Performance';
@@ -937,10 +953,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get previewNfo => 'Preview NFO';
 
   @override
-  String get settingsConnectionStorageSubtitle => 'Manage NAS connections and local download directory';
+  String get settingsConnectionStorageSubtitle =>
+      'Manage NAS connections and local download directory';
 
   @override
-  String get serverManagementHint => 'View, switch, edit and delete saved devices';
+  String get serverManagementHint =>
+      'View, switch, edit and delete saved devices';
 
   @override
   String settingsCurrentServer(String name) {
@@ -948,7 +966,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get downloadDirectoryHint => 'Choose on first download, modify here later';
+  String get downloadDirectoryHint =>
+      'Choose on first download, modify here later';
 
   @override
   String get sharingLinksHint => 'View and copy created share links';
@@ -981,19 +1000,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsAppearanceLanguage => 'Appearance & Language';
 
   @override
-  String get settingsAppearanceSubtitle => 'Adjust app display style and language';
+  String get settingsAppearanceSubtitle =>
+      'Adjust app display style and language';
 
   @override
   String get settingsAppSupport => 'App & Support';
 
   @override
-  String get settingsAppSupportSubtitle => 'Keep common support entries, remove debug and low-frequency features';
+  String get settingsAppSupportSubtitle =>
+      'Keep common support entries, remove debug and low-frequency features';
 
   @override
   String get settingsLogout => 'Logout';
 
   @override
-  String get settingsLogoutSubtitle => 'Clear current session and saved login state';
+  String get settingsLogoutSubtitle =>
+      'Clear current session and saved login state';
 
   @override
   String get settingsAbout => 'About';
@@ -1025,7 +1047,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get selectInstallLocation => 'Select Install Location';
 
   @override
-  String get selectInstallLocationHint => 'Select the volume to install the package';
+  String get selectInstallLocationHint =>
+      'Select the volume to install the package';
 
   @override
   String storeVersion(Object version) {
@@ -1222,7 +1245,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noSavedDevices => 'No saved devices';
 
   @override
-  String get addDeviceHint => 'Add a NAS connection first, then you can quickly switch here.';
+  String get addDeviceHint =>
+      'Add a NAS connection first, then you can quickly switch here.';
 
   @override
   String get addNewConnection => 'Add New Connection';
@@ -1247,16 +1271,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recentTransfers => 'Recent Transfers';
 
   @override
-  String get noTransfersHint => 'No tasks yet. New uploads and downloads will appear here.';
+  String get noTransfersHint =>
+      'No tasks yet. New uploads and downloads will appear here.';
 
   @override
-  String get transfersHint => 'Check active and failed tasks first. Completed records can be cleared anytime.';
+  String get transfersHint =>
+      'Check active and failed tasks first. Completed records can be cleared anytime.';
 
   @override
   String get noTransfersInFilter => 'No transfer tasks in this filter';
 
   @override
-  String get transfersAppearHere => 'New uploads, downloads, and retries will appear here.';
+  String get transfersAppearHere =>
+      'New uploads, downloads, and retries will appear here.';
 
   @override
   String get upload => 'Upload';
@@ -1616,7 +1643,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get viewGroupMembersRequiresDsm => 'Viewing group members requires operation in DSM Web interface';
+  String get viewGroupMembersRequiresDsm =>
+      'Viewing group members requires operation in DSM Web interface';
 
   @override
   String get none => 'None';
@@ -1717,13 +1745,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get currentDataSource => 'Current Data Source';
 
   @override
-  String get dsmDataSourceDescription => 'First version uses Synology native container data source by default.';
+  String get dsmDataSourceDescription =>
+      'First version uses Synology native container data source by default.';
 
   @override
-  String get dpanelDataSourceDescription => 'dpanel adapter reserved, showing module skeleton first.';
+  String get dpanelDataSourceDescription =>
+      'dpanel adapter reserved, showing module skeleton first.';
 
   @override
-  String get dpanelDataSourceDeveloping => 'dpanel data source under development, using Synology data source for now.';
+  String get dpanelDataSourceDeveloping =>
+      'dpanel data source under development, using Synology data source for now.';
 
   @override
   String get containerDataLoadFailed => 'Failed to load container data';
@@ -1738,7 +1769,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noComposeProjects => 'No Compose projects';
 
   @override
-  String get usingDsmComposeProjects => 'Using DSM / Container Manager native Compose project data.';
+  String get usingDsmComposeProjects =>
+      'Using DSM / Container Manager native Compose project data.';
 
   @override
   String get noImageData => 'No image data';
@@ -1853,7 +1885,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sharingLinksEmpty => 'No sharing links';
 
   @override
-  String get sharingLinksEmptyHint => 'Create share links from the Files page to manage them here';
+  String get sharingLinksEmptyHint =>
+      'Create share links from the Files page to manage them here';
 
   @override
   String get sharingLinksLoadFailed => 'Failed to load';
@@ -1865,7 +1898,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sharingLinksClearInvalid => 'Clear Invalid Links';
 
   @override
-  String get sharingLinksClearInvalidConfirm => 'Clear all invalid share links?';
+  String get sharingLinksClearInvalidConfirm =>
+      'Clear all invalid share links?';
 
   @override
   String get sharingLinksClearSuccess => 'Invalid links cleared';
@@ -1938,7 +1972,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sharingLinksStatusExpired => 'Expired';
 
   @override
-  String get sharingLinksSecurityHint => 'For secure sharing, use the Web interface';
+  String get sharingLinksSecurityHint =>
+      'For secure sharing, use the Web interface';
 
   @override
   String get sharingLinksNoLimit => 'No limit';
