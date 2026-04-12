@@ -6,7 +6,8 @@ import 'package:flutter/material.dart';
 class SlidingTabBar extends StatefulWidget {
   const SlidingTabBar({
     super.key,
-    required this.tabController,
+    this.tabController,
+    this.pageController,
     required this.tabs,
     this.backgroundColor,
     this.selectedColor,
@@ -19,9 +20,15 @@ class SlidingTabBar extends StatefulWidget {
     this.indicatorBorderRadius = 18,
     this.horizontalPadding = 6,
     this.onTabSelected,
-  });
+  }) : assert(tabController != null || pageController != null,
+            'Either tabController or pageController must be provided');
 
-  final TabController tabController;
+  /// TabController for TabBarView-based usage.
+  final TabController? tabController;
+
+  /// PageController for PageView-based usage.
+  final PageController? pageController;
+
   final List<SlidingTabItem> tabs;
   final Color? backgroundColor;
   final Color? selectedColor;
@@ -40,37 +47,49 @@ class SlidingTabBar extends StatefulWidget {
 }
 
 class _SlidingTabBarState extends State<SlidingTabBar> {
-  @override
-  void initState() {
-    super.initState();
-    widget.tabController.addListener(_onTabChange);
-    widget.tabController.animation?.addListener(_onAnimationTick);
-  }
+  TabController? get _tabController => widget.tabController;
+  PageController? get _pageController => widget.pageController;
+  bool get _isPageController => widget.pageController != null;
 
-  @override
-  void didUpdateWidget(covariant SlidingTabBar oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.tabController == widget.tabController) {
-      return;
+  int get _currentIndex {
+    if (_isPageController) {
+      return _pageController!.page?.round() ?? _pageController!.initialPage;
     }
-    oldWidget.tabController.removeListener(_onTabChange);
-    oldWidget.tabController.animation?.removeListener(_onAnimationTick);
-    widget.tabController.addListener(_onTabChange);
-    widget.tabController.animation?.addListener(_onAnimationTick);
+    return _tabController!.index;
   }
 
-  @override
-  void dispose() {
-    widget.tabController.removeListener(_onTabChange);
-    widget.tabController.animation?.removeListener(_onAnimationTick);
-    super.dispose();
+  double get _currentPageValue {
+    if (_isPageController) {
+      return _pageController!.position.pixels == 0 && _pageController!.page == null
+          ? _pageController!.initialPage.toDouble()
+          : (_pageController!.page ?? _pageController!.initialPage.toDouble());
+    }
+    final animation = _tabController!.animation;
+    if (animation == null) {
+      return _tabController!.index.toDouble();
+    }
+    return animation.value.clamp(0.0, (widget.tabs.length - 1).toDouble());
+  }
+
+  void _animateTo(int index) {
+    if (_isPageController) {
+      _pageController!.animateToPage(
+        index,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutCubic,
+      );
+    } else {
+      _tabController!.animateTo(index);
+    }
   }
 
   void _onTabChange() {
     if (!mounted) return;
     setState(() {});
-    if (widget.tabController.indexIsChanging == false) {
-      widget.onTabSelected?.call(widget.tabController.index);
+    if (_isPageController) {
+      widget.onTabSelected?.call(_currentIndex);
+    } else if (!_tabController!.indexIsChanging) {
+      widget.onTabSelected?.call(_tabController!.index);
     }
   }
 
@@ -79,12 +98,48 @@ class _SlidingTabBarState extends State<SlidingTabBar> {
     setState(() {});
   }
 
-  double _currentPageValue() {
-    final animation = widget.tabController.animation;
-    if (animation == null) {
-      return widget.tabController.index.toDouble();
+  @override
+  void initState() {
+    super.initState();
+    if (_isPageController) {
+      _pageController!.addListener(_onPageListener);
+    } else {
+      _tabController!.addListener(_onTabChange);
+      _tabController!.animation?.addListener(_onAnimationTick);
     }
-    return animation.value.clamp(0.0, (widget.tabs.length - 1).toDouble());
+  }
+
+  void _onPageListener() {
+    _onAnimationTick();
+  }
+
+  @override
+  void didUpdateWidget(covariant SlidingTabBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (_isPageController) {
+      if (oldWidget.pageController != widget.pageController) {
+        oldWidget.pageController?.removeListener(_onPageListener);
+        widget.pageController?.addListener(_onPageListener);
+      }
+    } else {
+      if (oldWidget.tabController != widget.tabController) {
+        oldWidget.tabController?.removeListener(_onTabChange);
+        oldWidget.tabController?.animation?.removeListener(_onAnimationTick);
+        _tabController?.addListener(_onTabChange);
+        _tabController?.animation?.addListener(_onAnimationTick);
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    if (_isPageController) {
+      _pageController?.removeListener(_onPageListener);
+    } else {
+      _tabController?.removeListener(_onTabChange);
+      _tabController?.animation?.removeListener(_onAnimationTick);
+    }
+    super.dispose();
   }
 
   @override
@@ -117,7 +172,7 @@ class _SlidingTabBarState extends State<SlidingTabBar> {
           final tabWidth = totalWidth / widget.tabs.length;
           final indicatorWidth = tabWidth - widget.horizontalPadding * 2;
 
-          final currentPage = _currentPageValue();
+          final currentPage = _currentPageValue;
           final normalizedProgress = widget.tabs.length > 1 ? currentPage / (widget.tabs.length - 1) : 0.0;
           final offset = normalizedProgress * (totalWidth - tabWidth);
 
@@ -162,7 +217,7 @@ class _SlidingTabBarState extends State<SlidingTabBar> {
                   return Expanded(
                     child: GestureDetector(
                       onTap: () {
-                        widget.tabController.animateTo(index);
+                        _animateTo(index);
                         widget.onTabSelected?.call(index);
                       },
                       behavior: HitTestBehavior.opaque,

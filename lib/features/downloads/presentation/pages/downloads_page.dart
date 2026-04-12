@@ -20,32 +20,32 @@ class DownloadsPage extends ConsumerStatefulWidget {
   ConsumerState<DownloadsPage> createState() => _DownloadsPageState();
 }
 
-class _DownloadsPageState extends ConsumerState<DownloadsPage> with SingleTickerProviderStateMixin {
-  late final TabController _tabController;
-  int get _selectedTab => _tabController.index;
+class _DownloadsPageState extends ConsumerState<DownloadsPage> {
+  late final PageController _pageController;
+  int _currentPage = 0;
 
   // Tab 索引对应: 0=全部 1=下载中 2=已暂停 3=已完成
-  // 状态代码: 1=下载中 2=暂停 3=完成 4=做种
-  static const _statusCodes = ['1', '2', '3', '4'];
+  // 状态代码: 2=下载中 3=暂停 5=完成 8=做种
+  static const _statusCodes = ['2', '3', '5', '8'];
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _pageController = PageController(initialPage: 0);
   }
 
   @override
   void dispose() {
-    _tabController.dispose();
+    _pageController.dispose();
     super.dispose();
   }
 
-  List<DownloadTask> _filterTasks(List<DownloadTask> tasks) {
-    if (_selectedTab == 0) return tasks; // 全部
-    final targetCode = _statusCodes[_selectedTab - 1]; // 1=下载中 2=暂停 3=完成(含做种) 4=做种
-    if (_selectedTab == 3) {
-      // 已完成 tab: status=3(finished) 或 status=4(seeding)
-      return tasks.where((t) => t.status == '3' || t.status == '4').toList();
+  List<DownloadTask> _filterTasks(List<DownloadTask> tasks, int page) {
+    if (page == 0) return tasks; // 全部
+    final targetCode = _statusCodes[page - 1];
+    if (page == 3) {
+      // 已完成 tab: status=5(finished) 或 status=8(seeding)
+      return tasks.where((t) => t.status == '5' || t.status == '8').toList();
     }
     return tasks.where((t) => t.status == targetCode).toList();
   }
@@ -189,8 +189,10 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> with SingleTicker
           );
         }
         return _DownloadScaffold(
-          tabController: _tabController,
-          filterTasks: _filterTasks,
+          pageController: _pageController,
+          currentPage: _currentPage,
+          onPageChanged: (page) => setState(() => _currentPage = page),
+          filterTasks: (tasks, page) => _filterTasks(tasks, page),
           onRefresh: _refreshTasks,
           onShowAddDialog: () => _showAddTaskDialog(context),
           onHandleAction: (task, action) => _handleTaskAction(context, task, action),
@@ -234,7 +236,9 @@ class _NotInstalledView extends StatelessWidget {
 
 class _DownloadScaffold extends ConsumerWidget {
   const _DownloadScaffold({
-    required this.tabController,
+    required this.pageController,
+    required this.currentPage,
+    required this.onPageChanged,
     required this.filterTasks,
     required this.onRefresh,
     required this.onShowAddDialog,
@@ -242,17 +246,26 @@ class _DownloadScaffold extends ConsumerWidget {
     required this.tasksAsync,
   });
 
-  final TabController tabController;
-  final List<DownloadTask> Function(List<DownloadTask>) filterTasks;
+  final PageController pageController;
+  final int currentPage;
+  final ValueChanged<int> onPageChanged;
+  final List<DownloadTask> Function(List<DownloadTask>, int) filterTasks;
   final Future<void> Function() onRefresh;
   final VoidCallback onShowAddDialog;
   final Future<void> Function(DownloadTask, String) onHandleAction;
   final AsyncValue<List<DownloadTask>> tasksAsync;
 
+  static const _tabIcons = [
+    Icons.list_alt,
+    Icons.downloading,
+    Icons.pause_circle_outline,
+    Icons.check_circle_outline,
+  ];
+  static const _tabLabels = ['全部', '下载中', '已暂停', '已完成'];
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.downloadsTitle)),
@@ -261,83 +274,26 @@ class _DownloadScaffold extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
             child: SlidingTabBar(
-              tabController: tabController,
-              tabs: const [
-                SlidingTabItem(icon: Icons.list_alt, label: '全部'),
-                SlidingTabItem(icon: Icons.downloading, label: '下载中'),
-                SlidingTabItem(icon: Icons.pause_circle_outline, label: '已暂停'),
-                SlidingTabItem(icon: Icons.check_circle_outline, label: '已完成'),
-              ],
+              tabController: pageController,
+              tabs: List.generate(
+                4,
+                (i) => SlidingTabItem(icon: _tabIcons[i], label: _tabLabels[i]),
+              ),
               height: 48,
               iconSize: 18,
               fontSize: 12,
             ),
           ),
           Expanded(
-            child: tasksAsync.when(
-              data: (tasks) {
-                final visibleTasks = filterTasks(tasks);
-                if (visibleTasks.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.inbox_outlined,
-                          size: 56,
-                          color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          l10n.noTasksForFilter,
-                          style: theme.textTheme.bodyLarge?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-                return RefreshIndicator(
-                  onRefresh: onRefresh,
-                  child: ListView.builder(
-                    padding: const EdgeInsets.only(top: 8, bottom: 88),
-                    itemCount: visibleTasks.length,
-                    itemBuilder: (context, index) {
-                      final task = visibleTasks[index];
-                      return _DownloadTaskCard(
-                        task: task,
-                        onTap: () => onHandleAction(task, 'detail'),
-                        onAction: (action) => onHandleAction(task, action),
-                      );
-                    },
-                  ),
-                );
-              },
-              error: (error, _) => Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
-                      const SizedBox(height: 16),
-                      Text(
-                        '${l10n.downloadTasksLoadFailed}\n${ErrorMapper.map(error).message}',
-                        style: TextStyle(color: theme.colorScheme.error),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 16),
-                      FilledButton.icon(
-                        onPressed: onRefresh,
-                        icon: const Icon(Icons.refresh),
-                        label: Text(l10n.retry),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              loading: () => const Center(child: CircularProgressIndicator()),
+            child: PageView(
+              controller: pageController,
+              onPageChanged: onPageChanged,
+              children: [
+                _buildTaskListPage(context, ref, 0),
+                _buildTaskListPage(context, ref, 1),
+                _buildTaskListPage(context, ref, 2),
+                _buildTaskListPage(context, ref, 3),
+              ],
             ),
           ),
         ],
@@ -346,6 +302,76 @@ class _DownloadScaffold extends ConsumerWidget {
         onPressed: onShowAddDialog,
         child: const Icon(Icons.add),
       ),
+    );
+  }
+
+  Widget _buildTaskListPage(BuildContext context, WidgetRef ref, int page) {
+    final theme = Theme.of(context);
+
+    return tasksAsync.when(
+      data: (tasks) {
+        final visibleTasks = filterTasks(tasks, page);
+        if (visibleTasks.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.inbox_outlined,
+                  size: 56,
+                  color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  l10n.noTasksForFilter,
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+        return RefreshIndicator(
+          onRefresh: onRefresh,
+          child: ListView.builder(
+            padding: const EdgeInsets.only(top: 8, bottom: 88),
+            itemCount: visibleTasks.length,
+            itemBuilder: (context, index) {
+              final task = visibleTasks[index];
+              return _DownloadTaskCard(
+                task: task,
+                onTap: () => onHandleAction(task, 'detail'),
+                onAction: (action) => onHandleAction(task, action),
+              );
+            },
+          ),
+        );
+      },
+      error: (error, _) => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
+              const SizedBox(height: 16),
+              Text(
+                '${l10n.downloadTasksLoadFailed}\n${ErrorMapper.map(error).message}',
+                style: TextStyle(color: theme.colorScheme.error),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              FilledButton.icon(
+                onPressed: onRefresh,
+                icon: const Icon(Icons.refresh),
+                label: Text(l10n.retry),
+              ),
+            ],
+          ),
+        ),
+      ),
+      loading: () => const Center(child: CircularProgressIndicator()),
     );
   }
 }
@@ -414,16 +440,17 @@ class _DownloadTaskCard extends StatelessWidget {
   });
 
   final DownloadTask task;
-  final VoidCallback onTap;
+  final Void onTap;
   final Future<void> Function(String) onAction;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final statusBadge = _buildStatusBadge(context, task.status);
-    final isPaused = task.status == '2';
-    final isFinished = task.status == '3' || task.status == '4';
-    final isError = task.status == '9';
+    final isPaused = task.status == '3';
+    final isFinished = task.status == '5' || task.status == '8';
+    final isError = task.status == '101';
+    final isDownloading = DownloadStatusHelper.isDownloading(task.status);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -556,16 +583,17 @@ class _DownloadTaskCard extends StatelessWidget {
                             ],
                           ),
                         ),
-                        PopupMenuItem(
-                          value: isPaused ? 'resume' : 'pause',
-                          child: Row(
-                            children: [
-                              Icon(isPaused ? Icons.play_arrow : Icons.pause, size: 18),
-                              const SizedBox(width: 8),
-                              Text(isPaused ? l10n.resume : l10n.pause),
-                            ],
+                        if (!isFinished && !isError)
+                          PopupMenuItem(
+                            value: isPaused ? 'resume' : 'pause',
+                            child: Row(
+                              children: [
+                                Icon(isPaused ? Icons.play_arrow : Icons.pause, size: 18),
+                                const SizedBox(width: 8),
+                                Text(isPaused ? l10n.resume : l10n.pause),
+                              ],
+                            ),
                           ),
-                        ),
                         PopupMenuItem(
                           value: 'delete',
                           child: Row(
@@ -605,7 +633,6 @@ class _DownloadTaskCard extends StatelessWidget {
   }
 
   Widget _buildStatusBadge(BuildContext context, String status) {
-    final theme = Theme.of(context);
     final (color, bgColor, text) = _statusStyle(context, status);
 
     return Container(
@@ -628,27 +655,39 @@ class _DownloadTaskCard extends StatelessWidget {
   (Color, Color, String) _statusStyle(BuildContext context, String status) {
     final theme = Theme.of(context);
     switch (status) {
-      case '1': // downloading
-        return (Colors.white, Colors.blue.shade600, l10n.downloadStatusDownloading);
-      case '0': // waiting
+      case '1':
         return (Colors.white, Colors.orange.shade600, l10n.downloadStatusWaiting);
-      case '2': // paused
+      case '2': // downloading
+        return (Colors.white, Colors.blue.shade600, l10n.downloadStatusDownloading);
+      case '3': // paused
         return (Colors.white, Colors.amber.shade700, l10n.downloadStatusPaused);
-      case '3': // finished
+      case '4': // finishing
+        return (Colors.white, Colors.teal.shade600, l10n.downloadStatusFinishing);
+      case '5': // finished
         return (Colors.white, Colors.green.shade600, l10n.downloadStatusFinished);
-      case '4': // seeding
-        return (Colors.white, Colors.teal.shade600, l10n.downloadStatusSeeding);
-      case '5': // hash_checking
+      case '6': // hash_checking
         return (Colors.white, Colors.purple.shade600, l10n.downloadStatusHashChecking);
-      case '6': // extracting
-        return (Colors.white, Colors.indigo.shade600, l10n.downloadStatusExtracting);
-      case '7': // filehosting_waiting
+      case '7': // pre-seeding
+        return (Colors.white, Colors.teal.shade400, l10n.downloadStatusPreSeeding);
+      case '8': // seeding
+        return (Colors.white, Colors.teal.shade600, l10n.downloadStatusSeeding);
+      case '9': // filehosting_waiting
         return (Colors.white, Colors.deepOrange.shade600, l10n.downloadStatusFileHostingWaiting);
-      case '8': // captcha_needed
+      case '10': // extracting
+        return (Colors.white, Colors.indigo.shade600, l10n.downloadStatusExtracting);
+      case '11': // preprocessing
+        return (Colors.white, Colors.blueGrey.shade600, l10n.downloadStatusPreprocessing);
+      case '13': // downloaded
+        return (Colors.white, Colors.green.shade400, l10n.downloadStatusDownloaded);
+      case '14': // postprocessing
+        return (Colors.white, Colors.purple.shade400, l10n.downloadStatusPostProcessing);
+      case '15': // captcha_needed
         return (Colors.white, Colors.red.shade700, l10n.downloadStatusCaptchaNeeded);
-      case '9': // error
-        return (Colors.white, theme.colorScheme.error, l10n.downloadStatusError);
       default:
+        // 101+ error
+        if (int.tryParse(status) != null && int.parse(status) >= 101) {
+          return (Colors.white, theme.colorScheme.error, l10n.downloadStatusError);
+        }
         return (theme.colorScheme.onSurfaceVariant, theme.colorScheme.surfaceContainerHighest, l10n.downloadStatusUnknown);
     }
   }
