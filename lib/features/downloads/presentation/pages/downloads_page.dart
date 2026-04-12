@@ -274,7 +274,7 @@ class _DownloadScaffold extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
             child: SlidingTabBar(
-              tabController: pageController,
+              pageController: _pageController,
               tabs: List.generate(
                 4,
                 (i) => SlidingTabItem(icon: _tabIcons[i], label: _tabLabels[i]),
@@ -440,7 +440,7 @@ class _DownloadTaskCard extends StatelessWidget {
   });
 
   final DownloadTask task;
-  final Void onTap;
+  final void onTap;
   final Future<void> Function(String) onAction;
 
   @override
