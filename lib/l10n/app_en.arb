@@ -21,6 +21,8 @@
   "testingConnection": "Testing…",
   "testConnection": "Test connection",
   "loggingIn": "Logging in…",
+  "quickLoginNeedPassword": "No password saved, please enter on login page",
+  "loginInProgress": "Logging in…",
   "dashboardTitle": "Home",
   "currentConnection": "Current connection",
   "sessionStatus": "Session status",

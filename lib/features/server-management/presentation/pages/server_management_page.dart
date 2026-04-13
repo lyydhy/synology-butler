@@ -1,9 +1,12 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/error/error_mapper.dart';
 import '../../../../core/utils/toast.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../core/network/app_dio.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../auth/presentation/providers/current_connection_readers.dart';
 import '../widgets/server_edit_dialog.dart';
@@ -49,6 +52,7 @@ class ServerManagementPage extends ConsumerWidget {
     final theme = Theme.of(context);
     final servers = ref.watch(savedServersProvider);
     final currentServer = ref.watch(currentConnectionProvider).server;
+    final savedServerUsernames = ref.watch(savedServerUsernamesProvider);
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.connectionManagement)),
@@ -114,10 +118,57 @@ class ServerManagementPage extends ConsumerWidget {
                             server: server,
                             isCurrent: currentServer?.id == server.id,
                             onSelect: () async {
+                              final savedUsername = savedServerUsernames[server.id];
+                              final savedPassword = ref.read(currentConnectionProvider).password;
+                              if (savedUsername == null ||
+                                  savedUsername.isEmpty ||
+                                  savedPassword == null ||
+                                  savedPassword.isEmpty) {
+                                if (context.mounted) {
+                                  Toast.show(l10n.quickLoginNeedPassword);
+                                  context.pushReplacement('/login', extra: server);
+                                }
+                                return;
+                              }
+
                               await ref.read(switchCurrentServerProvider)(server);
-                              if (context.mounted) {
-                                Toast.show(l10n.switchDeviceRelogin);
-                                context.pushReplacement('/login', extra: server);
+                              if (!context.mounted) return;
+
+                              Toast.show(l10n.loginInProgress);
+
+                              try {
+                                final version = await ref.read(authRepositoryProvider).probeVersion(server: server);
+                                if (!version.isDsm7OrAbove) {
+                                  if (context.mounted) {
+                                    Toast.show(l10n.dsm6NotSupported(version.displayText));
+                                  }
+                                  return;
+                                }
+
+                                final session = await ref.read(authRepositoryProvider).login(
+                                  server: server,
+                                  username: savedUsername,
+                                  password: savedPassword,
+                                );
+                                setSession(session);
+                                await ref.read(persistLoginProvider)(
+                                  server,
+                                  session,
+                                  savedUsername,
+                                  password: savedPassword,
+                                  rememberPassword: true,
+                                );
+                                if (context.mounted) {
+                                  context.go('/home');
+                                }
+                              } on DioException catch (e) {
+                                if (context.mounted) {
+                                  Toast.show(ErrorMapper.map(e).message);
+                                }
+                              } catch (e) {
+                                if (context.mounted) {
+                                  Toast.show(ErrorMapper.map(e).message);
+                                }
                               }
                             },
                             onEdit: () => _editServer(context, ref, server),

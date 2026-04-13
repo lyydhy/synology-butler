@@ -230,6 +230,18 @@ abstract class AppLocalizations {
   /// **'登录中…'**
   String get loggingIn;
 
+  /// No description provided for @quickLoginNeedPassword.
+  ///
+  /// In zh, this message translates to:
+  /// **'没有保存密码，请到登录页输入'**
+  String get quickLoginNeedPassword;
+
+  /// No description provided for @loginInProgress.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在登录…'**
+  String get loginInProgress;
+
   /// No description provided for @dashboardTitle.
   ///
   /// In zh, this message translates to:

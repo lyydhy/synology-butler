@@ -21,6 +21,8 @@
   "testingConnection": "测试中…",
   "testConnection": "测试连接",
   "loggingIn": "登录中…",
+  "quickLoginNeedPassword": "没有保存密码，请到登录页输入",
+  "loginInProgress": "正在登录…",
   "dashboardTitle": "首页",
   "currentConnection": "当前连接",
   "sessionStatus": "会话状态",

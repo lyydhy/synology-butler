@@ -75,6 +75,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loggingIn => 'Logging in…';
 
   @override
+  String get quickLoginNeedPassword =>
+      'No password saved, please enter on login page';
+
+  @override
+  String get loginInProgress => 'Logging in…';
+
+  @override
   String get dashboardTitle => 'Home';
 
   @override

@@ -75,6 +75,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get loggingIn => '登录中…';
 
   @override
+  String get quickLoginNeedPassword => '没有保存密码，请到登录页输入';
+
+  @override
+  String get loginInProgress => '正在登录…';
+
+  @override
   String get dashboardTitle => '首页';
 
   @override
