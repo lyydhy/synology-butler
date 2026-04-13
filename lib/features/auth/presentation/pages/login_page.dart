@@ -97,7 +97,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       portController.text = server.port.toString();
       https = server.https;
       ignoreBadCertificate = server.ignoreBadCertificate;
-      showManualForm = false;
+      // 不再强制切换模式，由用户通过切换按钮控制
       quickLoginExpanded = true;
       if (username != null && username.isNotEmpty) {
         usernameController.text = username;
