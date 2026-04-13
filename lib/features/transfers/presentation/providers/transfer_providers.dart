@@ -244,6 +244,7 @@ class TransferController extends StateNotifier<List<TransferTask>> {
     final sid = session.sid;
     final synoToken = session.synoToken;
     final cookieHeader = session.cookieHeader;
+    // 构建 URL（GET 方法，path 作为 query param，与 FileStation API 保持一致）
     final encodedPath = Uri.encodeComponent(jsonEncode([remotePath]));
     final downloadUrl = '$baseUrl/webapi/entry.cgi?api=SYNO.FileStation.Download&version=2&method=download&mode=download&path=$encodedPath&_sid=$sid';
 
@@ -256,14 +257,24 @@ class TransferController extends StateNotifier<List<TransferTask>> {
       headers['X-SYNO-TOKEN'] = synoToken;
     }
 
-    // 创建 background_downloader 任务（DSM API 为 POST）
+    // directory 必须是相对路径，不能是绝对路径
+    // 提取相对于外部存储根目录的相对路径
+    final String relativeDir;
+    if (Platform.isAndroid) {
+      // Android: 去掉外部存储的绝对路径前缀
+      relativeDir = targetDir.path.replaceFirst(RegExp(r'^/storage/emulated/\d+/'), '');
+    } else {
+      relativeDir = targetDir.path;
+    }
+
+    // 创建 background_downloader 任务（默认 GET 方法）
     final bdTask = DownloadTask(
       taskId: id,
       url: downloadUrl,
-      httpRequestMethod: 'POST',
       headers: headers,
       filename: displayName,
-      directory: targetDir.path,
+      directory: relativeDir,
+      baseDirectory: BaseDirectory.root,
       allowPause: true,
       updates: Updates.statusAndProgress,
       retries: 3,
