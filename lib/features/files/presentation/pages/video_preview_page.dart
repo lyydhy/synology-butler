@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
@@ -31,11 +33,11 @@ class _VideoPreviewPageState extends State<VideoPreviewPage> {
   }
 
   String get _streamUrl {
-    // DSM FileStation streaming API
-    // /webapi/entry.cgi?api=SYNO.FileStation.Streaming&method=stream&path=xxx&_sid=xxx
-    final encodedPath = Uri.encodeComponent(widget.path);
+    // 使用 FileStation Download API 直接获取视频文件
+    // DSM 的 /webapi/entry.cgi?api=SYNO.FileStation.Download
+    final encodedPath = Uri.encodeComponent(jsonEncode([widget.path]));
     final sid = widget.synoToken ?? '';
-    return '${widget.baseUrl}/webapi/entry.cgi?api=SYNO.FileStation.Streaming&method=stream&path=$encodedPath&_sid=$sid';
+    return '${widget.baseUrl}/webapi/entry.cgi?api=SYNO.FileStation.Download&version=2&method=download&mode=download&path=$encodedPath&_sid=$sid';
   }
 
   Future<void> _init() async {
