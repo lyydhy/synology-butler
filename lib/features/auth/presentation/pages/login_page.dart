@@ -1,6 +1,6 @@
-import 'package:flutter/services.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -26,51 +26,79 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   final addressController = TextEditingController();
   final usernameController = TextEditingController();
   final passwordController = TextEditingController();
-  final passwordFocusNode = FocusNode();
 
   bool https = true;
   bool ignoreBadCertificate = false;
   bool isLoading = false;
   bool isTesting = false;
   bool obscurePassword = true;
-  String? selectedServerId;
   String? addressError;
   String? usernameError;
   String? passwordError;
   String? errorText;
   String? infoText;
+  String? selectedServerId;
 
   @override
   void initState() {
     super.initState();
-    if (widget.initialServer != null) {
-      _applyServer(widget.initialServer!);
-    } else {
-      addressController.text = '192.168.1.2';
-    }
+    // 初始化填充逻辑在 didChangeDependencies 里做，此时 providers 已准备好
   }
 
   @override
-  void dispose() {
-    addressController.dispose();
-    usernameController.dispose();
-    passwordController.dispose();
-    passwordFocusNode.dispose();
-    super.dispose();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _autofillFromHistory();
   }
 
-  void _resetForm() {
-    addressController.clear();
-    usernameController.clear();
-    passwordController.clear();
-    selectedServerId = null;
-    https = true;
-    ignoreBadCertificate = false;
-    errorText = null;
-    infoText = null;
-    addressError = null;
-    usernameError = null;
-    passwordError = null;
+  void _autofillFromHistory() {
+    if (widget.initialServer != null) {
+      // 从历史页面跳转来，直接用传入的服务器数据
+      _applyServer(widget.initialServer!);
+      return;
+    }
+
+    // 否则从 providers 读取最新历史记录
+    final savedServers = ref.read(savedServersProvider);
+    final savedServerLastUsed = ref.read(savedServerLastUsedProvider);
+    final savedServerUsernames = ref.read(savedServerUsernamesProvider);
+    final connection = ref.read(currentConnectionProvider);
+
+    if (savedServers.isEmpty) return;
+
+    // 取最新一条
+    final sorted = [...savedServers]
+      ..sort((a, b) => (savedServerLastUsed[b.id] ?? 0).compareTo(savedServerLastUsed[a.id] ?? 0));
+    final latest = sorted.first;
+
+    setState(() {
+      selectedServerId = latest.id;
+      https = latest.https;
+      ignoreBadCertificate = latest.ignoreBadCertificate;
+      final showPort = (latest.https && latest.port != 443) || (!latest.https && latest.port != 80);
+      addressController.text = showPort ? '${latest.host}:${latest.port}' : latest.host;
+      final savedUsername = savedServerUsernames[latest.id];
+      if (savedUsername != null && savedUsername.isNotEmpty) {
+        usernameController.text = savedUsername;
+      }
+      passwordController.text = connection.password ?? '';
+    });
+  }
+
+  void _applyServer(NasServer server) {
+    setState(() {
+      selectedServerId = server.id;
+      https = server.https;
+      ignoreBadCertificate = server.ignoreBadCertificate;
+      final showPort = (server.https && server.port != 443) || (!server.https && server.port != 80);
+      addressController.text = showPort ? '${server.host}:${server.port}' : server.host;
+      passwordController.text = '';
+      errorText = null;
+      infoText = null;
+      addressError = null;
+      usernameError = null;
+      passwordError = null;
+    });
   }
 
   (String host, int port) _parseAddress(String raw) {
@@ -86,43 +114,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     return (trimmed, https ? 443 : 80);
   }
 
-  void _applyServer(NasServer server, {String? username}) {
-    setState(() {
-      selectedServerId = server.id;
-      https = server.https;
-      ignoreBadCertificate = server.ignoreBadCertificate;
-      final showPort = (server.https && server.port != 443) || (!server.https && server.port != 80);
-      addressController.text = showPort ? '${server.host}:${server.port}' : server.host;
-      if (username != null && username.isNotEmpty) {
-        usernameController.text = username;
-      }
-      passwordController.clear();
-      errorText = null;
-      infoText = null;
-      addressError = null;
-      usernameError = null;
-      passwordError = null;
-    });
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) passwordFocusNode.requestFocus();
-    });
-  }
-
-  String _buildServerInitials(NasServer server) {
-    final value = server.name.trim();
-    if (value.isEmpty) return 'N';
-    return value.characters.first.toUpperCase();
-  }
-
   void _validateAddress() {
     final (host, port) = _parseAddress(addressController.text);
-    if (host.isEmpty) {
-      addressError = l10n.enterNasAddress;
-    } else if (port <= 0 || port > 65535) {
-      addressError = l10n.portRange;
-    } else {
-      addressError = null;
-    }
+    addressError = host.isEmpty
+        ? l10n.enterNasAddress
+        : (port <= 0 || port > 65535 ? l10n.portRange : null);
   }
 
   void _validateUsername() {
@@ -131,12 +127,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   void _validatePassword() {
     passwordError = passwordController.text.isEmpty ? l10n.enterPassword : null;
-  }
-
-  void _clearFieldErrors() {
-    addressError = null;
-    usernameError = null;
-    passwordError = null;
   }
 
   bool get _canSubmit =>
@@ -235,8 +225,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     }
   }
 
-
-  // ─── 状态提示条 ────────────────────────────────────────────────
+  // ─── 状态提示条 ──────────────────────────────────────────────
   Widget _buildStatusBanner() {
     if (errorText == null && infoText == null) return const SizedBox.shrink();
     final isError = errorText != null;
@@ -263,43 +252,42 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     );
   }
 
-  // ─── HTTP/HTTPS 切换 ────────────────────────────────────────────
+  // ─── HTTP/HTTPS 切换（高度与 TextField 对齐） ─────────────────
   Widget _buildHttpsToggle(Color primaryColor) {
     final label = https ? 'HTTPS' : 'HTTP';
     final color = https ? primaryColor : Colors.orange.shade700;
     return GestureDetector(
-      onTap: () {
-        setState(() {
-          https = !https;
-          if (!https) ignoreBadCertificate = false;
-        });
-      },
+      onTap: () => setState(() {
+        https = !https;
+        if (!https) ignoreBadCertificate = false;
+      }),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        height: 56,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(10),
+          color: color.withValues(alpha: 0.10),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(color: color.withValues(alpha: 0.30)),
         ),
         child: Row(mainAxisSize: MainAxisSize.min, children: [
-          Icon(https ? Icons.lock_outline : Icons.lock_open_outlined, color: color, size: 16),
-          const SizedBox(width: 5),
-          Text(label, style: TextStyle(fontWeight: FontWeight.w700, color: color, fontSize: 13)),
+          Icon(https ? Icons.lock_outline : Icons.lock_open_outlined, color: color, size: 18),
+          const SizedBox(width: 6),
+          Text(label, style: TextStyle(fontWeight: FontWeight.w700, color: color, fontSize: 14)),
         ]),
       ),
     );
   }
 
-  // ─── 忽略证书选项 ──────────────────────────────────────────────
+  // ─── 忽略证书选项 ─────────────────────────────────────────────
   Widget _buildIgnoreCertToggle(Color primaryColor) {
     final enabled = https;
     return GestureDetector(
       onTap: enabled ? () => setState(() => ignoreBadCertificate = !ignoreBadCertificate) : null,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: enabled
                 ? (ignoreBadCertificate ? primaryColor.withValues(alpha: 0.30) : Colors.black.withValues(alpha: 0.06))
@@ -319,16 +307,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               children: [
                 Text(
                   l10n.ignoreSslCert,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: enabled ? null : Colors.grey.shade400,
-                  ),
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: enabled ? null : Colors.grey.shade400),
                 ),
-                Text(
-                  l10n.httpsOnly,
-                  style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurfaceVariant),
-                ),
+                Text(l10n.httpsOnly, style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurfaceVariant)),
               ],
             ),
           ),
@@ -342,19 +323,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             child: AnimatedAlign(
               duration: const Duration(milliseconds: 180),
               alignment: ignoreBadCertificate ? Alignment.centerRight : Alignment.centerLeft,
-              child: Container(
-                width: 18,
-                height: 18,
-                margin: const EdgeInsets.symmetric(horizontal: 2),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(9),
-                ),
+              child: Container(width: 18, height: 18, margin: const EdgeInsets.symmetric(horizontal: 2),
+                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(9)),
               ),
             ),
           ),
-        ],
-        ),
+        ]),
       ),
     );
   }
@@ -362,7 +336,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   // ─── 主表单 ────────────────────────────────────────────────────
   Widget _buildForm(Color primaryColor) {
     return Column(children: [
-      // HTTPS 切换 + 地址输入
+      // HTTPS 切换 + 地址输入（同行对齐）
       Row(children: [
         _buildHttpsToggle(primaryColor),
         const SizedBox(width: 8),
@@ -402,6 +376,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       // 忽略证书
       _buildIgnoreCertToggle(primaryColor),
       const SizedBox(height: 10),
+      // 用户名
       TextField(
         controller: usernameController,
         onChanged: (_) => setState(() => _validateUsername()),
@@ -431,6 +406,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         ),
       ),
       const SizedBox(height: 10),
+      // 密码
       TextField(
         controller: passwordController,
         obscureText: obscurePassword,
@@ -466,6 +442,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         onSubmitted: (_) => isLoading ? null : login(),
       ),
       const SizedBox(height: 16),
+      // 按钮行
       Row(children: [
         Expanded(
           child: OutlinedButton.icon(
@@ -505,30 +482,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     final themeColorOption = ref.watch(themeColorProvider);
     final primaryColor = seedColorFor(themeColorOption);
     final savedServers = ref.watch(savedServersProvider);
-    final savedServerLastUsed = ref.watch(savedServerLastUsedProvider);
-    final savedServerUsernames = ref.watch(savedServerUsernamesProvider);
-
-    // 没有initialServer时，自动填充最新一条历史记录（仅填地址和用户名）
-    if (widget.initialServer == null && savedServers.isNotEmpty && addressController.text == '192.168.1.2') {
-      final sorted = [...savedServers]
-        ..sort((a, b) => (savedServerLastUsed[b.id] ?? 0).compareTo(savedServerLastUsed[a.id] ?? 0));
-      final latest = sorted.first;
-      final showPort = (latest.https && latest.port != 443) || (!latest.https && latest.port != 80);
-      addressController.text = showPort ? '${latest.host}:${latest.port}' : latest.host;
-      https = latest.https;
-      ignoreBadCertificate = latest.ignoreBadCertificate;
-      final savedUsername = savedServerUsernames[latest.id];
-      if (savedUsername != null && savedUsername.isNotEmpty) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) usernameController.text = savedUsername;
-        });
-      }
-    }
-
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF0F2F7),
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -540,36 +498,36 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         ),
         centerTitle: true,
         leading: widget.initialServer != null
-            ? IconButton(
-                onPressed: () => context.pushReplacement('/servers'),
-                icon: const Icon(Icons.arrow_back),
-              )
+            ? IconButton(onPressed: () => context.pushReplacement('/servers'), icon: const Icon(Icons.arrow_back))
             : null,
-        actions: [
-          const SizedBox(width: 8),
-        ],
       ),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(18, 8, 18, 32),
-          child: Column(
-            children: [
-              _buildStatusBanner(),
-              Expanded(child: _buildForm(primaryColor)),
-              if (savedServers.isNotEmpty && widget.initialServer == null) ...[
-                const SizedBox(height: 16),
-                Center(
-                  child: TextButton.icon(
-                    onPressed: () => context.push('/servers'),
-                    icon: Icon(Icons.history_rounded, color: primaryColor.withValues(alpha: 0.7), size: 18),
-                    label: Text(l10n.historyDevices, style: TextStyle(color: primaryColor.withValues(alpha: 0.7))),
-                  ),
+          padding: const EdgeInsets.fromLTRB(18, 8, 18, 24),
+          child: Column(children: [
+            _buildStatusBanner(),
+            Expanded(child: SingleChildScrollView(child: _buildForm(primaryColor))),
+            if (savedServers.isNotEmpty && widget.initialServer == null) ...[
+              const SizedBox(height: 12),
+              Center(
+                child: TextButton.icon(
+                  onPressed: () => context.push('/servers'),
+                  icon: Icon(Icons.history_rounded, color: primaryColor.withValues(alpha: 0.7), size: 18),
+                  label: Text(l10n.historyDevices, style: TextStyle(color: primaryColor.withValues(alpha: 0.7))),
                 ),
-              ],
+              ),
             ],
-          ),
+          ]),
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    addressController.dispose();
+    usernameController.dispose();
+    passwordController.dispose();
+    super.dispose();
   }
 }
