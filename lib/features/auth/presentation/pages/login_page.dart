@@ -612,8 +612,8 @@ class _LoginPageState extends ConsumerState<LoginPage>
     final savedServers = ref.watch(savedServersProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bgColor = isDark
-        ? const Color(0xFF0F0F1A)
-        : const Color(0xFFE8ECF4);
+        ? HSLColor.fromColor(primaryColor).withLightness(0.06).toColor()
+        : HSLColor.fromColor(primaryColor).withLightness(0.93).withSaturation(0.25).toColor();
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -672,9 +672,7 @@ class _LoginPageState extends ConsumerState<LoginPage>
                         Container(
                           padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
-                            color: isDark
-                                ? const Color(0xFF1C1C28)
-                                : Colors.white,
+                            color: Theme.of(context).colorScheme.surfaceContainerLow,
                             borderRadius: BorderRadius.circular(24),
                             boxShadow: [
                               BoxShadow(
