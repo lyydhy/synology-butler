@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import '../../../../core/utils/format_utils.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -451,8 +452,8 @@ class _TransferTaskCardState extends ConsumerState<_TransferTaskCard> {
   String _progressText(TransferTask task, AppLocalizations l10n) {
     // 显示字节进度
     if (task.totalBytes > 0 && task.receivedBytes > 0) {
-      final received = _formatBytes(task.receivedBytes);
-      final total = _formatBytes(task.totalBytes);
+      final received = formatBytes(task.receivedBytes);
+      final total = formatBytes(task.totalBytes);
       return '$received / $total';
     }
     // 回退到百分比
@@ -460,12 +461,6 @@ class _TransferTaskCardState extends ConsumerState<_TransferTaskCard> {
     return '$percent%';
   }
 
-  String _formatBytes(int bytes) {
-    if (bytes < 1024) return '${bytes}B';
-    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)}K';
-    if (bytes < 1024 * 1024 * 1024) return '${(bytes / (1024 * 1024)).toStringAsFixed(1)}M';
-    return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)}G';
-  }
 
   String _statusText(TransferTask task, AppLocalizations l10n) {
     switch (task.status) {

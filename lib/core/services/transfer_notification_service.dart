@@ -1,4 +1,5 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import '../utils/format_utils.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// 传输类型
@@ -68,8 +69,8 @@ class TransferNotificationService {
     
     final progress = totalBytes > 0 ? (receivedBytes / totalBytes * 100).round() : 0;
     final progressText = totalBytes > 0 
-        ? '${_formatBytes(receivedBytes)} / ${_formatBytes(totalBytes)}'
-        : _formatBytes(receivedBytes);
+        ? '${formatBytes(receivedBytes)} / ${formatBytes(totalBytes)}'
+        : formatBytes(receivedBytes);
     
     final isDownload = type == TransferType.download;
     final channelId = isDownload ? 'download_channel' : 'upload_channel';
@@ -264,12 +265,6 @@ class TransferNotificationService {
     return base + (taskId.hashCode.abs() % 10000);
   }
 
-  String _formatBytes(int bytes) {
-    if (bytes < 1024) return '${bytes}B';
-    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)}K';
-    if (bytes < 1024 * 1024 * 1024) return '${(bytes / (1024 * 1024)).toStringAsFixed(1)}M';
-    return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)}G';
-  }
 }
 
 /// Provider

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/utils/format_utils.dart';
 
 import '../../../../domain/entities/information_center.dart';
 import '../../../../domain/entities/system_status.dart';
@@ -212,7 +213,7 @@ class DiskTile extends StatelessWidget {
               .where((e) => e.trim().isNotEmpty)
               .join(' · '),
         ),
-        trailing: Text(_formatBytes(disk.capacityBytes)),
+        trailing: Text(formatBytes(disk.capacityBytes)),
       ),
     );
   }
@@ -248,23 +249,8 @@ class VolumeUsageTile extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-            '${_formatBytes(volume.usedBytes)} / ${_formatBytes(volume.totalBytes)}'),
+            '${formatBytes(volume.usedBytes)} / ${formatBytes(volume.totalBytes)}'),
       ],
     );
   }
-}
-
-String formatBytes(double? value) => _formatBytes(value);
-
-String _formatBytes(double? value) {
-  if (value == null || value <= 0) return '--';
-  const units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
-  var size = value;
-  var unitIndex = 0;
-  while (size >= 1024 && unitIndex < units.length - 1) {
-    size /= 1024;
-    unitIndex++;
-  }
-  final digits = size >= 100 ? 0 : (size >= 10 ? 1 : 2);
-  return '${size.toStringAsFixed(digits)} ${units[unitIndex]}';
 }

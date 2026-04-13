@@ -1,5 +1,6 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import '../../../../core/utils/format_utils.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -151,7 +152,7 @@ class _AppLogsPageState extends State<AppLogsPage> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  '${LocalAppLogStore.formatBytes(file.sizeBytes)} · ${file.modifiedAt.toLocal()}',
+                                  '${formatBytes(file.sizeBytes)} · ${file.modifiedAt.toLocal()}',
                                   style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                                 ),
                               ],
@@ -449,7 +450,7 @@ class _AppLogsPageState extends State<AppLogsPage> {
                                             ),
                                             const SizedBox(height: 6),
                                             Text(
-                                              '${LocalAppLogStore.formatBytes(file.sizeBytes)} · ${file.modifiedAt.toLocal()}',
+                                              '${formatBytes(file.sizeBytes)} · ${file.modifiedAt.toLocal()}',
                                               style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                                             ),
                                           ],

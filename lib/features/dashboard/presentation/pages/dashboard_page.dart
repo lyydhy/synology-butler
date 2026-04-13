@@ -9,6 +9,7 @@ import '../../../../core/utils/server_url_helper.dart';
 import '../../../../core/utils/time_util.dart';
 import '../../../../domain/entities/system_status.dart';
 import '../../../../core/utils/l10n.dart';
+import '../../../../core/utils/format_utils.dart';
 import '../../../auth/presentation/providers/current_connection_readers.dart';
 import '../../../packages/presentation/providers/package_providers.dart';
 import '../providers/dashboard_providers.dart';
@@ -515,18 +516,10 @@ class _VolumeUsageTile extends StatelessWidget {
 
   String _formatBytes(double? value) {
     if (value == null || value <= 0) return '--';
-
-    const units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
-    var size = value;
-    var unitIndex = 0;
-    while (size >= 1024 && unitIndex < units.length - 1) {
-      size /= 1024;
-      unitIndex++;
-    }
-
-    final digits = size >= 100 ? 0 : (size >= 10 ? 1 : 2);
-    return '${size.toStringAsFixed(digits)} ${units[unitIndex]}';
+    final result = formatBytes(value);
+    return result.isEmpty ? '--' : result;
   }
+
 
   String _buildDisplayName() {
     final raw = volume.name.trim();
