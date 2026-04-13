@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
@@ -34,17 +32,16 @@ class _VideoPreviewPageState extends State<VideoPreviewPage> {
 
   /// UTF-8 十六进制编码（与 dsm_helper Util.utf8Encode 保持一致）
   String _utf8Encode(String data) {
-    final utf8Bytes = utf8.encode(data);
-    return utf8Bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+    // dsm_helper: List<int> utf8Str = utf8.encode(data); String encoded = utf8Str.map((e) => e.toRadixString(16)).join("");
+    return data.codeUnits.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
   }
 
   String get _streamUrl {
-    // 使用 DSM 的 /fbdownload/ 端点（与 dsm_helper 完全一致）
-    // dsm_helper: /fbdownload/${file['name']}?dlink=%22${Util.utf8Encode(file['path'])}%22&_sid=%22${Util.sid}%22&mode=open
+    // 与 dsm_helper 完全一致: Util.baseUrl + "/fbdownload/${Uri.encodeComponent(file['name'])}?dlink=%22${Util.utf8Encode(file['path'])}%22&_sid=%22${Util.sid}%22&mode=open"
+    final encodedName = Uri.encodeComponent(widget.name);
     final encodedDlink = '%22${_utf8Encode(widget.path)}%22';
     final sid = widget.sid ?? '';
-    // 注意：dsm_helper 中 filename 没有用 Uri.encodeComponent
-    final url = '${widget.baseUrl}/fbdownload/${widget.name}?dlink=$encodedDlink&_sid=%22$sid%22&mode=open';
+    final url = '${widget.baseUrl}/fbdownload/$encodedName?dlink=$encodedDlink&_sid=%22$sid%22&mode=open';
     debugPrint('[VideoPreview] baseUrl: ${widget.baseUrl}');
     debugPrint('[VideoPreview] path: ${widget.path}');
     debugPrint('[VideoPreview] name: ${widget.name}');
