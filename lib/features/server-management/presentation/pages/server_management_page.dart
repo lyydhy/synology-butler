@@ -120,28 +120,19 @@ class ServerManagementPage extends ConsumerWidget {
                             onSelect: () async {
                               final savedUsername = savedServerUsernames[server.id];
                               final savedPassword = ref.read(currentConnectionProvider).password;
-                              if (savedUsername == null ||
-                                  savedUsername.isEmpty ||
-                                  savedPassword == null ||
-                                  savedPassword.isEmpty) {
-                                if (context.mounted) {
-                                  Toast.show(l10n.quickLoginNeedPassword);
-                                  context.pushReplacement('/login', extra: server);
-                                }
+                              if (savedUsername == null || savedUsername.isEmpty || savedPassword == null || savedPassword.isEmpty) {
+                                if (context.mounted) Toast.show('账号或密码数据异常，请到登录页重新输入');
                                 return;
                               }
 
                               await ref.read(switchCurrentServerProvider)(server);
                               if (!context.mounted) return;
-
                               Toast.show(l10n.loginInProgress);
 
                               try {
                                 final version = await ref.read(authRepositoryProvider).probeVersion(server: server);
                                 if (!version.isDsm7OrAbove) {
-                                  if (context.mounted) {
-                                    Toast.show(l10n.dsm6NotSupported(version.displayText));
-                                  }
+                                  if (context.mounted) Toast.show(l10n.dsm6NotSupported(version.displayText));
                                   return;
                                 }
 
@@ -158,17 +149,11 @@ class ServerManagementPage extends ConsumerWidget {
                                   password: savedPassword,
                                   rememberPassword: true,
                                 );
-                                if (context.mounted) {
-                                  context.go('/home');
-                                }
+                                if (context.mounted) context.go('/home');
                               } on DioException catch (e) {
-                                if (context.mounted) {
-                                  Toast.show(ErrorMapper.map(e).message);
-                                }
+                                if (context.mounted) Toast.show(ErrorMapper.map(e).message);
                               } catch (e) {
-                                if (context.mounted) {
-                                  Toast.show(ErrorMapper.map(e).message);
-                                }
+                                if (context.mounted) Toast.show(ErrorMapper.map(e).message);
                               }
                             },
                             onEdit: () => _editServer(context, ref, server),
