@@ -283,7 +283,7 @@ class TransferController extends StateNotifier<List<TransferTask>> {
     // 配置 bd 插件通知（自动显示进度/完成/失败通知）
     FileDownloader().configureNotificationForTask(
       bdTask,
-      running: const TaskNotification('正在下载: {displayName}', '{filename} - {progress}%'),
+      running: const TaskNotification('正在下载: {displayName}', '{filename} - {progress}'),
       complete: const TaskNotification('下载完成: {displayName}', '{filename}'),
       error: const TaskNotification('下载失败: {displayName}', '{filename}'),
       paused: const TaskNotification('下载暂停: {displayName}', '{filename}'),
