@@ -362,8 +362,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   // ─── 主表单 ────────────────────────────────────────────────────
   Widget _buildForm(Color primaryColor) {
     return Column(children: [
-      // 地址输入 + HTTPS 切换
+      // HTTPS 切换 + 地址输入
       Row(children: [
+        _buildHttpsToggle(primaryColor),
+        const SizedBox(width: 8),
         Expanded(
           child: TextField(
             controller: addressController,
@@ -395,8 +397,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             ),
           ),
         ),
-        const SizedBox(width: 8),
-        _buildHttpsToggle(primaryColor),
       ]),
       const SizedBox(height: 10),
       // 忽略证书
@@ -506,8 +506,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     final primaryColor = seedColorFor(themeColorOption);
     final savedServers = ref.watch(savedServersProvider);
     final savedServerLastUsed = ref.watch(savedServerLastUsedProvider);
+    final savedServerUsernames = ref.watch(savedServerUsernamesProvider);
 
-    // 没有initialServer时，自动填充最新一条历史记录（仅填地址，不填用户名密码）
+    // 没有initialServer时，自动填充最新一条历史记录（仅填地址和用户名）
     if (widget.initialServer == null && savedServers.isNotEmpty && addressController.text == '192.168.1.2') {
       final sorted = [...savedServers]
         ..sort((a, b) => (savedServerLastUsed[b.id] ?? 0).compareTo(savedServerLastUsed[a.id] ?? 0));
@@ -516,6 +517,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       addressController.text = showPort ? '${latest.host}:${latest.port}' : latest.host;
       https = latest.https;
       ignoreBadCertificate = latest.ignoreBadCertificate;
+      final savedUsername = savedServerUsernames[latest.id];
+      if (savedUsername != null && savedUsername.isNotEmpty) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) usernameController.text = savedUsername;
+        });
+      }
     }
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
