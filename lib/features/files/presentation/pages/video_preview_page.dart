@@ -94,7 +94,7 @@ class _VideoPreviewPageState extends State<VideoPreviewPage> {
             allowSeeking: true,
             autoPlay: true,
           ),
-          playerUIVisibilityOptions: PlayerUIVisibilityOptions().copyWith(
+          playerUIVisibilityOptions: const PlayerUIVisibilityOptions().copyWith(
             showSeekBar: true,
             showCurrentTime: true,
             showDurationTime: true,
