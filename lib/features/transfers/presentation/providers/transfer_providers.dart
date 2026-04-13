@@ -79,6 +79,9 @@ class TransferController extends StateNotifier<List<TransferTask>> {
     if (ourId == null) return;
 
     switch (update.status) {
+      case TaskStatus.running:
+        _update(ourId, status: TransferTaskStatus.running, forcePersist: true);
+        break;
       case TaskStatus.complete:
         _update(ourId, status: TransferTaskStatus.success, progress: 1, forcePersist: true);
         break;
@@ -249,7 +252,7 @@ class TransferController extends StateNotifier<List<TransferTask>> {
       httpRequestMethod: 'POST',
       headers: headers,
       filename: displayName,
-      directory: '',
+      directory: targetDir.path,
       allowPause: true,
       updates: Updates.statusAndProgress,
       retries: 3,
