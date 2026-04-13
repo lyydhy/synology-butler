@@ -213,14 +213,19 @@ class TransferController extends StateNotifier<List<TransferTask>> {
 
     final id = _id();
 
-    // 测试用：国内 CDN 文件
-    final downloadUrl = 'https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.min.js';
+    // 构建 DSM 下载 URL
+    final conn = _ref.read(currentConnectionStoreProvider);
+    final baseUrl = conn.server?.host ?? '';
+    final sid = conn.session?.sid ?? '';
+    final encodedPath = Uri.encodeComponent(jsonEncode([remotePath]));
+    final downloadUrl = '$baseUrl/webapi/entry.cgi?api=SYNO.FileStation.Download&version=2&method=download&mode=download&path=$encodedPath';
 
-    // 创建 background_downloader 任务
+    // 创建 background_downloader 任务（DSM API 为 POST）
     final bdTask = DownloadTask(
       taskId: id,
       url: downloadUrl,
-      headers: {},
+      httpRequestMethod: 'POST',
+      headers: {'Cookie': 'id=$sid'},
       filename: displayName,
       directory: '',
       allowPause: true,
