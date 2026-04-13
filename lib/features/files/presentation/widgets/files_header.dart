@@ -33,72 +33,65 @@ class FilesHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 第一行：返回 + 标题 + 排序 + 操作菜单
+          // 操作按钮行：排序 + 新建文件夹 + 上传 + 菜单
           Row(
             children: [
-              if (canGoUp)
-                Padding(
-                  padding: const EdgeInsets.only(right: 4),
-                  child: IconButton(
-                    tooltip: l10n.goParent,
-                    onPressed: onGoUp,
-                    icon: const Icon(Icons.arrow_back_rounded),
-                  ),
-                ),
-              Expanded(
-                child: Text(
-                  title,
-                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              // 排序切换
-              _SortChip(
-                sort: sort,
-                onSortSelected: onSortSelected,
-              ),
-              const SizedBox(width: 4),
+              // 排序胶囊
+              _SortChip(sort: sort, onSortSelected: onSortSelected),
+              const Spacer(),
+              // 新建文件夹
               if (showActionMenu)
-                PopupMenuButton<String>(
-                  icon: const Icon(Icons.more_vert_rounded),
-                  tooltip: l10n.moreActions,
-                  onSelected: (value) {
-                    switch (value) {
-                      case 'upload':
-                        onUpload();
-                        break;
-                      case 'create_folder':
-                        onCreateFolder();
-                        break;
-                      case 'refresh':
-                        onRefresh();
-                        break;
-                    }
-                  },
-                  itemBuilder: (context) => [
-                    PopupMenuItem(value: 'upload', child: Text(l10n.uploadFile)),
-                    PopupMenuItem(value: 'create_folder', child: Text(l10n.createFolder)),
-                    const PopupMenuDivider(),
-                    PopupMenuItem(value: 'refresh', child: Text(l10n.refresh)),
-                  ],
-                )
-              else
+                IconButton(
+                  tooltip: l10n.createFolder,
+                  onPressed: onCreateFolder,
+                  icon: const Icon(Icons.create_new_folder_outlined),
+                  iconSize: 22,
+                ),
+              // 上传
+              if (showActionMenu)
+                IconButton(
+                  tooltip: l10n.uploadFile,
+                  onPressed: onUpload,
+                  icon: const Icon(Icons.upload_outlined),
+                  iconSize: 22,
+                ),
+              // 菜单（包含刷新）
+              PopupMenuButton<String>(
+                icon: const Icon(Icons.more_vert_rounded),
+                tooltip: l10n.moreActions,
+                onSelected: (value) {
+                  switch (value) {
+                    case 'refresh':
+                      onRefresh();
+                      break;
+                  }
+                },
+                itemBuilder: (context) => [
+                  PopupMenuItem(value: 'refresh', child: Text(l10n.refresh)),
+                ],
+              ),
+              // 非菜单模式下只显示刷新
+              if (!showActionMenu)
                 IconButton(
                   tooltip: l10n.refresh,
                   onPressed: onRefresh,
                   icon: const Icon(Icons.refresh_rounded),
+                  iconSize: 22,
                 ),
             ],
           ),
-          // 第二行：面包屑路径
-          PathBreadcrumb(path: path, onTapSegment: onTapSegment),
+          const SizedBox(height: 6),
+          // 面包屑路径（可点击跳转）
+          PathBreadcrumb(
+            path: path,
+            onTapSegment: onTapSegment,
+            onGoUp: canGoUp ? onGoUp : null,
+          ),
         ],
       ),
     );

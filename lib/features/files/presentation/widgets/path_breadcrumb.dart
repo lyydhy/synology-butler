@@ -7,10 +7,12 @@ class PathBreadcrumb extends StatelessWidget {
     super.key,
     required this.path,
     required this.onTapSegment,
+    this.onGoUp,
   });
 
   final String path;
   final ValueChanged<String> onTapSegment;
+  final VoidCallback? onGoUp;
 
   @override
   Widget build(BuildContext context) {
@@ -21,28 +23,57 @@ class PathBreadcrumb extends StatelessWidget {
           ]
         : _buildSegments(path);
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          for (var i = 0; i < segments.length; i++) ...[
-            _BreadcrumbNode(
-              label: segments[i].label,
-              current: segments[i].current,
-              onTap: () => onTapSegment(segments[i].path),
-            ),
-            if (i != segments.length - 1)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: Icon(
-                  Icons.chevron_right_rounded,
-                  size: 18,
-                  color: theme.colorScheme.onSurfaceVariant,
+    return Row(
+      children: [
+        if (onGoUp != null)
+          Padding(
+            padding: const EdgeInsets.only(right: 6),
+            child: Material(
+              color: theme.colorScheme.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(999),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(999),
+                onTap: onGoUp,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.subdirectory_arrow_left_rounded, size: 16, color: theme.colorScheme.onSurfaceVariant),
+                      const SizedBox(width: 2),
+                      Text('..', style: theme.textTheme.labelLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                    ],
+                  ),
                 ),
               ),
-          ],
-        ],
-      ),
+            ),
+          ),
+        Expanded(
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                for (var i = 0; i < segments.length; i++) ...[
+                  _BreadcrumbNode(
+                    label: segments[i].label,
+                    current: segments[i].current,
+                    onTap: () => onTapSegment(segments[i].path),
+                  ),
+                  if (i != segments.length - 1)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: Icon(
+                        Icons.chevron_right_rounded,
+                        size: 18,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 
