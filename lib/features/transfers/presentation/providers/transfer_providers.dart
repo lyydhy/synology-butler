@@ -32,11 +32,8 @@ class TransferController extends StateNotifier<List<TransferTask>> {
   /// background_downloader 状态更新订阅
   StreamSubscription<TaskUpdate>? _bdUpdatesSubscription;
 
-  /// 标记 FileDownloader.start() 是否已完成
-  bool _bdStarted = false;
-
-  /// 初始化 background_downloader：注册回调并启动
-  Future<void> _initBgrDownloader() async {
+  /// 初始化 background_downloader：注册回调并启动（fire-and-forget）
+  void _initBgrDownloader() {
     // 注册任务状态/进度回调
     FileDownloader().registerCallbacks(
       taskStatusCallback: (TaskStatusUpdate update) {
@@ -57,14 +54,8 @@ class TransferController extends StateNotifier<List<TransferTask>> {
     });
 
     // 启动 FileDownloader（关键！不调用则任务永远不开始）
-    print('[Download] calling FileDownloader.start()...');
-    try {
-      await FileDownloader().start();
-      _bdStarted = true;
-      print('[Download] FileDownloader.start() completed');
-    } catch (e) {
-      print('[Download] FileDownloader.start() error: $e');
-    }
+    // 不 await，让启动在后台完成
+    FileDownloader().start();
   }
 
   /// background_downloader 任务状态回调
@@ -200,16 +191,6 @@ class TransferController extends StateNotifier<List<TransferTask>> {
     required String displayName,
     int? estimatedSize,
   }) async {
-    // 确保 FileDownloader 已启动
-    if (!_bdStarted) {
-      print('[Download] _bdStarted=false, waiting for start...');
-      // 等到 _initBgrDownloader 的 start() 完成
-      while (!_bdStarted) {
-        await Future.delayed(const Duration(milliseconds: 200));
-      }
-      print('[Download] _bdStarted=true, continuing enqueue');
-    }
-
     final targetDir = await _resolveDownloadDirectory();
     final targetFile = await _resolveUniqueFile(targetDir, displayName);
 
