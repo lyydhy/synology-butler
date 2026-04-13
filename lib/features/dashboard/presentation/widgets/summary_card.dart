@@ -29,14 +29,17 @@ class SummaryCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5)),
           ),
-          child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-            title: Text(title, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
-            subtitle: Padding(
-              padding: const EdgeInsets.only(top: 6),
-              child: Text(subtitle, style: theme.textTheme.bodyMedium),
+          child: Material(
+            color: Colors.transparent,
+            child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              title: Text(title, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+              subtitle: Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Text(subtitle, style: theme.textTheme.bodyMedium),
+              ),
+              trailing: trailing,
             ),
-            trailing: trailing,
           ),
         ),
       ),

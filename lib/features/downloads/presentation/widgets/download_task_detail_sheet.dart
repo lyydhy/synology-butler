@@ -24,23 +24,32 @@ class DownloadTaskDetailSheet extends StatelessWidget {
           children: [
             Text(task.title, style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 12),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.tag_outlined),
-              title: Text(l10n.taskId),
-              subtitle: Text(task.id),
+            Material(
+              color: Colors.transparent,
+              child: ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.tag_outlined),
+                title: Text(l10n.taskId),
+                subtitle: Text(task.id),
+              ),
             ),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.sync_outlined),
-              title: Text(l10n.status),
-              subtitle: Text(DownloadStatusHelper.toDisplayText(task.status)),
+            Material(
+              color: Colors.transparent,
+              child: ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.sync_outlined),
+                title: Text(l10n.status),
+                subtitle: Text(DownloadStatusHelper.toDisplayText(task.status)),
+              ),
             ),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.percent_outlined),
-              title: Text(l10n.progress),
-              subtitle: Text('${(task.progress * 100).toStringAsFixed(0)}%'),
+            Material(
+              color: Colors.transparent,
+              child: ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.percent_outlined),
+                title: Text(l10n.progress),
+                subtitle: Text('${(task.progress * 100).toStringAsFixed(0)}%'),
+              ),
             ),
             const SizedBox(height: 12),
             Align(

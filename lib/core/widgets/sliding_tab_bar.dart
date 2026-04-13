@@ -60,13 +60,28 @@ class _SlidingTabBarState extends State<SlidingTabBar> {
 
   double get _currentPageValue {
     if (_isPageController) {
-      return _pageController!.position.pixels == 0 && _pageController!.page == null
-          ? _pageController!.initialPage.toDouble()
-          : (_pageController!.page ?? _pageController!.initialPage.toDouble());
+      // Check if controller exists
+      if (_pageController == null) {
+        return 0.0;
+      }
+      // position can be null if the PageController hasn't been attached to a scroll view yet
+      if (!_pageController!.hasClients) {
+        return _pageController!.initialPage.toDouble();
+      }
+      try {
+        final position = _pageController!.position;
+        if (position.pixels == 0 && _pageController!.page == null) {
+          return _pageController!.initialPage.toDouble();
+        }
+        return _pageController!.page ?? _pageController!.initialPage.toDouble();
+      } catch (e) {
+        // If accessing position fails (e.g., during disposal), fall back to initial page
+        return _pageController!.initialPage.toDouble();
+      }
     }
-    final animation = _tabController!.animation;
+    final animation = _tabController?.animation;
     if (animation == null) {
-      return _tabController!.index.toDouble();
+      return _tabController?.index.toDouble() ?? 0.0;
     }
     return animation.value.clamp(0.0, (widget.tabs.length - 1).toDouble());
   }

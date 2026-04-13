@@ -317,7 +317,7 @@ class _AppSection extends StatelessWidget {
               crossAxisCount: 2,
               mainAxisSpacing: 10,
               crossAxisSpacing: 10,
-              childAspectRatio: 1.18,
+              childAspectRatio: 1.3,
             ),
             itemBuilder: (context, index) => _AppEntryCard(item: items[index]),
           ),
@@ -358,7 +358,7 @@ class _AppEntryCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         onTap: item.onTap,
         child: Ink(
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
             color: item.color.withValues(alpha: 0.08),
@@ -389,16 +389,7 @@ class _AppEntryCard extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
               ),
-              const SizedBox(height: 4),
-              Text(
-                item.description,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                  height: 1.35,
-                ),
-              ),
+
             ],
           ),
         ),

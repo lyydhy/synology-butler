@@ -390,21 +390,24 @@ class _SettingsActionTile extends StatelessWidget {
     final resolvedIconColor = iconColor ?? theme.colorScheme.primary;
     final resolvedTextColor = textColor ?? theme.colorScheme.onSurface;
 
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-      leading: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: resolvedIconColor.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(14),
+    return Material(
+      color: Colors.transparent,
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+        leading: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: resolvedIconColor.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Icon(icon, color: resolvedIconColor),
         ),
-        child: Icon(icon, color: resolvedIconColor),
+        title: Text(title, style: TextStyle(color: resolvedTextColor, fontWeight: FontWeight.w600)),
+        subtitle: Text(subtitle),
+        trailing: const Icon(Icons.chevron_right_rounded),
+        onTap: onTap,
       ),
-      title: Text(title, style: TextStyle(color: resolvedTextColor, fontWeight: FontWeight.w600)),
-      subtitle: Text(subtitle),
-      trailing: const Icon(Icons.chevron_right_rounded),
-      onTap: onTap,
     );
   }
 }
@@ -423,19 +426,22 @@ class _SettingsStaticTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-      leading: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: theme.colorScheme.primary.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(14),
+    return Material(
+      color: Colors.transparent,
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+        leading: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: theme.colorScheme.primary.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Icon(icon, color: theme.colorScheme.primary),
         ),
-        child: Icon(icon, color: theme.colorScheme.primary),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+        subtitle: Text(subtitle),
       ),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-      subtitle: Text(subtitle),
     );
   }
 }
@@ -461,20 +467,23 @@ class _BottomSheetOption<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     final isSelected = value == groupValue;
     final theme = Theme.of(context);
-    return ListTile(
-      leading: Icon(
-        icon,
-        color: iconColor ?? (isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant),
-      ),
-      title: Text(
-        label,
-        style: TextStyle(
-          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-          color: isSelected ? theme.colorScheme.primary : null,
+    return Material(
+      color: Colors.transparent,
+      child: ListTile(
+        leading: Icon(
+          icon,
+          color: iconColor ?? (isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant),
         ),
+        title: Text(
+          label,
+          style: TextStyle(
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            color: isSelected ? theme.colorScheme.primary : null,
+          ),
+        ),
+        trailing: isSelected ? Icon(Icons.check, color: theme.colorScheme.primary) : null,
+        onTap: onTap,
       ),
-      trailing: isSelected ? Icon(Icons.check, color: theme.colorScheme.primary) : null,
-      onTap: onTap,
     );
   }
 }

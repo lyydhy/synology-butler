@@ -98,14 +98,17 @@ class InfoTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: CircleAvatar(
-        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-        child: Icon(icon),
+    return Material(
+      color: Colors.transparent,
+      child: ListTile(
+        contentPadding: EdgeInsets.zero,
+        leading: CircleAvatar(
+          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+          child: Icon(icon),
+        ),
+        title: Text(title),
+        subtitle: Text(subtitle.isEmpty ? '--' : subtitle),
       ),
-      title: Text(title),
-      subtitle: Text(subtitle.isEmpty ? '--' : subtitle),
     );
   }
 }
@@ -167,18 +170,21 @@ class NetworkTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: CircleAvatar(
-        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-        child: const Icon(Icons.lan_outlined),
-      ),
-      title: Text(network.name),
-      subtitle: Text(
-        [network.ipAddress, network.subnetMask, network.macAddress]
-            .whereType<String>()
-            .where((e) => e.trim().isNotEmpty)
-            .join(' · '),
+    return Material(
+      color: Colors.transparent,
+      child: ListTile(
+        contentPadding: EdgeInsets.zero,
+        leading: CircleAvatar(
+          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+          child: const Icon(Icons.lan_outlined),
+        ),
+        title: Text(network.name),
+        subtitle: Text(
+          [network.ipAddress, network.subnetMask, network.macAddress]
+              .whereType<String>()
+              .where((e) => e.trim().isNotEmpty)
+              .join(' · '),
+        ),
       ),
     );
   }
@@ -191,20 +197,23 @@ class DiskTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: CircleAvatar(
-        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-        child: const Icon(Icons.album_outlined),
+    return Material(
+      color: Colors.transparent,
+      child: ListTile(
+        contentPadding: EdgeInsets.zero,
+        leading: CircleAvatar(
+          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+          child: const Icon(Icons.album_outlined),
+        ),
+        title: Text(disk.name),
+        subtitle: Text(
+          [disk.serialNumber, disk.temperatureText]
+              .whereType<String>()
+              .where((e) => e.trim().isNotEmpty)
+              .join(' · '),
+        ),
+        trailing: Text(_formatBytes(disk.capacityBytes)),
       ),
-      title: Text(disk.name),
-      subtitle: Text(
-        [disk.serialNumber, disk.temperatureText]
-            .whereType<String>()
-            .where((e) => e.trim().isNotEmpty)
-            .join(' · '),
-      ),
-      trailing: Text(_formatBytes(disk.capacityBytes)),
     );
   }
 }
