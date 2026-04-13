@@ -18,8 +18,12 @@ import '../../../preferences/providers/preferences_providers.dart';
 
 class TransferController extends StateNotifier<List<TransferTask>> {
   TransferController(this._ref) : super(const []) {
-    _initBgrDownloader();
-    _restore();
+    _init();
+  }
+
+  Future<void> _init() async {
+    await _initBgrDownloader();
+    await _restore();
   }
 
   final Ref _ref;
