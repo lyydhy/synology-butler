@@ -45,7 +45,9 @@ class _VideoPreviewPageState extends State<VideoPreviewPage> {
     final encodedName = Uri.encodeComponent(widget.name);
     final encodedDlink = '%22${_utf8Encode(widget.path)}%22';
     final sid = widget.sid ?? '';
-    return '${widget.baseUrl}/fbdownload/$encodedName?dlink=$encodedDlink&_sid=%22$sid%22&mode=open';
+    final url = '${widget.baseUrl}/fbdownload/$encodedName?dlink=$encodedDlink&_sid=%22$sid%22&mode=open';
+    debugPrint('[VideoPreview] streamUrl: $url');
+    return url;
   }
 
   Future<void> _init() async {
