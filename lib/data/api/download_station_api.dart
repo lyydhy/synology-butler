@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 
 import '../../core/network/app_dio.dart';
 import '../models/download_task_model.dart';
@@ -76,20 +75,10 @@ class DsmDownloadStationApi implements DownloadStationApi {
       options: Options(contentType: Headers.formUrlEncodedContentType),
     );
 
-    // DEBUG
-    debugPrint('[DownloadStation] raw response tasks: ${response.data}');
-
     if (response.data is Map && response.data['success'] == true) {
       final data = response.data['data'] as Map? ?? const {};
       // SYNO.DownloadStation2.Task returns 'task' array, not 'tasks'
       final tasks = (data['task'] as List?) ?? const [];
-      debugPrint('[DownloadStation] tasks count: ${tasks.length}');
-      for (final t in tasks) {
-        final m = t as Map;
-        final addl = m['additional'] as Map? ?? {};
-        final tf = addl['transfer'] as Map? ?? {};
-        debugPrint('[DownloadStation] task=${m['id']} size=${m['size']} transfer=$tf');
-      }
       return tasks.map((item) {
         final map = item as Map;
         final additional = map['additional'] as Map? ?? const {};
