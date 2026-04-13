@@ -193,6 +193,8 @@ GoRouter createAppRouter({required String initialLocation}) {
           path: extra['path']?.toString() ?? '',
           name: extra['name']?.toString() ?? '视频预览',
           sid: extra['sid']?.toString(),
+          cookieHeader: extra['cookieHeader']?.toString(),
+          synoToken: extra['synoToken']?.toString(),
         );
       },
     ),

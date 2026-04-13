@@ -550,6 +550,8 @@ class _FilesPageState extends ConsumerState<FilesPage> {
                               'path': item.path,
                               'name': item.name,
                               'sid': currentSession.sid,
+                              'cookieHeader': currentSession.cookieHeader,
+                              'synoToken': currentSession.synoToken,
                             });
                             return;
                           }
