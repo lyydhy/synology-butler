@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/error/error_mapper.dart';
+import '../../../../core/utils/format_utils.dart';
 import '../../../../core/utils/l10n.dart';
 import '../../../../core/utils/toast.dart';
 import '../../../../core/widgets/sliding_tab_bar.dart';
@@ -498,27 +499,6 @@ class _DownloadTaskCard extends StatelessWidget {
   final VoidCallback onTap;
   final Future<void> Function(String) onAction;
 
-  static String _formatBytes(double bytes) {
-    if (bytes <= 0) return '';
-    const units = ['B', 'KB', 'MB', 'GB', 'TB'];
-    var size = bytes;
-    var unitIndex = 0;
-    while (size >= 1024 && unitIndex < units.length - 1) {
-      size /= 1024;
-      unitIndex++;
-    }
-    final digits = size >= 100 ? 0 : (size >= 10 ? 1 : 2);
-    return '${size.toStringAsFixed(digits)} ${units[unitIndex]}';
-  }
-
-  static String _formatSpeed(double down, double up) {
-    if (down > 0 && up > 0) {
-      return '\u2193${_formatBytes(down)}/s \u2191${_formatBytes(up)}/s';
-    }
-    if (down > 0) return '\u2193${_formatBytes(down)}/s';
-    if (up > 0) return '\u2191${_formatBytes(up)}/s';
-    return '';
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -594,7 +574,7 @@ class _DownloadTaskCard extends StatelessWidget {
                           ),
                           if (task.speedDownload > 0)
                             Text(
-                              _formatSpeed(task.speedDownload, 0),
+                              formatSpeed(task.speedDownload, 0),
                               style: theme.textTheme.labelSmall?.copyWith(
                                 color: theme.colorScheme.onSurfaceVariant,
                               ),
@@ -677,7 +657,7 @@ class _DownloadTaskCard extends StatelessWidget {
                       if (task.sizeTotal > 0) ...[
                         const SizedBox(width: 12),
                         Text(
-                          '${_formatBytes(task.sizeDownloaded)} / ${_formatBytes(task.sizeTotal)}',
+                          '${formatBytes(task.sizeDownloaded)} / ${formatBytes(task.sizeTotal)}',
                           style: theme.textTheme.labelSmall?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
