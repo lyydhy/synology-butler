@@ -49,3 +49,10 @@ android/app/*.jks
 android/app/*.keystore
 
 pubspec.lock
+-e 
+# AI dev notes (local only)
+MEMORY.md
+PROGRESS.md
+PROJECT_STATUS.md
+RUN.md
+SNACKBAR_TOAST_PROGRESS.md
