@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,14 +7,11 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/error/error_mapper.dart';
 import '../../../../core/utils/l10n.dart';
 import '../../../../core/utils/server_url_helper.dart';
-import '../../../../core/utils/toast.dart';
 import '../../../../domain/entities/nas_server.dart';
 import '../../../../core/network/app_dio.dart';
 import '../providers/auth_providers.dart';
 import '../providers/current_connection_readers.dart';
 import '../../../preferences/providers/preferences_providers.dart';
-
-enum _LoginView { manual, history }
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -39,10 +37,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   String? passwordError;
   String? errorText;
   String? infoText;
-  bool quickLoginExpanded = false;
-  List<String> _prevServerIds = [];
-  bool _initialized = false;
-  _LoginView _view = _LoginView.manual;
+
+  @override
+  void initState() {
+    super.initState();
+    addressController.text = '192.168.1.2';
+  }
 
   @override
   void dispose() {
@@ -60,7 +60,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     selectedServerId = null;
     https = true;
     ignoreBadCertificate = false;
-    quickLoginExpanded = false;
     errorText = null;
     infoText = null;
     addressError = null;
@@ -68,79 +67,40 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     passwordError = null;
   }
 
-  /// 从 "host" 或 "host:port" 格式解析出 host 和 port
-  /// 如果没有端口：
-  ///   https=true  → 443
-  ///   https=false → 80
   (String host, int port) _parseAddress(String raw) {
     final trimmed = raw.trim();
     if (trimmed.isEmpty) return ('', 5001);
-
-    String host;
-    int port;
-
     if (trimmed.contains(':')) {
       final lastColon = trimmed.lastIndexOf(':');
-      host = trimmed.substring(0, lastColon);
+      final host = trimmed.substring(0, lastColon);
       final portStr = trimmed.substring(lastColon + 1);
-      port = int.tryParse(portStr) ?? (https ? 443 : 80);
-    } else {
-      host = trimmed;
-      port = https ? 443 : 80;
+      final port = int.tryParse(portStr) ?? (https ? 443 : 80);
+      return (host.trim(), port);
     }
-
-    return (host.trim(), port);
+    return (trimmed, https ? 443 : 80);
   }
 
-  void _fillInitialValues(NasServer? server, String? savedUsername, List<NasServer> savedServers) {
-    final currentIds = savedServers.map((s) => s.id).toList();
-    if (currentIds != _prevServerIds) {
-      _prevServerIds = currentIds;
-      _resetForm();
-    }
-
-    if (server == null || _initialized) return;
-    _initialized = true;
-    selectedServerId = server.id;
-    https = server.https;
-    ignoreBadCertificate = server.ignoreBadCertificate;
-    // 重建地址字符串：host:port（如果端口是默认的则只显示host）
-    final showPort = (server.https && server.port != 443) || (!server.https && server.port != 80);
-    addressController.text = showPort ? '${server.host}:${server.port}' : server.host;
-    if (savedUsername != null && savedUsername.isNotEmpty) {
-      usernameController.text = savedUsername;
-    }
-  }
-
-  void _applyServerAndEnterQuickLogin(NasServer server, {String? username}) {
+  /// 用服务器数据填充表单（用于从历史列表返回后）
+  void applyServerPreset(NasServer server, {String? username}) {
     setState(() {
       selectedServerId = server.id;
       https = server.https;
       ignoreBadCertificate = server.ignoreBadCertificate;
       final showPort = (server.https && server.port != 443) || (!server.https && server.port != 80);
       addressController.text = showPort ? '${server.host}:${server.port}' : server.host;
-      quickLoginExpanded = true;
       if (username != null && username.isNotEmpty) {
         usernameController.text = username;
       }
       passwordController.clear();
       errorText = null;
       infoText = null;
-      _clearFieldErrors();
-      _view = _LoginView.manual;
+      addressError = null;
+      usernameError = null;
+      passwordError = null;
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) passwordFocusNode.requestFocus();
     });
-  }
-
-  Future<void> removeSavedServer(NasServer server) async {
-    await ref.read(deleteServerProvider)(server);
-    if (!mounted) return;
-    if (selectedServerId == server.id) {
-      _resetForm();
-    }
-    Toast.show(l10n.historyDeleted(server.name));
   }
 
   void _validateAddress() {
@@ -168,11 +128,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     passwordError = null;
   }
 
-  bool get _canManualSubmit =>
+  bool get _canSubmit =>
       addressError == null && usernameError == null && passwordError == null && !isLoading;
-
-  bool get _canQuickLogin =>
-      selectedServerId != null && usernameController.text.trim().isNotEmpty && passwordController.text.isNotEmpty && !isLoading;
 
   NasServer buildServer() {
     final (host, port) = _parseAddress(addressController.text);
@@ -223,7 +180,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     _validateAddress();
     _validateUsername();
     _validatePassword();
-    if (!_canManualSubmit) {
+    if (!_canSubmit) {
       setState(() {});
       return;
     }
@@ -267,61 +224,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     }
   }
 
-  String _formatLastUsed(int? timestampMs) {
-    if (timestampMs == null || timestampMs <= 0) return '';
-    final diff = DateTime.now().difference(DateTime.fromMillisecondsSinceEpoch(timestampMs));
-    if (diff.inMinutes < 1) return l10n.justUsed;
-    if (diff.inHours < 1) return l10n.minutesAgo(diff.inMinutes);
-    if (diff.inDays < 1) return l10n.hoursAgo(diff.inHours);
-    if (diff.inDays < 30) return l10n.daysAgo(diff.inDays);
-    return l10n.usedEarlier;
-  }
-
   String _buildServerInitials(NasServer server) {
     final value = server.name.trim();
     if (value.isEmpty) return 'N';
     return value.characters.first.toUpperCase();
-  }
-
-  NasServer? _findSelectedServer(List<NasServer> savedServers) {
-    if (selectedServerId == null) return null;
-    for (final server in savedServers) {
-      if (server.id == selectedServerId) return server;
-    }
-    return null;
-  }
-
-  InputDecoration _inputDecoration({
-    required String label,
-    required IconData icon,
-    Widget? suffixIcon,
-    String? errorText,
-  }) {
-    return InputDecoration(
-      labelText: label,
-      prefixIcon: Icon(icon),
-      suffixIcon: suffixIcon,
-      errorText: errorText,
-      filled: true,
-      fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.06)),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 1.5),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: Colors.redAccent, width: 1.1),
-      ),
-      focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: Colors.redAccent, width: 1.4),
-      ),
-    );
   }
 
   // ─── 状态提示条 ────────────────────────────────────────────────
@@ -331,7 +237,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     final color = isError ? Colors.red : Colors.green;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 220),
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 14),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.08),
@@ -351,121 +257,171 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     );
   }
 
-  // ─── HTTP/HTTPS 切换按钮（始终可点击） ─────────────────────────
+  // ─── HTTP/HTTPS 切换 ────────────────────────────────────────────
   Widget _buildHttpsToggle(Color primaryColor) {
     final label = https ? 'HTTPS' : 'HTTP';
     final color = https ? primaryColor : Colors.orange.shade700;
-    return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(14),
-        onTap: () {
-          setState(() {
-            https = !https;
-            if (!https) ignoreBadCertificate = false;
-          });
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.10),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: color.withValues(alpha: 0.30)),
-          ),
-          child: Row(mainAxisSize: MainAxisSize.min, children: [
-            Icon(https ? Icons.lock_outline : Icons.lock_open_outlined, color: color, size: 18),
-            const SizedBox(width: 6),
-            Text(label, style: TextStyle(fontWeight: FontWeight.w700, color: color, fontSize: 14)),
-          ]),
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          https = !https;
+          if (!https) ignoreBadCertificate = false;
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: color.withValues(alpha: 0.30)),
         ),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          Icon(https ? Icons.lock_outline : Icons.lock_open_outlined, color: color, size: 16),
+          const SizedBox(width: 5),
+          Text(label, style: TextStyle(fontWeight: FontWeight.w700, color: color, fontSize: 13)),
+        ]),
       ),
     );
   }
 
-  // ─── 忽略证书选项（始终显示，仅 HTTPS 时可交互） ───────────────
+  // ─── 忽略证书选项 ──────────────────────────────────────────────
   Widget _buildIgnoreCertToggle(Color primaryColor) {
     final enabled = https;
-    return Material(
-      color: Theme.of(context).colorScheme.surfaceContainerHighest,
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(14),
-        onTap: enabled
-            ? () => setState(() => ignoreBadCertificate = !ignoreBadCertificate)
-            : null,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          child: Row(children: [
-            Icon(
-              Icons.shield_outlined,
-              color: enabled
-                  ? (ignoreBadCertificate ? primaryColor : Colors.grey.shade600)
-                  : Colors.grey.shade400,
-              size: 18,
+    return GestureDetector(
+      onTap: enabled ? () => setState(() => ignoreBadCertificate = !ignoreBadCertificate) : null,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: enabled
+                ? (ignoreBadCertificate ? primaryColor.withValues(alpha: 0.30) : Colors.black.withValues(alpha: 0.06))
+                : Colors.transparent,
+          ),
+        ),
+        child: Row(children: [
+          Icon(
+            Icons.security_outlined,
+            color: enabled ? (ignoreBadCertificate ? primaryColor : Colors.grey.shade600) : Colors.grey.shade400,
+            size: 18,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.ignoreSslCert,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: enabled ? null : Colors.grey.shade400,
+                  ),
+                ),
+                Text(
+                  l10n.httpsOnly,
+                  style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                ),
+              ],
             ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.ignoreSslCert,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: enabled ? null : Colors.grey.shade400,
-                    ),
-                  ),
-                  Text(
-                    l10n.httpsOnly,
-                    style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurfaceVariant),
-                  ),
-                ],
+          ),
+          Container(
+            width: 40,
+            height: 22,
+            decoration: BoxDecoration(
+              color: ignoreBadCertificate ? primaryColor : Colors.grey.shade300,
+              borderRadius: BorderRadius.circular(11),
+            ),
+            child: AnimatedAlign(
+              duration: const Duration(milliseconds: 180),
+              alignment: ignoreBadCertificate ? Alignment.centerRight : Alignment.centerLeft,
+              child: Container(
+                width: 18,
+                height: 18,
+                margin: const EdgeInsets.symmetric(horizontal: 2),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(9),
+                ),
               ),
             ),
-                  Switch(
-                    value: ignoreBadCertificate,
-                    onChanged: enabled ? (v) => setState(() => ignoreBadCertificate = v) : null,
-                  ),
-          ]),
+          ),
+        ],
         ),
       ),
     );
   }
 
-  // ─── 手动登录表单 ──────────────────────────────────────────────
-  Widget _buildManualForm(Color primaryColor) {
+  // ─── 主表单 ────────────────────────────────────────────────────
+  Widget _buildForm(Color primaryColor) {
     return Column(children: [
-      // 地址输入（合并 host + port）
-      TextField(
-        controller: addressController,
-        onChanged: (_) => setState(() => _validateAddress()),
-        decoration: _inputDecoration(
-          label: l10n.addressOrHost,
-          icon: Icons.language_outlined,
-          errorText: addressError,
-          suffixIcon: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // HTTPS/HTTP 切换
-              _buildHttpsToggle(primaryColor),
-              const SizedBox(width: 4),
-            ],
+      // 地址输入 + HTTPS 切换
+      Row(children: [
+        Expanded(
+          child: TextField(
+            controller: addressController,
+            onChanged: (_) => setState(() => _validateAddress()),
+            decoration: InputDecoration(
+              labelText: l10n.addressOrHost,
+              hintText: '192.168.1.2 或 192.168.1.2:5000',
+              prefixIcon: const Icon(Icons.language_outlined),
+              errorText: addressError,
+              filled: true,
+              fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.06)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide(color: primaryColor, width: 1.5),
+              ),
+              errorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(color: Colors.redAccent, width: 1.1),
+              ),
+              focusedErrorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(color: Colors.redAccent, width: 1.4),
+              ),
+            ),
           ),
         ),
-      ),
+        const SizedBox(width: 8),
+        _buildHttpsToggle(primaryColor),
+      ]),
       const SizedBox(height: 10),
-      // 忽略证书选项
+      // 忽略证书
       _buildIgnoreCertToggle(primaryColor),
       const SizedBox(height: 10),
       TextField(
         controller: usernameController,
         onChanged: (_) => setState(() => _validateUsername()),
-        decoration: _inputDecoration(
-          label: l10n.username,
-          icon: Icons.person_outline,
+        decoration: InputDecoration(
+          labelText: l10n.username,
+          prefixIcon: const Icon(Icons.person_outline),
           errorText: usernameError,
+          filled: true,
+          fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.06)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide(color: primaryColor, width: 1.5),
+          ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: Colors.redAccent, width: 1.1),
+          ),
+          focusedErrorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: Colors.redAccent, width: 1.4),
+          ),
         ),
       ),
       const SizedBox(height: 10),
@@ -473,10 +429,29 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         controller: passwordController,
         obscureText: obscurePassword,
         onChanged: (_) => setState(() => _validatePassword()),
-        decoration: _inputDecoration(
-          label: l10n.password,
-          icon: Icons.lock_outline,
+        decoration: InputDecoration(
+          labelText: l10n.password,
+          prefixIcon: const Icon(Icons.lock_outline),
           errorText: passwordError,
+          filled: true,
+          fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.06)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide(color: primaryColor, width: 1.5),
+          ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: Colors.redAccent, width: 1.1),
+          ),
+          focusedErrorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: Colors.redAccent, width: 1.4),
+          ),
           suffixIcon: IconButton(
             icon: Icon(obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined),
             onPressed: () => setState(() => obscurePassword = !obscurePassword),
@@ -503,7 +478,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         Expanded(
           flex: 2,
           child: FilledButton(
-            onPressed: _canManualSubmit ? login : null,
+            onPressed: _canSubmit ? login : null,
             style: FilledButton.styleFrom(
               backgroundColor: primaryColor,
               padding: const EdgeInsets.symmetric(vertical: 14),
@@ -518,235 +493,23 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     ]);
   }
 
-  // ─── 历史登录设备列表 ──────────────────────────────────────────
-  Widget _buildHistoryList(
-    List<NasServer> savedServers,
-    Map<String, String> savedUsernames,
-    Map<String, int> lastUsedMap,
-    Color primaryColor,
-  ) {
-    if (savedServers.isEmpty) {
-      return Center(
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Icon(Icons.history_rounded, size: 56, color: Theme.of(context).colorScheme.outlineVariant),
-          const SizedBox(height: 16),
-          Text(l10n.noHistory, style: TextStyle(color: Theme.of(context).colorScheme.outlineVariant, fontSize: 16)),
-        ]),
-      );
-    }
-
-    final sortedServers = [...savedServers]
-      ..sort((a, b) => (lastUsedMap[b.id] ?? 0).compareTo(lastUsedMap[a.id] ?? 0));
-
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      itemCount: sortedServers.length,
-      itemBuilder: (_, index) {
-        final server = sortedServers[index];
-        final username = savedUsernames[server.id];
-        final lastUsed = _formatLastUsed(lastUsedMap[server.id]);
-        final isSelected = selectedServerId == server.id;
-
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(18),
-              onTap: () => _applyServerAndEnterQuickLogin(server, username: username),
-              onLongPress: () => _showDeleteServerDialog(server),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? primaryColor.withValues(alpha: 0.10)
-                      : Theme.of(context).colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(18),
-                  border: isSelected ? Border.all(color: primaryColor.withValues(alpha: 0.35), width: 1.5) : null,
-                ),
-                child: Row(children: [
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? primaryColor.withValues(alpha: 0.15)
-                          : Theme.of(context).colorScheme.surfaceContainerHigh,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      _buildServerInitials(server),
-                      style: TextStyle(
-                        color: isSelected ? primaryColor : Theme.of(context).colorScheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 17,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text(
-                        server.name,
-                        style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: isSelected ? primaryColor : null),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        [if (username != null && username.isNotEmpty) username, lastUsed].where((e) => e.isNotEmpty).join(' · '),
-                        style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ]),
-                  ),
-                  Icon(Icons.chevron_right_rounded, color: Theme.of(context).colorScheme.onSurfaceVariant),
-                ]),
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  void _showDeleteServerDialog(NasServer server) {
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.deleteConfirm),
-        content: Text(l10n.deleteConfirmHint(server.name)),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
-          FilledButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              removeSavedServer(server);
-            },
-            child: Text(l10n.deleteConfirm),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ─── 快速登录面板 ──────────────────────────────────────────────
-  Widget _buildQuickLoginPanel(Color primaryColor, NasServer? selectedServer) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 250),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: primaryColor.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: primaryColor.withValues(alpha: 0.15)),
-      ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: primaryColor.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              selectedServer != null ? _buildServerInitials(selectedServer) : 'N',
-              style: TextStyle(color: primaryColor, fontWeight: FontWeight.w800, fontSize: 15),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(
-                selectedServer?.name ?? '',
-                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: primaryColor),
-                overflow: TextOverflow.ellipsis,
-              ),
-              Text(
-                selectedServer != null
-                    ? ServerUrlHelper.buildBaseUrl(selectedServer)
-                    : '',
-                style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ]),
-          ),
-          IconButton(
-            onPressed: () => setState(() => quickLoginExpanded = false),
-            icon: const Icon(Icons.close, size: 18),
-          ),
-        ]),
-        const SizedBox(height: 12),
-        TextField(
-          controller: passwordController,
-          focusNode: passwordFocusNode,
-          obscureText: obscurePassword,
-          onChanged: (_) => setState(() => _validatePassword()),
-          decoration: _inputDecoration(
-            label: l10n.password,
-            icon: Icons.lock_outline,
-            errorText: passwordError,
-            suffixIcon: IconButton(
-              icon: Icon(obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined),
-              onPressed: () => setState(() => obscurePassword = !obscurePassword),
-            ),
-          ),
-          onSubmitted: (_) => isLoading ? null : login(),
-        ),
-        const SizedBox(height: 12),
-        SizedBox(
-          width: double.infinity,
-          child: FilledButton(
-            onPressed: _canQuickLogin ? login : null,
-            style: FilledButton.styleFrom(
-              backgroundColor: primaryColor,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-            ),
-            child: isLoading
-                ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                : Text(l10n.loginDsm, style: const TextStyle(fontWeight: FontWeight.w700)),
-          ),
-        ),
-      ]),
-    );
-  }
-
   // ─── Build ────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     final themeColorOption = ref.watch(themeColorProvider);
     final primaryColor = seedColorFor(themeColorOption);
     final connection = ref.watch(currentConnectionProvider);
-    final currentServer = connection.server;
     final savedUsername = connection.username;
-    final savedPassword = connection.password;
     final savedServers = ref.watch(savedServersProvider);
-    final savedServerUsernames = ref.watch(savedServerUsernamesProvider);
-    final savedServerLastUsed = ref.watch(savedServerLastUsedProvider);
 
-    _fillInitialValues(currentServer, savedUsername, savedServers);
-
-    // 自动填入已保存的密码（仅在快速登录展开时）
-    if (quickLoginExpanded && passwordController.text.isEmpty && (savedPassword?.isNotEmpty ?? false)) {
-      passwordController.text = savedPassword!;
-    }
-
-    // 没有已选服务器时，自动选中最近使用的并展开快速登录
-    if (selectedServerId == null && currentServer == null && savedServers.isNotEmpty && !quickLoginExpanded) {
-      final sortedServers = [...savedServers]
-        ..sort((a, b) => (savedServerLastUsed[b.id] ?? 0).compareTo(savedServerLastUsed[a.id] ?? 0));
-      final latest = sortedServers.first;
+    // 自动填入用户名（已保存的）
+    if (usernameController.text.isEmpty && (savedUsername?.isNotEmpty ?? false)) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted || selectedServerId != null) return;
-        _applyServerAndEnterQuickLogin(latest, username: savedServerUsernames[latest.id]);
+        if (mounted) usernameController.text = savedUsername!;
       });
     }
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final selectedServer = _findSelectedServer(savedServers);
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF0F2F7),
@@ -754,39 +517,37 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
-        leading: _view == _LoginView.history
-            ? IconButton(onPressed: () => setState(() => _view = _LoginView.manual), icon: const Icon(Icons.arrow_back))
-            : null,
+        systemOverlayStyle: isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
         title: Text(
-          _view == _LoginView.manual ? l10n.loginDsm : l10n.historyDevices,
+          l10n.loginDsm,
           style: TextStyle(fontWeight: FontWeight.w800, fontSize: 20, color: primaryColor),
         ),
-        centerTitle: _view == _LoginView.manual,
-        actions: _view == _LoginView.manual && savedServers.isNotEmpty
-            ? [
-                TextButton.icon(
-                  onPressed: () => setState(() => _view = _LoginView.history),
-                  icon: const Icon(Icons.history_rounded, size: 18),
-                  label: Text(l10n.historyDevices),
-                ),
-                const SizedBox(width: 4),
-              ]
-            : null,
+        centerTitle: true,
+        actions: [
+          if (savedServers.isNotEmpty)
+            TextButton.icon(
+              onPressed: () async {
+                // 跳转到历史设备管理页，返回时带回选中的服务器
+                final result = await context.push<NasServer>('/servers');
+                if (result != null && mounted) {
+                  applyServerPreset(result);
+                }
+              },
+              icon: Icon(Icons.history_rounded, color: primaryColor, size: 18),
+              label: Text(l10n.historyDevices, style: TextStyle(color: primaryColor)),
+            ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(18, 0, 18, 32),
-          child: _view == _LoginView.history
-              ? _buildHistoryList(savedServers, savedServerUsernames, savedServerLastUsed, primaryColor)
-              : Column(
-                  children: [
-                    _buildStatusBanner(),
-                    if (quickLoginExpanded && selectedServer != null)
-                      _buildQuickLoginPanel(primaryColor, selectedServer)
-                    else
-                      Expanded(child: _buildManualForm(primaryColor)),
-                  ],
-                ),
+          padding: const EdgeInsets.fromLTRB(18, 8, 18, 32),
+          child: Column(
+            children: [
+              _buildStatusBanner(),
+              Expanded(child: _buildForm(primaryColor)),
+            ],
+          ),
         ),
       ),
     );
