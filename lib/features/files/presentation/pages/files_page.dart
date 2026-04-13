@@ -503,7 +503,7 @@ class _FilesPageState extends ConsumerState<FilesPage> {
                     return Center(child: Text(l10n.folderIsEmpty));
                   }
                   return ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 120),
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 120),
                     itemCount: files.length,
                     separatorBuilder: (_, __) => const SizedBox(height: 10),
                     itemBuilder: (context, index) {

@@ -36,7 +36,7 @@ class FilesHeader extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(4, 8, 4, 4),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -44,10 +44,13 @@ class FilesHeader extends StatelessWidget {
           Row(
             children: [
               if (canGoUp)
-                IconButton(
-                  tooltip: l10n.goParent,
-                  onPressed: onGoUp,
-                  icon: const Icon(Icons.arrow_back_rounded),
+                Padding(
+                  padding: const EdgeInsets.only(right: 4),
+                  child: IconButton(
+                    tooltip: l10n.goParent,
+                    onPressed: onGoUp,
+                    icon: const Icon(Icons.arrow_back_rounded),
+                  ),
                 ),
               Expanded(
                 child: Text(
@@ -61,6 +64,7 @@ class FilesHeader extends StatelessWidget {
                 sort: sort,
                 onSortSelected: onSortSelected,
               ),
+              const SizedBox(width: 4),
               if (showActionMenu)
                 PopupMenuButton<String>(
                   icon: const Icon(Icons.more_vert_rounded),
