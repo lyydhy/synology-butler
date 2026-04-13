@@ -496,6 +496,28 @@ class _DownloadTaskCard extends StatelessWidget {
   final VoidCallback onTap;
   final Future<void> Function(String) onAction;
 
+  static String _formatBytes(double bytes) {
+    if (bytes <= 0) return '';
+    const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+    var size = bytes;
+    var unitIndex = 0;
+    while (size >= 1024 && unitIndex < units.length - 1) {
+      size /= 1024;
+      unitIndex++;
+    }
+    final digits = size >= 100 ? 0 : (size >= 10 ? 1 : 2);
+    return '${size.toStringAsFixed(digits)} ${units[unitIndex]}';
+  }
+
+  static String _formatSpeed(double down, double up) {
+    if (down > 0 && up > 0) {
+      return '\u2193${_formatBytes(down)}/s \u2191${_formatBytes(up)}/s';
+    }
+    if (down > 0) return '\u2193${_formatBytes(down)}/s';
+    if (up > 0) return '\u2191${_formatBytes(up)}/s';
+    return '';
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -568,6 +590,20 @@ class _DownloadTaskCard extends StatelessWidget {
                               color: theme.colorScheme.primary,
                             ),
                           ),
+                          if (task.speedDownload > 0 || task.speedUpload > 0)
+                            Text(
+                              _formatSpeed(task.speedDownload, task.speedUpload),
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          if (task.sizeTotal > 0)
+                            Text(
+                              _formatBytes(task.sizeTotal),
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
                           const SizedBox(height: 4),
                           GestureDetector(
                             onTap: () => onAction(isPaused ? 'resume' : 'pause'),

@@ -86,14 +86,37 @@ class DsmDownloadStationApi implements DownloadStationApi {
         final sizeTotal = (map['size'] as num?)?.toDouble() ?? 0;
         final progress = sizeTotal > 0 ? (sizeDownloaded / sizeTotal) : 0.0;
 
-        // status 是数字代码，用 code 做映射而非 DSM 返回的 status_string（后者已做多语言，不一定与我们 l10n 对齐）
         final statusCode = (detail['status'] ?? map['status'] ?? 99).toString();
+
+        // 时间戳转 DateTime（秒级）
+        DateTime? parseTs(dynamic s) {
+          if (s == null) return null;
+          final ms = (s is int ? s : int.tryParse(s.toString()));
+          if (ms == null || ms == 0) return null;
+          return DateTime.fromMillisecondsSinceEpoch(ms * 1000);
+        }
 
         return DownloadTaskModel(
           id: (map['id'] ?? '').toString(),
           title: (map['title'] ?? '').toString(),
           status: statusCode,
           progress: progress,
+          sizeTotal: sizeTotal,
+          sizeDownloaded: sizeDownloaded,
+          sizeUploaded: (transfer['size_uploaded'] as num?)?.toDouble() ?? 0,
+          speedDownload: (transfer['speed_download'] as num?)?.toDouble() ?? 0,
+          speedUpload: (transfer['speed_upload'] as num?)?.toDouble() ?? 0,
+          destination: (detail['destination'] as String?) ?? '',
+          uri: (detail['uri'] as String?) ?? '',
+          connectedPeers: (detail['connected_leechers'] as num?)?.toInt() ?? 0,
+          connectedSeeders: (detail['connected_seeders'] as num?)?.toInt() ?? 0,
+          totalPeers: (detail['total_peers'] as num?)?.toInt() ?? 0,
+          totalPieces: (detail['total_pieces'] as num?)?.toInt() ?? 0,
+          downloadedPieces: (transfer['downloaded_pieces'] as num?)?.toInt() ?? 0,
+          createdTime: parseTs(detail['created_time'] ?? map['create_time']),
+          startedTime: parseTs(detail['started_time']),
+          completedTime: parseTs(detail['completed_time']),
+          seedElapsed: (detail['seed_elapsed'] as num?)?.toInt() ?? 0,
         );
       }).toList();
     }
