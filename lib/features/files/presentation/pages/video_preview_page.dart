@@ -38,7 +38,11 @@ class _VideoPreviewPageState extends State<VideoPreviewPage> {
     final encodedDlink = _utf8Encode(widget.path);
     final synoToken = widget.synoToken ?? '';
     // mode=download, stdhtml=false
-    return '${widget.baseUrl}/fbdownload/$encodedName?mode=download&stdhtml=false&dlink=%22$encodedDlink%22&SynoToken=$synoToken';
+    final url = '${widget.baseUrl}/fbdownload/$encodedName?mode=download&stdhtml=false&dlink=%22$encodedDlink%22&SynoToken=$synoToken';
+    debugPrint('[VideoPreview] path: ${widget.path}');
+    debugPrint('[VideoPreview] dlink hex: $encodedDlink');
+    debugPrint('[VideoPreview] streamUrl: $url');
+    return url;
   }
 
   /// 构建 HTTP Headers（参考 NAS 网页抓包）
