@@ -42,6 +42,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   String? errorText;
   String? infoText;
   List<String> _prevServerIds = [];
+  bool _initialized = false;
 
   @override
   void dispose() {
@@ -77,7 +78,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       _resetForm();
     }
 
-    if (server == null) return;
+    if (server == null || _initialized) return;
+    _initialized = true;
     selectedServerId = server.id;
     hostController.text = server.host;
     portController.text = server.port.toString();
