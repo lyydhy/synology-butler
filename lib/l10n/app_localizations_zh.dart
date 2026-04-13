@@ -234,6 +234,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get downloadLinkOrMagnet => '下载链接 / Magnet';
 
   @override
+  String get downloadTargetDir => '目标文件夹';
+
+  @override
   String get submitting => '提交中…';
 
   @override

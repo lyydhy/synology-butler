@@ -235,6 +235,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get downloadLinkOrMagnet => 'Download link / Magnet';
 
   @override
+  String get downloadTargetDir => 'Target folder';
+
+  @override
   String get submitting => 'Submitting…';
 
   @override

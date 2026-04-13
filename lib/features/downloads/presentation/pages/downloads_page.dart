@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../core/constants/app_constants.dart';
 import '../../../../core/error/error_mapper.dart';
-
 import '../../../../core/utils/l10n.dart';
 import '../../../../core/utils/toast.dart';
 import '../../../../core/widgets/sliding_tab_bar.dart';
@@ -51,6 +52,7 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
 
   Future<void> _showAddTaskDialog(BuildContext context) async {
     final controller = TextEditingController();
+    String destination = AppConstants.downloadDefaultDestination;
     String? errorText;
     bool isSubmitting = false;
 
@@ -67,6 +69,51 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
                 decoration: InputDecoration(labelText: l10n.downloadLinkOrMagnet),
                 maxLines: 3,
               ),
+              const SizedBox(height: 12),
+              // 目标文件夹选择
+              InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: () async {
+                  final picked = await context.push<String>('/files/pick-directory');
+                  if (picked != null && picked.isNotEmpty) {
+                    // 提取文件夹名称（路径最后一段）
+                    final name = picked.split('/').where((s) => s.isNotEmpty).lastOrNull ?? picked;
+                    setState(() => destination = name);
+                  }
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Theme.of(context).colorScheme.outline),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.folder_outlined, size: 20, color: Theme.of(context).colorScheme.primary),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              l10n.downloadTargetDir,
+                              style: Theme.of(context).textTheme.labelSmall,
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              destination,
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(Icons.chevron_right_rounded, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                    ],
+                  ),
+                ),
+              ),
               if (errorText != null) ...[
                 const SizedBox(height: 12),
                 Text(errorText!, style: const TextStyle(color: Colors.red)),
@@ -82,8 +129,8 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
               onPressed: isSubmitting
                   ? null
                   : () async {
-                      final uri = controller.text.trim();
-                      if (uri.isEmpty) {
+                      final rawInput = controller.text.trim();
+                      if (rawInput.isEmpty) {
                         setState(() => errorText = l10n.downloadLinkOrMagnet);
                         return;
                       }
@@ -92,7 +139,16 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
                         errorText = null;
                       });
                       try {
-                        await ref.read(downloadActionProvider)(uri);
+                        final urls = rawInput
+                            .split(RegExp(r'[\n,]'))
+                            .map((s) => s.trim())
+                            .where((s) => s.isNotEmpty)
+                            .toList();
+                        await ref.read(downloadRepositoryProvider).createTask(
+                          urls: urls,
+                          destination: destination,
+                        );
+                        ref.read(downloadListProvider.notifier).refresh();
                         if (context.mounted) Navigator.of(context).pop();
                       } catch (e) {
                         setState(() {

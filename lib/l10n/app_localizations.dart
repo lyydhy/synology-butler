@@ -548,6 +548,12 @@ abstract class AppLocalizations {
   /// **'下载链接 / Magnet'**
   String get downloadLinkOrMagnet;
 
+  /// No description provided for @downloadTargetDir.
+  ///
+  /// In zh, this message translates to:
+  /// **'目标文件夹'**
+  String get downloadTargetDir;
+
   /// No description provided for @submitting.
   ///
   /// In zh, this message translates to:
