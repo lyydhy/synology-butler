@@ -32,22 +32,32 @@ class _VideoPreviewPageState extends State<VideoPreviewPage> {
   }
 
   String get _streamUrl {
-    // 与 dsm_helper 完全一致，_sid 在 URL 中也保留
+    // 参考 NAS 网页抓包格式：
+    // /fbdownload/{filename}?mode=download&dlink={utf8Path}&SynoToken={token}
     final encodedName = Uri.encodeComponent(widget.name);
-    final encodedDlink = '%22${_utf8Encode(widget.path)}%22';
-    final sid = widget.sid ?? '';
-    return '${widget.baseUrl}/fbdownload/$encodedName?dlink=$encodedDlink&_sid=%22$sid%22&mode=open';
+    final encodedDlink = _utf8Encode(widget.path);
+    final synoToken = widget.synoToken ?? '';
+    // mode=download, stdhtml=false
+    return '${widget.baseUrl}/fbdownload/$encodedName?mode=download&stdhtml=false&dlink=%22$encodedDlink%22&SynoToken=$synoToken';
   }
 
-  /// 构建 HTTP Headers（同时在 URL 和 Header 中传递认证信息）
+  /// 构建 HTTP Headers（参考 NAS 网页抓包）
   Map<String, String> get _httpHeaders {
-    final headers = <String, String>{};
+    final headers = <String, String>{
+      'accept': '*/*',
+      'accept-language': 'zh-CN,zh;q=0.9',
+      'cache-control': 'no-cache',
+      'pragma': 'no-cache',
+      // range 用于支持断点续传/流式播放
+      'range': 'bytes=0-',
+      // referer 包含 launchApp 参数，NAS 需要这个来识别为视频播放器
+      'referer': '${widget.baseUrl}/?launchApp=SYNO.SDS.VideoPlayer2.Application&SynoToken=${widget.synoToken ?? ''}',
+      'user-agent': 'Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36',
+    };
     if (widget.cookieHeader != null && widget.cookieHeader!.isNotEmpty) {
       headers['Cookie'] = widget.cookieHeader!;
     }
-    if (widget.synoToken != null && widget.synoToken!.isNotEmpty) {
-      headers['X-SYNO-TOKEN'] = widget.synoToken!;
-    }
+    debugPrint('[VideoPreview] streamUrl: $_streamUrl');
     debugPrint('[VideoPreview] headers: $headers');
     return headers;
   }
@@ -65,7 +75,6 @@ class _VideoPreviewPageState extends State<VideoPreviewPage> {
 
   @override
   Widget build(BuildContext context) {
-    debugPrint('[VideoPreview] streamUrl: $_streamUrl');
     return Scaffold(
       appBar: AppBar(title: Text(widget.name)),
       backgroundColor: Colors.black,
