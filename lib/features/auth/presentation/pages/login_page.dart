@@ -447,11 +447,13 @@ class _LoginPageState extends ConsumerState<LoginPage>
               textInputAction: textInputAction,
               style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
               decoration: InputDecoration(
-                labelText: labelText,
-                labelStyle: TextStyle(
+                hintText: labelText,
+                hintStyle: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
-                  color: hasError ? Colors.redAccent : theme.colorScheme.onSurfaceVariant,
+                  color: hasError
+                      ? Colors.redAccent.withValues(alpha: 0.70)
+                      : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.55),
                 ),
                 prefixIcon: Container(
                   margin: const EdgeInsets.only(left: 14, right: 4),
@@ -471,11 +473,6 @@ class _LoginPageState extends ConsumerState<LoginPage>
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
                 focusedBorder: InputBorder.none,
-                floatingLabelStyle: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
-                  color: hasError ? Colors.redAccent : primaryColor.withValues(alpha: 0.80),
-                ),
                 contentPadding: const EdgeInsets.fromLTRB(4, 10, 16, 0),
                 suffixIcon: suffixIcon,
                 isDense: true,
