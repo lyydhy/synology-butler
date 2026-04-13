@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:omni_video_player/omni_video_player.dart';
 
@@ -26,16 +28,17 @@ class VideoPreviewPage extends StatefulWidget {
 class _VideoPreviewPageState extends State<VideoPreviewPage> {
   OmniPlaybackController? _controller;
 
-  /// UTF-8 十六进制编码（与 dsm_helper Util.utf8Encode 保持一致）
-  String _utf8Encode(String data) {
-    return data.codeUnits.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+  /// UTF-8 编码后转十六进制字符串（与 NAS videoplayer.js bin2hex 完全一致）
+  String _bin2hex(String data) {
+    final utf8Bytes = utf8.encode(data); // 先 UTF-8 编码
+    return utf8Bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join(); // 再转十六进制
   }
 
   String get _streamUrl {
     // 参考 NAS 网页抓包格式：
     // /fbdownload/{filename}?mode=download&dlink={utf8Path}&SynoToken={token}
     final encodedName = Uri.encodeComponent(widget.name);
-    final encodedDlink = _utf8Encode(widget.path);
+    final encodedDlink = _bin2hex(widget.path);
     final synoToken = widget.synoToken ?? '';
     // mode=download, stdhtml=false
     final url = '${widget.baseUrl}/fbdownload/$encodedName?mode=download&stdhtml=false&dlink=%22$encodedDlink%22&SynoToken=$synoToken';
