@@ -537,12 +537,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               )
             : null,
         actions: [
-          if (savedServers.isNotEmpty && widget.initialServer == null)
-            TextButton.icon(
-              onPressed: () => context.push('/servers'),
-              icon: Icon(Icons.history_rounded, color: primaryColor, size: 18),
-              label: Text(l10n.historyDevices, style: TextStyle(color: primaryColor)),
-            ),
           const SizedBox(width: 8),
         ],
       ),
@@ -553,6 +547,16 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             children: [
               _buildStatusBanner(),
               Expanded(child: _buildForm(primaryColor)),
+              if (savedServers.isNotEmpty && widget.initialServer == null) ...[
+                const SizedBox(height: 16),
+                Center(
+                  child: TextButton.icon(
+                    onPressed: () => context.push('/servers'),
+                    icon: Icon(Icons.history_rounded, color: primaryColor.withValues(alpha: 0.7), size: 18),
+                    label: Text(l10n.historyDevices, style: TextStyle(color: primaryColor.withValues(alpha: 0.7))),
+                  ),
+                ),
+              ],
             ],
           ),
         ),
