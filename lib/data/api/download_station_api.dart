@@ -68,6 +68,7 @@ class DsmDownloadStationApi implements DownloadStationApi {
         'sort_by': 'total_size',
         'order': 'ASC',
         'action': 'enum',
+        'type': '["emule"]',
         'type_inverse': true,
         'limit': 25,
         'additional': '["detail","transfer"]',
