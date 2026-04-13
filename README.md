@@ -2,6 +2,19 @@
 
 一款面向 **Synology DSM 7+** 的 Flutter 移动客户端，以现代移动体验为核心，覆盖 NAS 日常运维的核心场景。
 
+## 截图
+
+<p float="left">
+  <img src="example_img/Screenshot_20260413_230248.png" width="250" />
+  <img src="example_img/Screenshot_20260413_230352.png" width="250" />
+  <img src="example_img/Screenshot_20260413_230407.png" width="250" />
+</p>
+<p float="left">
+  <img src="example_img/Screenshot_20260413_230414.png" width="250" />
+  <img src="example_img/Screenshot_20260413_230428.png" width="250" />
+  <img src="example_img/Screenshot_20260413_230439.png" width="250" />
+</p>
+
 ## 核心特性
 
 ### 全面的 DSM 系统集成
