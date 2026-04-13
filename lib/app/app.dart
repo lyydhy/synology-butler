@@ -76,9 +76,6 @@ class _QunhuiManagerAppState extends ConsumerState<QunhuiManagerApp> {
       filePath: event.filePath,
     );
   }
-      ),
-    );
-  }
 
   @override
   void dispose() {
