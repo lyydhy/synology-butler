@@ -1,146 +1,145 @@
-# Synology Butler / 群晖管家
+# 群晖管家
 
-A Flutter-based mobile client for **Synology DSM 7+**, focused on a modern mobile experience for common NAS operations such as system overview, file access, downloads, and package management.
+一款面向 **Synology DSM 7+** 的 Flutter 移动客户端，以现代移动体验为核心，覆盖 NAS 日常运维的核心场景。
 
-> Current codename: `syno_keeper`
+## 核心特性
 
-## Highlights
+### 全面的 DSM 系统集成
 
-- DSM 7+ oriented architecture
-- Clean layered project structure
-- Riverpod-based state management
-- Synology authentication and session persistence
-- Dashboard with system overview and realtime recovery flow
-- File Station integration
-- Download Station integration
-- Package Center foundation
-- Android CI workflow and release build optimization
+基于 Synology 官方 WebAPI 构建，覆盖认证、存储、网络、下载、容器、用户管理等多个子系统，共计 **20+ WebAPI 模块**，包括：
 
-## Project Structure
+| 模块 | 说明 |
+|------|------|
+| `SYNO.Login` / `SYNO.Auth` | 登录与会话管理，支持 SynoToken 刷新与自动恢复 |
+| `SYNO.DSM.Info` | 系统基本信息与版本 |
+| `SYNO.Core.System` | 电源控制、重启、关机 |
+| `SYNO.Core.SYSVM.Retention` | 存储快照管理 |
+| `SYNO.FileStation` | 文件浏览、上传下载、分享链接、文本编辑 |
+| `SYNO.DownloadStation2` | 下载任务管理（创建/暂停/恢复/删除） |
+| `SYNO.PackageStation` | 套件中心：安装/卸载/启停/升级 |
+| `SYNO.Docker.Container` | Docker 容器管理 |
+| `SYNO.Core.Network` | 网络状态与网关配置 |
+| `SYNO.Core.System.SystemInfo` | CPU、内存、存储实时状态 |
+| `SYNO.Core.ExternalDevice` | 外接设备（UPS 等） |
+| `SYNO.Core.Findmee` | 设备定位 |
+| `SYNO.Core.UPnP` | UPnP 端口映射 |
+| `SYNO.TaskScheduler` | 计划任务管理 |
+| `SYNO.S2S.Server` | 远程服务器管理 |
+| `SYNO.BandwidthControl` | 带宽控制 |
+| `SYNO.Core.Security` | 安全扫描状态 |
+| `SYNO.Virtualization` | 虚拟机管理 |
+| `SYNO.IndexService` | 索引服务 |
+| `SYNO.UserGroup` | 用户与群组管理 |
+| `SYNO.Share` | 共享文件夹管理 |
+| `SYNO.Terminal` | 终端（SSH/明文） |
+| `SYNO.SurveillanceStation` | Surveillance Station 摄像头管理 |
+| `SYNO.Backup.Server` | 备份任务管理 |
+| `SYNO.Entry` | 复合请求（支持多 API 并行批量调用） |
 
-```text
+### 稳定可靠的会话管理
+
+- SynoToken + Session Cookie 双轨认证，登录状态持久化
+- Realtime WebSocket 会话保活与自动恢复
+- Dio 统一网络层，集成重试、日志、错误映射拦截器
+- 网络抖动时无缝重连，用户无感知
+
+### 现代化移动体验
+
+- **Material Design 3** 主题，动态色彩、圆角、Elevation 体系
+- **深色模式** 原生支持
+- **多语言**（简体中文 / English）
+- 文件列表支持**路径面包屑导航**，超宽时自动滚动至最新目录
+- 下载任务卡片实时显示进度、速度、已下载/总大小
+- 全局 Toast 通知 + 下载任务实时通知栏推送
+
+## 技术架构
+
+```
 lib/
-├── app/                 # app bootstrap, router, theme
-├── core/                # shared infra: errors, network, storage, utils
-├── data/                # DSM APIs, models, repository implementations
-├── domain/              # entities + repository contracts
-├── features/            # feature-oriented presentation layer
-├── l10n/                # localization
-└── main.dart            # app entry
+├── app/                      # 应用入口、路由、主题
+├── core/                     # 公共基础设施
+│   ├── constants/            # 全局常量
+│   ├── error/                # 统一异常定义与映射
+│   ├── network/              # Dio 实例、重连桥、会话拦截器
+│   ├── services/             # 通知服务等全局服务
+│   ├── storage/              # 本地存储、安全存储
+│   ├── utils/                # 通用工具函数（格式化、日志、Toast 等）
+│   └── widgets/              # 公共 UI 组件
+├── data/                     # 数据层
+│   ├── api/                  # 各 WebAPI 实现（20+ 模块）
+│   ├── models/               # API 响应模型
+│   └── repositories/         # Repository 具体实现
+├── domain/                   # 领域层
+│   ├── entities/             # 纯业务实体
+│   └── repositories/          # Repository 接口定义
+├── features/                 # 功能模块（按领域划分）
+│   ├── auth/                 # 登录、会话
+│   ├── dashboard/            # 系统概览、仪表盘
+│   ├── downloads/            # 下载管理
+│   ├── files/                # 文件浏览与管理
+│   ├── information_center/   # 存储、网络详情
+│   ├── packages/             # 套件中心
+│   ├── performance/         # 性能监控与历史图表
+│   ├── power/                # 电源控制
+│   ├── server-management/    # 服务器管理
+│   ├── settings/             # 设置与连接管理
+│   ├── shared_folders/       # 共享文件夹
+│   ├── task_scheduler/       # 计划任务
+│   ├── terminal/             # 终端
+│   ├── transfers/            # 传输管理
+│   ├── user_groups/          # 用户与群组
+│   └── ...                   # Docker、升级、日志等
+└── l10n/                     # 国际化（ARB 驱动）
 ```
 
-## Current Features
+**状态管理**：Riverpod（Provider + AsyncNotifier），所有数据层和业务层完全解耦。
 
-### Authentication
-- DSM login
-- Saved server switching
-- Session persistence
-- SynoToken refresh path
-- Realtime session refresh fallback
+**路由**：GoRouter，支持深层链接和 Shell 路由架构。
 
-### Dashboard
-- System overview
-- CPU / memory / storage cards
-- Uptime display
-- Realtime utilization fallback and recovery handling
-- Home entry for Package Center
+## 当前功能模块
 
-### Files
-- Share / folder listing
-- File preview basics
-- Text editor
-- Upload / download foundation
-- Create folder / rename / delete / share link
+| 模块 | 能力 |
+|------|------|
+| **登录** | DSM 账号密码登录、服务器切换、登录状态持久化 |
+| **仪表盘** | 系统状态总览、CPU / 内存 / 存储使用率、运行时间、套件入口 |
+| **文件管理** | 共享文件夹浏览、文件预览、文本编辑、上传下载、创建/重命名/删除、分享链接生成 |
+| **下载** | Download Station 任务列表、创建 URL/磁力任务、暂停/恢复/删除、进度实时轮询、详情弹窗 |
+| **存储概览** | 各卷使用率、硬盘 SMART 状态、RAID 组信息、网络接口状态 |
+| **性能监控** | CPU / 内存实时图表、历史趋势、指标卡片 |
+| **套件中心** | 已安装 / 可更新过滤、包详情、启停 / 安装 / 卸载 / 升级 |
+| **Docker** | 容器列表、镜像管理、创建/启停/删除 |
+| **电源** | 关机、重启、进入/退出休眠、UPS 管理 |
+| **用户管理** | 用户列表、群组管理 |
+| **终端** | 内置 SSH 终端界面 |
+| **计划任务** | 任务列表与启停管理 |
+| **系统升级** | DSM 升级包检测与安装 |
+| **设置** | 深色主题、多语言切换、服务器配置管理 |
+| **调试日志** | App 本地日志查看与导出 |
 
-### Downloads
-- Download Station task list
-- Create / pause / resume / delete tasks
-
-### Package Center
-- Package list
-- Installed / updatable filtering
-- Package detail page
-- Start / stop / uninstall actions
-- Install / update flow foundation
-- Volume selection
-- Queue impact confirmation
-
-## Android Build Notes
-
-Android release-related configuration has been added:
-
-- R8 / ProGuard enabled for release
-- Resource shrinking enabled
-- ABI split build supported
-- Dart obfuscation output supported
-- Mapping / symbols artifact retention supported
-
-Related files:
-
-- `android/app/build.gradle.kts`
-- `android/app/proguard-rules.pro`
-- `docs/android-build.md`
-
-## GitHub Actions
-
-GitHub CI workflows are included:
-
-- `.github/workflows/android-release.yml`
-- `.github/workflows/pr-check.yml`
-
-Current behavior:
-- PR check runs `flutter analyze`
-- Android release workflow currently only builds and uploads APK artifacts
-- Analyze is configured as **non-blocking** for now, to avoid existing lint debt from blocking release artifacts
-
-See also:
-- `docs/github-actions.md`
-
-## Local Development
-
-Use your local Flutter environment:
+## 构建说明
 
 ```bash
+# 安装依赖
 flutter pub get
+
+# 代码分析（推送前必须保证 No issues found）
 flutter analyze
+
+# 运行调试
 flutter run
-```
 
-If you are using the OpenClaw-hosted Flutter SDK path from this workspace environment:
-
-```bash
-/root/.openclaw/projectEnv/flutter-sdk/bin/flutter pub get
-/root/.openclaw/projectEnv/flutter-sdk/bin/flutter analyze
-/root/.openclaw/projectEnv/flutter-sdk/bin/flutter run
-```
-
-## Release Build Examples
-
-### APK (split per ABI)
-```bash
+# APK 构建（按 ABI 分包）
 flutter build apk --release --split-per-abi --obfuscate --split-debug-info=build/app/outputs/symbols
-```
 
-### AAB
-```bash
+# AAB 构建（Google Play 发布用）
 flutter build appbundle --release --obfuscate --split-debug-info=build/app/outputs/symbols
 ```
 
-## Current Limitations
+## CI / CD
 
-- Formal Android release signing is not configured yet
-- Application ID is still placeholder-style and should be finalized before public distribution
-- Some advanced DSM flows still need real-device and real-server validation
-- Package Center is already usable as a first version, but still needs deeper production hardening
+- **PR 检查**：每次 PR 自动运行 `flutter analyze`，不允许有 error / warning / info
+- **Release 构建**：通过 `workflow_dispatch` 触发 Windows Build Agent 进行交叉编译，APK 自动上传
 
-## Recommended Next Steps
+## License
 
-1. Finalize Android signing config
-2. Replace placeholder package name / namespace
-3. Validate package install/update flows against real DSM servers
-4. Expand common token-refresh recovery beyond dashboard-only paths
-5. Continue cleaning remaining lint / polish items until `flutter analyze` is fully clean
-
-## License / Status
-
-This repository is currently in active product iteration and should be treated as a working codebase rather than a finalized public SDK.
+当前仓库处于活跃迭代阶段，请勿作为最终发布版本使用。
