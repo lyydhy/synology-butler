@@ -213,19 +213,31 @@ class TransferController extends StateNotifier<List<TransferTask>> {
 
     final id = _id();
 
-    // 构建 DSM 下载 URL
+    // 构建 DSM 下载 URL（与 Dio 保持一致：sid 作为 query param，X-SYNO-TOKEN 和 Cookie 作为 headers）
     final conn = _ref.read(currentConnectionStoreProvider);
     final baseUrl = conn.server?.host ?? '';
-    final sid = conn.session?.sid ?? '';
+    final session = conn.session;
+    final sid = session?.sid ?? '';
+    final synoToken = session?.synoToken;
+    final cookieHeader = session?.cookieHeader;
     final encodedPath = Uri.encodeComponent(jsonEncode([remotePath]));
-    final downloadUrl = '$baseUrl/webapi/entry.cgi?api=SYNO.FileStation.Download&version=2&method=download&mode=download&path=$encodedPath';
+    final downloadUrl = '$baseUrl/webapi/entry.cgi?api=SYNO.FileStation.Download&version=2&method=download&mode=download&path=$encodedPath&_sid=$sid';
+
+    // 构建 headers（与 Dio SessionAttachInterceptor 保持一致）
+    final headers = <String, String>{};
+    if (cookieHeader != null && cookieHeader.isNotEmpty) {
+      headers['Cookie'] = cookieHeader;
+    }
+    if (synoToken != null && synoToken.isNotEmpty) {
+      headers['X-SYNO-TOKEN'] = synoToken;
+    }
 
     // 创建 background_downloader 任务（DSM API 为 POST）
     final bdTask = DownloadTask(
       taskId: id,
       url: downloadUrl,
       httpRequestMethod: 'POST',
-      headers: {'Cookie': 'id=$sid'},
+      headers: headers,
       filename: displayName,
       directory: '',
       allowPause: true,
