@@ -28,6 +28,8 @@ abstract class DownloadStationApi {
   Future<void> deleteTask({
     required String id,
   });
+
+  Future<String> getDefaultDestination();
 }
 
 class DsmDownloadStationApi implements DownloadStationApi {
@@ -242,5 +244,24 @@ class DsmDownloadStationApi implements DownloadStationApi {
       error: 'Failed to delete task',
       response: response,
     );
+  }
+
+  @override
+  Future<String> getDefaultDestination() async {
+    final response = await _dio.get(
+      '/webapi/entry.cgi',
+      queryParameters: {
+        'api': 'SYNO.DownloadStation2.Settings.Location',
+        'method': 'get',
+        'version': '1',
+      },
+      options: Options(contentType: Headers.formUrlEncodedContentType),
+    );
+
+    if (response.data is Map && response.data['success'] == true) {
+      final data = response.data['data'] as Map? ?? const {};
+      return (data['default_destination'] as String?) ?? 'Download';
+    }
+    return 'Download';
   }
 }

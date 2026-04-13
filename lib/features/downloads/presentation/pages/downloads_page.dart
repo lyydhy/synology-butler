@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/constants/app_constants.dart';
 import '../../../../core/error/error_mapper.dart';
 import '../../../../core/utils/l10n.dart';
 import '../../../../core/utils/toast.dart';
@@ -52,7 +51,10 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
 
   Future<void> _showAddTaskDialog(BuildContext context) async {
     final controller = TextEditingController();
-    String destination = AppConstants.downloadDefaultDestination;
+    final api = ref.read(downloadStationApiProvider);
+    final defaultDest = await api.getDefaultDestination();
+    if (!context.mounted) return;
+    String destination = defaultDest;
     String? errorText;
     bool isSubmitting = false;
 
