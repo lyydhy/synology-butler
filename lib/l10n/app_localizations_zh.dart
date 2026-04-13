@@ -237,6 +237,194 @@ class AppLocalizationsZh extends AppLocalizations {
   String get downloadTargetDir => '目标文件夹';
 
   @override
+  String get downloadTaskWaiting => '等待中';
+  @override
+  String get downloadTaskDownloading => '下载中';
+  @override
+  String get downloadTaskPaused => '已暂停';
+  @override
+  String get downloadTaskFinishing => '即将完成';
+  @override
+  String get downloadTaskFinished => '已完成';
+  @override
+  String get downloadTaskHashChecking => '校验中';
+  @override
+  String get downloadTaskPreSeeding => '等待做种';
+  @override
+  String get downloadTaskSeeding => '做种中';
+  @override
+  String get downloadTaskExtracting => '解压中';
+  @override
+  String get downloadTaskCaptchaNeeded => '需要验证码';
+  @override
+  String get downloadTaskError => '下载出错';
+  @override
+  String get downloadTaskBrokenLink => '错误链接';
+  @override
+  String get downloadTaskDestNotExist => '目标目录不存在';
+  @override
+  String get downloadTaskDestDeny => '目标目录无权限';
+  @override
+  String get downloadTaskDiskFull => '硬盘已满';
+  @override
+  String get downloadTaskQuotaReached => '已达空间配额';
+  @override
+  String get downloadTaskTimeout => '联机超时';
+  @override
+  String get downloadBtnNew => '新增';
+  @override
+  String get downloadBtnOk => '确定';
+  @override
+  String get downloadBtnCancel => '取消';
+  @override
+  String get downloadBtnRefresh => '刷新';
+  @override
+  String get downloadBtnRemove => '删除';
+  @override
+  String get downloadBtnResume => '恢复';
+  @override
+  String get downloadBtnStop => '暂停';
+  @override
+  String get downloadBtnClear => '清除';
+  @override
+  String get downloadBtnEnd => '结束';
+  @override
+  String get downloadBtnChange => '变更';
+  @override
+  String get downloadBtnHelp => '说明';
+  @override
+  String get downloadLblInputUrl => '输入网址';
+  @override
+  String get downloadLblInputFile => '打开文件';
+  @override
+  String get downloadLblDestFolder => '目的地文件夹';
+  @override
+  String get downloadLblFilename => '文件名称';
+  @override
+  String get downloadLblFileSize => '文件大小';
+  @override
+  String get downloadLblStatus => '状态';
+  @override
+  String get downloadLblProgress => '进度';
+  @override
+  String get downloadLblSpeed => '速度';
+  @override
+  String get downloadLblDownloaded => '已下载';
+  @override
+  String get downloadLblCreatedTime => '创建时间';
+  @override
+  String get downloadLblStartedTime => '开始时间';
+  @override
+  String get downloadLblConnectedPeers => '已联机的Peer数';
+  @override
+  String get downloadLblPeer => 'Peer数';
+  @override
+  String get downloadLblLeechers => '下载用户数';
+  @override
+  String get downloadLblSeeders => '种子数';
+  @override
+  String get downloadLblSeedElapsed => '已作种时间';
+  @override
+  String get downloadLblTransfered => '已传输';
+  @override
+  String get downloadLblUploadRate => '上传速度';
+  @override
+  String get downloadLblDownRate => '下载速度';
+  @override
+  String get downloadLblUrl => '网址';
+  @override
+  String get downloadLblUsername => '用户名';
+  @override
+  String get downloadLblTotalPieces => '分块总数';
+  @override
+  String get downloadLblDownloadedPieces => '已下载的分块数';
+  @override
+  String get downloadLblTimeLeft => '剩余时间';
+  @override
+  String get downloadMsgActionFailed => '要求的动作无法完成。';
+  @override
+  String get downloadMsgEndDoneDelErr => '成功结束选择的下载任务，但系统无法删除此下载任务。请手动删除。';
+  @override
+  String get downloadMsgInvalidUser => '不合法的用户。';
+  @override
+  String get downloadMsgReachLimit => '下载任务数已达到上限。';
+  @override
+  String get downloadWarningSelectItems => '请先勾选项目。';
+  @override
+  String get downloadWarningSelectShare => '请先选择目的地文件夹。';
+  @override
+  String get downloadWarningDiskFull => '此存储空间的可用空间不足。';
+  @override
+  String get downloadErrorNoTask => '下载任务不正确或已被删除。';
+  @override
+  String get downloadErrorNoPrivilege => '您没有权限读取此下载任务。';
+  @override
+  String get downloadErrorWrongFormat => '文件格式不正确。';
+  @override
+  String get downloadErrorWrongUrl => '网址的开头必须是http://、https://，或ftp://。';
+  @override
+  String get downloadErrorEmptyInput => '请输入网址。';
+  @override
+  String get downloadErrorNetwork => '创建网络联机失败。';
+  @override
+  String get downloadErrorServer => '发生未知的错误！';
+  @override
+  String get downloadErrorShareNotFound => '找不到有写入权限的文件夹。';
+  @override
+  String get downloadErrorUserRemoved => '帐号不存在或已被删除。';
+  @override
+  String get downloadErrorSelectNum => '只能选择一个下载任务。';
+  @override
+  String get downloadErrorReadTorrentFail => '无法读取 torrent 文件。';
+  @override
+  String get downloadErrorMagnet => '无法由磁力链接取得 torrent 文件的信息。';
+  @override
+  String get downloadErrorNoFileToEnd => '文件不存在。';
+  @override
+  String get downloadConfirmRemove => '您确定要删除此下载任务吗？';
+  @override
+  String get downloadConfirmEnd => '您确定要结束此下载任务吗？';
+  @override
+  String get downloadEndDesc => '此功能只适合无法继续下载的任务或有错误的任务。';
+  @override
+  String get downloadEndNoteFinished => '您无法结束此下载任务，下载任务已经完成。';
+  @override
+  String get downloadEndNoteNoFile => '您无法结束此下载任务，此任务还未开始下载。';
+  @override
+  String get downloadRedirectConfirm => 'Download Station 未启用。您要设置Download Station 吗？';
+  @override
+  String get downloadNotEnabled => '下载服务尚未启用。';
+  @override
+  String get downloadSeedDays => '天';
+  @override
+  String get downloadSeedHours => '小时';
+  @override
+  String get downloadSeedMins => '分钟';
+  @override
+  String get downloadSeedSeconds => '秒';
+  @override
+  String get downloadNextPage => '下一页';
+  @override
+  String get downloadPreviousPage => '上一页';
+  @override
+  String get downloadTitle => 'BT/PT/HTTP/FTP/NZB下载';
+  @override
+  String get titleDownloadManager => 'BT/PT/HTTP/FTP/NZB';
+  @override
+  String get downloadEmptyInputFile => '请打开要新增的文件。';
+  @override
+  String get downloadEmptyInputUrl => '请输入网址。';
+  @override
+  String get downloadComplete => '下载已完成。';
+  @override
+  String get downloadFailed => '下载失败。';
+  @override
+  String get downloadMsgAskHelp2 => '请求系统管理员解决此问题。';
+  @override
+  String get temporaryLocation => '暂存位置';
+  @override
+  String get userNoShareFolder => '您没有权限存取任何共享文件夹，请与系统管理员联络。';
+  @override
   String get submitting => '提交中…';
 
   @override
