@@ -70,7 +70,7 @@ class DsmDownloadStationApi implements DownloadStationApi {
         'action': 'enum',
         'type_inverse': true,
         'limit': 25,
-        'additional': 'detail,transfer',
+        'additional': '["detail","transfer"]',
       },
       options: Options(contentType: Headers.formUrlEncodedContentType),
     );
