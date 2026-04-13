@@ -40,7 +40,6 @@ class DownloadListNotifier extends AsyncNotifier<List<DownloadTask>> {
 
   Future<void> _refresh() async {
     if (state.isLoading) return;
-    state = const AsyncValue.loading();
     state = await AsyncValue.guard(() => ref.read(downloadRepositoryProvider).listTasks());
   }
 
