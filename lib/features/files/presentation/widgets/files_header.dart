@@ -60,29 +60,13 @@ class FilesHeader extends StatelessWidget {
                   icon: const Icon(Icons.upload_outlined),
                   iconSize: 22,
                 ),
-              // 菜单（包含刷新）
-              PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert_rounded),
-                tooltip: l10n.moreActions,
-                onSelected: (value) {
-                  switch (value) {
-                    case 'refresh':
-                      onRefresh();
-                      break;
-                  }
-                },
-                itemBuilder: (context) => [
-                  PopupMenuItem(value: 'refresh', child: Text(l10n.refresh)),
-                ],
+              // 刷新
+              IconButton(
+                tooltip: l10n.refresh,
+                onPressed: onRefresh,
+                icon: const Icon(Icons.refresh_rounded),
+                iconSize: 22,
               ),
-              // 非菜单模式下只显示刷新
-              if (!showActionMenu)
-                IconButton(
-                  tooltip: l10n.refresh,
-                  onPressed: onRefresh,
-                  icon: const Icon(Icons.refresh_rounded),
-                  iconSize: 22,
-                ),
             ],
           ),
           const SizedBox(height: 6),
