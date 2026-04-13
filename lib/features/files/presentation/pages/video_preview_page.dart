@@ -45,6 +45,10 @@ class _VideoPreviewPageState extends State<VideoPreviewPage> {
     final sid = widget.sid ?? '';
     // 注意：dsm_helper 中 filename 没有用 Uri.encodeComponent
     final url = '${widget.baseUrl}/fbdownload/${widget.name}?dlink=$encodedDlink&_sid=%22$sid%22&mode=open';
+    debugPrint('[VideoPreview] baseUrl: ${widget.baseUrl}');
+    debugPrint('[VideoPreview] path: ${widget.path}');
+    debugPrint('[VideoPreview] name: ${widget.name}');
+    debugPrint('[VideoPreview] sid: $sid');
     debugPrint('[VideoPreview] streamUrl: $url');
     return url;
   }
