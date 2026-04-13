@@ -1558,6 +1558,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noData => 'No data';
 
   @override
+  String get noHistory => 'No history';
+
+  @override
   String get failedToGetLogSettings => 'Failed to get log settings';
 
   @override

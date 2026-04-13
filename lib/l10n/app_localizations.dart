@@ -2930,6 +2930,12 @@ abstract class AppLocalizations {
   /// **'暂无数据'**
   String get noData;
 
+  /// No description provided for @noHistory.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂无历史记录'**
+  String get noHistory;
+
   /// No description provided for @failedToGetLogSettings.
   ///
   /// In zh, this message translates to:

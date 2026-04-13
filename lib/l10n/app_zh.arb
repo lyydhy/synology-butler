@@ -762,6 +762,7 @@
   "transferLogLevel": "传输日志级别",
   "applyChanges": "应用更改",
   "noData": "暂无数据",
+  "noHistory": "暂无历史记录",
   "failedToGetLogSettings": "获取日志设置失败",
   "saving": "保存中…",
   "logLevelCreate": "创建",

@@ -1531,6 +1531,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get noData => '暂无数据';
 
   @override
+  String get noHistory => '暂无历史记录';
+
+  @override
   String get failedToGetLogSettings => '获取日志设置失败';
 
   @override

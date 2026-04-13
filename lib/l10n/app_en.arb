@@ -734,6 +734,7 @@
   "transferLogLevel": "Transfer Log Level",
   "applyChanges": "Apply Changes",
   "noData": "No data",
+  "noHistory": "No history",
   "failedToGetLogSettings": "Failed to get log settings",
   "saving": "Saving…",
   "logLevelCreate": "Create",
