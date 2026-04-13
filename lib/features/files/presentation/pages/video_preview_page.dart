@@ -85,27 +85,75 @@ class _VideoPreviewPageState extends State<VideoPreviewPage> {
     return Scaffold(
       appBar: AppBar(title: Text(widget.name)),
       backgroundColor: Colors.black,
-      body: OmniVideoPlayer(
-        configuration: VideoPlayerConfiguration(
-          videoSourceConfiguration: VideoSourceConfiguration.network(
-            videoUrl: Uri.parse(_streamUrl),
-            httpHeaders: _httpHeaders,
+      body: Stack(
+        children: [
+          OmniVideoPlayer(
+            configuration: VideoPlayerConfiguration(
+              videoSourceConfiguration: VideoSourceConfiguration.network(
+                videoUrl: Uri.parse(_streamUrl),
+                httpHeaders: _httpHeaders,
+              ),
+              playerUIVisibilityOptions: const PlayerUIVisibilityOptions(
+                showPlaybackSpeedButton: true,
+                showFullScreenButton: true,
+                showMuteUnMuteButton: true,
+                enableForwardGesture: true,
+                enableBackwardGesture: true,
+                enableExitFullscreenOnVerticalSwipe: true,
+                // 一直显示底部控制栏，方便调试
+                alwaysShowBottomControlsBar: true,
+                controlsPersistenceDuration: Duration(seconds: 10),
+              ),
+            ),
+            callbacks: VideoPlayerCallbacks(
+              onControllerCreated: (controller) {
+                _controller = controller..addListener(_onUpdate);
+              },
+            ),
           ),
-          playerUIVisibilityOptions: const PlayerUIVisibilityOptions(
-            showPlaybackSpeedButton: true,
-            showFullScreenButton: true,
-            showMuteUnMuteButton: true,
-            enableForwardGesture: true,
-            enableBackwardGesture: true,
-            enableExitFullscreenOnVerticalSwipe: true,
+          // 临时调试：左右区域手动快进快退
+          Positioned.fill(
+            child: Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onDoubleTap: () {
+                      debugPrint('[VideoPreview] 双击后退');
+                      _seekBackward();
+                    },
+                    child: Container(color: Colors.transparent),
+                  ),
+                ),
+                Expanded(
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onDoubleTap: () {
+                      debugPrint('[VideoPreview] 双击前进');
+                      _seekForward();
+                    },
+                    child: Container(color: Colors.transparent),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-        callbacks: VideoPlayerCallbacks(
-          onControllerCreated: (controller) {
-            _controller = controller..addListener(_onUpdate);
-          },
-        ),
+        ],
       ),
     );
+  }
+
+  void _seekBackward() {
+    final ctrl = _controller;
+    if (ctrl == null || !ctrl.hasStarted || ctrl.isFinished) return;
+    final newPos = ctrl.currentPosition - const Duration(seconds: 10);
+    if (newPos > Duration.zero) ctrl.seekTo(newPos);
+  }
+
+  void _seekForward() {
+    final ctrl = _controller;
+    if (ctrl == null || !ctrl.hasStarted || ctrl.isFinished) return;
+    final newPos = ctrl.currentPosition + const Duration(seconds: 10);
+    if (newPos < ctrl.duration) ctrl.seekTo(newPos);
   }
 }
