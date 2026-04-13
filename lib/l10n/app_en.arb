@@ -148,7 +148,6 @@
   "appLogsSanitizedBadge": "Sanitized",
   "appLogsRawBadge": "Raw log",
   "appLogsViewerHint": "You are viewing sanitized content, which is safer to copy or export for troubleshooting.",
-
   "controlPanelTitle": "Control Panel",
   "taskSchedulerTitle": "Task Scheduler",
   "externalDevicesTitle": "External Devices",
@@ -157,31 +156,26 @@
   "sharedFoldersTitle": "Shared Folders",
   "userGroupsTitle": "Users & Groups",
   "informationCenterTitle": "Information Center",
-
   "noTasks": "No scheduled tasks",
   "noExternalDevices": "No external devices connected",
   "noDdnsRecords": "No DDNS records",
   "noSharedFolders": "No shared folders",
   "noUsersFound": "No users found",
   "noGroupsFound": "No groups found",
-
   "executeNow": "Execute Now",
   "taskSubmitted": "Task submitted for execution",
   "executeFailed": "Execution failed",
   "updateFailed": "Update failed",
-
   "ejectDevice": "Eject Device",
   "ejectSubmitted": "Eject request submitted",
   "ejectFailed": "Eject failed",
   "fileSystem": "File System",
   "mountPath": "Mount Path",
   "capacity": "Capacity",
-
   "nextAutoUpdateTime": "Next auto update time",
-  "ipAddress": "IP",
+  "ipAddress": "IP Address",
   "lastUpdated": "Last updated",
   "refreshNow": "Refresh Now",
-
   "thumbnailQuality": "Thumbnail Quality",
   "thumbnailQualityUpdated": "Thumbnail quality updated",
   "rebuildIndex": "Rebuild Index",
@@ -191,7 +185,6 @@
   "currentIndexStatus": "Current Status",
   "currentTask": "Current Task",
   "noIndexTasks": "No indexing tasks",
-
   "historyDeleted": "History deleted for {name}",
   "@historyDeleted": {
     "placeholders": {
@@ -300,7 +293,7 @@
       "path": {}
     }
   },
-  "selectUploadDir": "Select upload directory",
+  "selectUploadDir": "Select Upload Directory",
   "loadFilesFailed": "Failed to load files: {error}",
   "@loadFilesFailed": {
     "placeholders": {
@@ -345,7 +338,6 @@
   "uploadTaskAdded": "Upload task added",
   "videoPreviewHint": "Open video preview from list",
   "pathCopied": "Path copied",
-
   "open": "Open",
   "backgroundTaskRunning": "Background task running",
   "backgroundTaskRunningCount": "Background task running ({count})",
@@ -370,14 +362,11 @@
   "transfer": "Transfer",
   "downloadAndOpenTitle": "Download and Open",
   "processingLabel": "Processing",
-
   "fileServicesTitle": "File Services",
   "noFileServices": "No file service information available",
   "fileServiceEnabled": "Enabled",
   "fileServiceDisabled": "Disabled",
-
   "defaultDeviceName": "My NAS",
-
   "splashTitle": "Synology Manager",
   "splashSubtitleReady": "Your DSM 7+ Assistant",
   "splashSubtitleRestoring": "Restoring your connection and device status",
@@ -385,7 +374,6 @@
   "splashLoadingStart": "Starting...",
   "splashLoadingEnter": "Entering...",
   "splashLoadingLogin": "Redirecting to login...",
-
   "dashboardSectionApps": "Apps",
   "dashboardSectionAppsSubtitle": "Quick access to common features",
   "dashboardContainerManagement": "Containers",
@@ -428,7 +416,6 @@
     }
   },
   "usedUnknown": "Used -- / Total --",
-
   "confirmDeleteName": "Are you sure you want to delete \"{name}\"?",
   "@confirmDeleteName": {
     "placeholders": {
@@ -441,30 +428,14 @@
       "path": {}
     }
   },
-  "selectUploadDir": "Select Upload Directory",
-  "selectCurrentDir": "Select current directory: {path}",
-  "@selectCurrentDir": {
-    "placeholders": {
-      "path": {}
-    }
-  },
-  "loadFilesFailed": "Failed to load files: {error}",
-  "@loadFilesFailed": {
-    "placeholders": {
-      "error": {}
-    }
-  },
   "startDownloadingName": "Starting download of {name}",
   "@startDownloadingName": {
     "placeholders": {
       "name": {}
     }
   },
-
-  "previewImage": "Preview Image",
   "previewText": "Preview Text",
   "previewNfo": "Preview NFO",
-
   "settingsConnectionStorage": "Connection & Storage",
   "settingsConnectionManagement": "Connection Management",
   "settingsDownloadDirectory": "Download Directory",
@@ -495,7 +466,6 @@
   "aboutSubtitle": "Synology Butler v0.1",
   "settingsAbout": "About",
   "settingsAboutSubtitle": "Synology Manager v0.1",
-
   "packageCenter": "Package Center",
   "packageAll": "All",
   "packageInstalled": "Installed",
@@ -547,7 +517,6 @@
     }
   },
   "confirmUpdateImpact": "Confirm Update Impact",
-
   "start": "Start",
   "stop": "Stop",
   "uninstall": "Uninstall",
@@ -564,7 +533,6 @@
       "error": {}
     }
   },
-
   "transfersTitle": "Transfers",
   "clearCompleted": "Clear completed records",
   "clearFailed": "Clear failed records",
@@ -572,8 +540,8 @@
   "filterActive": "Active",
   "filterCompleted": "Completed",
   "filterFailed": "Failed",
-  "deleteCompleted": "Delete Completed",
-  "deleteFailedRecords": "Delete Failed Records",
+  "deleteCompleted": "Clear Completed",
+  "deleteFailedRecords": "Clear Failed Records",
   "openedWithSystem": "Opened with system handler",
   "directory": "Directory: {path}",
   "@directory": {
@@ -581,14 +549,9 @@
       "path": {}
     }
   },
-  "open": "Open",
   "openDirectory": "Open Directory",
-
-  "retry": "Retry",
   "removeRecord": "Remove Record",
   "reasonCopied": "Failure reason copied",
-  "pathCopied": "Path copied",
-
   "containerSuccess": "{action} container success: {name}",
   "@containerSuccess": {
     "placeholders": {
@@ -657,12 +620,9 @@
   "recentTransfers": "Recent Transfers",
   "noTransfersHint": "No tasks yet. New uploads and downloads will appear here.",
   "transfersHint": "Check active and failed tasks first. Completed records can be cleared anytime.",
-  "deleteCompleted": "Clear Completed",
-  "deleteFailedRecords": "Clear Failed Records",
   "noTransfersInFilter": "No transfer tasks in this filter",
   "transfersAppearHere": "New uploads, downloads, and retries will appear here.",
   "upload": "Upload",
-  "download": "Download",
   "statusQueued": "Queued",
   "statusRunning": "Running",
   "statusPaused": "Paused",
@@ -686,7 +646,6 @@
   "copyErrorReason": "Copy error reason",
   "copyPath": "Copy path",
   "errorCopied": "Error reason copied",
-  "pathCopied": "Path copied",
   "copyReason": "Copy reason",
   "removeRecordAndFile": "Delete record and file",
   "resultLabel": "Result: {message}",
@@ -716,7 +675,6 @@
   "workgroup": "Workgroup",
   "connected": "Connected",
   "disconnected": "Disconnected",
-  "ipAddress": "IP Address",
   "subnetMask": "Subnet Mask",
   "dhcp": "DHCP",
   "ipv6Address": "IPv6 Address",
@@ -739,7 +697,6 @@
   "updateStatus": "Update Status",
   "terminalTitle": "Terminal Settings",
   "terminalSubtitle": "SSH and Telnet services",
-  
   "fileServicesStatusSummary": "File Services Status Summary",
   "fileServicesEnabledCount": "Enabled {enabledCount} / {totalCount} total",
   "@fileServicesEnabledCount": {
@@ -848,7 +805,6 @@
   "usingDsmComposeProjects": "Using DSM / Container Manager native Compose project data.",
   "noImageData": "No image data",
   "running": "Running",
-  "containerStopped": "Stopped",
   "buildFailed": "Build Failed",
   "failed": "Failed",
   "containerUnknown": "Unknown",
@@ -909,5 +865,117 @@
   "sharingLinksStatusValid": "Valid",
   "sharingLinksStatusExpired": "Expired",
   "sharingLinksSecurityHint": "For secure sharing, use the Web interface",
-  "sharingLinksNoLimit": "No limit"
+  "sharingLinksNoLimit": "No limit",
+  "downloadTargetDir": "Target folder",
+  "downloadTaskWaiting": "Waiting",
+  "downloadTaskDownloading": "Downloading",
+  "downloadTaskPaused": "Paused",
+  "downloadTaskFinishing": "Finishing",
+  "downloadTaskFinished": "Finished",
+  "downloadTaskHashChecking": "Hash Checking",
+  "downloadTaskPreSeeding": "Pre-seeding",
+  "downloadTaskSeeding": "Seeding",
+  "downloadTaskExtracting": "Extracting",
+  "downloadTaskCaptchaNeeded": "Captcha Needed",
+  "downloadTaskError": "Error",
+  "downloadTaskBrokenLink": "Broken Link",
+  "downloadTaskDestNotExist": "Destination Not Found",
+  "downloadTaskDestDeny": "Destination Access Denied",
+  "downloadTaskDiskFull": "Disk Full",
+  "downloadTaskQuotaReached": "Quota Reached",
+  "downloadTaskTimeout": "Connection Timeout",
+  "downloadBtnNew": "New",
+  "downloadBtnOk": "OK",
+  "downloadBtnCancel": "Cancel",
+  "downloadBtnRefresh": "Refresh",
+  "downloadBtnRemove": "Remove",
+  "downloadBtnResume": "Resume",
+  "downloadBtnStop": "Stop",
+  "downloadBtnClear": "Clear",
+  "downloadBtnEnd": "End",
+  "downloadBtnChange": "Change",
+  "downloadBtnHelp": "Help",
+  "downloadLblInputUrl": "Input URL",
+  "downloadLblInputFile": "Open File",
+  "downloadLblDestFolder": "Destination Folder",
+  "downloadLblFilename": "File Name",
+  "downloadLblFileSize": "File Size",
+  "downloadLblStatus": "Status",
+  "downloadLblProgress": "Progress",
+  "downloadLblSpeed": "Speed",
+  "downloadLblDownloaded": "Downloaded",
+  "downloadLblCreatedTime": "Created Time",
+  "downloadLblStartedTime": "Started Time",
+  "downloadLblConnectedPeers": "Connected Peers",
+  "downloadLblPeer": "Peers",
+  "downloadLblLeechers": "Leechers",
+  "downloadLblSeeders": "Seeders",
+  "downloadLblSeedElapsed": "Seeding Time",
+  "downloadLblTransfered": "Transferred",
+  "downloadLblUploadRate": "Upload Speed",
+  "downloadLblDownRate": "Download Speed",
+  "downloadLblUrl": "URL",
+  "downloadLblUsername": "Username",
+  "downloadLblTotalPieces": "Total Pieces",
+  "downloadLblDownloadedPieces": "Downloaded Pieces",
+  "downloadLblTimeLeft": "Time Left",
+  "downloadMsgActionFailed": "Action failed.",
+  "downloadMsgEndDoneDelErr": "Task ended but failed to delete. Please delete manually.",
+  "downloadMsgInvalidUser": "Invalid user.",
+  "downloadMsgReachLimit": "Download limit reached.",
+  "downloadWarningSelectItems": "Please select an item first.",
+  "downloadWarningSelectShare": "Please select a destination folder first.",
+  "downloadWarningDiskFull": "Not enough free space on this volume.",
+  "downloadErrorNoTask": "Download task is invalid or has been deleted.",
+  "downloadErrorNoPrivilege": "You do not have permission to access this task.",
+  "downloadErrorWrongFormat": "File format is incorrect.",
+  "downloadErrorWrongUrl": "URL must start with http://, https://, or ftp://.",
+  "downloadErrorEmptyInput": "Please enter a URL.",
+  "downloadErrorNetwork": "Failed to establish network connection.",
+  "downloadErrorServer": "An unknown error occurred!",
+  "downloadErrorShareNotFound": "No writable folder found.",
+  "downloadErrorUserRemoved": "Account does not exist or has been removed.",
+  "downloadErrorSelectNum": "Only one download task can be selected.",
+  "downloadErrorReadTorrentFail": "Failed to read torrent file.",
+  "downloadErrorMagnet": "Failed to get torrent info from magnet link.",
+  "downloadErrorNoFileToEnd": "File does not exist.",
+  "downloadConfirmRemove": "Are you sure you want to delete this download task?",
+  "downloadConfirmEnd": "Are you sure you want to end this download task?",
+  "downloadEndDesc": "This is only for tasks that cannot continue downloading or have errors.",
+  "downloadEndNoteFinished": "Cannot end a completed download task.",
+  "downloadEndNoteNoFile": "Cannot end a task that has not started downloading.",
+  "downloadRedirectConfirm": "Download Station is not enabled. Would you like to configure it?",
+  "downloadNotEnabled": "Download service is not enabled.",
+  "downloadSeedDays": "days",
+  "downloadSeedHours": "hours",
+  "downloadSeedMins": "minutes",
+  "downloadSeedSeconds": "seconds",
+  "downloadNextPage": "Next Page",
+  "downloadPreviousPage": "Previous Page",
+  "downloadTitle": "BT/PT/HTTP/FTP/NZB Downloads",
+  "titleDownloadManager": "BT/PT/HTTP/FTP/NZB",
+  "downloadEmptyInputFile": "Please open a file to add.",
+  "downloadEmptyInputUrl": "Please enter a URL.",
+  "downloadComplete": "Download completed.",
+  "downloadFailed": "Download failed.",
+  "downloadMsgAskHelp2": "Please contact your system administrator.",
+  "temporaryLocation": "Temporary Location",
+  "userNoShareFolder": "You have no access to any shared folders. Contact your administrator.",
+  "downloadErrorExceedFsMaxSize": "File size exceeds the filesystem maximum.",
+  "downloadErrorEncryptionLongPath": "Encrypted file path is too long.",
+  "downloadErrorLongPath": "File path is too long.",
+  "downloadErrorDuplicateTorrent": "Duplicate download task.",
+  "downloadErrorPremiumAccountRequire": "Premium account required.",
+  "downloadErrorNotSupportType": "File type not supported.",
+  "downloadErrorFtpEncryptionNotSupportType": "FTP encryption file type not supported.",
+  "downloadErrorExtractFailed": "Extraction failed.",
+  "downloadErrorInvalidTorrent": "Invalid torrent file.",
+  "downloadErrorAccountRequireStatus": "Account status requirement not met.",
+  "downloadErrorTryItLater": "Please try again later.",
+  "downloadErrorTaskEncryption": "Task encryption error.",
+  "downloadErrorMissingPython": "Missing Python component.",
+  "downloadErrorPrivateVideo": "Private video cannot be downloaded.",
+  "downloadErrorNzbMissingArticle": "NZB file missing article.",
+  "downloadErrorParchiveRepairFailed": "Parchive repair failed.",
+  "downloadErrorInvalidAccountPassword": "Invalid account password."
 }

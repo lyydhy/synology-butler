@@ -151,7 +151,6 @@
   "appLogsSanitizedBadge": "已脱敏",
   "appLogsRawBadge": "原始日志",
   "appLogsViewerHint": "当前展示的是脱敏后的内容，适合复制或导出给别人排查问题。",
-
   "controlPanelTitle": "控制面板",
   "taskSchedulerTitle": "任务计划",
   "externalDevicesTitle": "外接设备",
@@ -160,31 +159,26 @@
   "sharedFoldersTitle": "共享文件夹",
   "userGroupsTitle": "用户与群组",
   "informationCenterTitle": "信息中心",
-
   "noTasks": "当前没有任务计划",
   "noExternalDevices": "当前没有连接外接设备",
   "noDdnsRecords": "当前没有 DDNS 记录",
   "noSharedFolders": "当前没有共享文件夹",
   "noUsersFound": "没有找到用户",
   "noGroupsFound": "没有找到群组",
-
   "executeNow": "立即执行",
   "taskSubmitted": "任务已提交执行",
   "executeFailed": "执行失败",
   "updateFailed": "更新失败",
-
   "ejectDevice": "弹出设备",
   "ejectSubmitted": "已提交弹出设备请求",
   "ejectFailed": "弹出失败",
   "fileSystem": "文件系统",
   "mountPath": "挂载路径",
   "capacity": "容量",
-
   "nextAutoUpdateTime": "下次自动更新时间",
-  "ipAddress": "IP",
+  "ipAddress": "IP 地址",
   "lastUpdated": "上次更新",
   "refreshNow": "立即刷新",
-
   "thumbnailQuality": "缩图质量",
   "thumbnailQualityUpdated": "缩图质量已更新",
   "rebuildIndex": "重建索引",
@@ -194,7 +188,6 @@
   "currentIndexStatus": "当前状态",
   "currentTask": "当前任务",
   "noIndexTasks": "当前没有索引任务",
-
   "historyDeleted": "已删除 {name} 的历史记录",
   "@historyDeleted": {
     "placeholders": {
@@ -348,7 +341,6 @@
   "uploadTaskAdded": "已加入上传任务",
   "videoPreviewHint": "视频预览请从列表打开",
   "pathCopied": "路径已复制",
-
   "open": "打开",
   "backgroundTaskRunning": "后台任务进行中",
   "backgroundTaskRunningCount": "后台任务进行中（{count}）",
@@ -373,14 +365,11 @@
   "transfer": "传输",
   "downloadAndOpenTitle": "下载并打开",
   "processingLabel": "处理中",
-
   "fileServicesTitle": "文件服务",
   "noFileServices": "未获取到文件服务信息",
   "fileServiceEnabled": "已启用",
   "fileServiceDisabled": "未启用",
-
   "defaultDeviceName": "我的 NAS",
-
   "splashTitle": "群晖管家",
   "splashSubtitleReady": "你的 DSM 7+ 掌上助手",
   "splashSubtitleRestoring": "正在恢复你的连接与设备状态",
@@ -388,7 +377,6 @@
   "splashLoadingStart": "正在启动...",
   "splashLoadingEnter": "正在进入...",
   "splashLoadingLogin": "正在跳转登录...",
-
   "dashboardSectionApps": "应用",
   "dashboardSectionAppsSubtitle": "常用功能快捷入口",
   "dashboardContainerManagement": "容器管理",
@@ -431,7 +419,6 @@
     }
   },
   "usedUnknown": "已用 -- / 总计 --",
-
   "confirmDeleteName": "确定要删除\"{name}\"吗？",
   "@confirmDeleteName": {
     "placeholders": {
@@ -444,30 +431,14 @@
       "path": {}
     }
   },
-  "selectUploadDir": "选择上传目录",
-  "selectCurrentDir": "选择当前目录：{path}",
-  "@selectCurrentDir": {
-    "placeholders": {
-      "path": {}
-    }
-  },
-  "loadFilesFailed": "加载文件失败：{error}",
-  "@loadFilesFailed": {
-    "placeholders": {
-      "error": {}
-    }
-  },
   "startDownloadingName": "开始下载 {name}",
   "@startDownloadingName": {
     "placeholders": {
       "name": {}
     }
   },
-
-  "previewImage": "预览图片",
   "previewText": "预览文本",
   "previewNfo": "预览 NFO",
-
   "settingsConnectionStorageSubtitle": "管理 NAS 连接和本地下载目录",
   "@settingsConnectionStorageSubtitle": {
     "description": "连接与存储副标题"
@@ -522,7 +493,6 @@
   "settingsLogoutSubtitle": "清除当前会话和本地保存的登录态",
   "settingsAbout": "关于",
   "settingsAboutSubtitle": "群晖管家 v0.1",
-
   "packageCenter": "套件中心",
   "packageAll": "全部",
   "packageInstalled": "已安装",
@@ -574,7 +544,6 @@
     }
   },
   "confirmUpdateImpact": "确认更新影响",
-
   "start": "启动",
   "stop": "停止",
   "uninstall": "卸载",
@@ -591,7 +560,6 @@
       "error": {}
     }
   },
-
   "transfersTitle": "传输中心",
   "clearCompleted": "删除已完成记录",
   "clearFailed": "删除失败记录",
@@ -599,8 +567,8 @@
   "filterActive": "进行中",
   "filterCompleted": "已完成",
   "filterFailed": "失败",
-  "deleteCompleted": "删除已完成",
-  "deleteFailedRecords": "删除失败记录",
+  "deleteCompleted": "清除已完成",
+  "deleteFailedRecords": "清除失败记录",
   "openedWithSystem": "已调用系统打开方式",
   "directory": "目录：{path}",
   "@directory": {
@@ -608,14 +576,9 @@
       "path": {}
     }
   },
-  "open": "打开",
   "openDirectory": "打开目录",
-
-  "retry": "重试",
   "removeRecord": "移除记录",
   "reasonCopied": "失败原因已复制",
-  "pathCopied": "路径已复制",
-
   "containerSuccess": "{action}容器成功：{name}",
   "@containerSuccess": {
     "placeholders": {
@@ -685,12 +648,9 @@
   "recentTransfers": "最近传输",
   "noTransfersHint": "还没有任务，新的上传和下载会显示在这里",
   "transfersHint": "优先看进行中和失败任务，已完成记录可以随时清理",
-  "deleteCompleted": "清除已完成",
-  "deleteFailedRecords": "清除失败记录",
   "noTransfersInFilter": "这个筛选下暂时没有传输任务",
   "transfersAppearHere": "新的上传、下载、失败重试都会出现在这里。",
   "upload": "上传",
-  "download": "下载",
   "statusQueued": "排队中",
   "statusRunning": "进行中",
   "statusPaused": "已暂停",
@@ -714,7 +674,6 @@
   "copyErrorReason": "复制失败原因",
   "copyPath": "复制路径",
   "errorCopied": "失败原因已复制",
-  "pathCopied": "路径已复制",
   "copyReason": "复制原因",
   "removeRecordAndFile": "删除记录和文件",
   "resultLabel": "结果：{message}",
@@ -744,7 +703,6 @@
   "workgroup": "工作组",
   "connected": "已连接",
   "disconnected": "未连接",
-  "ipAddress": "IP 地址",
   "subnetMask": "子网掩码",
   "dhcp": "DHCP",
   "ipv6Address": "IPv6 地址",
@@ -767,7 +725,6 @@
   "updateStatus": "更新状态",
   "terminalTitle": "终端设置",
   "terminalSubtitle": "SSH 与 Telnet 服务",
-  
   "fileServicesStatusSummary": "文件服务状态总览",
   "fileServicesEnabledCount": "已启用 {enabledCount} / 共 {totalCount}",
   "@fileServicesEnabledCount": {
@@ -1102,7 +1059,6 @@
   "@running": {
     "description": "运行中状态"
   },
-  "containerStopped": "已停止",
   "@containerStopped": {
     "description": "已停止状态"
   },
@@ -1389,5 +1345,117 @@
   "sharingLinksNoLimit": "不限制",
   "@sharingLinksNoLimit": {
     "description": "不限制"
-  }
+  },
+  "downloadTargetDir": "目标文件夹",
+  "downloadTaskWaiting": "等待中",
+  "downloadTaskDownloading": "下载中",
+  "downloadTaskPaused": "已暂停",
+  "downloadTaskFinishing": "即将完成",
+  "downloadTaskFinished": "已完成",
+  "downloadTaskHashChecking": "校验中",
+  "downloadTaskPreSeeding": "等待做种",
+  "downloadTaskSeeding": "做种中",
+  "downloadTaskExtracting": "解压中",
+  "downloadTaskCaptchaNeeded": "需要验证码",
+  "downloadTaskError": "下载出错",
+  "downloadTaskBrokenLink": "错误链接",
+  "downloadTaskDestNotExist": "目标目录不存在",
+  "downloadTaskDestDeny": "目标目录无权限",
+  "downloadTaskDiskFull": "硬盘已满",
+  "downloadTaskQuotaReached": "已达空间配额",
+  "downloadTaskTimeout": "联机超时",
+  "downloadBtnNew": "新增",
+  "downloadBtnOk": "确定",
+  "downloadBtnCancel": "取消",
+  "downloadBtnRefresh": "刷新",
+  "downloadBtnRemove": "删除",
+  "downloadBtnResume": "恢复",
+  "downloadBtnStop": "暂停",
+  "downloadBtnClear": "清除",
+  "downloadBtnEnd": "结束",
+  "downloadBtnChange": "变更",
+  "downloadBtnHelp": "说明",
+  "downloadLblInputUrl": "输入网址",
+  "downloadLblInputFile": "打开文件",
+  "downloadLblDestFolder": "目的地文件夹",
+  "downloadLblFilename": "文件名称",
+  "downloadLblFileSize": "文件大小",
+  "downloadLblStatus": "状态",
+  "downloadLblProgress": "进度",
+  "downloadLblSpeed": "速度",
+  "downloadLblDownloaded": "已下载",
+  "downloadLblCreatedTime": "创建时间",
+  "downloadLblStartedTime": "开始时间",
+  "downloadLblConnectedPeers": "已联机的Peer数",
+  "downloadLblPeer": "Peer数",
+  "downloadLblLeechers": "下载用户数",
+  "downloadLblSeeders": "种子数",
+  "downloadLblSeedElapsed": "已作种时间",
+  "downloadLblTransfered": "已传输",
+  "downloadLblUploadRate": "上传速度",
+  "downloadLblDownRate": "下载速度",
+  "downloadLblUrl": "网址",
+  "downloadLblUsername": "用户名",
+  "downloadLblTotalPieces": "分块总数",
+  "downloadLblDownloadedPieces": "已下载的分块数",
+  "downloadLblTimeLeft": "剩余时间",
+  "downloadMsgActionFailed": "要求的动作无法完成。",
+  "downloadMsgEndDoneDelErr": "成功结束选择的下载任务，但系统无法删除此下载任务。请手动删除。",
+  "downloadMsgInvalidUser": "不合法的用户。",
+  "downloadMsgReachLimit": "下载任务数已达到上限。",
+  "downloadWarningSelectItems": "请先勾选项目。",
+  "downloadWarningSelectShare": "请先选择目的地文件夹。",
+  "downloadWarningDiskFull": "此存储空间的可用空间不足。",
+  "downloadErrorNoTask": "下载任务不正确或已被删除。",
+  "downloadErrorNoPrivilege": "您没有权限读取此下载任务。",
+  "downloadErrorWrongFormat": "文件格式不正确。",
+  "downloadErrorWrongUrl": "网址的开头必须是http://、https://，或ftp://。",
+  "downloadErrorEmptyInput": "请输入网址。",
+  "downloadErrorNetwork": "创建网络联机失败。",
+  "downloadErrorServer": "发生未知的错误！",
+  "downloadErrorShareNotFound": "找不到有写入权限的文件夹。",
+  "downloadErrorUserRemoved": "帐号不存在或已被删除。",
+  "downloadErrorSelectNum": "只能选择一个下载任务。",
+  "downloadErrorReadTorrentFail": "无法读取 torrent 文件。",
+  "downloadErrorMagnet": "无法由磁力链接取得 torrent 文件的信息。",
+  "downloadErrorNoFileToEnd": "文件不存在。",
+  "downloadConfirmRemove": "您确定要删除此下载任务吗？",
+  "downloadConfirmEnd": "您确定要结束此下载任务吗？",
+  "downloadEndDesc": "此功能只适合无法继续下载的任务或有错误的任务。",
+  "downloadEndNoteFinished": "您无法结束此下载任务，下载任务已经完成。",
+  "downloadEndNoteNoFile": "您无法结束此下载任务，此任务还未开始下载。",
+  "downloadRedirectConfirm": "Download Station 未启用。您要设置Download Station 吗？",
+  "downloadNotEnabled": "下载服务尚未启用。",
+  "downloadSeedDays": "天",
+  "downloadSeedHours": "小时",
+  "downloadSeedMins": "分钟",
+  "downloadSeedSeconds": "秒",
+  "downloadNextPage": "下一页",
+  "downloadPreviousPage": "上一页",
+  "downloadTitle": "BT/PT/HTTP/FTP/NZB下载",
+  "titleDownloadManager": "BT/PT/HTTP/FTP/NZB",
+  "downloadEmptyInputFile": "请打开要新增的文件。",
+  "downloadEmptyInputUrl": "请输入网址。",
+  "downloadComplete": "下载已完成。",
+  "downloadFailed": "下载失败。",
+  "downloadMsgAskHelp2": "请求系统管理员解决此问题。",
+  "temporaryLocation": "暂存位置",
+  "userNoShareFolder": "您没有权限存取任何共享文件夹，请与系统管理员联络。",
+  "downloadErrorExceedFsMaxSize": "超过文件系统最大文件大小。",
+  "downloadErrorEncryptionLongPath": "加密文件路径过长。",
+  "downloadErrorLongPath": "文件路径过长。",
+  "downloadErrorDuplicateTorrent": "下载任务重复。",
+  "downloadErrorPremiumAccountRequire": "需要Premium账户。",
+  "downloadErrorNotSupportType": "不支持的文件类型。",
+  "downloadErrorFtpEncryptionNotSupportType": "FTP加密不支持的文件类型。",
+  "downloadErrorExtractFailed": "解压失败。",
+  "downloadErrorInvalidTorrent": "无效的torrent文件。",
+  "downloadErrorAccountRequireStatus": "账户状态不符合要求。",
+  "downloadErrorTryItLater": "请稍后再试。",
+  "downloadErrorTaskEncryption": "任务加密出错。",
+  "downloadErrorMissingPython": "缺少Python组件。",
+  "downloadErrorPrivateVideo": "私有视频无法下载。",
+  "downloadErrorNzbMissingArticle": "NZB文件缺少Article。",
+  "downloadErrorParchiveRepairFailed": "Parchive修复失败。",
+  "downloadErrorInvalidAccountPassword": "账户密码无效。"
 }

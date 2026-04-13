@@ -235,231 +235,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get downloadLinkOrMagnet => 'Download link / Magnet';
 
   @override
-  String get downloadTargetDir => 'Target folder';
-
-  @override
-  String get downloadTaskWaiting => 'Waiting';
-  @override
-  String get downloadTaskDownloading => 'Downloading';
-  @override
-  String get downloadTaskPaused => 'Paused';
-  @override
-  String get downloadTaskFinishing => 'Finishing';
-  @override
-  String get downloadTaskFinished => 'Finished';
-  @override
-  String get downloadTaskHashChecking => 'Hash Checking';
-  @override
-  String get downloadTaskPreSeeding => 'Pre-seeding';
-  @override
-  String get downloadTaskSeeding => 'Seeding';
-  @override
-  String get downloadTaskExtracting => 'Extracting';
-  @override
-  String get downloadTaskCaptchaNeeded => 'Captcha Needed';
-  @override
-  String get downloadTaskError => 'Error';
-  @override
-  String get downloadTaskBrokenLink => 'Broken Link';
-  @override
-  String get downloadTaskDestNotExist => 'Destination Not Found';
-  @override
-  String get downloadTaskDestDeny => 'Destination Access Denied';
-  @override
-  String get downloadTaskDiskFull => 'Disk Full';
-  @override
-  String get downloadTaskQuotaReached => 'Quota Reached';
-  @override
-  String get downloadTaskTimeout => 'Connection Timeout';
-
-  @override
-  String get downloadErrorExceedFsMaxSize => 'File size exceeds the filesystem maximum.';
-  @override
-  String get downloadErrorEncryptionLongPath => 'Encrypted file path is too long.';
-  @override
-  String get downloadErrorLongPath => 'File path is too long.';
-  @override
-  String get downloadErrorDuplicateTorrent => 'Duplicate download task.';
-  @override
-  String get downloadErrorPremiumAccountRequire => 'Premium account required.';
-  @override
-  String get downloadErrorNotSupportType => 'File type not supported.';
-  @override
-  String get downloadErrorFtpEncryptionNotSupportType => 'FTP encryption file type not supported.';
-  @override
-  String get downloadErrorExtractFailed => 'Extraction failed.';
-  @override
-  String get downloadErrorInvalidTorrent => 'Invalid torrent file.';
-  @override
-  String get downloadErrorAccountRequireStatus => 'Account status requirement not met.';
-  @override
-  String get downloadErrorTryItLater => 'Please try again later.';
-  @override
-  String get downloadErrorTaskEncryption => 'Task encryption error.';
-  @override
-  String get downloadErrorMissingPython => 'Missing Python component.';
-  @override
-  String get downloadErrorPrivateVideo => 'Private video cannot be downloaded.';
-  @override
-  String get downloadErrorNzbMissingArticle => 'NZB file missing article.';
-  @override
-  String get downloadErrorParchiveRepairFailed => 'Parchive repair failed.';
-  @override
-  String get downloadErrorInvalidAccountPassword => 'Invalid account password.';  @override
-  String get downloadBtnNew => 'New';
-  @override
-  String get downloadBtnOk => 'OK';
-  @override
-  String get downloadBtnCancel => 'Cancel';
-  @override
-  String get downloadBtnRefresh => 'Refresh';
-  @override
-  String get downloadBtnRemove => 'Remove';
-  @override
-  String get downloadBtnResume => 'Resume';
-  @override
-  String get downloadBtnStop => 'Stop';
-  @override
-  String get downloadBtnClear => 'Clear';
-  @override
-  String get downloadBtnEnd => 'End';
-  @override
-  String get downloadBtnChange => 'Change';
-  @override
-  String get downloadBtnHelp => 'Help';
-  @override
-  String get downloadLblInputUrl => 'Input URL';
-  @override
-  String get downloadLblInputFile => 'Open File';
-  @override
-  String get downloadLblDestFolder => 'Destination Folder';
-  @override
-  String get downloadLblFilename => 'File Name';
-  @override
-  String get downloadLblFileSize => 'File Size';
-  @override
-  String get downloadLblStatus => 'Status';
-  @override
-  String get downloadLblProgress => 'Progress';
-  @override
-  String get downloadLblSpeed => 'Speed';
-  @override
-  String get downloadLblDownloaded => 'Downloaded';
-  @override
-  String get downloadLblCreatedTime => 'Created Time';
-  @override
-  String get downloadLblStartedTime => 'Started Time';
-  @override
-  String get downloadLblConnectedPeers => 'Connected Peers';
-  @override
-  String get downloadLblPeer => 'Peers';
-  @override
-  String get downloadLblLeechers => 'Leechers';
-  @override
-  String get downloadLblSeeders => 'Seeders';
-  @override
-  String get downloadLblSeedElapsed => 'Seeding Time';
-  @override
-  String get downloadLblTransfered => 'Transferred';
-  @override
-  String get downloadLblUploadRate => 'Upload Speed';
-  @override
-  String get downloadLblDownRate => 'Download Speed';
-  @override
-  String get downloadLblUrl => 'URL';
-  @override
-  String get downloadLblUsername => 'Username';
-  @override
-  String get downloadLblTotalPieces => 'Total Pieces';
-  @override
-  String get downloadLblDownloadedPieces => 'Downloaded Pieces';
-  @override
-  String get downloadLblTimeLeft => 'Time Left';
-  @override
-  String get downloadMsgActionFailed => 'Action failed.';
-  @override
-  String get downloadMsgEndDoneDelErr => 'Task ended but failed to delete. Please delete manually.';
-  @override
-  String get downloadMsgInvalidUser => 'Invalid user.';
-  @override
-  String get downloadMsgReachLimit => 'Download limit reached.';
-  @override
-  String get downloadWarningSelectItems => 'Please select an item first.';
-  @override
-  String get downloadWarningSelectShare => 'Please select a destination folder first.';
-  @override
-  String get downloadWarningDiskFull => 'Not enough free space on this volume.';
-  @override
-  String get downloadErrorNoTask => 'Download task is invalid or has been deleted.';
-  @override
-  String get downloadErrorNoPrivilege => 'You do not have permission to access this task.';
-  @override
-  String get downloadErrorWrongFormat => 'File format is incorrect.';
-  @override
-  String get downloadErrorWrongUrl => 'URL must start with http://, https://, or ftp://.';
-  @override
-  String get downloadErrorEmptyInput => 'Please enter a URL.';
-  @override
-  String get downloadErrorNetwork => 'Failed to establish network connection.';
-  @override
-  String get downloadErrorServer => 'An unknown error occurred!';
-  @override
-  String get downloadErrorShareNotFound => 'No writable folder found.';
-  @override
-  String get downloadErrorUserRemoved => 'Account does not exist or has been removed.';
-  @override
-  String get downloadErrorSelectNum => 'Only one download task can be selected.';
-  @override
-  String get downloadErrorReadTorrentFail => 'Failed to read torrent file.';
-  @override
-  String get downloadErrorMagnet => 'Failed to get torrent info from magnet link.';
-  @override
-  String get downloadErrorNoFileToEnd => 'File does not exist.';
-  @override
-  String get downloadConfirmRemove => 'Are you sure you want to delete this download task?';
-  @override
-  String get downloadConfirmEnd => 'Are you sure you want to end this download task?';
-  @override
-  String get downloadEndDesc => 'This is only for tasks that cannot continue downloading or have errors.';
-  @override
-  String get downloadEndNoteFinished => 'Cannot end a completed download task.';
-  @override
-  String get downloadEndNoteNoFile => 'Cannot end a task that has not started downloading.';
-  @override
-  String get downloadRedirectConfirm => 'Download Station is not enabled. Would you like to configure it?';
-  @override
-  String get downloadNotEnabled => 'Download service is not enabled.';
-  @override
-  String get downloadSeedDays => 'days';
-  @override
-  String get downloadSeedHours => 'hours';
-  @override
-  String get downloadSeedMins => 'minutes';
-  @override
-  String get downloadSeedSeconds => 'seconds';
-  @override
-  String get downloadNextPage => 'Next Page';
-  @override
-  String get downloadPreviousPage => 'Previous Page';
-  @override
-  String get downloadTitle => 'BT/PT/HTTP/FTP/NZB Downloads';
-  @override
-  String get titleDownloadManager => 'BT/PT/HTTP/FTP/NZB';
-  @override
-  String get downloadEmptyInputFile => 'Please open a file to add.';
-  @override
-  String get downloadEmptyInputUrl => 'Please enter a URL.';
-  @override
-  String get downloadComplete => 'Download completed.';
-  @override
-  String get downloadFailed => 'Download failed.';
-  @override
-  String get downloadMsgAskHelp2 => 'Please contact your system administrator.';
-  @override
-  String get temporaryLocation => 'Temporary Location';
-  @override
-  String get userNoShareFolder => 'You have no access to any shared folders. Contact your administrator.';
-  @override
   String get submitting => 'Submitting…';
 
   @override
@@ -2205,4 +1980,358 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sharingLinksNoLimit => 'No limit';
+
+  @override
+  String get downloadTargetDir => 'Target folder';
+
+  @override
+  String get downloadTaskWaiting => 'Waiting';
+
+  @override
+  String get downloadTaskDownloading => 'Downloading';
+
+  @override
+  String get downloadTaskPaused => 'Paused';
+
+  @override
+  String get downloadTaskFinishing => 'Finishing';
+
+  @override
+  String get downloadTaskFinished => 'Finished';
+
+  @override
+  String get downloadTaskHashChecking => 'Hash Checking';
+
+  @override
+  String get downloadTaskPreSeeding => 'Pre-seeding';
+
+  @override
+  String get downloadTaskSeeding => 'Seeding';
+
+  @override
+  String get downloadTaskExtracting => 'Extracting';
+
+  @override
+  String get downloadTaskCaptchaNeeded => 'Captcha Needed';
+
+  @override
+  String get downloadTaskError => 'Error';
+
+  @override
+  String get downloadTaskBrokenLink => 'Broken Link';
+
+  @override
+  String get downloadTaskDestNotExist => 'Destination Not Found';
+
+  @override
+  String get downloadTaskDestDeny => 'Destination Access Denied';
+
+  @override
+  String get downloadTaskDiskFull => 'Disk Full';
+
+  @override
+  String get downloadTaskQuotaReached => 'Quota Reached';
+
+  @override
+  String get downloadTaskTimeout => 'Connection Timeout';
+
+  @override
+  String get downloadBtnNew => 'New';
+
+  @override
+  String get downloadBtnOk => 'OK';
+
+  @override
+  String get downloadBtnCancel => 'Cancel';
+
+  @override
+  String get downloadBtnRefresh => 'Refresh';
+
+  @override
+  String get downloadBtnRemove => 'Remove';
+
+  @override
+  String get downloadBtnResume => 'Resume';
+
+  @override
+  String get downloadBtnStop => 'Stop';
+
+  @override
+  String get downloadBtnClear => 'Clear';
+
+  @override
+  String get downloadBtnEnd => 'End';
+
+  @override
+  String get downloadBtnChange => 'Change';
+
+  @override
+  String get downloadBtnHelp => 'Help';
+
+  @override
+  String get downloadLblInputUrl => 'Input URL';
+
+  @override
+  String get downloadLblInputFile => 'Open File';
+
+  @override
+  String get downloadLblDestFolder => 'Destination Folder';
+
+  @override
+  String get downloadLblFilename => 'File Name';
+
+  @override
+  String get downloadLblFileSize => 'File Size';
+
+  @override
+  String get downloadLblStatus => 'Status';
+
+  @override
+  String get downloadLblProgress => 'Progress';
+
+  @override
+  String get downloadLblSpeed => 'Speed';
+
+  @override
+  String get downloadLblDownloaded => 'Downloaded';
+
+  @override
+  String get downloadLblCreatedTime => 'Created Time';
+
+  @override
+  String get downloadLblStartedTime => 'Started Time';
+
+  @override
+  String get downloadLblConnectedPeers => 'Connected Peers';
+
+  @override
+  String get downloadLblPeer => 'Peers';
+
+  @override
+  String get downloadLblLeechers => 'Leechers';
+
+  @override
+  String get downloadLblSeeders => 'Seeders';
+
+  @override
+  String get downloadLblSeedElapsed => 'Seeding Time';
+
+  @override
+  String get downloadLblTransfered => 'Transferred';
+
+  @override
+  String get downloadLblUploadRate => 'Upload Speed';
+
+  @override
+  String get downloadLblDownRate => 'Download Speed';
+
+  @override
+  String get downloadLblUrl => 'URL';
+
+  @override
+  String get downloadLblUsername => 'Username';
+
+  @override
+  String get downloadLblTotalPieces => 'Total Pieces';
+
+  @override
+  String get downloadLblDownloadedPieces => 'Downloaded Pieces';
+
+  @override
+  String get downloadLblTimeLeft => 'Time Left';
+
+  @override
+  String get downloadMsgActionFailed => 'Action failed.';
+
+  @override
+  String get downloadMsgEndDoneDelErr =>
+      'Task ended but failed to delete. Please delete manually.';
+
+  @override
+  String get downloadMsgInvalidUser => 'Invalid user.';
+
+  @override
+  String get downloadMsgReachLimit => 'Download limit reached.';
+
+  @override
+  String get downloadWarningSelectItems => 'Please select an item first.';
+
+  @override
+  String get downloadWarningSelectShare =>
+      'Please select a destination folder first.';
+
+  @override
+  String get downloadWarningDiskFull => 'Not enough free space on this volume.';
+
+  @override
+  String get downloadErrorNoTask =>
+      'Download task is invalid or has been deleted.';
+
+  @override
+  String get downloadErrorNoPrivilege =>
+      'You do not have permission to access this task.';
+
+  @override
+  String get downloadErrorWrongFormat => 'File format is incorrect.';
+
+  @override
+  String get downloadErrorWrongUrl =>
+      'URL must start with http://, https://, or ftp://.';
+
+  @override
+  String get downloadErrorEmptyInput => 'Please enter a URL.';
+
+  @override
+  String get downloadErrorNetwork => 'Failed to establish network connection.';
+
+  @override
+  String get downloadErrorServer => 'An unknown error occurred!';
+
+  @override
+  String get downloadErrorShareNotFound => 'No writable folder found.';
+
+  @override
+  String get downloadErrorUserRemoved =>
+      'Account does not exist or has been removed.';
+
+  @override
+  String get downloadErrorSelectNum =>
+      'Only one download task can be selected.';
+
+  @override
+  String get downloadErrorReadTorrentFail => 'Failed to read torrent file.';
+
+  @override
+  String get downloadErrorMagnet =>
+      'Failed to get torrent info from magnet link.';
+
+  @override
+  String get downloadErrorNoFileToEnd => 'File does not exist.';
+
+  @override
+  String get downloadConfirmRemove =>
+      'Are you sure you want to delete this download task?';
+
+  @override
+  String get downloadConfirmEnd =>
+      'Are you sure you want to end this download task?';
+
+  @override
+  String get downloadEndDesc =>
+      'This is only for tasks that cannot continue downloading or have errors.';
+
+  @override
+  String get downloadEndNoteFinished => 'Cannot end a completed download task.';
+
+  @override
+  String get downloadEndNoteNoFile =>
+      'Cannot end a task that has not started downloading.';
+
+  @override
+  String get downloadRedirectConfirm =>
+      'Download Station is not enabled. Would you like to configure it?';
+
+  @override
+  String get downloadNotEnabled => 'Download service is not enabled.';
+
+  @override
+  String get downloadSeedDays => 'days';
+
+  @override
+  String get downloadSeedHours => 'hours';
+
+  @override
+  String get downloadSeedMins => 'minutes';
+
+  @override
+  String get downloadSeedSeconds => 'seconds';
+
+  @override
+  String get downloadNextPage => 'Next Page';
+
+  @override
+  String get downloadPreviousPage => 'Previous Page';
+
+  @override
+  String get downloadTitle => 'BT/PT/HTTP/FTP/NZB Downloads';
+
+  @override
+  String get titleDownloadManager => 'BT/PT/HTTP/FTP/NZB';
+
+  @override
+  String get downloadEmptyInputFile => 'Please open a file to add.';
+
+  @override
+  String get downloadEmptyInputUrl => 'Please enter a URL.';
+
+  @override
+  String get downloadComplete => 'Download completed.';
+
+  @override
+  String get downloadFailed => 'Download failed.';
+
+  @override
+  String get downloadMsgAskHelp2 => 'Please contact your system administrator.';
+
+  @override
+  String get temporaryLocation => 'Temporary Location';
+
+  @override
+  String get userNoShareFolder =>
+      'You have no access to any shared folders. Contact your administrator.';
+
+  @override
+  String get downloadErrorExceedFsMaxSize =>
+      'File size exceeds the filesystem maximum.';
+
+  @override
+  String get downloadErrorEncryptionLongPath =>
+      'Encrypted file path is too long.';
+
+  @override
+  String get downloadErrorLongPath => 'File path is too long.';
+
+  @override
+  String get downloadErrorDuplicateTorrent => 'Duplicate download task.';
+
+  @override
+  String get downloadErrorPremiumAccountRequire => 'Premium account required.';
+
+  @override
+  String get downloadErrorNotSupportType => 'File type not supported.';
+
+  @override
+  String get downloadErrorFtpEncryptionNotSupportType =>
+      'FTP encryption file type not supported.';
+
+  @override
+  String get downloadErrorExtractFailed => 'Extraction failed.';
+
+  @override
+  String get downloadErrorInvalidTorrent => 'Invalid torrent file.';
+
+  @override
+  String get downloadErrorAccountRequireStatus =>
+      'Account status requirement not met.';
+
+  @override
+  String get downloadErrorTryItLater => 'Please try again later.';
+
+  @override
+  String get downloadErrorTaskEncryption => 'Task encryption error.';
+
+  @override
+  String get downloadErrorMissingPython => 'Missing Python component.';
+
+  @override
+  String get downloadErrorPrivateVideo => 'Private video cannot be downloaded.';
+
+  @override
+  String get downloadErrorNzbMissingArticle => 'NZB file missing article.';
+
+  @override
+  String get downloadErrorParchiveRepairFailed => 'Parchive repair failed.';
+
+  @override
+  String get downloadErrorInvalidAccountPassword => 'Invalid account password.';
 }

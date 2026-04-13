@@ -548,567 +548,6 @@ abstract class AppLocalizations {
   /// **'下载链接 / Magnet'**
   String get downloadLinkOrMagnet;
 
-  /// No description provided for @downloadTargetDir.
-  ///
-  /// In zh, this message translates to:
-  /// **'目标文件夹'**
-  String get downloadTargetDir;
-
-  /// No description provided for @downloadTaskWaiting.
-  ///
-  /// In zh, this message translates to:
-  /// **'等待中'**
-  String get downloadTaskWaiting;
-  /// No description provided for @downloadTaskDownloading.
-  ///
-  /// In zh, this message translates to:
-  /// **'下载中'**
-  String get downloadTaskDownloading;
-  /// No description provided for @downloadTaskPaused.
-  ///
-  /// In zh, this message translates to:
-  /// **'已暂停'**
-  String get downloadTaskPaused;
-  /// No description provided for @downloadTaskFinishing.
-  ///
-  /// In zh, this message translates to:
-  /// **'即将完成'**
-  String get downloadTaskFinishing;
-  /// No description provided for @downloadTaskFinished.
-  ///
-  /// In zh, this message translates to:
-  /// **'已完成'**
-  String get downloadTaskFinished;
-  /// No description provided for @downloadTaskHashChecking.
-  ///
-  /// In zh, this message translates to:
-  /// **'校验中'**
-  String get downloadTaskHashChecking;
-  /// No description provided for @downloadTaskPreSeeding.
-  ///
-  /// In zh, this message translates to:
-  /// **'等待做种'**
-  String get downloadTaskPreSeeding;
-  /// No description provided for @downloadTaskSeeding.
-  ///
-  /// In zh, this message translates to:
-  /// **'做种中'**
-  String get downloadTaskSeeding;
-  /// No description provided for @downloadTaskExtracting.
-  ///
-  /// In zh, this message translates to:
-  /// **'解压中'**
-  String get downloadTaskExtracting;
-  /// No description provided for @downloadTaskCaptchaNeeded.
-  ///
-  /// In zh, this message translates to:
-  /// **'需要验证码'**
-  String get downloadTaskCaptchaNeeded;
-  /// No description provided for @downloadTaskError.
-  ///
-  /// In zh, this message translates to:
-  /// **'下载出错'**
-  String get downloadTaskError;
-  /// No description provided for @downloadTaskBrokenLink.
-  ///
-  /// In zh, this message translates to:
-  /// **'错误链接'**
-  String get downloadTaskBrokenLink;
-  /// No description provided for @downloadTaskDestNotExist.
-  ///
-  /// In zh, this message translates to:
-  /// **'目标目录不存在'**
-  String get downloadTaskDestNotExist;
-  /// No description provided for @downloadTaskDestDeny.
-  ///
-  /// In zh, this message translates to:
-  /// **'目标目录无权限'**
-  String get downloadTaskDestDeny;
-  /// No description provided for @downloadTaskDiskFull.
-  ///
-  /// In zh, this message translates to:
-  /// **'硬盘已满'**
-  String get downloadTaskDiskFull;
-  /// No description provided for @downloadTaskQuotaReached.
-  ///
-  /// In zh, this message translates to:
-  /// **'已达空间配额'**
-  String get downloadTaskQuotaReached;
-  /// No description provided for @downloadTaskTimeout.
-  ///
-  /// In zh, this message translates to:
-  /// **'联机超时'**
-  String get downloadTaskTimeout;
-
-  /// No description provided for @downloadErrorExceedFsMaxSize.
-  ///
-  /// In zh, this message translates to:
-  /// **'超过文件系统最大文件大小。'**
-  String get downloadErrorExceedFsMaxSize;
-  /// No description provided for @downloadErrorEncryptionLongPath.
-  ///
-  /// In zh, this message translates to:
-  /// **'加密文件路径过长。'**
-  String get downloadErrorEncryptionLongPath;
-  /// No description provided for @downloadErrorLongPath.
-  ///
-  /// In zh, this message translates to:
-  /// **'文件路径过长。'**
-  String get downloadErrorLongPath;
-  /// No description provided for @downloadErrorDuplicateTorrent.
-  ///
-  /// In zh, this message translates to:
-  /// **'下载任务重复。'**
-  String get downloadErrorDuplicateTorrent;
-  /// No description provided for @downloadErrorPremiumAccountRequire.
-  ///
-  /// In zh, this message translates to:
-  /// **'需要Premium账户。'**
-  String get downloadErrorPremiumAccountRequire;
-  /// No description provided for @downloadErrorNotSupportType.
-  ///
-  /// In zh, this message translates to:
-  /// **'不支持的文件类型。'**
-  String get downloadErrorNotSupportType;
-  /// No description provided for @downloadErrorFtpEncryptionNotSupportType.
-  ///
-  /// In zh, this message translates to:
-  /// **'FTP加密不支持的文件类型。'**
-  String get downloadErrorFtpEncryptionNotSupportType;
-  /// No description provided for @downloadErrorExtractFailed.
-  ///
-  /// In zh, this message translates to:
-  /// **'解压失败。'**
-  String get downloadErrorExtractFailed;
-  /// No description provided for @downloadErrorInvalidTorrent.
-  ///
-  /// In zh, this message translates to:
-  /// **'无效的torrent文件。'**
-  String get downloadErrorInvalidTorrent;
-  /// No description provided for @downloadErrorAccountRequireStatus.
-  ///
-  /// In zh, this message translates to:
-  /// **'账户状态不符合要求。'**
-  String get downloadErrorAccountRequireStatus;
-  /// No description provided for @downloadErrorTryItLater.
-  ///
-  /// In zh, this message translates to:
-  /// **'请稍后再试。'**
-  String get downloadErrorTryItLater;
-  /// No description provided for @downloadErrorTaskEncryption.
-  ///
-  /// In zh, this message translates to:
-  /// **'任务加密出错。'**
-  String get downloadErrorTaskEncryption;
-  /// No description provided for @downloadErrorMissingPython.
-  ///
-  /// In zh, this message translates to:
-  /// **'缺少Python组件。'**
-  String get downloadErrorMissingPython;
-  /// No description provided for @downloadErrorPrivateVideo.
-  ///
-  /// In zh, this message translates to:
-  /// **'私有视频无法下载。'**
-  String get downloadErrorPrivateVideo;
-  /// No description provided for @downloadErrorNzbMissingArticle.
-  ///
-  /// In zh, this message translates to:
-  /// **'NZB文件缺少Article。'**
-  String get downloadErrorNzbMissingArticle;
-  /// No description provided for @downloadErrorParchiveRepairFailed.
-  ///
-  /// In zh, this message translates to:
-  /// **'Parchive修复失败。'**
-  String get downloadErrorParchiveRepairFailed;
-  /// No description provided for @downloadErrorInvalidAccountPassword.
-  ///
-  /// In zh, this message translates to:
-  /// **'账户密码无效。'**
-  String get downloadErrorInvalidAccountPassword;  /// No description provided for @downloadBtnNew.
-  ///
-  /// In zh, this message translates to:
-  /// **'新增'**
-  String get downloadBtnNew;
-  /// No description provided for @downloadBtnOk.
-  ///
-  /// In zh, this message translates to:
-  /// **'确定'**
-  String get downloadBtnOk;
-  /// No description provided for @downloadBtnCancel.
-  ///
-  /// In zh, this message translates to:
-  /// **'取消'**
-  String get downloadBtnCancel;
-  /// No description provided for @downloadBtnRefresh.
-  ///
-  /// In zh, this message translates to:
-  /// **'刷新'**
-  String get downloadBtnRefresh;
-  /// No description provided for @downloadBtnRemove.
-  ///
-  /// In zh, this message translates to:
-  /// **'删除'**
-  String get downloadBtnRemove;
-  /// No description provided for @downloadBtnResume.
-  ///
-  /// In zh, this message translates to:
-  /// **'恢复'**
-  String get downloadBtnResume;
-  /// No description provided for @downloadBtnStop.
-  ///
-  /// In zh, this message translates to:
-  /// **'暂停'**
-  String get downloadBtnStop;
-  /// No description provided for @downloadBtnClear.
-  ///
-  /// In zh, this message translates to:
-  /// **'清除'**
-  String get downloadBtnClear;
-  /// No description provided for @downloadBtnEnd.
-  ///
-  /// In zh, this message translates to:
-  /// **'结束'**
-  String get downloadBtnEnd;
-  /// No description provided for @downloadBtnChange.
-  ///
-  /// In zh, this message translates to:
-  /// **'变更'**
-  String get downloadBtnChange;
-  /// No description provided for @downloadBtnHelp.
-  ///
-  /// In zh, this message translates to:
-  /// **'说明'**
-  String get downloadBtnHelp;
-  /// No description provided for @downloadLblInputUrl.
-  ///
-  /// In zh, this message translates to:
-  /// **'输入网址'**
-  String get downloadLblInputUrl;
-  /// No description provided for @downloadLblInputFile.
-  ///
-  /// In zh, this message translates to:
-  /// **'打开文件'**
-  String get downloadLblInputFile;
-  /// No description provided for @downloadLblDestFolder.
-  ///
-  /// In zh, this message translates to:
-  /// **'目的地文件夹'**
-  String get downloadLblDestFolder;
-  /// No description provided for @downloadLblFilename.
-  ///
-  /// In zh, this message translates to:
-  /// **'文件名称'**
-  String get downloadLblFilename;
-  /// No description provided for @downloadLblFileSize.
-  ///
-  /// In zh, this message translates to:
-  /// **'文件大小'**
-  String get downloadLblFileSize;
-  /// No description provided for @downloadLblStatus.
-  ///
-  /// In zh, this message translates to:
-  /// **'状态'**
-  String get downloadLblStatus;
-  /// No description provided for @downloadLblProgress.
-  ///
-  /// In zh, this message translates to:
-  /// **'进度'**
-  String get downloadLblProgress;
-  /// No description provided for @downloadLblSpeed.
-  ///
-  /// In zh, this message translates to:
-  /// **'速度'**
-  String get downloadLblSpeed;
-  /// No description provided for @downloadLblDownloaded.
-  ///
-  /// In zh, this message translates to:
-  /// **'已下载'**
-  String get downloadLblDownloaded;
-  /// No description provided for @downloadLblCreatedTime.
-  ///
-  /// In zh, this message translates to:
-  /// **'创建时间'**
-  String get downloadLblCreatedTime;
-  /// No description provided for @downloadLblStartedTime.
-  ///
-  /// In zh, this message translates to:
-  /// **'开始时间'**
-  String get downloadLblStartedTime;
-  /// No description provided for @downloadLblConnectedPeers.
-  ///
-  /// In zh, this message translates to:
-  /// **'已联机的Peer数'**
-  String get downloadLblConnectedPeers;
-  /// No description provided for @downloadLblPeer.
-  ///
-  /// In zh, this message translates to:
-  /// **'Peer数'**
-  String get downloadLblPeer;
-  /// No description provided for @downloadLblLeechers.
-  ///
-  /// In zh, this message translates to:
-  /// **'下载用户数'**
-  String get downloadLblLeechers;
-  /// No description provided for @downloadLblSeeders.
-  ///
-  /// In zh, this message translates to:
-  /// **'种子数'**
-  String get downloadLblSeeders;
-  /// No description provided for @downloadLblSeedElapsed.
-  ///
-  /// In zh, this message translates to:
-  /// **'已作种时间'**
-  String get downloadLblSeedElapsed;
-  /// No description provided for @downloadLblTransfered.
-  ///
-  /// In zh, this message translates to:
-  /// **'已传输'**
-  String get downloadLblTransfered;
-  /// No description provided for @downloadLblUploadRate.
-  ///
-  /// In zh, this message translates to:
-  /// **'上传速度'**
-  String get downloadLblUploadRate;
-  /// No description provided for @downloadLblDownRate.
-  ///
-  /// In zh, this message translates to:
-  /// **'下载速度'**
-  String get downloadLblDownRate;
-  /// No description provided for @downloadLblUrl.
-  ///
-  /// In zh, this message translates to:
-  /// **'网址'**
-  String get downloadLblUrl;
-  /// No description provided for @downloadLblUsername.
-  ///
-  /// In zh, this message translates to:
-  /// **'用户名'**
-  String get downloadLblUsername;
-  /// No description provided for @downloadLblTotalPieces.
-  ///
-  /// In zh, this message translates to:
-  /// **'分块总数'**
-  String get downloadLblTotalPieces;
-  /// No description provided for @downloadLblDownloadedPieces.
-  ///
-  /// In zh, this message translates to:
-  /// **'已下载的分块数'**
-  String get downloadLblDownloadedPieces;
-  /// No description provided for @downloadLblTimeLeft.
-  ///
-  /// In zh, this message translates to:
-  /// **'剩余时间'**
-  String get downloadLblTimeLeft;
-  /// No description provided for @downloadMsgActionFailed.
-  ///
-  /// In zh, this message translates to:
-  /// **'要求的动作无法完成。'**
-  String get downloadMsgActionFailed;
-  /// No description provided for @downloadMsgEndDoneDelErr.
-  ///
-  /// In zh, this message translates to:
-  /// **'成功结束选择的下载任务，但系统无法删除此下载任务。请手动删除。'**
-  String get downloadMsgEndDoneDelErr;
-  /// No description provided for @downloadMsgInvalidUser.
-  ///
-  /// In zh, this message translates to:
-  /// **'不合法的用户。'**
-  String get downloadMsgInvalidUser;
-  /// No description provided for @downloadMsgReachLimit.
-  ///
-  /// In zh, this message translates to:
-  /// **'下载任务数已达到上限。'**
-  String get downloadMsgReachLimit;
-  /// No description provided for @downloadWarningSelectItems.
-  ///
-  /// In zh, this message translates to:
-  /// **'请先勾选项目。'**
-  String get downloadWarningSelectItems;
-  /// No description provided for @downloadWarningSelectShare.
-  ///
-  /// In zh, this message translates to:
-  /// **'请先选择目的地文件夹。'**
-  String get downloadWarningSelectShare;
-  /// No description provided for @downloadWarningDiskFull.
-  ///
-  /// In zh, this message translates to:
-  /// **'此存储空间的可用空间不足。'**
-  String get downloadWarningDiskFull;
-  /// No description provided for @downloadErrorNoTask.
-  ///
-  /// In zh, this message translates to:
-  /// **'下载任务不正确或已被删除。'**
-  String get downloadErrorNoTask;
-  /// No description provided for @downloadErrorNoPrivilege.
-  ///
-  /// In zh, this message translates to:
-  /// **'您没有权限读取此下载任务。'**
-  String get downloadErrorNoPrivilege;
-  /// No description provided for @downloadErrorWrongFormat.
-  ///
-  /// In zh, this message translates to:
-  /// **'文件格式不正确。'**
-  String get downloadErrorWrongFormat;
-  /// No description provided for @downloadErrorWrongUrl.
-  ///
-  /// In zh, this message translates to:
-  /// **'网址的开头必须是http://、https://，或ftp://。'**
-  String get downloadErrorWrongUrl;
-  /// No description provided for @downloadErrorEmptyInput.
-  ///
-  /// In zh, this message translates to:
-  /// **'请输入网址。'**
-  String get downloadErrorEmptyInput;
-  /// No description provided for @downloadErrorNetwork.
-  ///
-  /// In zh, this message translates to:
-  /// **'创建网络联机失败。'**
-  String get downloadErrorNetwork;
-  /// No description provided for @downloadErrorServer.
-  ///
-  /// In zh, this message translates to:
-  /// **'发生未知的错误！'**
-  String get downloadErrorServer;
-  /// No description provided for @downloadErrorShareNotFound.
-  ///
-  /// In zh, this message translates to:
-  /// **'找不到有写入权限的文件夹。'**
-  String get downloadErrorShareNotFound;
-  /// No description provided for @downloadErrorUserRemoved.
-  ///
-  /// In zh, this message translates to:
-  /// **'帐号不存在或已被删除。'**
-  String get downloadErrorUserRemoved;
-  /// No description provided for @downloadErrorSelectNum.
-  ///
-  /// In zh, this message translates to:
-  /// **'只能选择一个下载任务。'**
-  String get downloadErrorSelectNum;
-  /// No description provided for @downloadErrorReadTorrentFail.
-  ///
-  /// In zh, this message translates to:
-  /// **'无法读取 torrent 文件。'**
-  String get downloadErrorReadTorrentFail;
-  /// No description provided for @downloadErrorMagnet.
-  ///
-  /// In zh, this message translates to:
-  /// **'无法由磁力链接取得 torrent 文件的信息。'**
-  String get downloadErrorMagnet;
-  /// No description provided for @downloadErrorNoFileToEnd.
-  ///
-  /// In zh, this message translates to:
-  /// **'文件不存在。'**
-  String get downloadErrorNoFileToEnd;
-  /// No description provided for @downloadConfirmRemove.
-  ///
-  /// In zh, this message translates to:
-  /// **'您确定要删除此下载任务吗？'**
-  String get downloadConfirmRemove;
-  /// No description provided for @downloadConfirmEnd.
-  ///
-  /// In zh, this message translates to:
-  /// **'您确定要结束此下载任务吗？'**
-  String get downloadConfirmEnd;
-  /// No description provided for @downloadEndDesc.
-  ///
-  /// In zh, this message translates to:
-  /// **'此功能只适合无法继续下载的任务或有错误的任务。'**
-  String get downloadEndDesc;
-  /// No description provided for @downloadEndNoteFinished.
-  ///
-  /// In zh, this message translates to:
-  /// **'您无法结束此下载任务，下载任务已经完成。'**
-  String get downloadEndNoteFinished;
-  /// No description provided for @downloadEndNoteNoFile.
-  ///
-  /// In zh, this message translates to:
-  /// **'您无法结束此下载任务，此任务还未开始下载。'**
-  String get downloadEndNoteNoFile;
-  /// No description provided for @downloadRedirectConfirm.
-  ///
-  /// In zh, this message translates to:
-  /// **'Download Station 未启用。您要设置Download Station 吗？'**
-  String get downloadRedirectConfirm;
-  /// No description provided for @downloadNotEnabled.
-  ///
-  /// In zh, this message translates to:
-  /// **'下载服务尚未启用。'**
-  String get downloadNotEnabled;
-  /// No description provided for @downloadSeedDays.
-  ///
-  /// In zh, this message translates to:
-  /// **'天'**
-  String get downloadSeedDays;
-  /// No description provided for @downloadSeedHours.
-  ///
-  /// In zh, this message translates to:
-  /// **'小时'**
-  String get downloadSeedHours;
-  /// No description provided for @downloadSeedMins.
-  ///
-  /// In zh, this message translates to:
-  /// **'分钟'**
-  String get downloadSeedMins;
-  /// No description provided for @downloadSeedSeconds.
-  ///
-  /// In zh, this message translates to:
-  /// **'秒'**
-  String get downloadSeedSeconds;
-  /// No description provided for @downloadNextPage.
-  ///
-  /// In zh, this message translates to:
-  /// **'下一页'**
-  String get downloadNextPage;
-  /// No description provided for @downloadPreviousPage.
-  ///
-  /// In zh, this message translates to:
-  /// **'上一页'**
-  String get downloadPreviousPage;
-  /// No description provided for @downloadTitle.
-  ///
-  /// In zh, this message translates to:
-  /// **'BT/PT/HTTP/FTP/NZB下载'**
-  String get downloadTitle;
-  /// No description provided for @titleDownloadManager.
-  ///
-  /// In zh, this message translates to:
-  /// **'BT/PT/HTTP/FTP/NZB'**
-  String get titleDownloadManager;
-  /// No description provided for @downloadEmptyInputFile.
-  ///
-  /// In zh, this message translates to:
-  /// **'请打开要新增的文件。'**
-  String get downloadEmptyInputFile;
-  /// No description provided for @downloadEmptyInputUrl.
-  ///
-  /// In zh, this message translates to:
-  /// **'请输入网址。'**
-  String get downloadEmptyInputUrl;
-  /// No description provided for @downloadComplete.
-  ///
-  /// In zh, this message translates to:
-  /// **'下载已完成。'**
-  String get downloadComplete;
-  /// No description provided for @downloadFailed.
-  ///
-  /// In zh, this message translates to:
-  /// **'下载失败。'**
-  String get downloadFailed;
-  /// No description provided for @downloadMsgAskHelp2.
-  ///
-  /// In zh, this message translates to:
-  /// **'请求系统管理员解决此问题。'**
-  String get downloadMsgAskHelp2;
-  /// No description provided for @temporaryLocation.
-  ///
-  /// In zh, this message translates to:
-  /// **'暂存位置'**
-  String get temporaryLocation;
-  /// No description provided for @userNoShareFolder.
-  ///
-  /// In zh, this message translates to:
-  /// **'您没有权限存取任何共享文件夹，请与系统管理员联络。'**
-  String get userNoShareFolder;
   /// No description provided for @submitting.
   ///
   /// In zh, this message translates to:
@@ -4282,6 +3721,678 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'不限制'**
   String get sharingLinksNoLimit;
+
+  /// No description provided for @downloadTargetDir.
+  ///
+  /// In zh, this message translates to:
+  /// **'目标文件夹'**
+  String get downloadTargetDir;
+
+  /// No description provided for @downloadTaskWaiting.
+  ///
+  /// In zh, this message translates to:
+  /// **'等待中'**
+  String get downloadTaskWaiting;
+
+  /// No description provided for @downloadTaskDownloading.
+  ///
+  /// In zh, this message translates to:
+  /// **'下载中'**
+  String get downloadTaskDownloading;
+
+  /// No description provided for @downloadTaskPaused.
+  ///
+  /// In zh, this message translates to:
+  /// **'已暂停'**
+  String get downloadTaskPaused;
+
+  /// No description provided for @downloadTaskFinishing.
+  ///
+  /// In zh, this message translates to:
+  /// **'即将完成'**
+  String get downloadTaskFinishing;
+
+  /// No description provided for @downloadTaskFinished.
+  ///
+  /// In zh, this message translates to:
+  /// **'已完成'**
+  String get downloadTaskFinished;
+
+  /// No description provided for @downloadTaskHashChecking.
+  ///
+  /// In zh, this message translates to:
+  /// **'校验中'**
+  String get downloadTaskHashChecking;
+
+  /// No description provided for @downloadTaskPreSeeding.
+  ///
+  /// In zh, this message translates to:
+  /// **'等待做种'**
+  String get downloadTaskPreSeeding;
+
+  /// No description provided for @downloadTaskSeeding.
+  ///
+  /// In zh, this message translates to:
+  /// **'做种中'**
+  String get downloadTaskSeeding;
+
+  /// No description provided for @downloadTaskExtracting.
+  ///
+  /// In zh, this message translates to:
+  /// **'解压中'**
+  String get downloadTaskExtracting;
+
+  /// No description provided for @downloadTaskCaptchaNeeded.
+  ///
+  /// In zh, this message translates to:
+  /// **'需要验证码'**
+  String get downloadTaskCaptchaNeeded;
+
+  /// No description provided for @downloadTaskError.
+  ///
+  /// In zh, this message translates to:
+  /// **'下载出错'**
+  String get downloadTaskError;
+
+  /// No description provided for @downloadTaskBrokenLink.
+  ///
+  /// In zh, this message translates to:
+  /// **'错误链接'**
+  String get downloadTaskBrokenLink;
+
+  /// No description provided for @downloadTaskDestNotExist.
+  ///
+  /// In zh, this message translates to:
+  /// **'目标目录不存在'**
+  String get downloadTaskDestNotExist;
+
+  /// No description provided for @downloadTaskDestDeny.
+  ///
+  /// In zh, this message translates to:
+  /// **'目标目录无权限'**
+  String get downloadTaskDestDeny;
+
+  /// No description provided for @downloadTaskDiskFull.
+  ///
+  /// In zh, this message translates to:
+  /// **'硬盘已满'**
+  String get downloadTaskDiskFull;
+
+  /// No description provided for @downloadTaskQuotaReached.
+  ///
+  /// In zh, this message translates to:
+  /// **'已达空间配额'**
+  String get downloadTaskQuotaReached;
+
+  /// No description provided for @downloadTaskTimeout.
+  ///
+  /// In zh, this message translates to:
+  /// **'联机超时'**
+  String get downloadTaskTimeout;
+
+  /// No description provided for @downloadBtnNew.
+  ///
+  /// In zh, this message translates to:
+  /// **'新增'**
+  String get downloadBtnNew;
+
+  /// No description provided for @downloadBtnOk.
+  ///
+  /// In zh, this message translates to:
+  /// **'确定'**
+  String get downloadBtnOk;
+
+  /// No description provided for @downloadBtnCancel.
+  ///
+  /// In zh, this message translates to:
+  /// **'取消'**
+  String get downloadBtnCancel;
+
+  /// No description provided for @downloadBtnRefresh.
+  ///
+  /// In zh, this message translates to:
+  /// **'刷新'**
+  String get downloadBtnRefresh;
+
+  /// No description provided for @downloadBtnRemove.
+  ///
+  /// In zh, this message translates to:
+  /// **'删除'**
+  String get downloadBtnRemove;
+
+  /// No description provided for @downloadBtnResume.
+  ///
+  /// In zh, this message translates to:
+  /// **'恢复'**
+  String get downloadBtnResume;
+
+  /// No description provided for @downloadBtnStop.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂停'**
+  String get downloadBtnStop;
+
+  /// No description provided for @downloadBtnClear.
+  ///
+  /// In zh, this message translates to:
+  /// **'清除'**
+  String get downloadBtnClear;
+
+  /// No description provided for @downloadBtnEnd.
+  ///
+  /// In zh, this message translates to:
+  /// **'结束'**
+  String get downloadBtnEnd;
+
+  /// No description provided for @downloadBtnChange.
+  ///
+  /// In zh, this message translates to:
+  /// **'变更'**
+  String get downloadBtnChange;
+
+  /// No description provided for @downloadBtnHelp.
+  ///
+  /// In zh, this message translates to:
+  /// **'说明'**
+  String get downloadBtnHelp;
+
+  /// No description provided for @downloadLblInputUrl.
+  ///
+  /// In zh, this message translates to:
+  /// **'输入网址'**
+  String get downloadLblInputUrl;
+
+  /// No description provided for @downloadLblInputFile.
+  ///
+  /// In zh, this message translates to:
+  /// **'打开文件'**
+  String get downloadLblInputFile;
+
+  /// No description provided for @downloadLblDestFolder.
+  ///
+  /// In zh, this message translates to:
+  /// **'目的地文件夹'**
+  String get downloadLblDestFolder;
+
+  /// No description provided for @downloadLblFilename.
+  ///
+  /// In zh, this message translates to:
+  /// **'文件名称'**
+  String get downloadLblFilename;
+
+  /// No description provided for @downloadLblFileSize.
+  ///
+  /// In zh, this message translates to:
+  /// **'文件大小'**
+  String get downloadLblFileSize;
+
+  /// No description provided for @downloadLblStatus.
+  ///
+  /// In zh, this message translates to:
+  /// **'状态'**
+  String get downloadLblStatus;
+
+  /// No description provided for @downloadLblProgress.
+  ///
+  /// In zh, this message translates to:
+  /// **'进度'**
+  String get downloadLblProgress;
+
+  /// No description provided for @downloadLblSpeed.
+  ///
+  /// In zh, this message translates to:
+  /// **'速度'**
+  String get downloadLblSpeed;
+
+  /// No description provided for @downloadLblDownloaded.
+  ///
+  /// In zh, this message translates to:
+  /// **'已下载'**
+  String get downloadLblDownloaded;
+
+  /// No description provided for @downloadLblCreatedTime.
+  ///
+  /// In zh, this message translates to:
+  /// **'创建时间'**
+  String get downloadLblCreatedTime;
+
+  /// No description provided for @downloadLblStartedTime.
+  ///
+  /// In zh, this message translates to:
+  /// **'开始时间'**
+  String get downloadLblStartedTime;
+
+  /// No description provided for @downloadLblConnectedPeers.
+  ///
+  /// In zh, this message translates to:
+  /// **'已联机的Peer数'**
+  String get downloadLblConnectedPeers;
+
+  /// No description provided for @downloadLblPeer.
+  ///
+  /// In zh, this message translates to:
+  /// **'Peer数'**
+  String get downloadLblPeer;
+
+  /// No description provided for @downloadLblLeechers.
+  ///
+  /// In zh, this message translates to:
+  /// **'下载用户数'**
+  String get downloadLblLeechers;
+
+  /// No description provided for @downloadLblSeeders.
+  ///
+  /// In zh, this message translates to:
+  /// **'种子数'**
+  String get downloadLblSeeders;
+
+  /// No description provided for @downloadLblSeedElapsed.
+  ///
+  /// In zh, this message translates to:
+  /// **'已作种时间'**
+  String get downloadLblSeedElapsed;
+
+  /// No description provided for @downloadLblTransfered.
+  ///
+  /// In zh, this message translates to:
+  /// **'已传输'**
+  String get downloadLblTransfered;
+
+  /// No description provided for @downloadLblUploadRate.
+  ///
+  /// In zh, this message translates to:
+  /// **'上传速度'**
+  String get downloadLblUploadRate;
+
+  /// No description provided for @downloadLblDownRate.
+  ///
+  /// In zh, this message translates to:
+  /// **'下载速度'**
+  String get downloadLblDownRate;
+
+  /// No description provided for @downloadLblUrl.
+  ///
+  /// In zh, this message translates to:
+  /// **'网址'**
+  String get downloadLblUrl;
+
+  /// No description provided for @downloadLblUsername.
+  ///
+  /// In zh, this message translates to:
+  /// **'用户名'**
+  String get downloadLblUsername;
+
+  /// No description provided for @downloadLblTotalPieces.
+  ///
+  /// In zh, this message translates to:
+  /// **'分块总数'**
+  String get downloadLblTotalPieces;
+
+  /// No description provided for @downloadLblDownloadedPieces.
+  ///
+  /// In zh, this message translates to:
+  /// **'已下载的分块数'**
+  String get downloadLblDownloadedPieces;
+
+  /// No description provided for @downloadLblTimeLeft.
+  ///
+  /// In zh, this message translates to:
+  /// **'剩余时间'**
+  String get downloadLblTimeLeft;
+
+  /// No description provided for @downloadMsgActionFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'要求的动作无法完成。'**
+  String get downloadMsgActionFailed;
+
+  /// No description provided for @downloadMsgEndDoneDelErr.
+  ///
+  /// In zh, this message translates to:
+  /// **'成功结束选择的下载任务，但系统无法删除此下载任务。请手动删除。'**
+  String get downloadMsgEndDoneDelErr;
+
+  /// No description provided for @downloadMsgInvalidUser.
+  ///
+  /// In zh, this message translates to:
+  /// **'不合法的用户。'**
+  String get downloadMsgInvalidUser;
+
+  /// No description provided for @downloadMsgReachLimit.
+  ///
+  /// In zh, this message translates to:
+  /// **'下载任务数已达到上限。'**
+  String get downloadMsgReachLimit;
+
+  /// No description provided for @downloadWarningSelectItems.
+  ///
+  /// In zh, this message translates to:
+  /// **'请先勾选项目。'**
+  String get downloadWarningSelectItems;
+
+  /// No description provided for @downloadWarningSelectShare.
+  ///
+  /// In zh, this message translates to:
+  /// **'请先选择目的地文件夹。'**
+  String get downloadWarningSelectShare;
+
+  /// No description provided for @downloadWarningDiskFull.
+  ///
+  /// In zh, this message translates to:
+  /// **'此存储空间的可用空间不足。'**
+  String get downloadWarningDiskFull;
+
+  /// No description provided for @downloadErrorNoTask.
+  ///
+  /// In zh, this message translates to:
+  /// **'下载任务不正确或已被删除。'**
+  String get downloadErrorNoTask;
+
+  /// No description provided for @downloadErrorNoPrivilege.
+  ///
+  /// In zh, this message translates to:
+  /// **'您没有权限读取此下载任务。'**
+  String get downloadErrorNoPrivilege;
+
+  /// No description provided for @downloadErrorWrongFormat.
+  ///
+  /// In zh, this message translates to:
+  /// **'文件格式不正确。'**
+  String get downloadErrorWrongFormat;
+
+  /// No description provided for @downloadErrorWrongUrl.
+  ///
+  /// In zh, this message translates to:
+  /// **'网址的开头必须是http://、https://，或ftp://。'**
+  String get downloadErrorWrongUrl;
+
+  /// No description provided for @downloadErrorEmptyInput.
+  ///
+  /// In zh, this message translates to:
+  /// **'请输入网址。'**
+  String get downloadErrorEmptyInput;
+
+  /// No description provided for @downloadErrorNetwork.
+  ///
+  /// In zh, this message translates to:
+  /// **'创建网络联机失败。'**
+  String get downloadErrorNetwork;
+
+  /// No description provided for @downloadErrorServer.
+  ///
+  /// In zh, this message translates to:
+  /// **'发生未知的错误！'**
+  String get downloadErrorServer;
+
+  /// No description provided for @downloadErrorShareNotFound.
+  ///
+  /// In zh, this message translates to:
+  /// **'找不到有写入权限的文件夹。'**
+  String get downloadErrorShareNotFound;
+
+  /// No description provided for @downloadErrorUserRemoved.
+  ///
+  /// In zh, this message translates to:
+  /// **'帐号不存在或已被删除。'**
+  String get downloadErrorUserRemoved;
+
+  /// No description provided for @downloadErrorSelectNum.
+  ///
+  /// In zh, this message translates to:
+  /// **'只能选择一个下载任务。'**
+  String get downloadErrorSelectNum;
+
+  /// No description provided for @downloadErrorReadTorrentFail.
+  ///
+  /// In zh, this message translates to:
+  /// **'无法读取 torrent 文件。'**
+  String get downloadErrorReadTorrentFail;
+
+  /// No description provided for @downloadErrorMagnet.
+  ///
+  /// In zh, this message translates to:
+  /// **'无法由磁力链接取得 torrent 文件的信息。'**
+  String get downloadErrorMagnet;
+
+  /// No description provided for @downloadErrorNoFileToEnd.
+  ///
+  /// In zh, this message translates to:
+  /// **'文件不存在。'**
+  String get downloadErrorNoFileToEnd;
+
+  /// No description provided for @downloadConfirmRemove.
+  ///
+  /// In zh, this message translates to:
+  /// **'您确定要删除此下载任务吗？'**
+  String get downloadConfirmRemove;
+
+  /// No description provided for @downloadConfirmEnd.
+  ///
+  /// In zh, this message translates to:
+  /// **'您确定要结束此下载任务吗？'**
+  String get downloadConfirmEnd;
+
+  /// No description provided for @downloadEndDesc.
+  ///
+  /// In zh, this message translates to:
+  /// **'此功能只适合无法继续下载的任务或有错误的任务。'**
+  String get downloadEndDesc;
+
+  /// No description provided for @downloadEndNoteFinished.
+  ///
+  /// In zh, this message translates to:
+  /// **'您无法结束此下载任务，下载任务已经完成。'**
+  String get downloadEndNoteFinished;
+
+  /// No description provided for @downloadEndNoteNoFile.
+  ///
+  /// In zh, this message translates to:
+  /// **'您无法结束此下载任务，此任务还未开始下载。'**
+  String get downloadEndNoteNoFile;
+
+  /// No description provided for @downloadRedirectConfirm.
+  ///
+  /// In zh, this message translates to:
+  /// **'Download Station 未启用。您要设置Download Station 吗？'**
+  String get downloadRedirectConfirm;
+
+  /// No description provided for @downloadNotEnabled.
+  ///
+  /// In zh, this message translates to:
+  /// **'下载服务尚未启用。'**
+  String get downloadNotEnabled;
+
+  /// No description provided for @downloadSeedDays.
+  ///
+  /// In zh, this message translates to:
+  /// **'天'**
+  String get downloadSeedDays;
+
+  /// No description provided for @downloadSeedHours.
+  ///
+  /// In zh, this message translates to:
+  /// **'小时'**
+  String get downloadSeedHours;
+
+  /// No description provided for @downloadSeedMins.
+  ///
+  /// In zh, this message translates to:
+  /// **'分钟'**
+  String get downloadSeedMins;
+
+  /// No description provided for @downloadSeedSeconds.
+  ///
+  /// In zh, this message translates to:
+  /// **'秒'**
+  String get downloadSeedSeconds;
+
+  /// No description provided for @downloadNextPage.
+  ///
+  /// In zh, this message translates to:
+  /// **'下一页'**
+  String get downloadNextPage;
+
+  /// No description provided for @downloadPreviousPage.
+  ///
+  /// In zh, this message translates to:
+  /// **'上一页'**
+  String get downloadPreviousPage;
+
+  /// No description provided for @downloadTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'BT/PT/HTTP/FTP/NZB下载'**
+  String get downloadTitle;
+
+  /// No description provided for @titleDownloadManager.
+  ///
+  /// In zh, this message translates to:
+  /// **'BT/PT/HTTP/FTP/NZB'**
+  String get titleDownloadManager;
+
+  /// No description provided for @downloadEmptyInputFile.
+  ///
+  /// In zh, this message translates to:
+  /// **'请打开要新增的文件。'**
+  String get downloadEmptyInputFile;
+
+  /// No description provided for @downloadEmptyInputUrl.
+  ///
+  /// In zh, this message translates to:
+  /// **'请输入网址。'**
+  String get downloadEmptyInputUrl;
+
+  /// No description provided for @downloadComplete.
+  ///
+  /// In zh, this message translates to:
+  /// **'下载已完成。'**
+  String get downloadComplete;
+
+  /// No description provided for @downloadFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'下载失败。'**
+  String get downloadFailed;
+
+  /// No description provided for @downloadMsgAskHelp2.
+  ///
+  /// In zh, this message translates to:
+  /// **'请求系统管理员解决此问题。'**
+  String get downloadMsgAskHelp2;
+
+  /// No description provided for @temporaryLocation.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂存位置'**
+  String get temporaryLocation;
+
+  /// No description provided for @userNoShareFolder.
+  ///
+  /// In zh, this message translates to:
+  /// **'您没有权限存取任何共享文件夹，请与系统管理员联络。'**
+  String get userNoShareFolder;
+
+  /// No description provided for @downloadErrorExceedFsMaxSize.
+  ///
+  /// In zh, this message translates to:
+  /// **'超过文件系统最大文件大小。'**
+  String get downloadErrorExceedFsMaxSize;
+
+  /// No description provided for @downloadErrorEncryptionLongPath.
+  ///
+  /// In zh, this message translates to:
+  /// **'加密文件路径过长。'**
+  String get downloadErrorEncryptionLongPath;
+
+  /// No description provided for @downloadErrorLongPath.
+  ///
+  /// In zh, this message translates to:
+  /// **'文件路径过长。'**
+  String get downloadErrorLongPath;
+
+  /// No description provided for @downloadErrorDuplicateTorrent.
+  ///
+  /// In zh, this message translates to:
+  /// **'下载任务重复。'**
+  String get downloadErrorDuplicateTorrent;
+
+  /// No description provided for @downloadErrorPremiumAccountRequire.
+  ///
+  /// In zh, this message translates to:
+  /// **'需要Premium账户。'**
+  String get downloadErrorPremiumAccountRequire;
+
+  /// No description provided for @downloadErrorNotSupportType.
+  ///
+  /// In zh, this message translates to:
+  /// **'不支持的文件类型。'**
+  String get downloadErrorNotSupportType;
+
+  /// No description provided for @downloadErrorFtpEncryptionNotSupportType.
+  ///
+  /// In zh, this message translates to:
+  /// **'FTP加密不支持的文件类型。'**
+  String get downloadErrorFtpEncryptionNotSupportType;
+
+  /// No description provided for @downloadErrorExtractFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'解压失败。'**
+  String get downloadErrorExtractFailed;
+
+  /// No description provided for @downloadErrorInvalidTorrent.
+  ///
+  /// In zh, this message translates to:
+  /// **'无效的torrent文件。'**
+  String get downloadErrorInvalidTorrent;
+
+  /// No description provided for @downloadErrorAccountRequireStatus.
+  ///
+  /// In zh, this message translates to:
+  /// **'账户状态不符合要求。'**
+  String get downloadErrorAccountRequireStatus;
+
+  /// No description provided for @downloadErrorTryItLater.
+  ///
+  /// In zh, this message translates to:
+  /// **'请稍后再试。'**
+  String get downloadErrorTryItLater;
+
+  /// No description provided for @downloadErrorTaskEncryption.
+  ///
+  /// In zh, this message translates to:
+  /// **'任务加密出错。'**
+  String get downloadErrorTaskEncryption;
+
+  /// No description provided for @downloadErrorMissingPython.
+  ///
+  /// In zh, this message translates to:
+  /// **'缺少Python组件。'**
+  String get downloadErrorMissingPython;
+
+  /// No description provided for @downloadErrorPrivateVideo.
+  ///
+  /// In zh, this message translates to:
+  /// **'私有视频无法下载。'**
+  String get downloadErrorPrivateVideo;
+
+  /// No description provided for @downloadErrorNzbMissingArticle.
+  ///
+  /// In zh, this message translates to:
+  /// **'NZB文件缺少Article。'**
+  String get downloadErrorNzbMissingArticle;
+
+  /// No description provided for @downloadErrorParchiveRepairFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'Parchive修复失败。'**
+  String get downloadErrorParchiveRepairFailed;
+
+  /// No description provided for @downloadErrorInvalidAccountPassword.
+  ///
+  /// In zh, this message translates to:
+  /// **'账户密码无效。'**
+  String get downloadErrorInvalidAccountPassword;
 }
 
 class _AppLocalizationsDelegate

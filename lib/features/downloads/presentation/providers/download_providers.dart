@@ -31,7 +31,7 @@ class DownloadListNotifier extends AsyncNotifier<List<DownloadTask>> {
     // 启动轮询
     _timer?.cancel();
     _timer = Timer.periodic(
-      Duration(seconds: AppConstants.downloadTaskPollIntervalSeconds),
+      const Duration(seconds: AppConstants.downloadTaskPollIntervalSeconds),
       (_) => _refresh(),
     );
 
