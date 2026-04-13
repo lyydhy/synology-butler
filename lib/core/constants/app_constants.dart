@@ -23,6 +23,12 @@ class AppConstants {
   /// DSM realtime websocket 主动拉取当前利用率的轮询间隔（秒）。
   static const realtimeRequestIntervalSeconds = 3;
 
+  /// Download Station 任务列表轮询间隔（秒）。
+  static const downloadTaskPollIntervalSeconds = 5;
+
+  /// Download Station 默认下载目标文件夹。
+  static const downloadDefaultDestination = 'Download';
+
   /// SnackBar 默认显示时长（秒）
   static const snackBarDurationSeconds = 3;
 }

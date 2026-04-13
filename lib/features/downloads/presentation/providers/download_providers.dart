@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/constants/app_constants.dart';
 import '../../../../data/api/download_station_api.dart';
 import '../../../../data/repositories/download_repository_impl.dart';
 import '../../../../domain/entities/download_task.dart';
@@ -13,12 +16,40 @@ final downloadRepositoryProvider = Provider<DownloadRepository>((ref) {
   return DownloadRepositoryImpl(ref.read(downloadStationApiProvider));
 });
 
-/// 下载任务原始列表。
-///
-/// 筛选状态属于页面局部状态，因此不再在 provider 内耦合过滤逻辑。
-final downloadListProvider = FutureProvider<List<DownloadTask>>((ref) async {
-  return ref.read(downloadRepositoryProvider).listTasks();
-});
+/// Download Station 任务列表轮询 provider。
+/// 每隔 [AppConstants.downloadTaskPollIntervalSeconds] 秒自动刷新。
+class DownloadListNotifier extends AsyncNotifier<List<DownloadTask>> {
+  Timer? _timer;
+
+  @override
+  Future<List<DownloadTask>> build() async {
+    ref.onDispose(() => _timer?.cancel());
+
+    // 首次立即加载
+    final data = await ref.read(downloadRepositoryProvider).listTasks();
+
+    // 启动轮询
+    _timer?.cancel();
+    _timer = Timer.periodic(
+      Duration(seconds: AppConstants.downloadTaskPollIntervalSeconds),
+      (_) => _refresh(),
+    );
+
+    return data;
+  }
+
+  Future<void> _refresh() async {
+    if (state.isLoading) return;
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() => ref.read(downloadRepositoryProvider).listTasks());
+  }
+
+  Future<void> refresh() => _refresh();
+}
+
+final downloadListProvider = AsyncNotifierProvider<DownloadListNotifier, List<DownloadTask>>(
+  DownloadListNotifier.new,
+);
 
 /// Download Station 是否可用（已安装且服务正常）
 final downloadStationAvailableProvider = FutureProvider<bool>((ref) async {
@@ -27,35 +58,37 @@ final downloadStationAvailableProvider = FutureProvider<bool>((ref) async {
 
 final downloadActionProvider = Provider<Future<void> Function(String)>((ref) {
   return (rawInput) async {
-    // 支持多行输入，每行一个URL
     final urls = rawInput
         .split(RegExp(r'[\n,]'))
         .map((s) => s.trim())
         .where((s) => s.isNotEmpty)
         .toList();
     if (urls.isEmpty) return;
-    await ref.read(downloadRepositoryProvider).createTask(urls: urls);
-    ref.invalidate(downloadListProvider);
+    await ref.read(downloadRepositoryProvider).createTask(
+      urls: urls,
+      destination: AppConstants.downloadDefaultDestination,
+    );
+    ref.read(downloadListProvider.notifier).refresh();
   };
 });
 
 final downloadPauseProvider = Provider<Future<void> Function(String)>((ref) {
   return (id) async {
     await ref.read(downloadRepositoryProvider).pauseTask(id: id);
-    ref.invalidate(downloadListProvider);
+    ref.read(downloadListProvider.notifier).refresh();
   };
 });
 
 final downloadResumeProvider = Provider<Future<void> Function(String)>((ref) {
   return (id) async {
     await ref.read(downloadRepositoryProvider).resumeTask(id: id);
-    ref.invalidate(downloadListProvider);
+    ref.read(downloadListProvider.notifier).refresh();
   };
 });
 
 final downloadDeleteProvider = Provider<Future<void> Function(String)>((ref) {
   return (id) async {
     await ref.read(downloadRepositoryProvider).deleteTask(id: id);
-    ref.invalidate(downloadListProvider);
+    ref.read(downloadListProvider.notifier).refresh();
   };
 });
