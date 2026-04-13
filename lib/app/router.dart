@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../domain/entities/nas_server.dart';
 import '../features/auth/presentation/pages/login_page.dart';
 import '../features/auth/presentation/pages/splash_page.dart';
 import '../features/container_management/presentation/pages/compose_project_build_logs_page.dart';
@@ -49,7 +50,7 @@ GoRouter createAppRouter({required String initialLocation}) {
     initialLocation: initialLocation,
     routes: [
     GoRoute(path: '/splash', builder: (context, state) => const SplashPage()),
-    GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
+    GoRoute(path: '/login', builder: (context, state) => LoginPage(initialServer: state.extra as NasServer?)),
     GoRoute(path: '/home', builder: (context, state) => const MainShellPage()),
     GoRoute(path: '/servers', builder: (context, state) => const ServerManagementPage()),
     GoRoute(path: '/debug', builder: (context, state) => const DebugInfoPage()),

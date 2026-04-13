@@ -123,7 +123,7 @@ class ServerManagementPage extends ConsumerWidget {
                               await ref.read(switchCurrentServerProvider)(server);
                               if (context.mounted) {
                                 Toast.show(l10n.switchDeviceRelogin);
-                                context.go('/login');
+                                context.pushReplacement('/login', extra: server);
                               }
                             },
                             onEdit: () => _editServer(context, ref, server),

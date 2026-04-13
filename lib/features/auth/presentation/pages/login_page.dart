@@ -14,7 +14,9 @@ import '../providers/current_connection_readers.dart';
 import '../../../preferences/providers/preferences_providers.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
-  const LoginPage({super.key});
+  final NasServer? initialServer;
+
+  const LoginPage({super.key, this.initialServer});
 
   @override
   ConsumerState<LoginPage> createState() => _LoginPageState();
@@ -39,9 +41,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   String? infoText;
 
   @override
+  @override
   void initState() {
     super.initState();
-    addressController.text = '192.168.1.2';
+    if (widget.initialServer != null) {
+      _applyServer(widget.initialServer!);
+    } else {
+      addressController.text = '192.168.1.2';
+    }
   }
 
   @override
@@ -80,8 +87,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     return (trimmed, https ? 443 : 80);
   }
 
-  /// 用服务器数据填充表单（用于从历史列表返回后）
-  void applyServerPreset(NasServer server, {String? username}) {
+  /// 用服务器数据填充表单
+  void _applyServer(NasServer server, {String? username}) {
     setState(() {
       selectedServerId = server.id;
       https = server.https;
@@ -519,20 +526,20 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         scrolledUnderElevation: 0,
         systemOverlayStyle: isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
         title: Text(
-          l10n.loginDsm,
+          widget.initialServer != null ? l10n.loginToNas(widget.initialServer!.name) : l10n.loginDsm,
           style: TextStyle(fontWeight: FontWeight.w800, fontSize: 20, color: primaryColor),
         ),
         centerTitle: true,
+        leading: widget.initialServer != null
+            ? IconButton(
+                onPressed: () => context.pushReplacement('/servers'),
+                icon: const Icon(Icons.arrow_back),
+              )
+            : null,
         actions: [
-          if (savedServers.isNotEmpty)
+          if (savedServers.isNotEmpty && widget.initialServer == null)
             TextButton.icon(
-              onPressed: () async {
-                // 跳转到历史设备管理页，返回时带回选中的服务器
-                final result = await context.push<NasServer>('/servers');
-                if (result != null && mounted) {
-                  applyServerPreset(result);
-                }
-              },
+              onPressed: () => context.push('/servers'),
               icon: Icon(Icons.history_rounded, color: primaryColor, size: 18),
               label: Text(l10n.historyDevices, style: TextStyle(color: primaryColor)),
             ),
