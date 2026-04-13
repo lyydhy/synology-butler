@@ -483,7 +483,7 @@ class _LoginPageState extends ConsumerState<LoginPage>
     return Column(children: [
       // HTTPS + 地址
       Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           _buildHttpsToggle(primaryColor),
           const SizedBox(width: 10),
@@ -538,13 +538,11 @@ class _LoginPageState extends ConsumerState<LoginPage>
       // 登录按钮（渐变色大按钮）
       _buildLoginButton(primaryColor),
       const SizedBox(height: 10),
-      // 测试连接按钮
+      // 历史登录设备按钮
       OutlinedButton.icon(
-        onPressed: isTesting ? null : testConnection,
-        icon: isTesting
-            ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-            : const Icon(Icons.wifi_tethering_outlined, size: 18),
-        label: Text(isTesting ? l10n.testingConnection : l10n.testConnection),
+        onPressed: () => context.push('/servers'),
+        icon: const Icon(Icons.history_rounded, size: 18),
+        label: Text(l10n.historyDevices),
         style: OutlinedButton.styleFrom(
           foregroundColor: primaryColor,
           padding: const EdgeInsets.symmetric(vertical: 13),
