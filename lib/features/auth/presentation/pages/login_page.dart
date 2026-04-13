@@ -75,7 +75,8 @@ class _LoginPageState extends ConsumerState<LoginPage>
     final savedServers = ref.read(savedServersProvider);
     final savedServerLastUsed = ref.read(savedServerLastUsedProvider);
     final savedServerUsernames = ref.read(savedServerUsernamesProvider);
-    final connection = ref.read(currentConnectionProvider);
+    // use watch so we get the value after restoreSessionProvider completes
+    final connection = ref.watch(currentConnectionProvider);
 
     if (savedServers.isEmpty) return;
 
@@ -422,77 +423,59 @@ class _LoginPageState extends ConsumerState<LoginPage>
     final hasError = errorText != null;
     final theme = Theme.of(context);
 
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-      Container(
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: hasError
-                ? Colors.redAccent.withValues(alpha: 0.60)
-                : (controller.text.isNotEmpty
-                    ? primaryColor.withValues(alpha: 0.30)
-                    : Colors.black.withValues(alpha: 0.05)),
-            width: hasError ? 1.3 : 1,
-          ),
-        ),
-        child: TextField(
-          controller: controller,
-          obscureText: obscureText,
-          onTap: onTap,
-          onChanged: onChanged,
-          textInputAction: textInputAction,
-          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
-          decoration: InputDecoration(
-            hintText: labelText,
-            hintStyle: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              color: hasError
-                  ? Colors.redAccent.withValues(alpha: 0.70)
-                  : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.55),
-            ),
-            prefixIcon: Container(
-              margin: const EdgeInsets.only(left: 14, right: 4),
-              child: Icon(
-                icon,
-                color: hasError
-                    ? Colors.redAccent
-                    : (controller.text.isNotEmpty
-                        ? primaryColor.withValues(alpha: 0.80)
-                        : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.70)),
-                size: 20,
-              ),
-            ),
-            errorText: hasError ? '' : null,
-            errorStyle: TextStyle(
-              fontSize: 11,
-              height: 1.3,
-              color: Colors.redAccent.withValues(alpha: 0.80),
-            ),
-            filled: false,
-            border: InputBorder.none,
-            enabledBorder: InputBorder.none,
-            focusedBorder: InputBorder.none,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 16),
-            suffixIcon: suffixIcon,
-            isDense: true,
-          ),
+    return Container(
+      height: 56,
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: hasError
+              ? Colors.redAccent.withValues(alpha: 0.60)
+              : (controller.text.isNotEmpty
+                  ? primaryColor.withValues(alpha: 0.30)
+                  : Colors.black.withValues(alpha: 0.05)),
+          width: hasError ? 1.3 : 1,
         ),
       ),
-      if (errorText != null)
-        Padding(
-          padding: const EdgeInsets.only(left: 4, top: 4),
-          child: Text(
-            errorText,
-            style: TextStyle(
-              fontSize: 11,
-              color: Colors.redAccent.withValues(alpha: 0.80),
-              fontWeight: FontWeight.w500,
+      child: TextField(
+        controller: controller,
+        obscureText: obscureText,
+        onTap: onTap,
+        onChanged: onChanged,
+        textInputAction: textInputAction,
+        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+        decoration: InputDecoration(
+          hintText: labelText,
+          hintStyle: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            color: hasError
+                ? Colors.redAccent.withValues(alpha: 0.70)
+                : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.55),
+          ),
+          prefixIcon: Container(
+            margin: const EdgeInsets.only(left: 14, right: 4),
+            child: Icon(
+              icon,
+              color: hasError
+                  ? Colors.redAccent
+                  : (controller.text.isNotEmpty
+                      ? primaryColor.withValues(alpha: 0.80)
+                      : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.70)),
+              size: 20,
             ),
           ),
+          errorText: null,
+          filled: false,
+          border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 16),
+          suffixIcon: suffixIcon,
+          isDense: true,
         ),
-    ]);
+      ),
+    );
   }
 
   // ─── 主表单 ────────────────────────────────────────────────────
@@ -504,19 +487,18 @@ class _LoginPageState extends ConsumerState<LoginPage>
         children: [
           _buildHttpsToggle(primaryColor),
           const SizedBox(width: 10),
-          Expanded(
-            child: _buildTextField(
-              controller: addressController,
-              errorText: addressError,
-              labelText: l10n.addressOrHost,
-              icon: Icons.language_outlined,
-              primaryColor: primaryColor,
-              textInputAction: TextInputAction.next,
-              onChanged: (_) => setState(() => _validateAddress()),
-            ),
-          ),
+          Expanded(child: _buildTextField(
+            controller: addressController,
+            errorText: null,
+            labelText: l10n.addressOrHost,
+            icon: Icons.language_outlined,
+            primaryColor: primaryColor,
+            textInputAction: TextInputAction.next,
+            onChanged: (_) => setState(() => _validateAddress()),
+          )),
         ],
       ),
+      if (addressError != null) _errorRow(addressError!),
       const SizedBox(height: 10),
       // 忽略证书
       _buildIgnoreCertToggle(primaryColor),
@@ -531,6 +513,7 @@ class _LoginPageState extends ConsumerState<LoginPage>
         textInputAction: TextInputAction.next,
         onChanged: (_) => setState(() => _validateUsername()),
       ),
+      if (usernameError != null) _errorRow(usernameError!),
       const SizedBox(height: 10),
       // 密码
       _buildTextField(
@@ -551,11 +534,25 @@ class _LoginPageState extends ConsumerState<LoginPage>
           onPressed: () => setState(() => obscurePassword = !obscurePassword),
         ),
       ),
+      if (passwordError != null) _errorRow(passwordError!),
       const SizedBox(height: 16),
       // 登录按钮（渐变色大按钮）
       _buildLoginButton(primaryColor),
     ]);
   }
+
+  Widget _errorRow(String msg) => Padding(
+        padding: const EdgeInsets.only(left: 4, top: 5),
+        child: Row(children: [
+          Icon(Icons.error_outline, size: 13, color: Colors.redAccent.withValues(alpha: 0.80)),
+          const SizedBox(width: 4),
+          Text(msg,
+              style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.redAccent.withValues(alpha: 0.80),
+                  fontWeight: FontWeight.w500)),
+        ]),
+      );
 
   Widget _buildLoginButton(Color primaryColor) {
     return Container(
