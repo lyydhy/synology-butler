@@ -476,6 +476,12 @@ abstract class AppLocalizations {
   /// **'删除'**
   String get deleteConfirm;
 
+  /// No description provided for @deleteConfirmHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'确定删除 {name} 吗？'**
+  String deleteConfirmHint(Object name);
+
   /// No description provided for @deleteSuccess.
   ///
   /// In zh, this message translates to:
@@ -1172,6 +1178,18 @@ abstract class AppLocalizations {
   /// **'快速登录'**
   String get quickLogin;
 
+  /// No description provided for @enterPasswordToLogin.
+  ///
+  /// In zh, this message translates to:
+  /// **'输入密码即可登录'**
+  String get enterPasswordToLogin;
+
+  /// No description provided for @addDevice.
+  ///
+  /// In zh, this message translates to:
+  /// **'添加设备'**
+  String get addDevice;
+
   /// No description provided for @done.
   ///
   /// In zh, this message translates to:
@@ -1259,8 +1277,8 @@ abstract class AppLocalizations {
   /// No description provided for @loginToNas.
   ///
   /// In zh, this message translates to:
-  /// **'登录到 NAS'**
-  String get loginToNas;
+  /// **'登录到 {name}'**
+  String loginToNas(Object name);
 
   /// No description provided for @loginToNasHint.
   ///

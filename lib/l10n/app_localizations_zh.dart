@@ -198,6 +198,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get deleteConfirm => '删除';
 
   @override
+  String deleteConfirmHint(Object name) {
+    return '确定删除 $name 吗？';
+  }
+
+  @override
   String get deleteSuccess => '删除成功';
 
   @override
@@ -554,6 +559,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get quickLogin => '快速登录';
 
   @override
+  String get enterPasswordToLogin => '输入密码即可登录';
+
+  @override
+  String get addDevice => '添加设备';
+
+  @override
   String get done => '完成';
 
   @override
@@ -596,7 +607,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get quickReloginHint => '有历史记录时优先显示这个界面，减少输入内容。';
 
   @override
-  String get loginToNas => '登录到 NAS';
+  String loginToNas(Object name) {
+    return '登录到 $name';
+  }
 
   @override
   String get loginToNasHint => '支持局域网 IP、域名和端口。';

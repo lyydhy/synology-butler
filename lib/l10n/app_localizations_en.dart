@@ -199,6 +199,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deleteConfirm => 'Delete';
 
   @override
+  String deleteConfirmHint(Object name) {
+    return 'Delete $name?';
+  }
+
+  @override
   String get deleteSuccess => 'Deleted successfully';
 
   @override
@@ -559,6 +564,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quickLogin => 'Quick Login';
 
   @override
+  String get enterPasswordToLogin => 'Enter password to sign in';
+
+  @override
+  String get addDevice => 'Add Device';
+
+  @override
   String get done => 'Done';
 
   @override
@@ -603,7 +614,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Show this interface when history is available to reduce input.';
 
   @override
-  String get loginToNas => 'Login to NAS';
+  String loginToNas(Object name) {
+    return 'Login to $name';
+  }
 
   @override
   String get loginToNasHint => 'Supports LAN IP, domain and port.';
