@@ -554,18 +554,6 @@ class _LoginPageState extends ConsumerState<LoginPage>
       const SizedBox(height: 16),
       // 登录按钮（渐变色大按钮）
       _buildLoginButton(primaryColor),
-      const SizedBox(height: 8),
-      // 历史登录设备按钮
-      TextButton.icon(
-        onPressed: () => context.push('/servers'),
-        icon: const Icon(Icons.history_rounded, size: 18),
-        label: Text(l10n.historyDevices),
-        style: TextButton.styleFrom(
-          foregroundColor: primaryColor.withValues(alpha: 0.70),
-          padding: const EdgeInsets.symmetric(vertical: 13),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        ),
-      ),
     ]);
   }
 
@@ -710,6 +698,15 @@ class _LoginPageState extends ConsumerState<LoginPage>
                         const Spacer(),
                         if (savedServers.isNotEmpty && widget.initialServer == null) ...[
                           const SizedBox(height: 12),
+                          TextButton.icon(
+                            onPressed: () => context.push('/servers'),
+                            icon: Icon(Icons.history_rounded,
+                                color: primaryColor.withValues(alpha: 0.70), size: 18),
+                            label: Text(l10n.historyDevices,
+                                style: TextStyle(
+                                    color: primaryColor.withValues(alpha: 0.70),
+                                    fontWeight: FontWeight.w600)),
+                          ),
                         ],
                       ]),
                     ),
