@@ -1,29 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 
-import '../../core/constants/app_constants.dart';
 import '../../core/network/app_dio.dart';
 import '../../core/utils/dsm_logger.dart';
-import '../../domain/entities/file_service.dart';
-import '../../domain/entities/shared_folder.dart';
-import '../models/shared_folder_model.dart';
-import '../../domain/entities/power_schedule_task.dart';
-import '../../domain/entities/power_status.dart';
-import '../../domain/entities/terminal_settings.dart';
-import '../../domain/entities/upgrade_status.dart';
-import '../models/dsm_group_model.dart';
-import '../models/dsm_user_model.dart';
-import '../models/external_access_model.dart';
-import '../models/file_service_model.dart';
-import '../models/index_service_model.dart';
 import '../models/information_center_model.dart';
-import '../models/shared_folder_model.dart';
 import '../models/system_status_model.dart';
-import '../models/task_scheduler_model.dart';
 
 abstract class SystemApi {
   Future<SystemStatusModel> fetchOverview();
@@ -701,10 +684,10 @@ class DsmSystemApi implements SystemApi {
     final days = seconds ~/ 86400;
     final hours = (seconds % 86400) ~/ 3600;
     final minutes = (seconds % 3600) ~/ 60;
-    if (days > 0) return '${days}天 ${hours}小时';
-    if (hours > 0) return '${hours}小时 ${minutes}分钟';
-    if (minutes > 0) return '${minutes}分钟';
-    return '${seconds}秒';
+    if (days > 0) return '$days天 $hours小时';
+    if (hours > 0) return '$hours小时 $minutes分钟';
+    if (minutes > 0) return '$minutes分钟';
+    return '$seconds秒';
   }
 
   String? _resolveSystemTime(Map timeData) {
@@ -867,14 +850,4 @@ class DsmSystemApi implements SystemApi {
 
     return 0;
   }
-}
-
-class _PollingState {
-  final String engineSid;
-  final String? cookieHeader;
-
-  const _PollingState({
-    required this.engineSid,
-    this.cookieHeader,
-  });
 }

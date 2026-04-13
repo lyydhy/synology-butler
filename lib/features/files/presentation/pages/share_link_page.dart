@@ -245,6 +245,7 @@ class _ShareLinkPageState extends ConsumerState<ShareLinkPage> {
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Image.memory(
+                              // ignore: prefer_const_constructors
                               Base64Decoder().convert(_link!.qrcode!.split(',').last),
                               width: 160,
                               height: 160,
@@ -294,8 +295,8 @@ class _ShareLinkPageState extends ConsumerState<ShareLinkPage> {
                       TextField(
                         controller: _expireTimesController,
                         keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
-                          border: const OutlineInputBorder(),
+                        decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
                           hintText: '0',
                         ),
                       ),

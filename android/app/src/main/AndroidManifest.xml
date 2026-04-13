@@ -1,4 +1,5 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <!-- 核心网络权限 -->
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- 可选：允许访问网络状态（帮助排查网络问题） -->
@@ -67,11 +68,20 @@
             android:name="flutterEmbedding"
             android:value="2" />
 
-        <!-- 下载前台服务 -->
+        <!-- flutter_local_notifications 前台服务 -->
         <service
             android:name="com.dexterous.flutterlocalnotifications.ForegroundService"
             android:exported="false"
-            android:foregroundServiceType="dataSync" />
+            android:foregroundServiceType="dataSync"
+            tools:node="merge" />
+
+        <!-- background_downloader UIDT前台服务 (Android 14+，priority=0时使用) -->
+        <service
+            android:name="com.bbflight.background_downloader.UIDTJobService"
+            android:permission="android.permission.BIND_JOB_SERVICE"
+            android:exported="true"
+            android:foregroundServiceType="dataSync"
+            tools:node="merge" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

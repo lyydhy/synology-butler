@@ -305,7 +305,7 @@ class _AppLogsPageState extends State<AppLogsPage> {
                       children: [
                         const Icon(Icons.error_outline, size: 40),
                         const SizedBox(height: 12),
-                        Text(l10n.logCenterLoadFailed, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                        Text(l10n.logCenterLoadFailed, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
                         const SizedBox(height: 8),
                         Text(errorMessage!, textAlign: TextAlign.center),
                         const SizedBox(height: 16),

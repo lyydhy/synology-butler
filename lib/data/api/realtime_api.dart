@@ -608,8 +608,8 @@ class DsmRealtimeApi implements RealtimeApi {
     final total = disk['total'] as Map?;
     if (total != null) {
       return {
-        'read_bytes_per_second': _toDouble(total['read_byte']) ?? 0,
-        'write_bytes_per_second': _toDouble(total['write_byte']) ?? 0,
+        'read_bytes_per_second': _toDouble(total['read_byte']),
+        'write_bytes_per_second': _toDouble(total['write_byte']),
       };
     }
     // Fallback: sum from individual disks
@@ -636,13 +636,13 @@ class DsmRealtimeApi implements RealtimeApi {
         .map(
           (item) => DiskStatusModel(
             name: (item['display_name'] ?? item['name'] ?? item['device'] ?? item['diskno'] ?? '').toString(),
-            utilization: _toDouble(item['utilization']) ?? 0,
+            utilization: _toDouble(item['utilization']),
             readBytesPerSecond:
-                _toDouble(item['read_byte'] ?? item['read_bytes_per_second']) ?? 0,
+                _toDouble(item['read_byte'] ?? item['read_bytes_per_second']),
             writeBytesPerSecond:
-                _toDouble(item['write_byte'] ?? item['write_bytes_per_second']) ?? 0,
-            readIops: _toDouble(item['read_access'] ?? item['read_iops']) ?? 0,
-            writeIops: _toDouble(item['write_access'] ?? item['write_iops']) ?? 0,
+                _toDouble(item['write_byte'] ?? item['write_bytes_per_second']),
+            readIops: _toDouble(item['read_access'] ?? item['read_iops']),
+            writeIops: _toDouble(item['write_access'] ?? item['write_iops']),
           ),
         )
         .toList();

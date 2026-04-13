@@ -4,6 +4,18 @@
 -keep class io.flutter.plugin.** { *; }
 -dontwarn io.flutter.**
 
+# flutter_local_notifications - keep TypeToken generic signatures for R8
+-keep class com.dexterous.flutterlocalnotifications.** { *; }
+-keep class com.google.gson.** { *; }
+-keep class * implements com.google.gson.TypeAdapterFactory
+-keep class * implements com.google.gson.JsonSerializer
+-keep class * implements com.google.gson.JsonDeserializer
+-keepclassmembers,allowobfuscation class * {
+  @com.google.gson.annotations.SerializedName <fields>;
+}
+-keep,allowobfuscation,allowshrinking class com.google.gson.reflect.TypeToken
+-keep,allowobfuscation,allowshrinking class * extends com.google.gson.reflect.TypeToken
+
 # Keep MethodChannel / plugin reflection entry points
 -keep class * extends io.flutter.embedding.engine.plugins.FlutterPlugin { *; }
 -keep class * implements io.flutter.plugin.common.MethodChannel$MethodCallHandler { *; }

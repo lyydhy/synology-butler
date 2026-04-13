@@ -5,10 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
-import '../core/utils/l10n.dart';
-import '../core/utils/toast.dart';
-import '../core/constants/app_constants.dart';
-import '../core/services/download_notification_service.dart';
 import '../domain/entities/transfer_task.dart';
 import '../features/auth/presentation/providers/auth_providers.dart';
 import '../features/dashboard/presentation/providers/dashboard_realtime_global.dart';
@@ -67,38 +63,8 @@ class _QunhuiManagerAppState extends ConsumerState<QunhuiManagerApp> {
   }
 
   void _handleDownloadCompleted(DownloadCompletedEvent event) {
-    if (!mounted) return;
-    final context = appNavigatorKey.currentContext;
-    if (context == null) return;
-
-    // 显示系统通知
-    DownloadNotificationService().showCompleted(
-      taskId: event.taskId,
-      fileName: event.fileName,
-      filePath: event.filePath,
-    );
-
-    // 显示 SnackBar
-    final messenger = ScaffoldMessenger.of(context);
-    messenger.hideCurrentSnackBar();
-    messenger.showSnackBar(
-      SnackBar(
-        duration: const Duration(seconds: AppConstants.snackBarDurationSeconds),
-        content: Text(l10n.downloadTaskComplete(event.fileName)),
-        action: SnackBarAction(
-          label: l10n.open,
-          onPressed: () async {
-            try {
-              // TODO: 打开文件
-              // await FileLauncher.open(event.filePath);
-            } catch (e) {
-              if (!mounted) return;
-              Toast.error(e.toString());
-            }
-          },
-        ),
-      ),
-    );
+    // bd 插件会自动显示通知，这里无需额外处理
+    // 事件保留用于其他依赖完成状态的逻辑
   }
 
   @override

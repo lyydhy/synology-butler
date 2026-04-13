@@ -615,6 +615,7 @@ class DsmFileStationApi implements FileStationApi {
   }
 
   /// 编辑分享链接（修改有效期等）
+  @override
   Future<void> editShareLink({
     required String shareId,
     required String url,
