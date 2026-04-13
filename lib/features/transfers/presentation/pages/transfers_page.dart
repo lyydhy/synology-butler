@@ -267,8 +267,11 @@ class _TransferTaskCardState extends ConsumerState<_TransferTaskCard> {
                       case 'open_dir':
                         final parent = File(task.targetPath).parent.path;
                         try {
-                          await FileLauncher.open(parent);
-                        } catch (_) {
+                          final success = await FileLauncher.openDirectory(parent);
+                          if (!success && context.mounted) {
+                            Toast.show(l10n.directory(parent));
+                          }
+                        } catch (e) {
                           if (context.mounted) {
                             Toast.show(l10n.directory(parent));
                           }
@@ -280,7 +283,7 @@ class _TransferTaskCardState extends ConsumerState<_TransferTaskCard> {
                     PopupMenuItem(value: 'toggle', child: Text(expanded ? l10n.collapseDetails : l10n.viewDetails)),
                     if (task.status == TransferTaskStatus.success && task.type == TransferTaskType.download)
                       PopupMenuItem(value: 'open', child: Text(l10n.open)),
-                    if (task.status == TransferTaskStatus.success && task.type == TransferTaskType.download)
+                    if (task.status == TransferTaskStatus.success && task.type == TransferTaskType.download && FileLauncher.supportsOpenDirectory)
                       PopupMenuItem(value: 'open_dir', child: Text(l10n.openDirectory)),
                     if (task.status == TransferTaskStatus.failed)
                       PopupMenuItem(value: 'retry', child: Text(l10n.retry)),
@@ -381,13 +384,16 @@ class _TransferTaskCardState extends ConsumerState<_TransferTaskCard> {
                       icon: const Icon(Icons.open_in_new_rounded),
                       label: Text(l10n.open),
                     ),
-                  if (task.status == TransferTaskStatus.success && task.type == TransferTaskType.download)
+                  if (task.status == TransferTaskStatus.success && task.type == TransferTaskType.download && FileLauncher.supportsOpenDirectory)
                     OutlinedButton.icon(
                       onPressed: () async {
                         final parent = File(task.targetPath).parent.path;
                         try {
-                          await FileLauncher.open(parent);
-                        } catch (_) {
+                          final success = await FileLauncher.openDirectory(parent);
+                          if (!success && context.mounted) {
+                            Toast.show(l10n.directory(parent));
+                          }
+                        } catch (e) {
                           if (context.mounted) {
                             Toast.show(l10n.directory(parent));
                           }

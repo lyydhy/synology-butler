@@ -69,7 +69,7 @@ class TransferController extends StateNotifier<List<TransferTask>> {
   }
 
   /// background_downloader 任务状态回调
-  void _onBgrStatus(TaskStatusUpdate update) {
+  Future<void> _onBgrStatus(TaskStatusUpdate update) async {
     final task = update.task;
     // 找到我们对应的任务 ID
     final ourId = _bdTaskMap.entries
@@ -83,7 +83,14 @@ class TransferController extends StateNotifier<List<TransferTask>> {
         _update(ourId, status: TransferTaskStatus.running, forcePersist: true);
         break;
       case TaskStatus.complete:
-        _update(ourId, status: TransferTaskStatus.success, progress: 1, forcePersist: true);
+        // 验证文件是否存在
+        final task = state.firstWhere((t) => t.id == ourId, orElse: () => throw StateError('Task not found'));
+        final file = File(task.targetPath);
+        if (await file.exists()) {
+          _update(ourId, status: TransferTaskStatus.success, progress: 1, forcePersist: true);
+        } else {
+          _update(ourId, status: TransferTaskStatus.failed, progress: 1, errorMessage: '文件未找到，可能下载失败', forcePersist: true);
+        }
         break;
       case TaskStatus.canceled:
         _update(ourId, status: TransferTaskStatus.failed, progress: 1, errorMessage: '下载已取消', forcePersist: true);
