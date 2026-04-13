@@ -39,13 +39,12 @@ class _VideoPreviewPageState extends State<VideoPreviewPage> {
   }
 
   String get _streamUrl {
-    // 使用 DSM 的 /fbdownload/ 端点进行流媒体播放（与 dsm_helper 保持一致）
-    // 格式: /fbdownload/{filename}?dlink={path}&_sid={sid}&mode=open
-    // dlink 参数使用 UTF-8 十六进制编码，并用引号包裹
-    final encodedName = Uri.encodeComponent(widget.name);
+    // 使用 DSM 的 /fbdownload/ 端点（与 dsm_helper 完全一致）
+    // dsm_helper: /fbdownload/${file['name']}?dlink=%22${Util.utf8Encode(file['path'])}%22&_sid=%22${Util.sid}%22&mode=open
     final encodedDlink = '%22${_utf8Encode(widget.path)}%22';
     final sid = widget.sid ?? '';
-    final url = '${widget.baseUrl}/fbdownload/$encodedName?dlink=$encodedDlink&_sid=%22$sid%22&mode=open';
+    // 注意：dsm_helper 中 filename 没有用 Uri.encodeComponent
+    final url = '${widget.baseUrl}/fbdownload/${widget.name}?dlink=$encodedDlink&_sid=%22$sid%22&mode=open';
     debugPrint('[VideoPreview] streamUrl: $url');
     return url;
   }
