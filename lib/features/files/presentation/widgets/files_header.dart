@@ -33,52 +33,38 @@ class FilesHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    
     final theme = Theme.of(context);
 
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.10)),
-      ),
+      padding: const EdgeInsets.fromLTRB(4, 8, 4, 4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // 第一行：返回 + 标题 + 排序 + 操作菜单
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(14),
+              if (canGoUp)
+                IconButton(
+                  tooltip: l10n.goParent,
+                  onPressed: onGoUp,
+                  icon: const Icon(Icons.arrow_back_rounded),
                 ),
-                child: Icon(Icons.folder_open_rounded, color: theme.colorScheme.primary),
-              ),
-              const SizedBox(width: 12),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      path,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodySmall,
-                    ),
-                  ],
+                child: Text(
+                  title,
+                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+                  overflow: TextOverflow.ellipsis,
                 ),
+              ),
+              // 排序切换
+              _SortChip(
+                sort: sort,
+                onSortSelected: onSortSelected,
               ),
               if (showActionMenu)
                 PopupMenuButton<String>(
-                  icon: const Icon(Icons.more_horiz_rounded),
+                  icon: const Icon(Icons.more_vert_rounded),
+                  tooltip: l10n.moreActions,
                   onSelected: (value) {
                     switch (value) {
                       case 'upload':
@@ -86,12 +72,6 @@ class FilesHeader extends StatelessWidget {
                         break;
                       case 'create_folder':
                         onCreateFolder();
-                        break;
-                      case 'sort_name':
-                        onSortSelected('name');
-                        break;
-                      case 'sort_size':
-                        onSortSelected('size');
                         break;
                       case 'refresh':
                         onRefresh();
@@ -102,26 +82,90 @@ class FilesHeader extends StatelessWidget {
                     PopupMenuItem(value: 'upload', child: Text(l10n.uploadFile)),
                     PopupMenuItem(value: 'create_folder', child: Text(l10n.createFolder)),
                     const PopupMenuDivider(),
-                    PopupMenuItem(value: 'sort_name', child: Text(l10n.sortByName)),
-                    PopupMenuItem(value: 'sort_size', child: Text(l10n.sortBySize)),
-                    const PopupMenuDivider(),
-                    PopupMenuItem(value: 'refresh', child: Text(l10n.retry)),
+                    PopupMenuItem(value: 'refresh', child: Text(l10n.refresh)),
                   ],
+                )
+              else
+                IconButton(
+                  tooltip: l10n.refresh,
+                  onPressed: onRefresh,
+                  icon: const Icon(Icons.refresh_rounded),
                 ),
             ],
           ),
-          const SizedBox(height: 14),
+          // 第二行：面包屑路径
           PathBreadcrumb(path: path, onTapSegment: onTapSegment),
-          if (canGoUp) ...[
-            const SizedBox(height: 10),
-            TextButton.icon(
-              onPressed: onGoUp,
-              icon: const Icon(Icons.arrow_upward_rounded),
-              label: Text(l10n.goParent),
-            ),
-          ],
         ],
       ),
+    );
+  }
+}
+
+/// 排序方式选择器，紧凑胶囊形态。
+class _SortChip extends StatelessWidget {
+  const _SortChip({required this.sort, required this.onSortSelected});
+
+  final String sort;
+  final ValueChanged<String> onSortSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return PopupMenuButton<String>(
+      initialValue: sort,
+      onSelected: onSortSelected,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              sort == 'size' ? Icons.straighten_rounded : Icons.sort_by_alpha_rounded,
+              size: 16,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              sort == 'size' ? l10n.sortBySize : l10n.sortByName,
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            Icon(
+              Icons.arrow_drop_down_rounded,
+              size: 18,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ],
+        ),
+      ),
+      itemBuilder: (context) => [
+        PopupMenuItem(
+          value: 'name',
+          child: Row(
+            children: [
+              Icon(Icons.sort_by_alpha_rounded, size: 18, color: sort == 'name' ? theme.colorScheme.primary : null),
+              const SizedBox(width: 8),
+              Text(l10n.sortByName),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: 'size',
+          child: Row(
+            children: [
+              Icon(Icons.straighten_rounded, size: 18, color: sort == 'size' ? theme.colorScheme.primary : null),
+              const SizedBox(width: 8),
+              Text(l10n.sortBySize),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

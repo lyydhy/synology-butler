@@ -593,6 +593,26 @@ class _FilesPageState extends ConsumerState<FilesPage> {
                 ),
               )
             : null,
+        floatingActionButton: isDirectoryPickerMode
+            ? null
+            : Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  FloatingActionButton.small(
+                    heroTag: 'fab_create_folder',
+                    onPressed: () => actions.showCreateFolderDialog(context, ref, _currentPath),
+                    tooltip: l10n.createFolder,
+                    child: const Icon(Icons.create_new_folder_outlined),
+                  ),
+                  const SizedBox(height: 8),
+                  FloatingActionButton(
+                    heroTag: 'fab_upload',
+                    onPressed: () => actions.showUploadDialog(context, ref, _currentPath, _pickSingleFile),
+                    tooltip: l10n.uploadFile,
+                    child: const Icon(Icons.upload_rounded),
+                  ),
+                ],
+              ),
       ),
     );
   }
