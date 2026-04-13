@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -22,7 +21,8 @@ class LoginPage extends ConsumerStatefulWidget {
   ConsumerState<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends ConsumerState<LoginPage> {
+class _LoginPageState extends ConsumerState<LoginPage>
+    with SingleTickerProviderStateMixin {
   final addressController = TextEditingController();
   final usernameController = TextEditingController();
   final passwordController = TextEditingController();
@@ -40,15 +40,30 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   String? selectedServerId;
 
   bool _autofilled = false;
+  late final AnimationController _animController;
+  late final Animation<double> _fadeAnim;
+  late final Animation<Offset> _slideAnim;
 
   @override
   void initState() {
     super.initState();
+    _animController = AnimationController(
+      duration: const Duration(milliseconds: 700),
+      vsync: this,
+    );
+    _fadeAnim = CurvedAnimation(parent: _animController, curve: Curves.easeOutCubic);
+    _slideAnim = Tween<Offset>(
+      begin: const Offset(0, 0.12),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _animController, curve: Curves.easeOutCubic));
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || _autofilled) return;
       _autofilled = true;
       _autofillFromHistory();
     });
+
+    _animController.forward();
   }
 
   void _autofillFromHistory() {
@@ -249,7 +264,60 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     );
   }
 
-  // ─── HTTP/HTTPS 切换（高度与 TextField 对齐） ─────────────────
+  // ─── 顶部品牌区 ──────────────────────────────────────────────
+  Widget _buildHeader(Color primaryColor) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(8, 16, 8, 28),
+      child: Column(children: [
+        // Logo 圆角方块
+        Container(
+          width: 72,
+          height: 72,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(22),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                primaryColor.withValues(alpha: 0.85),
+                primaryColor.withValues(alpha: 0.55),
+              ],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: primaryColor.withValues(alpha: 0.30),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: const Icon(Icons.cloud_outlined, color: Colors.white, size: 36),
+        ),
+        const SizedBox(height: 18),
+        Text(
+          '群晖管家',
+          style: TextStyle(
+            fontSize: 26,
+            fontWeight: FontWeight.w900,
+            letterSpacing: -0.5,
+            color: primaryColor,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          l10n.loginDsm,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w400,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ]),
+    );
+  }
+
+  // ─── HTTP/HTTPS 切换 ──────────────────────────────────────────
   Widget _buildHttpsToggle(Color primaryColor) {
     final label = https ? 'HTTPS' : 'HTTP';
     final color = https ? primaryColor : Colors.orange.shade700;
@@ -260,68 +328,76 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       }),
       child: Container(
         height: 56,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 14),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.10),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: color.withValues(alpha: 0.30)),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withValues(alpha: 0.28)),
         ),
         child: Row(mainAxisSize: MainAxisSize.min, children: [
           Icon(https ? Icons.lock_outline : Icons.lock_open_outlined, color: color, size: 18),
-          const SizedBox(width: 6),
-          Text(label, style: TextStyle(fontWeight: FontWeight.w700, color: color, fontSize: 14)),
+          const SizedBox(width: 7),
+          Text(label, style: TextStyle(fontWeight: FontWeight.w800, color: color, fontSize: 14)),
         ]),
       ),
     );
   }
 
-  // ─── 忽略证书选项 ─────────────────────────────────────────────
+  // ─── 忽略证书 ─────────────────────────────────────────────────
   Widget _buildIgnoreCertToggle(Color primaryColor) {
     final enabled = https;
     return GestureDetector(
       onTap: enabled ? () => setState(() => ignoreBadCertificate = !ignoreBadCertificate) : null,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-          borderRadius: BorderRadius.circular(14),
+          color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: enabled
-                ? (ignoreBadCertificate ? primaryColor.withValues(alpha: 0.30) : Colors.black.withValues(alpha: 0.06))
+                ? (ignoreBadCertificate ? primaryColor.withValues(alpha: 0.28) : Colors.black.withValues(alpha: 0.05))
                 : Colors.transparent,
           ),
         ),
         child: Row(children: [
           Icon(
             Icons.security_outlined,
-            color: enabled ? (ignoreBadCertificate ? primaryColor : Colors.grey.shade600) : Colors.grey.shade400,
-            size: 18,
+            color: enabled
+                ? (ignoreBadCertificate ? primaryColor : Theme.of(context).colorScheme.onSurfaceVariant)
+                : Colors.grey.shade400,
+            size: 19,
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 10),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.ignoreSslCert,
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: enabled ? null : Colors.grey.shade400),
-                ),
-                Text(l10n.httpsOnly, style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurfaceVariant)),
-              ],
-            ),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(
+                l10n.ignoreSslCert,
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600,
+                    color: enabled ? null : Colors.grey.shade400),
+              ),
+              Text(l10n.httpsOnly,
+                  style: TextStyle(fontSize: 11,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant)),
+            ]),
           ),
           Container(
-            width: 40,
-            height: 22,
+            width: 42,
+            height: 24,
             decoration: BoxDecoration(
               color: ignoreBadCertificate ? primaryColor : Colors.grey.shade300,
-              borderRadius: BorderRadius.circular(11),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: AnimatedAlign(
               duration: const Duration(milliseconds: 180),
               alignment: ignoreBadCertificate ? Alignment.centerRight : Alignment.centerLeft,
-              child: Container(width: 18, height: 18, margin: const EdgeInsets.symmetric(horizontal: 2),
-                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(9)),
+              child: Container(
+                width: 20,
+                height: 20,
+                margin: const EdgeInsets.symmetric(horizontal: 2),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
             ),
           ),
@@ -330,152 +406,202 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     );
   }
 
+  // ─── 输入字段 ─────────────────────────────────────────────────
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String? errorText,
+    required String labelText,
+    required IconData icon,
+    required Color primaryColor,
+    bool obscureText = false,
+    Widget? suffixIcon,
+    VoidCallback? onTap,
+    ValueChanged<String>? onChanged,
+    TextInputAction? textInputAction,
+  }) {
+    final hasError = errorText != null;
+    final theme = Theme.of(context);
+
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Container(
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: hasError
+                ? Colors.redAccent.withValues(alpha: 0.60)
+                : (errorText == null && controller.text.isNotEmpty
+                    ? primaryColor.withValues(alpha: 0.30)
+                    : Colors.black.withValues(alpha: 0.05)),
+            width: hasError ? 1.3 : 1,
+          ),
+        ),
+        child: TextField(
+          controller: controller,
+          obscureText: obscureText,
+          onTap: onTap,
+          onChanged: onChanged,
+          textInputAction: textInputAction,
+          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+          decoration: InputDecoration(
+            labelText: labelText,
+            labelStyle: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: hasError
+                  ? Colors.redAccent
+                  : theme.colorScheme.onSurfaceVariant,
+            ),
+            prefixIcon: Container(
+              margin: const EdgeInsets.only(left: 14, right: 4),
+              child: Icon(
+                icon,
+                color: hasError
+                    ? Colors.redAccent
+                    : (controller.text.isNotEmpty
+                        ? primaryColor.withValues(alpha: 0.80)
+                        : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.70)),
+                size: 20,
+              ),
+            ),
+            errorText: hasError ? errorText : null,
+            errorStyle: const TextStyle(fontSize: 11, height: 1.3),
+            filled: false,
+            border: InputBorder.none,
+            enabledBorder: InputBorder.none,
+            focusedBorder: InputBorder.none,
+            contentPadding: const EdgeInsets.fromLTRB(4, 18, 16, 18),
+            suffixIcon: suffixIcon,
+          ),
+        ),
+      ),
+    ]);
+  }
+
   // ─── 主表单 ────────────────────────────────────────────────────
   Widget _buildForm(Color primaryColor) {
     return Column(children: [
-      // HTTPS 切换 + 地址输入（同行对齐）
+      // HTTPS + 地址
       Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildHttpsToggle(primaryColor),
-          const SizedBox(width: 8),
+          const SizedBox(width: 10),
           Expanded(
-            child: TextField(
+            child: _buildTextField(
               controller: addressController,
+              errorText: addressError,
+              labelText: l10n.addressOrHost,
+              icon: Icons.language_outlined,
+              primaryColor: primaryColor,
+              textInputAction: TextInputAction.next,
               onChanged: (_) => setState(() => _validateAddress()),
-              style: const TextStyle(fontSize: 15),
-              decoration: InputDecoration(
-                labelText: l10n.addressOrHost,
-                hintText: '192.168.1.2 或 192.168.1.2:5000',
-                prefixIcon: const Icon(Icons.language_outlined),
-                errorText: addressError,
-                filled: true,
-                fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.06)),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide(color: primaryColor, width: 1.5),
-                ),
-                errorBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: const BorderSide(color: Colors.redAccent, width: 1.1),
-                ),
-                focusedErrorBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: const BorderSide(color: Colors.redAccent, width: 1.4),
-                ),
-              ),
             ),
           ),
         ],
       ),
-      const SizedBox(height: 10),
+      const SizedBox(height: 12),
       // 忽略证书
       _buildIgnoreCertToggle(primaryColor),
-      const SizedBox(height: 10),
+      const SizedBox(height: 12),
       // 用户名
-      TextField(
+      _buildTextField(
         controller: usernameController,
+        errorText: usernameError,
+        labelText: l10n.username,
+        icon: Icons.person_outline,
+        primaryColor: primaryColor,
+        textInputAction: TextInputAction.next,
         onChanged: (_) => setState(() => _validateUsername()),
-        decoration: InputDecoration(
-          labelText: l10n.username,
-          prefixIcon: const Icon(Icons.person_outline),
-          errorText: usernameError,
-          filled: true,
-          fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.06)),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: BorderSide(color: primaryColor, width: 1.5),
-          ),
-          errorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: Colors.redAccent, width: 1.1),
-          ),
-          focusedErrorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: Colors.redAccent, width: 1.4),
-          ),
-        ),
       ),
-      const SizedBox(height: 10),
+      const SizedBox(height: 12),
       // 密码
-      TextField(
+      _buildTextField(
         controller: passwordController,
+        errorText: passwordError,
+        labelText: l10n.password,
+        icon: Icons.lock_outline,
+        primaryColor: primaryColor,
         obscureText: obscurePassword,
+        textInputAction: TextInputAction.done,
         onChanged: (_) => setState(() => _validatePassword()),
-        decoration: InputDecoration(
-          labelText: l10n.password,
-          prefixIcon: const Icon(Icons.lock_outline),
-          errorText: passwordError,
-          filled: true,
-          fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.06)),
+        suffixIcon: IconButton(
+          icon: Icon(
+            obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+            color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.60),
+            size: 21,
           ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: BorderSide(color: primaryColor, width: 1.5),
-          ),
-          errorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: Colors.redAccent, width: 1.1),
-          ),
-          focusedErrorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: Colors.redAccent, width: 1.4),
-          ),
-          suffixIcon: IconButton(
-            icon: Icon(obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined),
-            onPressed: () => setState(() => obscurePassword = !obscurePassword),
-          ),
+          onPressed: () => setState(() => obscurePassword = !obscurePassword),
         ),
-        onSubmitted: (_) => isLoading ? null : login(),
       ),
-      const SizedBox(height: 16),
-      // 按钮行
-      Row(children: [
-        Expanded(
-          child: OutlinedButton.icon(
-            onPressed: isTesting ? null : testConnection,
-            icon: isTesting
-                ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                : const Icon(Icons.wifi_tethering_outlined, size: 18),
-            label: Text(isTesting ? l10n.testingConnection : l10n.testConnection),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-            ),
-          ),
+      const SizedBox(height: 22),
+      // 登录按钮（渐变色大按钮）
+      _buildLoginButton(primaryColor),
+      const SizedBox(height: 10),
+      // 测试连接按钮
+      OutlinedButton.icon(
+        onPressed: isTesting ? null : testConnection,
+        icon: isTesting
+            ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+            : const Icon(Icons.wifi_tethering_outlined, size: 18),
+        label: Text(isTesting ? l10n.testingConnection : l10n.testConnection),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: primaryColor,
+          padding: const EdgeInsets.symmetric(vertical: 13),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          side: BorderSide(color: primaryColor.withValues(alpha: 0.35), width: 1.2),
         ),
-        const SizedBox(width: 10),
-        Expanded(
-          flex: 2,
-          child: FilledButton(
-            onPressed: _canSubmit ? login : null,
-            style: FilledButton.styleFrom(
-              backgroundColor: primaryColor,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-            ),
-            child: isLoading
-                ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                : Text(l10n.loginDsm, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
-          ),
-        ),
-      ]),
+      ),
     ]);
+  }
+
+  Widget _buildLoginButton(Color primaryColor) {
+    return Container(
+      width: double.infinity,
+      height: 52,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            primaryColor,
+            primaryColor.withValues(alpha: 0.80),
+          ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: primaryColor.withValues(alpha: 0.35),
+            blurRadius: 14,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: _canSubmit ? login : null,
+          borderRadius: BorderRadius.circular(16),
+          child: Center(
+            child: isLoading
+                ? const SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(strokeWidth: 2.2, color: Colors.white),
+                  )
+                : Text(
+                    l10n.loginDsm,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 16,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+          ),
+        ),
+      ),
+    );
   }
 
   // ─── Build ────────────────────────────────────────────────────
@@ -485,48 +611,118 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     final primaryColor = seedColorFor(themeColorOption);
     final savedServers = ref.watch(savedServersProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark
+        ? const Color(0xFF0F0F1A)
+        : const Color(0xFFE8ECF4);
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF0F2F7),
+      backgroundColor: bgColor,
       resizeToAvoidBottomInset: true,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        systemOverlayStyle: isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
-        title: Text(
-          widget.initialServer != null ? l10n.loginToNas(widget.initialServer!.name) : l10n.loginDsm,
-          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 20, color: primaryColor),
-        ),
-        centerTitle: true,
-        leading: widget.initialServer != null
-            ? IconButton(onPressed: () => context.pushReplacement('/servers'), icon: const Icon(Icons.arrow_back))
-            : null,
-      ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(18, 8, 18, 24),
-          child: Column(children: [
-            _buildStatusBanner(),
-            Expanded(child: SingleChildScrollView(child: _buildForm(primaryColor))),
-            if (savedServers.isNotEmpty && widget.initialServer == null) ...[
-              const SizedBox(height: 12),
-              Center(
-                child: TextButton.icon(
-                  onPressed: () => context.push('/servers'),
-                  icon: Icon(Icons.history_rounded, color: primaryColor.withValues(alpha: 0.7), size: 18),
-                  label: Text(l10n.historyDevices, style: TextStyle(color: primaryColor.withValues(alpha: 0.7))),
-                ),
+      body: Stack(children: [
+        // 背景装饰圆
+        Positioned(
+          top: -80,
+          right: -60,
+          child: Container(
+            width: 260,
+            height: 260,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: RadialGradient(
+                colors: [
+                  primaryColor.withValues(alpha: 0.14),
+                  primaryColor.withValues(alpha: 0.0),
+                ],
               ),
-            ],
-          ]),
+            ),
+          ),
         ),
-      ),
+        Positioned(
+          bottom: -40,
+          left: -80,
+          child: Container(
+            width: 220,
+            height: 220,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: RadialGradient(
+                colors: [
+                  primaryColor.withValues(alpha: 0.10),
+                  primaryColor.withValues(alpha: 0.0),
+                ],
+              ),
+            ),
+          ),
+        ),
+        // 主内容
+        SafeArea(
+          child: FadeTransition(
+            opacity: _fadeAnim,
+            child: SlideTransition(
+              position: _slideAnim,
+              child: CustomScrollView(
+                slivers: [
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
+                      child: Column(children: [
+                        _buildHeader(primaryColor),
+                        // 表单卡片
+                        Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? const Color(0xFF1C1C28)
+                                : Colors.white,
+                            borderRadius: BorderRadius.circular(24),
+                            boxShadow: [
+                              BoxShadow(
+                                color: isDark
+                                    ? Colors.black.withValues(alpha: 0.40)
+                                    : Colors.black.withValues(alpha: 0.08),
+                                blurRadius: 24,
+                                offset: const Offset(0, 8),
+                              ),
+                            ],
+                          ),
+                          child: Column(children: [
+                            if (errorText != null || infoText != null)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 14),
+                                child: _buildStatusBanner(),
+                              ),
+                            _buildForm(primaryColor),
+                          ]),
+                        ),
+                        const Spacer(),
+                        if (savedServers.isNotEmpty && widget.initialServer == null) ...[
+                          const SizedBox(height: 20),
+                          TextButton.icon(
+                            onPressed: () => context.push('/servers'),
+                            icon: Icon(Icons.history_rounded,
+                                color: primaryColor.withValues(alpha: 0.65), size: 18),
+                            label: Text(l10n.historyDevices,
+                                style: TextStyle(
+                                    color: primaryColor.withValues(alpha: 0.65),
+                                    fontWeight: FontWeight.w600)),
+                          ),
+                        ],
+                      ]),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ]),
     );
   }
 
   @override
   void dispose() {
+    _animController.dispose();
     addressController.dispose();
     usernameController.dispose();
     passwordController.dispose();
