@@ -55,8 +55,8 @@ class _VideoPreviewPageState extends State<VideoPreviewPage> {
       'accept-language': 'zh-CN,zh;q=0.9',
       'cache-control': 'no-cache',
       'pragma': 'no-cache',
-      // range 用于支持断点续传/流式播放
-      'range': 'bytes=0-',
+      // 注意：不要加 range header！加了会导致 DSM 返回 206 而不返回 Content-Length，
+      // 播放器获取不到总时长，手势Seek会失效（_onDoubleTap 里 newPosition > duration 会 return）
       // referer 包含 launchApp 参数，NAS 需要这个来识别为视频播放器
       'referer': '${widget.baseUrl}/?launchApp=SYNO.SDS.VideoPlayer2.Application&SynoToken=${widget.synoToken ?? ''}',
       'user-agent': 'Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36',
