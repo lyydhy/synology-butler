@@ -440,49 +440,6 @@ class _SettingsStaticTile extends StatelessWidget {
   }
 }
 
-class _SettingsDropdownTile<T> extends StatelessWidget {
-  const _SettingsDropdownTile({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.value,
-    required this.items,
-    required this.onChanged,
-  });
-
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final T value;
-  final List<DropdownMenuItem<T>> items;
-  final ValueChanged<T?> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-      leading: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: theme.colorScheme.primary.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Icon(icon, color: theme.colorScheme.primary),
-      ),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-      subtitle: Text(subtitle),
-      trailing: DropdownButton<T>(
-        value: value,
-        underline: const SizedBox.shrink(),
-        onChanged: onChanged,
-        items: items,
-      ),
-    );
-  }
-}
-
 class _BottomSheetOption<T> extends StatelessWidget {
   const _BottomSheetOption({
     required this.value,

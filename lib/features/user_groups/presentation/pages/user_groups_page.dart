@@ -34,7 +34,6 @@ class _UserGroupsPageState extends ConsumerState<UserGroupsPage> with SingleTick
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final usersAsync = ref.watch(usersProvider);
     final groupsAsync = ref.watch(groupsProvider);
 

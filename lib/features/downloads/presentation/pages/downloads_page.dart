@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/error/error_mapper.dart';
-import '../../../../core/utils/download_status_helper.dart';
 
 import '../../../../core/utils/l10n.dart';
 import '../../../../core/utils/toast.dart';
@@ -129,7 +128,7 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
               context: context,
               builder: (context) => AlertDialog(
                 title: Text(l10n.deleteTask),
-                content: Text('${task.title}'),
+                content: Text(task.title),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(false),
@@ -265,8 +264,6 @@ class _DownloadScaffold extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-
     return Scaffold(
       appBar: AppBar(title: Text(l10n.downloadsTitle)),
       body: Column(
@@ -450,7 +447,6 @@ class _DownloadTaskCard extends StatelessWidget {
     final isPaused = task.status == '3';
     final isFinished = task.status == '5' || task.status == '8';
     final isError = task.status == '101';
-    final isDownloading = DownloadStatusHelper.isDownloading(task.status);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),

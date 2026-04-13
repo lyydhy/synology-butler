@@ -2,9 +2,9 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
-import 'dart:typed_data';
 
 import 'package:background_downloader/background_downloader.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_constants.dart';
@@ -62,10 +62,10 @@ class TransferController extends StateNotifier<List<TransferTask>> {
     });
 
     // 启动 FileDownloader（关键！不调用则任务永远不开始）
-    print('[Download] calling FileDownloader.start()...');
+    debugPrint('[Download] calling FileDownloader.start()...');
     await FileDownloader().start();
     _bdReady = true;
-    print('[Download] FileDownloader.start() done');
+    debugPrint('[Download] FileDownloader.start() done');
   }
 
   /// background_downloader 任务状态回调
@@ -206,7 +206,7 @@ class TransferController extends StateNotifier<List<TransferTask>> {
   }) async {
     // 确保 FileDownloader 已完全启动
     if (!_bdReady) {
-      print('[Download] waiting for FileDownloader.start()...');
+      debugPrint('[Download] waiting for FileDownloader.start()...');
       while (!_bdReady) {
         await Future.delayed(const Duration(milliseconds: 100));
       }
@@ -258,7 +258,7 @@ class TransferController extends StateNotifier<List<TransferTask>> {
       retries: 3,
     );
 
-    print('[Download] bdTask taskId=${bdTask.taskId} taskType=${bdTask.taskType} url=${bdTask.url}');
+    debugPrint('[Download] bdTask taskId=${bdTask.taskId} taskType=${bdTask.taskType} url=${bdTask.url}');
 
     final task = TransferTask(
       id: id,
@@ -278,13 +278,13 @@ class TransferController extends StateNotifier<List<TransferTask>> {
     // enqueue 后 background_downloader 自动在后台下载，状态通过 stream 回调更新
     try {
       final enqueued = await FileDownloader().enqueue(bdTask);
-      print('[Download] enqueue $id → $enqueued');
+      debugPrint('[Download] enqueue $id → $enqueued');
       if (!enqueued) {
         _update(id, status: TransferTaskStatus.failed, progress: 1, errorMessage: '任务入队失败', forcePersist: true);
         return;
       }
     } catch (e) {
-      print('[Download] enqueue $id error: $e');
+      debugPrint('[Download] enqueue $id error: $e');
       _update(id, status: TransferTaskStatus.failed, progress: 1, errorMessage: '下载启动失败: $e', forcePersist: true);
       return;
     }
