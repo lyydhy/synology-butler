@@ -257,24 +257,15 @@ class TransferController extends StateNotifier<List<TransferTask>> {
       headers['X-SYNO-TOKEN'] = synoToken;
     }
 
-    // directory 必须是相对路径，不能是绝对路径
-    // 提取相对于外部存储根目录的相对路径
-    final String relativeDir;
-    if (Platform.isAndroid) {
-      // Android: 去掉外部存储的绝对路径前缀
-      relativeDir = targetDir.path.replaceFirst(RegExp(r'^/storage/emulated/\d+/'), '');
-    } else {
-      relativeDir = targetDir.path;
-    }
-
-    // 创建 background_downloader 任务（默认 GET 方法）
+    // 创建 background_downloader 任务
+    // 使用 baseDirectory 指定下载目录，由 bd 插件解析完整路径
     final bdTask = DownloadTask(
       taskId: id,
       url: downloadUrl,
       headers: headers,
       filename: displayName,
-      directory: relativeDir,
-      baseDirectory: BaseDirectory.root,
+      directory: targetDir.path,  // 使用完整绝对路径
+      baseDirectory: BaseDirectory.root,  // 配合绝对路径使用 root
       allowPause: true,
       updates: Updates.statusAndProgress,
       retries: 3,
