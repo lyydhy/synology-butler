@@ -358,10 +358,18 @@ class TransferController extends StateNotifier<List<TransferTask>> {
     final transferType = task.type == TransferTaskType.download ? TransferType.download : TransferType.upload;
     await _notificationService.cancel(id, transferType);
 
-    // 如果正在下载，标记为取消
+    // 如果正在下载，需要取消后台任务
     if (task.status == TransferTaskStatus.running || task.status == TransferTaskStatus.queued) {
-      // 删除本地临时文件
       if (task.type == TransferTaskType.download) {
+        // 取消后台下载任务
+        final bdTask = _bdTaskMap[id];
+        if (bdTask != null) {
+          try {
+            await FileDownloader().cancel(bdTask);
+          } catch (_) {}
+          _bdTaskMap.remove(id);
+        }
+        // 删除本地临时文件
         final file = File(task.targetPath);
         if (await file.exists()) {
           try {

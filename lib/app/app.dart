@@ -68,8 +68,6 @@ class _QunhuiManagerAppState extends ConsumerState<QunhuiManagerApp> {
 
   void _handleDownloadCompleted(DownloadCompletedEvent event) {
     if (!mounted) return;
-    final context = appNavigatorKey.currentContext;
-    if (context == null) return;
 
     // 显示系统通知
     DownloadNotificationService().showCompleted(
@@ -77,26 +75,7 @@ class _QunhuiManagerAppState extends ConsumerState<QunhuiManagerApp> {
       fileName: event.fileName,
       filePath: event.filePath,
     );
-
-    // 显示 SnackBar
-    final messenger = ScaffoldMessenger.of(context);
-    messenger.hideCurrentSnackBar();
-    messenger.showSnackBar(
-      SnackBar(
-        duration: const Duration(seconds: AppConstants.snackBarDurationSeconds),
-        content: Text(l10n.downloadTaskComplete(event.fileName)),
-        action: SnackBarAction(
-          label: l10n.open,
-          onPressed: () async {
-            try {
-              // TODO: 打开文件
-              // await FileLauncher.open(event.filePath);
-            } catch (e) {
-              if (!mounted) return;
-              Toast.error(e.toString());
-            }
-          },
-        ),
+  }
       ),
     );
   }
