@@ -1,4 +1,4 @@
-﻿import 'package:dio/dio.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -34,21 +34,20 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   bool https = true;
   bool ignoreBadCertificate = false;
-  bool rememberPassword = false;
   bool isLoading = false;
   bool isTesting = false;
   bool obscurePassword = true;
-  bool initialized = false;
-  bool handledExpiredMessage = false;
   String? selectedServerId;
-  String? hostValidationText;
-  String? portValidationText;
-  String? usernameValidationText;
-  String? passwordValidationText;
+  String? hostError;
+  String? portError;
+  String? usernameError;
+  String? passwordError;
   String? errorText;
   String? infoText;
   bool quickLoginEditUsername = false;
   _LoginMode loginMode = _LoginMode.manual;
+  // 用于检测服务器列表是否变化，从而决定是否重新填充初始值
+  List<String> _prevServerIds = [];
 
   @override
   void dispose() {
@@ -61,10 +60,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     super.dispose();
   }
 
-  void fillInitialValues(NasServer? server, String? savedUsername, bool hasSavedServers) {
-    if (initialized) return;
-    initialized = true;
-    loginMode = hasSavedServers ? _LoginMode.quick : _LoginMode.manual;
+  void _fillInitialValues(NasServer? server, String? savedUsername, List<NasServer> savedServers) {
+    // 检测 savedServers 是否变化，变化则重置表单
+    final currentIds = savedServers.map((s) => s.id).toList();
+    if (currentIds != _prevServerIds) {
+      _prevServerIds = currentIds;
+      _resetForm();
+    }
 
     if (server == null) {
       serverNameController.text = l10n.defaultDeviceName;
@@ -82,7 +84,25 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     https = server.https;
     ignoreBadCertificate = server.ignoreBadCertificate;
     selectedServerId = server.id;
-    _validateFields();
+  }
+
+  void _resetForm() {
+    serverNameController.clear();
+    hostController.clear();
+    portController.clear();
+    usernameController.clear();
+    passwordController.clear();
+    selectedServerId = null;
+    https = true;
+    ignoreBadCertificate = false;
+    quickLoginEditUsername = false;
+    loginMode = _LoginMode.manual;
+    errorText = null;
+    infoText = null;
+    hostError = null;
+    portError = null;
+    usernameError = null;
+    passwordError = null;
   }
 
   void applyServerPreset(NasServer server, {String? username}) {
@@ -101,13 +121,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       passwordController.clear();
       errorText = null;
       infoText = l10n.selectedEnterPassword(server.name);
-      _validateFields();
+      _clearFieldErrors();
     });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        passwordFocusNode.requestFocus();
-      }
+      if (mounted) passwordFocusNode.requestFocus();
     });
   }
 
@@ -115,48 +133,51 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     await ref.read(deleteServerProvider)(server);
     if (!mounted) return;
 
-    final stillHasSavedServers = ref.read(savedServersProvider).isNotEmpty;
+    final stillHasServers = ref.read(savedServersProvider).isNotEmpty;
 
     if (selectedServerId == server.id) {
-      setState(() {
-        selectedServerId = null;
-        if (serverNameController.text == server.name) serverNameController.clear();
-        if (hostController.text == server.host) hostController.clear();
-        if (portController.text == server.port.toString()) portController.clear();
-        usernameController.clear();
-        passwordController.clear();
-        quickLoginEditUsername = false;
-        loginMode = stillHasSavedServers ? _LoginMode.quick : _LoginMode.manual;
-        _validateFields();
-      });
+      _resetForm();
+      loginMode = stillHasServers ? _LoginMode.quick : _LoginMode.manual;
     }
 
     Toast.show(l10n.historyDeleted(server.name));
   }
 
-  void _validateFields() {
+  void _validateHost() {
     final host = hostController.text.trim();
-    final portText = portController.text.trim();
-    final username = usernameController.text.trim();
-    final password = passwordController.text;
-    final parsedPort = int.tryParse(portText);
+    hostError = host.isEmpty ? l10n.enterNasAddress : null;
+  }
 
-    hostValidationText = host.isEmpty ? l10n.enterNasAddress : null;
-    portValidationText = portText.isEmpty
+  void _validatePort() {
+    final portText = portController.text.trim();
+    final parsed = int.tryParse(portText);
+    portError = portText.isEmpty
         ? l10n.enterPort
-        : (parsedPort == null || parsedPort <= 0 || parsedPort > 65535)
+        : (parsed == null || parsed <= 0 || parsed > 65535)
             ? l10n.portRange
             : null;
-    usernameValidationText = username.isEmpty ? l10n.enterUsername : null;
-    passwordValidationText = password.isEmpty ? l10n.enterPassword : null;
+  }
+
+  void _validateUsername() {
+    usernameError = usernameController.text.trim().isEmpty ? l10n.enterUsername : null;
+  }
+
+  void _validatePassword() {
+    passwordError = passwordController.text.isEmpty ? l10n.enterPassword : null;
+  }
+
+  void _clearFieldErrors() {
+    hostError = null;
+    portError = null;
+    usernameError = null;
+    passwordError = null;
   }
 
   bool get _canSubmit {
-    _validateFields();
-    return hostValidationText == null &&
-        portValidationText == null &&
-        usernameValidationText == null &&
-        passwordValidationText == null &&
+    return hostError == null &&
+        portError == null &&
+        usernameError == null &&
+        passwordError == null &&
         !isLoading;
   }
 
@@ -168,7 +189,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   NasServer buildServer() {
     final normalizedHost = ServerUrlHelper.normalizeHost(hostController.text.trim());
-
     return NasServer(
       id: '$normalizedHost:${portController.text.trim()}:${https ? 'https' : 'http'}:${ignoreBadCertificate ? 'insecure' : 'strict'}',
       name: l10n.defaultDeviceName,
@@ -221,9 +241,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         event: 'test_connection_success',
         extra: {'baseUrl': baseUrl},
       );
-      setState(() {
-        infoText = l10n.connectionSuccess;
-      });
+      setState(() => infoText = l10n.connectionSuccess);
     } on DioException catch (e) {
       final details = [
         '测试连接失败',
@@ -262,9 +280,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           ),
         );
       }
-      setState(() {
-        errorText = ErrorMapper.map(e).message;
-      });
+      setState(() => errorText = ErrorMapper.map(e).message);
     } catch (e) {
       await LocalAppLogger.log(
         level: 'error',
@@ -272,20 +288,27 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         event: 'test_connection_failed',
         message: e.toString(),
       );
-      setState(() {
-        errorText = ErrorMapper.map(e).message;
-      });
+      setState(() => errorText = ErrorMapper.map(e).message);
     } finally {
       if (mounted) setState(() => isTesting = false);
     }
   }
 
   Future<void> login() async {
-    _validateFields();
-    final canSubmit = loginMode == _LoginMode.quick ? _canQuickLogin : _canSubmit;
-    if (!canSubmit) {
-      setState(() {});
-      return;
+    // 手动模式需要完整校验
+    if (loginMode == _LoginMode.manual) {
+      _validateHost();
+      _validatePort();
+      _validateUsername();
+      _validatePassword();
+      if (!_canSubmit) {
+        setState(() {});
+        return;
+      }
+    } else {
+      _validateUsername();
+      _validatePassword();
+      if (!_canQuickLogin) return;
     }
 
     FocusScope.of(context).unfocus();
@@ -324,9 +347,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         },
       );
       if (!version.isDsm7OrAbove) {
-        setState(() {
-          errorText = l10n.dsm6NotSupported(version.displayText);
-        });
+        setState(() => errorText = l10n.dsm6NotSupported(version.displayText));
         return;
       }
 
@@ -345,7 +366,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         },
       );
       setSession(session);
-      await ref.read(persistLoginProvider)(server, session, username, password: passwordController.text, rememberPassword: rememberPassword);
+      // 始终保存密码（用户去掉了"记住密码"勾选框，但行为不变）
+      await ref.read(persistLoginProvider)(
+        server,
+        session,
+        username,
+        password: passwordController.text,
+        rememberPassword: true,
+      );
       if (mounted) context.go('/home');
     } catch (e) {
       await LocalAppLogger.log(
@@ -354,13 +382,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         event: 'login_failed',
         message: e.toString(),
       );
-      setState(() {
-        errorText = ErrorMapper.map(e).message;
-      });
+      setState(() => errorText = ErrorMapper.map(e).message);
     } finally {
-      if (mounted) {
-        setState(() => isLoading = false);
-      }
+      if (mounted) setState(() => isLoading = false);
     }
   }
 
@@ -388,7 +412,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     return null;
   }
 
-  InputDecoration _inputDecoration({required String label, required IconData icon, Widget? suffixIcon, String? errorText}) {
+  InputDecoration _inputDecoration({
+    required String label,
+    required IconData icon,
+    Widget? suffixIcon,
+    String? errorText,
+  }) {
     return InputDecoration(
       labelText: label,
       prefixIcon: Icon(icon),
@@ -397,11 +426,26 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       filled: true,
       fillColor: const Color(0xFFF8FAFC),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(18), borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.06))),
-      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(18), borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.06))),
-      focusedBorder: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(18)), borderSide: BorderSide(color: Color(0xFF2563EB), width: 1.4)),
-      errorBorder: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(18)), borderSide: BorderSide(color: Colors.redAccent, width: 1.1)),
-      focusedErrorBorder: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(18)), borderSide: BorderSide(color: Colors.redAccent, width: 1.4)),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(18),
+        borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.06)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(18),
+        borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.06)),
+      ),
+      focusedBorder: const OutlineInputBorder(
+        borderRadius: BorderRadius.all(Radius.circular(18)),
+        borderSide: BorderSide(color: Color(0xFF2563EB), width: 1.4),
+      ),
+      errorBorder: const OutlineInputBorder(
+        borderRadius: BorderRadius.all(Radius.circular(18)),
+        borderSide: BorderSide(color: Colors.redAccent, width: 1.1),
+      ),
+      focusedErrorBorder: const OutlineInputBorder(
+        borderRadius: BorderRadius.all(Radius.circular(18)),
+        borderSide: BorderSide(color: Colors.redAccent, width: 1.4),
+      ),
     );
   }
 
@@ -425,7 +469,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         children: [
           Icon(icon, color: color),
           const SizedBox(width: 12),
-          Expanded(child: Text(text, style: TextStyle(color: color.shade700, height: 1.35, fontWeight: FontWeight.w500))),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(color: color.shade700, height: 1.35, fontWeight: FontWeight.w500),
+            ),
+          ),
         ],
       ),
     );
@@ -443,9 +492,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             https = !https;
             if (!https) ignoreBadCertificate = false;
           });
-          if (!https) {
-            Toast.show(l10n.switchedToHttp);
-          }
+          if (!https) Toast.show(l10n.switchedToHttp);
         },
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
@@ -457,7 +504,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(https ? Icons.lock_outline_rounded : Icons.lock_open_rounded, color: const Color(0xFF2563EB), size: 18),
+              Icon(
+                https ? Icons.lock_outline_rounded : Icons.lock_open_rounded,
+                color: const Color(0xFF2563EB),
+                size: 18,
+              ),
               const SizedBox(width: 8),
               Text(text, style: TextStyle(fontWeight: FontWeight.w700, color: color)),
             ],
@@ -491,9 +542,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     Map<String, String> savedUsernames,
     Map<String, int> lastUsedMap,
   ) {
-    final sortedServers = [...savedServers]..sort(
-      (a, b) => (lastUsedMap[b.id] ?? 0).compareTo(lastUsedMap[a.id] ?? 0),
-    );
+    final sortedServers = [...savedServers]
+      ..sort((a, b) => (lastUsedMap[b.id] ?? 0).compareTo(lastUsedMap[a.id] ?? 0));
 
     showModalBottomSheet<void>(
       context: context,
@@ -510,7 +560,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           ),
           child: Column(
             children: [
-              // Handle bar
               Container(
                 margin: const EdgeInsets.only(top: 12, bottom: 8),
                 width: 40,
@@ -520,7 +569,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
-              // Header
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
                 child: Row(
@@ -537,7 +585,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 ),
               ),
               const Divider(height: 1),
-              // Server list
               Expanded(
                 child: ListView.builder(
                   controller: scrollController,
@@ -587,29 +634,65 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     if (server == null) {
       return Container(
         padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(18), border: Border.all(color: Colors.black.withValues(alpha: 0.06))),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF8FAFC),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
+        ),
         child: Row(children: [
-          Container(width: 42, height: 42, decoration: BoxDecoration(color: const Color(0xFFEFF6FF), borderRadius: BorderRadius.circular(14)), child: const Icon(Icons.history_toggle_off_rounded, color: Color(0xFF2563EB))),
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: const Color(0xFFEFF6FF),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: const Icon(Icons.history_toggle_off_rounded, color: Color(0xFF2563EB)),
+          ),
           const SizedBox(width: 12),
-          Expanded(child: Text(l10n.selectDeviceFirst, style: const TextStyle(fontWeight: FontWeight.w600))),
+          Expanded(
+            child: Text(l10n.selectDeviceFirst, style: const TextStyle(fontWeight: FontWeight.w600)),
+          ),
         ]),
       );
     }
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(colors: [Color(0xFFEEF4FF), Color(0xFFF8FBFF)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+        gradient: const LinearGradient(
+          colors: [Color(0xFFEEF4FF), Color(0xFFF8FBFF)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: const Color(0xFF2563EB).withValues(alpha: 0.16)),
       ),
       child: Row(children: [
-        Container(width: 44, height: 44, decoration: BoxDecoration(color: const Color(0xFF2563EB), borderRadius: BorderRadius.circular(14)), alignment: Alignment.center, child: Text(_buildServerInitials(server), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800))),
+        Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: const Color(0xFF2563EB),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            _buildServerInitials(server),
+            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800),
+          ),
+        ),
         const SizedBox(width: 12),
-        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(server.name, style: const TextStyle(fontWeight: FontWeight.w800), overflow: TextOverflow.ellipsis),
-          const SizedBox(height: 4),
-          Text(ServerUrlHelper.buildBaseUrl(server), style: TextStyle(color: Colors.grey.shade700, fontSize: 12), overflow: TextOverflow.ellipsis),
-        ])),
+        Expanded(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(server.name, style: const TextStyle(fontWeight: FontWeight.w800), overflow: TextOverflow.ellipsis),
+            const SizedBox(height: 4),
+            Text(
+              ServerUrlHelper.buildBaseUrl(server),
+              style: TextStyle(color: Colors.grey.shade700, fontSize: 12),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ]),
+        ),
       ]),
     );
   }
@@ -617,17 +700,34 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   Widget _buildQuickLoginCard(List<NasServer> savedServers) {
     final selectedServer = _findSelectedServer(savedServers);
     return Container(
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(28), boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 28, offset: const Offset(0, 12))]),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 28, offset: const Offset(0, 12)),
+        ],
+      ),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
-            Container(width: 38, height: 38, decoration: BoxDecoration(color: const Color(0xFFEEF4FF), borderRadius: BorderRadius.circular(12)), child: const Icon(Icons.flash_on_rounded, color: Color(0xFF2563EB), size: 20)),
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: const Color(0xFFEEF4FF),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.flash_on_rounded, color: Color(0xFF2563EB), size: 20),
+            ),
             const SizedBox(width: 10),
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(l10n.quickLogin, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17)),
               const SizedBox(height: 2),
-              Text(selectedServerId == null ? l10n.selectDeviceThenPassword : l10n.deviceReadyEnterPassword, style: TextStyle(color: Colors.grey.shade600, fontSize: 12.5)),
+              Text(
+                selectedServerId == null ? l10n.selectDeviceThenPassword : l10n.deviceReadyEnterPassword,
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 12.5),
+              ),
             ])),
           ]),
           const SizedBox(height: 14),
@@ -636,35 +736,55 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           if (!quickLoginEditUsername)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(18), border: Border.all(color: Colors.black.withValues(alpha: 0.06))),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
+              ),
               child: Row(children: [
                 const Icon(Icons.person_outline, color: Color(0xFF2563EB)),
                 const SizedBox(width: 12),
                 Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Text(l10n.username, style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
                   const SizedBox(height: 4),
-                  Text(usernameController.text.trim().isEmpty ? l10n.noUsernameTapChange : usernameController.text.trim(), style: const TextStyle(fontWeight: FontWeight.w700)),
+                  Text(
+                    usernameController.text.trim().isEmpty ? l10n.noUsernameTapChange : usernameController.text.trim(),
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
                 ])),
-                TextButton(onPressed: () => setState(() => quickLoginEditUsername = true), child: Text(usernameController.text.trim().isEmpty ? l10n.fill : l10n.changeAccount)),
+                TextButton(
+                  onPressed: () => setState(() => quickLoginEditUsername = true),
+                  child: Text(usernameController.text.trim().isEmpty ? l10n.fill : l10n.changeAccount),
+                ),
               ]),
             )
           else
             TextField(
               controller: usernameController,
               onChanged: (_) => setState(() {}),
-              decoration: _inputDecoration(label: l10n.username, icon: Icons.person_outline, suffixIcon: TextButton(onPressed: () => setState(() => quickLoginEditUsername = false), child: Text(l10n.done))),
+              decoration: _inputDecoration(
+                label: l10n.username,
+                icon: Icons.person_outline,
+                suffixIcon: TextButton(
+                  onPressed: () => setState(() => quickLoginEditUsername = false),
+                  child: Text(l10n.done),
+                ),
+              ),
             ),
           const SizedBox(height: 10),
           TextField(
             controller: passwordController,
             focusNode: passwordFocusNode,
             obscureText: obscurePassword,
-            onChanged: (_) => setState(() => _validateFields()),
+            onChanged: (_) => setState(() => _validatePassword()),
             decoration: _inputDecoration(
               label: l10n.password,
               icon: Icons.lock_outline,
-              errorText: passwordValidationText,
-              suffixIcon: IconButton(onPressed: () => setState(() => obscurePassword = !obscurePassword), icon: Icon(obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined)),
+              errorText: passwordError,
+              suffixIcon: IconButton(
+                onPressed: () => setState(() => obscurePassword = !obscurePassword),
+                icon: Icon(obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined),
+              ),
             ),
             onSubmitted: (_) => isLoading ? null : login(),
           ),
@@ -673,7 +793,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             width: double.infinity,
             child: FilledButton.icon(
               onPressed: _canQuickLogin ? login : null,
-              icon: isLoading ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Icon(Icons.login_rounded),
+              icon: isLoading
+                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  : const Icon(Icons.login_rounded),
               label: Text(isLoading ? l10n.loggingIn : l10n.loginDsm),
             ),
           ),
@@ -700,28 +822,65 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   Widget _buildInputCard({required bool showBackToQuick}) {
     return Container(
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(28), boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 28, offset: const Offset(0, 12))]),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 28, offset: const Offset(0, 12)),
+        ],
+      ),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
-            Container(width: 42, height: 42, decoration: BoxDecoration(color: const Color(0xFFEEF4FF), borderRadius: BorderRadius.circular(14)), child: const Icon(Icons.admin_panel_settings_outlined, color: Color(0xFF2563EB))),
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: const Color(0xFFEEF4FF),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: const Icon(Icons.admin_panel_settings_outlined, color: Color(0xFF2563EB)),
+            ),
             const SizedBox(width: 12),
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(l10n.connectionInfo, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
               const SizedBox(height: 2),
               Text(l10n.enterNasCredentials, style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
             ])),
-            if (showBackToQuick) TextButton(onPressed: () => setState(() => loginMode = _LoginMode.quick), child: Text(l10n.quickLogin)),
+            if (showBackToQuick)
+              TextButton(
+                onPressed: () => setState(() => loginMode = _LoginMode.quick),
+                child: Text(l10n.quickLogin),
+              ),
           ]),
           const SizedBox(height: 18),
           Row(children: [
             _buildHttpsField(),
             const SizedBox(width: 12),
-            Expanded(child: TextField(controller: hostController, onChanged: (_) => setState(() => _validateFields()), decoration: _inputDecoration(label: l10n.addressOrHost, icon: Icons.language_outlined, errorText: hostValidationText))),
+            Expanded(
+              child: TextField(
+                controller: hostController,
+                onChanged: (_) => setState(() => _validateHost()),
+                decoration: _inputDecoration(
+                  label: l10n.addressOrHost,
+                  icon: Icons.language_outlined,
+                  errorText: hostError,
+                ),
+              ),
+            ),
           ]),
           const SizedBox(height: 12),
-          TextField(controller: portController, keyboardType: TextInputType.number, onChanged: (_) => setState(() => _validateFields()), decoration: _inputDecoration(label: l10n.port, icon: Icons.settings_ethernet_outlined, errorText: portValidationText)),
+          TextField(
+            controller: portController,
+            keyboardType: TextInputType.number,
+            onChanged: (_) => setState(() => _validatePort()),
+            decoration: _inputDecoration(
+              label: l10n.port,
+              icon: Icons.settings_ethernet_outlined,
+              errorText: portError,
+            ),
+          ),
           const SizedBox(height: 12),
           Material(
             color: Colors.transparent,
@@ -730,35 +889,61 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               value: ignoreBadCertificate,
               onChanged: https ? (value) => setState(() => ignoreBadCertificate = value) : null,
               title: Text(l10n.ignoreSslCert),
-              subtitle: Text(https ? l10n.ignoreSslCertHint : l10n.httpsOnly, style: TextStyle(color: Colors.grey.shade600, fontSize: 12.5)),
+              subtitle: Text(
+                https ? l10n.ignoreSslCertHint : l10n.httpsOnly,
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 12.5),
+              ),
             ),
           ),
           const SizedBox(height: 12),
-          TextField(controller: usernameController, onChanged: (_) => setState(() => _validateFields()), decoration: _inputDecoration(label: l10n.username, icon: Icons.person_outline, errorText: usernameValidationText)),
+          TextField(
+            controller: usernameController,
+            onChanged: (_) => setState(() => _validateUsername()),
+            decoration: _inputDecoration(
+              label: l10n.username,
+              icon: Icons.person_outline,
+              errorText: usernameError,
+            ),
+          ),
           const SizedBox(height: 12),
           TextField(
             controller: passwordController,
             focusNode: passwordFocusNode,
             obscureText: obscurePassword,
-            onChanged: (_) => setState(() => _validateFields()),
-            decoration: _inputDecoration(label: l10n.password, icon: Icons.lock_outline, errorText: passwordValidationText, suffixIcon: IconButton(onPressed: () => setState(() => obscurePassword = !obscurePassword), icon: Icon(obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined))),
+            onChanged: (_) => setState(() => _validatePassword()),
+            decoration: _inputDecoration(
+              label: l10n.password,
+              icon: Icons.lock_outline,
+              errorText: passwordError,
+              suffixIcon: IconButton(
+                onPressed: () => setState(() => obscurePassword = !obscurePassword),
+                icon: Icon(obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined),
+              ),
+            ),
             onSubmitted: (_) => isLoading ? null : login(),
           ),
-          const SizedBox(height: 8),
-          Material(
-            color: Colors.transparent,
-            child: CheckboxListTile(
-              contentPadding: EdgeInsets.zero,
-              value: rememberPassword,
-              onChanged: (value) => setState(() => rememberPassword = value ?? false),
-              title: Text(l10n.rememberPassword),
-              controlAffinity: ListTileControlAffinity.leading,
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: _canSubmit ? login : null,
+              icon: isLoading
+                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  : const Icon(Icons.login_rounded),
+              label: Text(isLoading ? l10n.loggingIn : l10n.loginDsm),
             ),
           ),
-          const SizedBox(height: 12),
-          SizedBox(width: double.infinity, child: FilledButton.icon(onPressed: _canSubmit ? login : null, icon: isLoading ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Icon(Icons.login_rounded), label: Text(isLoading ? l10n.loggingIn : l10n.loginDsm))),
           const SizedBox(height: 10),
-          SizedBox(width: double.infinity, child: OutlinedButton.icon(onPressed: isTesting ? null : testConnection, icon: isTesting ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.wifi_tethering_outlined), label: Text(isTesting ? l10n.testingConnection : l10n.testConnection))),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: isTesting ? null : testConnection,
+              icon: isTesting
+                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Icon(Icons.wifi_tethering_outlined),
+              label: Text(isTesting ? l10n.testingConnection : l10n.testConnection),
+            ),
+          ),
         ]),
       ),
     );
@@ -770,19 +955,22 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     final currentServer = connection.server;
     final savedUsername = connection.username;
     final savedPassword = connection.password;
-    final savedRememberPassword = ref.watch(savedRememberPasswordProvider);
     final savedServers = ref.watch(savedServersProvider);
     final savedServerUsernames = ref.watch(savedServerUsernamesProvider);
     final savedServerLastUsed = ref.watch(savedServerLastUsedProvider);
     final sessionExpiredAsync = ref.watch(localStorageProvider).readString(AppConstants.sessionExpiredFlagKey);
-    fillInitialValues(currentServer, savedUsername, savedServers.isNotEmpty);
+
+    _fillInitialValues(currentServer, savedUsername, savedServers);
+
+    // 自动填入已保存的密码
     if (passwordController.text.isEmpty && (savedPassword?.isNotEmpty ?? false)) {
       passwordController.text = savedPassword!;
-      rememberPassword = savedRememberPassword;
     }
 
+    // 没有选中服务器且有历史记录时，自动选中最近使用的
     if (selectedServerId == null && currentServer == null && savedServers.isNotEmpty) {
-      final sortedServers = [...savedServers]..sort((a, b) => (savedServerLastUsed[b.id] ?? 0).compareTo(savedServerLastUsed[a.id] ?? 0));
+      final sortedServers = [...savedServers]
+        ..sort((a, b) => (savedServerLastUsed[b.id] ?? 0).compareTo(savedServerLastUsed[a.id] ?? 0));
       final latest = sortedServers.first;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted || selectedServerId != null) return;
@@ -790,24 +978,27 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       });
     }
 
-    sessionExpiredAsync.then((flag) {
-      if (!mounted || handledExpiredMessage || flag != '1') return;
-      handledExpiredMessage = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) async {
-        if (!mounted) return;
-        setState(() {
-          infoText = null;
-          errorText = l10n.sessionExpired;
-        });
-        await ref.read(localStorageProvider).remove(AppConstants.sessionExpiredFlagKey);
+    // 会话过期提示
+    sessionExpiredAsync.then((flag) async {
+      if (!mounted || flag != '1') return;
+      setState(() {
+        infoText = null;
+        errorText = l10n.sessionExpired;
       });
+      await ref.read(localStorageProvider).remove(AppConstants.sessionExpiredFlagKey);
     });
 
     final showQuickLogin = savedServers.isNotEmpty && loginMode == _LoginMode.quick;
 
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0xFFF3F7FF), Color(0xFFFFFFFF)])),
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFFF3F7FF), Color(0xFFFFFFFF)],
+          ),
+        ),
         child: SafeArea(
           child: ListView(
             padding: const EdgeInsets.fromLTRB(18, 18, 18, 28),
@@ -815,20 +1006,52 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(colors: [Color(0xFF1D4ED8), Color(0xFF2563EB)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF1D4ED8), Color(0xFF2563EB)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                   borderRadius: BorderRadius.circular(24),
-                  boxShadow: [BoxShadow(color: const Color(0xFF2563EB).withValues(alpha: 0.16), blurRadius: 20, offset: const Offset(0, 10))],
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF2563EB).withValues(alpha: 0.16),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
                 ),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Row(children: [
-                    Container(width: 44, height: 44, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.14), borderRadius: BorderRadius.circular(14)), child: const Icon(Icons.dns_rounded, color: Colors.white, size: 24)),
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.14),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: const Icon(Icons.dns_rounded, color: Colors.white, size: 24),
+                    ),
                     const SizedBox(width: 12),
-                    Expanded(child: Text(l10n.appTitle, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w800, height: 1.1))),
-                    Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6), decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(999)), child: Text(l10n.dsm7Plus, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 12))),
+                    Expanded(
+                      child: Text(
+                        l10n.appTitle,
+                        style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w800, height: 1.1),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(l10n.dsm7Plus, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 12)),
+                    ),
                   ]),
                   const SizedBox(height: 10),
-                  Text(showQuickLogin ? l10n.quickLoginReady : l10n.connectToDsm, style: TextStyle(color: Colors.white.withValues(alpha: 0.90), height: 1.35, fontSize: 13)),
-                  const SizedBox(height: 4),
+                  Text(
+                    showQuickLogin ? l10n.quickLoginReady : l10n.connectToDsm,
+                    style: TextStyle(color: Colors.white.withValues(alpha: 0.90), height: 1.35, fontSize: 13),
+                  ),
                 ]),
               ),
               const SizedBox(height: 18),
