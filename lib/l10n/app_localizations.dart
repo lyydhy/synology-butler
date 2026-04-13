@@ -639,7 +639,92 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'联机超时'**
   String get downloadTaskTimeout;
-  /// No description provided for @downloadBtnNew.
+
+  /// No description provided for @downloadErrorExceedFsMaxSize.
+  ///
+  /// In zh, this message translates to:
+  /// **'超过文件系统最大文件大小。'**
+  String get downloadErrorExceedFsMaxSize;
+  /// No description provided for @downloadErrorEncryptionLongPath.
+  ///
+  /// In zh, this message translates to:
+  /// **'加密文件路径过长。'**
+  String get downloadErrorEncryptionLongPath;
+  /// No description provided for @downloadErrorLongPath.
+  ///
+  /// In zh, this message translates to:
+  /// **'文件路径过长。'**
+  String get downloadErrorLongPath;
+  /// No description provided for @downloadErrorDuplicateTorrent.
+  ///
+  /// In zh, this message translates to:
+  /// **'下载任务重复。'**
+  String get downloadErrorDuplicateTorrent;
+  /// No description provided for @downloadErrorPremiumAccountRequire.
+  ///
+  /// In zh, this message translates to:
+  /// **'需要Premium账户。'**
+  String get downloadErrorPremiumAccountRequire;
+  /// No description provided for @downloadErrorNotSupportType.
+  ///
+  /// In zh, this message translates to:
+  /// **'不支持的文件类型。'**
+  String get downloadErrorNotSupportType;
+  /// No description provided for @downloadErrorFtpEncryptionNotSupportType.
+  ///
+  /// In zh, this message translates to:
+  /// **'FTP加密不支持的文件类型。'**
+  String get downloadErrorFtpEncryptionNotSupportType;
+  /// No description provided for @downloadErrorExtractFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'解压失败。'**
+  String get downloadErrorExtractFailed;
+  /// No description provided for @downloadErrorInvalidTorrent.
+  ///
+  /// In zh, this message translates to:
+  /// **'无效的torrent文件。'**
+  String get downloadErrorInvalidTorrent;
+  /// No description provided for @downloadErrorAccountRequireStatus.
+  ///
+  /// In zh, this message translates to:
+  /// **'账户状态不符合要求。'**
+  String get downloadErrorAccountRequireStatus;
+  /// No description provided for @downloadErrorTryItLater.
+  ///
+  /// In zh, this message translates to:
+  /// **'请稍后再试。'**
+  String get downloadErrorTryItLater;
+  /// No description provided for @downloadErrorTaskEncryption.
+  ///
+  /// In zh, this message translates to:
+  /// **'任务加密出错。'**
+  String get downloadErrorTaskEncryption;
+  /// No description provided for @downloadErrorMissingPython.
+  ///
+  /// In zh, this message translates to:
+  /// **'缺少Python组件。'**
+  String get downloadErrorMissingPython;
+  /// No description provided for @downloadErrorPrivateVideo.
+  ///
+  /// In zh, this message translates to:
+  /// **'私有视频无法下载。'**
+  String get downloadErrorPrivateVideo;
+  /// No description provided for @downloadErrorNzbMissingArticle.
+  ///
+  /// In zh, this message translates to:
+  /// **'NZB文件缺少Article。'**
+  String get downloadErrorNzbMissingArticle;
+  /// No description provided for @downloadErrorParchiveRepairFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'Parchive修复失败。'**
+  String get downloadErrorParchiveRepairFailed;
+  /// No description provided for @downloadErrorInvalidAccountPassword.
+  ///
+  /// In zh, this message translates to:
+  /// **'账户密码无效。'**
+  String get downloadErrorInvalidAccountPassword;  /// No description provided for @downloadBtnNew.
   ///
   /// In zh, this message translates to:
   /// **'新增'**

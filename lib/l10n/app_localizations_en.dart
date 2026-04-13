@@ -271,7 +271,41 @@ class AppLocalizationsEn extends AppLocalizations {
   String get downloadTaskQuotaReached => 'Quota Reached';
   @override
   String get downloadTaskTimeout => 'Connection Timeout';
+
   @override
+  String get downloadErrorExceedFsMaxSize => 'File size exceeds the filesystem maximum.';
+  @override
+  String get downloadErrorEncryptionLongPath => 'Encrypted file path is too long.';
+  @override
+  String get downloadErrorLongPath => 'File path is too long.';
+  @override
+  String get downloadErrorDuplicateTorrent => 'Duplicate download task.';
+  @override
+  String get downloadErrorPremiumAccountRequire => 'Premium account required.';
+  @override
+  String get downloadErrorNotSupportType => 'File type not supported.';
+  @override
+  String get downloadErrorFtpEncryptionNotSupportType => 'FTP encryption file type not supported.';
+  @override
+  String get downloadErrorExtractFailed => 'Extraction failed.';
+  @override
+  String get downloadErrorInvalidTorrent => 'Invalid torrent file.';
+  @override
+  String get downloadErrorAccountRequireStatus => 'Account status requirement not met.';
+  @override
+  String get downloadErrorTryItLater => 'Please try again later.';
+  @override
+  String get downloadErrorTaskEncryption => 'Task encryption error.';
+  @override
+  String get downloadErrorMissingPython => 'Missing Python component.';
+  @override
+  String get downloadErrorPrivateVideo => 'Private video cannot be downloaded.';
+  @override
+  String get downloadErrorNzbMissingArticle => 'NZB file missing article.';
+  @override
+  String get downloadErrorParchiveRepairFailed => 'Parchive repair failed.';
+  @override
+  String get downloadErrorInvalidAccountPassword => 'Invalid account password.';  @override
   String get downloadBtnNew => 'New';
   @override
   String get downloadBtnOk => 'OK';

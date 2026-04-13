@@ -270,7 +270,41 @@ class AppLocalizationsZh extends AppLocalizations {
   String get downloadTaskQuotaReached => '已达空间配额';
   @override
   String get downloadTaskTimeout => '联机超时';
+
   @override
+  String get downloadErrorExceedFsMaxSize => '超过文件系统最大文件大小。';
+  @override
+  String get downloadErrorEncryptionLongPath => '加密文件路径过长。';
+  @override
+  String get downloadErrorLongPath => '文件路径过长。';
+  @override
+  String get downloadErrorDuplicateTorrent => '下载任务重复。';
+  @override
+  String get downloadErrorPremiumAccountRequire => '需要Premium账户。';
+  @override
+  String get downloadErrorNotSupportType => '不支持的文件类型。';
+  @override
+  String get downloadErrorFtpEncryptionNotSupportType => 'FTP加密不支持的文件类型。';
+  @override
+  String get downloadErrorExtractFailed => '解压失败。';
+  @override
+  String get downloadErrorInvalidTorrent => '无效的torrent文件。';
+  @override
+  String get downloadErrorAccountRequireStatus => '账户状态不符合要求。';
+  @override
+  String get downloadErrorTryItLater => '请稍后再试。';
+  @override
+  String get downloadErrorTaskEncryption => '任务加密出错。';
+  @override
+  String get downloadErrorMissingPython => '缺少Python组件。';
+  @override
+  String get downloadErrorPrivateVideo => '私有视频无法下载。';
+  @override
+  String get downloadErrorNzbMissingArticle => 'NZB文件缺少Article。';
+  @override
+  String get downloadErrorParchiveRepairFailed => 'Parchive修复失败。';
+  @override
+  String get downloadErrorInvalidAccountPassword => '账户密码无效。';  @override
   String get downloadBtnNew => '新增';
   @override
   String get downloadBtnOk => '确定';

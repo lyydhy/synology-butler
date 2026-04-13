@@ -71,60 +71,60 @@ class DownloadStatusHelper {
       case '15':
         return l10n.downloadStatusCaptchaNeeded;
       case '102':
-        return 'broken_link';
+        return l10n.downloadTaskBrokenLink;
       case '103':
-        return 'dest_not_exist';
+        return l10n.downloadTaskDestNotExist;
       case '104':
-        return 'dest_deny';
+        return l10n.downloadTaskDestDeny;
       case '105':
-        return 'disk_full';
+        return l10n.downloadTaskDiskFull;
       case '106':
-        return 'quota_reached';
+        return l10n.downloadTaskQuotaReached;
       case '107':
-        return 'timeout';
+        return l10n.downloadTaskTimeout;
       case '108':
       case '109':
       case '110':
-        return 'exceed_fs_max_size';
+        return l10n.downloadErrorExceedFsMaxSize;
       case '111':
-        return 'encryption_long_path';
+        return l10n.downloadErrorEncryptionLongPath;
       case '112':
-        return 'long_path';
+        return l10n.downloadErrorLongPath;
       case '113':
-        return 'duplicate_torrent';
+        return l10n.downloadErrorDuplicateTorrent;
       case '114':
-        return 'no_file_to_end';
+        return l10n.downloadErrorNoFileToEnd;
       case '115':
-        return 'premium_account_require';
+        return l10n.downloadErrorPremiumAccountRequire;
       case '116':
-        return 'not_support_type';
+        return l10n.downloadErrorNotSupportType;
       case '117':
-        return 'ftp_not_support_type';
+        return l10n.downloadErrorFtpEncryptionNotSupportType;
       case '118':
       case '119':
       case '120':
       case '121':
       case '122':
       case '129':
-        return 'extract_failed';
+        return l10n.downloadErrorExtractFailed;
       case '123':
-        return 'invalid_torrent';
+        return l10n.downloadErrorInvalidTorrent;
       case '124':
-        return 'account_require_status';
+        return l10n.downloadErrorAccountRequireStatus;
       case '125':
-        return 'try_it_later';
+        return l10n.downloadErrorTryItLater;
       case '126':
-        return 'task_encryption';
+        return l10n.downloadErrorTaskEncryption;
       case '127':
-        return 'missing_python';
+        return l10n.downloadErrorMissingPython;
       case '128':
-        return 'private_video';
+        return l10n.downloadErrorPrivateVideo;
       case '130':
-        return 'nzb_missing_article';
+        return l10n.downloadErrorNzbMissingArticle;
       case '133':
-        return 'parchive_repair_failed';
+        return l10n.downloadErrorParchiveRepairFailed;
       case '134':
-        return 'invalid_account_password';
+        return l10n.downloadErrorInvalidAccountPassword;
       default:
         final code = int.tryParse(statusCode);
         if (code != null && code >= 101) {
