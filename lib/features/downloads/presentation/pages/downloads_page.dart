@@ -592,55 +592,13 @@ class _DownloadTaskCard extends StatelessWidget {
                               color: theme.colorScheme.primary,
                             ),
                           ),
-                          if (task.speedDownload > 0 || task.speedUpload > 0)
+                          if (task.speedDownload > 0)
                             Text(
-                              _formatSpeed(task.speedDownload, task.speedUpload),
+                              _formatSpeed(task.speedDownload, 0),
                               style: theme.textTheme.labelSmall?.copyWith(
                                 color: theme.colorScheme.onSurfaceVariant,
                               ),
                             ),
-                          if (task.sizeTotal > 0)
-                            Text(
-                              _formatBytes(task.sizeTotal),
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                          const SizedBox(height: 4),
-                          GestureDetector(
-                            onTap: () => onAction(isPaused ? 'resume' : 'pause'),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: isPaused
-                                    ? theme.colorScheme.primaryContainer
-                                    : theme.colorScheme.surfaceContainerHighest,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    isPaused ? Icons.play_arrow : Icons.pause,
-                                    size: 14,
-                                    color: isPaused
-                                        ? theme.colorScheme.onPrimaryContainer
-                                        : theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                  const SizedBox(width: 2),
-                                  Text(
-                                    isPaused ? l10n.resume : l10n.pause,
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: isPaused
-                                          ? theme.colorScheme.onPrimaryContainer
-                                          : theme.colorScheme.onSurfaceVariant,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
                         ],
                       ),
                     if (isFinished)
@@ -655,7 +613,6 @@ class _DownloadTaskCard extends StatelessWidget {
                         color: theme.colorScheme.error,
                         size: 28,
                       ),
-                    const SizedBox(width: 8),
                     PopupMenuButton<String>(
                       icon: Icon(
                         Icons.more_vert,
@@ -699,19 +656,34 @@ class _DownloadTaskCard extends StatelessWidget {
                   ],
                 ),
                 if (!isFinished && !isError) ...[
-                  const SizedBox(height: 12),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: LinearProgressIndicator(
-                      value: task.progress.clamp(0, 1),
-                      minHeight: 5,
-                      backgroundColor: theme.colorScheme.surfaceContainerHighest,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        isError
-                            ? theme.colorScheme.error
-                            : theme.colorScheme.primary,
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: LinearProgressIndicator(
+                            value: task.progress.clamp(0, 1),
+                            minHeight: 8,
+                            backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              isError
+                                  ? theme.colorScheme.error
+                                  : theme.colorScheme.primary,
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
+                      if (task.sizeTotal > 0) ...[
+                        const SizedBox(width: 12),
+                        Text(
+                          '${_formatBytes(task.sizeDownloaded)} / ${_formatBytes(task.sizeTotal)}',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ],
               ],
