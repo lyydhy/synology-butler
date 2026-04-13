@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/services/transfer_notification_service.dart';
+import '../../../../core/utils/server_url_helper.dart';
 import '../../../../core/storage/platform_downloads_directory.dart';
 import '../../../../domain/entities/transfer_task.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
@@ -213,13 +214,22 @@ class TransferController extends StateNotifier<List<TransferTask>> {
 
     final id = _id();
 
-    // 构建 DSM 下载 URL（与 Dio 保持一致：sid 作为 query param，X-SYNO-TOKEN 和 Cookie 作为 headers）
+    // 构建 DSM 下载 URL（与 Dio 保持一致：使用完整的 baseUrl，sid 作为 query param）
     final conn = _ref.read(currentConnectionStoreProvider);
-    final baseUrl = conn.server?.host ?? '';
+    final server = conn.server;
+    if (server == null) {
+      _update(id, status: TransferTaskStatus.failed, progress: 1, errorMessage: '无可用服务器连接', forcePersist: true);
+      return;
+    }
     final session = conn.session;
-    final sid = session?.sid ?? '';
-    final synoToken = session?.synoToken;
-    final cookieHeader = session?.cookieHeader;
+    if (session == null) {
+      _update(id, status: TransferTaskStatus.failed, progress: 1, errorMessage: '无可用会话', forcePersist: true);
+      return;
+    }
+    final baseUrl = ServerUrlHelper.buildBaseUrl(server);
+    final sid = session.sid;
+    final synoToken = session.synoToken;
+    final cookieHeader = session.cookieHeader;
     final encodedPath = Uri.encodeComponent(jsonEncode([remotePath]));
     final downloadUrl = '$baseUrl/webapi/entry.cgi?api=SYNO.FileStation.Download&version=2&method=download&mode=download&path=$encodedPath&_sid=$sid';
 
