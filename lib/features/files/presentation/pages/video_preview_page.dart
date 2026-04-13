@@ -91,6 +91,14 @@ class _VideoPreviewPageState extends State<VideoPreviewPage> {
             videoUrl: Uri.parse(_streamUrl),
             httpHeaders: _httpHeaders,
           ),
+          playerUIVisibilityOptions: const PlayerUIVisibilityOptions(
+            showPlaybackSpeedButton: true,
+            showFullScreenButton: true,
+            showMuteUnMuteButton: true,
+            enableForwardGesture: true,
+            enableBackwardGesture: true,
+            enableExitFullscreenOnVerticalSwipe: true,
+          ),
         ),
         callbacks: VideoPlayerCallbacks(
           onControllerCreated: (controller) {
