@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
@@ -30,13 +32,20 @@ class _VideoPreviewPageState extends State<VideoPreviewPage> {
     _init();
   }
 
+  /// UTF-8 十六进制编码（与 dsm_helper Util.utf8Encode 保持一致）
+  String _utf8Encode(String data) {
+    final utf8Bytes = utf8.encode(data);
+    return utf8Bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+  }
+
   String get _streamUrl {
     // 使用 DSM 的 /fbdownload/ 端点进行流媒体播放（与 dsm_helper 保持一致）
     // 格式: /fbdownload/{filename}?dlink={path}&_sid={sid}&mode=open
+    // dlink 参数使用 UTF-8 十六进制编码，并用引号包裹
     final encodedName = Uri.encodeComponent(widget.name);
-    final encodedPath = Uri.encodeComponent('"${widget.path}"');
+    final encodedDlink = '%22${_utf8Encode(widget.path)}%22';
     final sid = widget.sid ?? '';
-    return '${widget.baseUrl}/fbdownload/$encodedName?dlink=$encodedPath&_sid=%22$sid%22&mode=open';
+    return '${widget.baseUrl}/fbdownload/$encodedName?dlink=$encodedDlink&_sid=%22$sid%22&mode=open';
   }
 
   Future<void> _init() async {
