@@ -213,20 +213,14 @@ class TransferController extends StateNotifier<List<TransferTask>> {
 
     final id = _id();
 
-    // 构建带认证的下载 URL（background_downloader 用系统 HTTP client，需要显式带 cookie）
-    final conn = _ref.read(currentConnectionStoreProvider);
-    final baseUrl = conn.server?.host ?? '';
-    final sid = conn.session?.sid ?? '';
-    print('[Download] start id=$id url=$baseUrl/... sid=${sid.isNotEmpty ? "present" : "MISSING"}');
-    final encodedPath = Uri.encodeComponent(jsonEncode([remotePath]));
-    final downloadUrl = '$baseUrl/webapi/entry.cgi?api=SYNO.FileStation.Download&version=2&method=download&mode=download&path=$encodedPath';
+    // 测试用：国内 CDN 文件
+    final downloadUrl = 'https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.min.js';
 
     // 创建 background_downloader 任务
-    // directory 留空，文件直接存在 baseDirectory（applicationDocuments）下
     final bdTask = DownloadTask(
-      taskId: id, // 用我们的 ID 作为 BD 任务 ID，方便映射
+      taskId: id,
       url: downloadUrl,
-      headers: {'Cookie': 'id=$sid'}, // 认证通过 header 传递（与 Dio 方式一致）
+      headers: {},
       filename: displayName,
       directory: '',
       allowPause: true,
