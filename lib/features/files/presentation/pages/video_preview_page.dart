@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:video_player/video_player.dart';
+import 'package:omni_video_player/omni_video_player.dart';
 
 class VideoPreviewPage extends StatefulWidget {
   const VideoPreviewPage({
@@ -20,60 +20,30 @@ class VideoPreviewPage extends StatefulWidget {
 }
 
 class _VideoPreviewPageState extends State<VideoPreviewPage> {
-  VideoPlayerController? _controller;
-  bool _loading = true;
-  String? _error;
-
-  @override
-  void initState() {
-    super.initState();
-    _init();
-  }
+  OmniPlaybackController? _controller;
 
   /// UTF-8 十六进制编码（与 dsm_helper Util.utf8Encode 保持一致）
   String _utf8Encode(String data) {
-    // dsm_helper: List<int> utf8Str = utf8.encode(data); String encoded = utf8Str.map((e) => e.toRadixString(16)).join("");
     return data.codeUnits.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
   }
 
   String get _streamUrl {
-    // 与 dsm_helper 完全一致: Util.baseUrl + "/fbdownload/${Uri.encodeComponent(file['name'])}?dlink=%22${Util.utf8Encode(file['path'])}%22&_sid=%22${Util.sid}%22&mode=open"
+    // 与 dsm_helper 完全一致
     final encodedName = Uri.encodeComponent(widget.name);
     final encodedDlink = '%22${_utf8Encode(widget.path)}%22';
     final sid = widget.sid ?? '';
-    final url = '${widget.baseUrl}/fbdownload/$encodedName?dlink=$encodedDlink&_sid=%22$sid%22&mode=open';
-    debugPrint('[VideoPreview] baseUrl: ${widget.baseUrl}');
-    debugPrint('[VideoPreview] path: ${widget.path}');
-    debugPrint('[VideoPreview] name: ${widget.name}');
-    debugPrint('[VideoPreview] sid: $sid');
-    debugPrint('[VideoPreview] streamUrl: $url');
-    return url;
-  }
-
-  Future<void> _init() async {
-    try {
-      final uri = Uri.parse(_streamUrl);
-      final controller = VideoPlayerController.networkUrl(uri);
-      await controller.initialize();
-      controller.play();
-      if (!mounted) return;
-      setState(() {
-        _controller = controller;
-        _loading = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _error = e.toString();
-        _loading = false;
-      });
-    }
+    return '${widget.baseUrl}/fbdownload/$encodedName?dlink=$encodedDlink&_sid=%22$sid%22&mode=open';
   }
 
   @override
   void dispose() {
+    _controller?.removeListener(_onUpdate);
     _controller?.dispose();
     super.dispose();
+  }
+
+  void _onUpdate() {
+    if (mounted) setState(() {});
   }
 
   @override
@@ -81,32 +51,19 @@ class _VideoPreviewPageState extends State<VideoPreviewPage> {
     return Scaffold(
       appBar: AppBar(title: Text(widget.name)),
       backgroundColor: Colors.black,
-      body: Center(
-        child: _loading
-            ? const CircularProgressIndicator()
-            : _error != null
-                ? Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Text(_error!, style: const TextStyle(color: Colors.white)),
-                  )
-                : _controller == null
-                    ? const Text('视频加载失败', style: TextStyle(color: Colors.white))
-                    : AspectRatio(
-                        aspectRatio: _controller!.value.aspectRatio == 0 ? 16 / 9 : _controller!.value.aspectRatio,
-                        child: VideoPlayer(_controller!),
-                      ),
+      body: OmniVideoPlayer(
+        configuration: VideoPlayerConfiguration(
+          videoSourceConfiguration: VideoSourceConfiguration.network(
+            videoUrl: Uri.parse(_streamUrl),
+            httpHeaders: const {},  // DSM 的认证通过 URL 中的 _sid 参数完成
+          ),
+        ),
+        callbacks: VideoPlayerCallbacks(
+          onControllerCreated: (controller) {
+            _controller = controller..addListener(_onUpdate);
+          },
+        ),
       ),
-      floatingActionButton: _controller == null
-          ? null
-          : FloatingActionButton(
-              onPressed: () {
-                final controller = _controller!;
-                setState(() {
-                  controller.value.isPlaying ? controller.pause() : controller.play();
-                });
-              },
-              child: Icon(_controller!.value.isPlaying ? Icons.pause : Icons.play_arrow),
-            ),
     );
   }
 }
