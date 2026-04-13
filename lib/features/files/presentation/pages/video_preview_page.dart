@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
@@ -33,11 +31,12 @@ class _VideoPreviewPageState extends State<VideoPreviewPage> {
   }
 
   String get _streamUrl {
-    // 使用 FileStation Download API 直接获取视频文件
-    // DSM 的 /webapi/entry.cgi?api=SYNO.FileStation.Download
-    final encodedPath = Uri.encodeComponent(jsonEncode([widget.path]));
+    // 使用 DSM 的 /fbdownload/ 端点进行流媒体播放（与 dsm_helper 保持一致）
+    // 格式: /fbdownload/{filename}?dlink={path}&_sid={sid}&mode=open
+    final encodedName = Uri.encodeComponent(widget.name);
+    final encodedPath = Uri.encodeComponent('"${widget.path}"');
     final sid = widget.synoToken ?? '';
-    return '${widget.baseUrl}/webapi/entry.cgi?api=SYNO.FileStation.Download&version=2&method=download&mode=download&path=$encodedPath&_sid=$sid';
+    return '${widget.baseUrl}/fbdownload/$encodedName?dlink=$encodedPath&_sid=%22$sid%22&mode=open';
   }
 
   Future<void> _init() async {
