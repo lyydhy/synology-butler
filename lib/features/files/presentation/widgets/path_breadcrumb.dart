@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 typedef BreadcrumbSegment = ({String label, String path, bool current});
 
-class PathBreadcrumb extends StatelessWidget {
+class PathBreadcrumb extends StatefulWidget {
   const PathBreadcrumb({
     super.key,
     required this.path,
@@ -15,17 +15,55 @@ class PathBreadcrumb extends StatelessWidget {
   final VoidCallback? onGoUp;
 
   @override
+  State<PathBreadcrumb> createState() => _PathBreadcrumbState();
+}
+
+class _PathBreadcrumbState extends State<PathBreadcrumb> {
+  late ScrollController _scrollController;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+    // 首次渲染后滚动到最右侧（显示最新路径）
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+      }
+    });
+  }
+
+  @override
+  void didUpdateWidget(PathBreadcrumb oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // 路径变化时滚动到最右侧
+    if (oldWidget.path != widget.path) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scrollController.hasClients) {
+          _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final segments = path == '/'
+    final segments = widget.path == '/'
         ? <BreadcrumbSegment>[
             (label: '/', path: '/', current: true),
           ]
-        : _buildSegments(path);
+        : _buildSegments(widget.path);
 
     return Row(
       children: [
-        if (onGoUp != null)
+        if (widget.onGoUp != null)
           Padding(
             padding: const EdgeInsets.only(right: 6),
             child: Material(
@@ -33,15 +71,15 @@ class PathBreadcrumb extends StatelessWidget {
               borderRadius: BorderRadius.circular(999),
               child: InkWell(
                 borderRadius: BorderRadius.circular(999),
-                onTap: onGoUp,
+                onTap: widget.onGoUp,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.subdirectory_arrow_left_rounded, size: 16, color: theme.colorScheme.onSurfaceVariant),
+                      Icon(Icons.subdirectory_arrow_left_rounded, size: 14, color: theme.colorScheme.onSurfaceVariant),
                       const SizedBox(width: 2),
-                      Text('..', style: theme.textTheme.labelLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                      Text('..', style: theme.textTheme.labelMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
                     ],
                   ),
                 ),
@@ -50,6 +88,7 @@ class PathBreadcrumb extends StatelessWidget {
           ),
         Expanded(
           child: SingleChildScrollView(
+            controller: _scrollController,
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
@@ -57,14 +96,14 @@ class PathBreadcrumb extends StatelessWidget {
                   _BreadcrumbNode(
                     label: segments[i].label,
                     current: segments[i].current,
-                    onTap: () => onTapSegment(segments[i].path),
+                    onTap: () => widget.onTapSegment(segments[i].path),
                   ),
                   if (i != segments.length - 1)
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 3),
                       child: Icon(
                         Icons.chevron_right_rounded,
-                        size: 18,
+                        size: 16,
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
@@ -121,14 +160,14 @@ class _BreadcrumbNode extends StatelessWidget {
         onTap: onTap,
         child: Padding(
           padding: EdgeInsets.symmetric(
-            horizontal: label == '/' ? 12 : 14,
-            vertical: 8,
+            horizontal: label == '/' ? 10 : 12,
+            vertical: 4,
           ),
           child: Text(
             label,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.labelLarge?.copyWith(
+            style: theme.textTheme.labelMedium?.copyWith(
               color: foregroundColor,
               fontWeight: current ? FontWeight.w800 : FontWeight.w600,
             ),
