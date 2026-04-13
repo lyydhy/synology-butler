@@ -237,12 +237,6 @@ class SettingsPage extends ConsumerWidget {
             subtitle: server == null ? l10n.noSessionPleaseLogin : l10n.settingsConnectionStorageSubtitle,
             children: [
               _SettingsActionTile(
-                icon: Icons.dns_rounded,
-                title: l10n.settingsConnectionManagement,
-                subtitle: server == null ? l10n.serverManagementHint : l10n.settingsCurrentServer(server.name),
-                onTap: () => context.push('/servers'),
-              ),
-              _SettingsActionTile(
                 icon: Icons.folder_open_rounded,
                 title: l10n.settingsDownloadDirectory,
                 subtitle: downloadDirectory ?? l10n.downloadDirectoryHint,
