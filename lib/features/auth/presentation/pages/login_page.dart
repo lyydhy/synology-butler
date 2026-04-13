@@ -13,7 +13,6 @@ import '../providers/auth_providers.dart';
 import '../providers/current_connection_readers.dart';
 import '../../../preferences/providers/preferences_providers.dart';
 
-// ─── 内部路由状态：showHistory 控制显示哪个页面 ────────────────────
 enum _LoginView { manual, history }
 
 class LoginPage extends ConsumerStatefulWidget {
@@ -24,8 +23,7 @@ class LoginPage extends ConsumerStatefulWidget {
 }
 
 class _LoginPageState extends ConsumerState<LoginPage> {
-  final hostController = TextEditingController();
-  final portController = TextEditingController();
+  final addressController = TextEditingController();
   final usernameController = TextEditingController();
   final passwordController = TextEditingController();
   final passwordFocusNode = FocusNode();
@@ -36,8 +34,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   bool isTesting = false;
   bool obscurePassword = true;
   String? selectedServerId;
-  String? hostError;
-  String? portError;
+  String? addressError;
   String? usernameError;
   String? passwordError;
   String? errorText;
@@ -45,13 +42,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   bool quickLoginExpanded = false;
   List<String> _prevServerIds = [];
   bool _initialized = false;
-  // 当前视图：manual 或 history
   _LoginView _view = _LoginView.manual;
 
   @override
   void dispose() {
-    hostController.dispose();
-    portController.dispose();
+    addressController.dispose();
     usernameController.dispose();
     passwordController.dispose();
     passwordFocusNode.dispose();
@@ -59,8 +54,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   }
 
   void _resetForm() {
-    hostController.clear();
-    portController.clear();
+    addressController.clear();
     usernameController.clear();
     passwordController.clear();
     selectedServerId = null;
@@ -69,10 +63,33 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     quickLoginExpanded = false;
     errorText = null;
     infoText = null;
-    hostError = null;
-    portError = null;
+    addressError = null;
     usernameError = null;
     passwordError = null;
+  }
+
+  /// 从 "host" 或 "host:port" 格式解析出 host 和 port
+  /// 如果没有端口：
+  ///   https=true  → 443
+  ///   https=false → 80
+  (String host, int port) _parseAddress(String raw) {
+    final trimmed = raw.trim();
+    if (trimmed.isEmpty) return ('', 5001);
+
+    String host;
+    int port;
+
+    if (trimmed.contains(':')) {
+      final lastColon = trimmed.lastIndexOf(':');
+      host = trimmed.substring(0, lastColon);
+      final portStr = trimmed.substring(lastColon + 1);
+      port = int.tryParse(portStr) ?? (https ? 443 : 80);
+    } else {
+      host = trimmed;
+      port = https ? 443 : 80;
+    }
+
+    return (host.trim(), port);
   }
 
   void _fillInitialValues(NasServer? server, String? savedUsername, List<NasServer> savedServers) {
@@ -85,10 +102,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     if (server == null || _initialized) return;
     _initialized = true;
     selectedServerId = server.id;
-    hostController.text = server.host;
-    portController.text = server.port.toString();
     https = server.https;
     ignoreBadCertificate = server.ignoreBadCertificate;
+    // 重建地址字符串：host:port（如果端口是默认的则只显示host）
+    final showPort = (server.https && server.port != 443) || (!server.https && server.port != 80);
+    addressController.text = showPort ? '${server.host}:${server.port}' : server.host;
     if (savedUsername != null && savedUsername.isNotEmpty) {
       usernameController.text = savedUsername;
     }
@@ -97,10 +115,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   void _applyServerAndEnterQuickLogin(NasServer server, {String? username}) {
     setState(() {
       selectedServerId = server.id;
-      hostController.text = server.host;
-      portController.text = server.port.toString();
       https = server.https;
       ignoreBadCertificate = server.ignoreBadCertificate;
+      final showPort = (server.https && server.port != 443) || (!server.https && server.port != 80);
+      addressController.text = showPort ? '${server.host}:${server.port}' : server.host;
       quickLoginExpanded = true;
       if (username != null && username.isNotEmpty) {
         usernameController.text = username;
@@ -125,15 +143,15 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     Toast.show(l10n.historyDeleted(server.name));
   }
 
-  void _validateHost() {
-    hostError = hostController.text.trim().isEmpty ? l10n.enterNasAddress : null;
-  }
-
-  void _validatePort() {
-    final parsed = int.tryParse(portController.text.trim());
-    portError = portController.text.trim().isEmpty
-        ? l10n.enterPort
-        : (parsed == null || parsed <= 0 || parsed > 65535) ? l10n.portRange : null;
+  void _validateAddress() {
+    final (host, port) = _parseAddress(addressController.text);
+    if (host.isEmpty) {
+      addressError = l10n.enterNasAddress;
+    } else if (port <= 0 || port > 65535) {
+      addressError = l10n.portRange;
+    } else {
+      addressError = null;
+    }
   }
 
   void _validateUsername() {
@@ -145,25 +163,25 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   }
 
   void _clearFieldErrors() {
-    hostError = null;
-    portError = null;
+    addressError = null;
     usernameError = null;
     passwordError = null;
   }
 
   bool get _canManualSubmit =>
-      hostError == null && portError == null && usernameError == null && passwordError == null && !isLoading;
+      addressError == null && usernameError == null && passwordError == null && !isLoading;
 
   bool get _canQuickLogin =>
       selectedServerId != null && usernameController.text.trim().isNotEmpty && passwordController.text.isNotEmpty && !isLoading;
 
   NasServer buildServer() {
-    final normalizedHost = ServerUrlHelper.normalizeHost(hostController.text.trim());
+    final (host, port) = _parseAddress(addressController.text);
+    final normalizedHost = ServerUrlHelper.normalizeHost(host);
     return NasServer(
-      id: '$normalizedHost:${portController.text.trim()}:${https ? 'https' : 'http'}:${ignoreBadCertificate ? 'insecure' : 'strict'}',
+      id: '$normalizedHost:$port:${https ? 'https' : 'http'}:${ignoreBadCertificate ? 'insecure' : 'strict'}',
       name: l10n.defaultDeviceName,
       host: normalizedHost,
-      port: int.tryParse(portController.text.trim()) ?? 5001,
+      port: port,
       https: https,
       basePath: null,
       ignoreBadCertificate: ignoreBadCertificate,
@@ -202,8 +220,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   }
 
   Future<void> login() async {
-    _validateHost();
-    _validatePort();
+    _validateAddress();
     _validateUsername();
     _validatePassword();
     if (!_canManualSubmit) {
@@ -286,6 +303,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       suffixIcon: suffixIcon,
       errorText: errorText,
       filled: true,
+      fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
@@ -333,60 +351,114 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     );
   }
 
+  // ─── HTTP/HTTPS 切换按钮（始终可点击） ─────────────────────────
+  Widget _buildHttpsToggle(Color primaryColor) {
+    final label = https ? 'HTTPS' : 'HTTP';
+    final color = https ? primaryColor : Colors.orange.shade700;
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: () {
+          setState(() {
+            https = !https;
+            if (!https) ignoreBadCertificate = false;
+          });
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.10),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: color.withValues(alpha: 0.30)),
+          ),
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            Icon(https ? Icons.lock_outline : Icons.lock_open_outlined, color: color, size: 18),
+            const SizedBox(width: 6),
+            Text(label, style: TextStyle(fontWeight: FontWeight.w700, color: color, fontSize: 14)),
+          ]),
+        ),
+      ),
+    );
+  }
+
+  // ─── 忽略证书选项（始终显示，仅 HTTPS 时可交互） ───────────────
+  Widget _buildIgnoreCertToggle(Color primaryColor) {
+    final enabled = https;
+    return Material(
+      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: enabled
+            ? () => setState(() => ignoreBadCertificate = !ignoreBadCertificate)
+            : null,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          child: Row(children: [
+            Icon(
+              Icons.shield_outlined,
+              color: enabled
+                  ? (ignoreBadCertificate ? primaryColor : Colors.grey.shade600)
+                  : Colors.grey.shade400,
+              size: 18,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.ignoreSslCert,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: enabled ? null : Colors.grey.shade400,
+                    ),
+                  ),
+                  Text(
+                    l10n.httpsOnly,
+                    style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                  ),
+                ],
+              ),
+            ),
+                  Switch(
+                    value: ignoreBadCertificate,
+                    onChanged: enabled ? (v) => setState(() => ignoreBadCertificate = v) : null,
+                  ),
+          ]),
+        ),
+      ),
+    );
+  }
+
   // ─── 手动登录表单 ──────────────────────────────────────────────
   Widget _buildManualForm(Color primaryColor) {
     return Column(children: [
-      // 地址 + 端口一行
-      Row(children: [
-        Expanded(
-          flex: 3,
-          child: TextField(
-            controller: hostController,
-            onChanged: (_) => setState(() => _validateHost()),
-            decoration: _inputDecoration(
-              label: l10n.addressOrHost,
-              icon: Icons.language_outlined,
-              errorText: hostError,
-            ),
+      // 地址输入（合并 host + port）
+      TextField(
+        controller: addressController,
+        onChanged: (_) => setState(() => _validateAddress()),
+        decoration: _inputDecoration(
+          label: l10n.addressOrHost,
+          icon: Icons.language_outlined,
+          errorText: addressError,
+          suffixIcon: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // HTTPS/HTTP 切换
+              _buildHttpsToggle(primaryColor),
+              const SizedBox(width: 4),
+            ],
           ),
         ),
-        const SizedBox(width: 10),
-        Expanded(
-          flex: 1,
-          child: TextField(
-            controller: portController,
-            keyboardType: TextInputType.number,
-            onChanged: (_) => setState(() => _validatePort()),
-            decoration: _inputDecoration(
-              label: l10n.port,
-              icon: Icons.settings_ethernet_outlined,
-              errorText: portError,
-            ),
-          ),
-        ),
-      ]),
-      const SizedBox(height: 12),
-      // HTTPS 行
-      Row(children: [
-        _buildHttpsToggle(primaryColor),
-        const SizedBox(width: 10),
-        if (https)
-          Expanded(
-            child: Material(
-              color: Theme.of(context).colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(14),
-              child: SwitchListTile.adaptive(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-                dense: true,
-                value: ignoreBadCertificate,
-                onChanged: (v) => setState(() => ignoreBadCertificate = v),
-                title: Text(l10n.ignoreSslCert, style: const TextStyle(fontSize: 13)),
-                subtitle: Text(l10n.httpsOnly, style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurfaceVariant)),
-              ),
-            ),
-          ),
-      ]),
-      const SizedBox(height: 12),
+      ),
+      const SizedBox(height: 10),
+      // 忽略证书选项
+      _buildIgnoreCertToggle(primaryColor),
+      const SizedBox(height: 10),
       TextField(
         controller: usernameController,
         onChanged: (_) => setState(() => _validateUsername()),
@@ -396,7 +468,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           errorText: usernameError,
         ),
       ),
-      const SizedBox(height: 12),
+      const SizedBox(height: 10),
       TextField(
         controller: passwordController,
         obscureText: obscurePassword,
@@ -412,7 +484,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         ),
         onSubmitted: (_) => isLoading ? null : login(),
       ),
-      const SizedBox(height: 14),
+      const SizedBox(height: 16),
       Row(children: [
         Expanded(
           child: OutlinedButton.icon(
@@ -439,41 +511,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             ),
             child: isLoading
                 ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                : Text(l10n.loginDsm, style: const TextStyle(fontWeight: FontWeight.w700)),
+                : Text(l10n.loginDsm, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
           ),
         ),
       ]),
     ]);
-  }
-
-  Widget _buildHttpsToggle(Color primaryColor) {
-    final label = https ? 'HTTPS' : 'HTTP';
-    final color = https ? primaryColor : Colors.orange.shade700;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(14),
-        onTap: () {
-          setState(() {
-            https = !https;
-            if (!https) ignoreBadCertificate = false;
-          });
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.10),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: color.withValues(alpha: 0.30)),
-          ),
-          child: Row(mainAxisSize: MainAxisSize.min, children: [
-            Icon(https ? Icons.lock_outline : Icons.lock_open_outlined, color: color, size: 18),
-            const SizedBox(width: 6),
-            Text(label, style: TextStyle(fontWeight: FontWeight.w700, color: color, fontSize: 14)),
-          ]),
-        ),
-      ),
-    );
   }
 
   // ─── 历史登录设备列表 ──────────────────────────────────────────
@@ -486,9 +528,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     if (savedServers.isEmpty) {
       return Center(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Icon(Icons.history_rounded, size: 48, color: Theme.of(context).colorScheme.outlineVariant),
-          const SizedBox(height: 12),
-          Text(l10n.noHistory, style: TextStyle(color: Theme.of(context).colorScheme.outlineVariant, fontSize: 15)),
+          Icon(Icons.history_rounded, size: 56, color: Theme.of(context).colorScheme.outlineVariant),
+          const SizedBox(height: 16),
+          Text(l10n.noHistory, style: TextStyle(color: Theme.of(context).colorScheme.outlineVariant, fontSize: 16)),
         ]),
       );
     }
@@ -525,8 +567,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 ),
                 child: Row(children: [
                   Container(
-                    width: 42,
-                    height: 42,
+                    width: 44,
+                    height: 44,
                     decoration: BoxDecoration(
                       color: isSelected
                           ? primaryColor.withValues(alpha: 0.15)
@@ -539,7 +581,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       style: TextStyle(
                         color: isSelected ? primaryColor : Theme.of(context).colorScheme.onSurfaceVariant,
                         fontWeight: FontWeight.w800,
-                        fontSize: 16,
+                        fontSize: 17,
                       ),
                     ),
                   ),
@@ -559,10 +601,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       ),
                     ]),
                   ),
-                  Icon(
-                    Icons.chevron_right_rounded,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                  Icon(Icons.chevron_right_rounded, color: Theme.of(context).colorScheme.onSurfaceVariant),
                 ]),
               ),
             ),
@@ -596,28 +635,47 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   Widget _buildQuickLoginPanel(Color primaryColor, NasServer? selectedServer) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 250),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: primaryColor.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(22),
         border: Border.all(color: primaryColor.withValues(alpha: 0.15)),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
-          Icon(Icons.lock_outline, color: primaryColor, size: 18),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              selectedServer != null ? l10n.loginToNas(selectedServer.name) : l10n.enterPasswordToLogin,
-              style: TextStyle(fontWeight: FontWeight.w600, color: primaryColor, fontSize: 14),
-              overflow: TextOverflow.ellipsis,
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: primaryColor.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10),
             ),
+            alignment: Alignment.center,
+            child: Text(
+              selectedServer != null ? _buildServerInitials(selectedServer) : 'N',
+              style: TextStyle(color: primaryColor, fontWeight: FontWeight.w800, fontSize: 15),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(
+                selectedServer?.name ?? '',
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: primaryColor),
+                overflow: TextOverflow.ellipsis,
+              ),
+              Text(
+                selectedServer != null
+                    ? ServerUrlHelper.buildBaseUrl(selectedServer)
+                    : '',
+                style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ]),
           ),
           IconButton(
             onPressed: () => setState(() => quickLoginExpanded = false),
             icon: const Icon(Icons.close, size: 18),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
           ),
         ]),
         const SizedBox(height: 12),
@@ -671,8 +729,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
     _fillInitialValues(currentServer, savedUsername, savedServers);
 
-    // 自动填入已保存的密码
-    if (passwordController.text.isEmpty && (savedPassword?.isNotEmpty ?? false)) {
+    // 自动填入已保存的密码（仅在快速登录展开时）
+    if (quickLoginExpanded && passwordController.text.isEmpty && (savedPassword?.isNotEmpty ?? false)) {
       passwordController.text = savedPassword!;
     }
 
@@ -691,22 +749,29 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     final selectedServer = _findSelectedServer(savedServers);
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF5F7FA),
+      backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF0F2F7),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: _view == _LoginView.history
-            ? IconButton(
-                onPressed: () => setState(() => _view = _LoginView.manual),
-                icon: const Icon(Icons.arrow_back),
-              )
+            ? IconButton(onPressed: () => setState(() => _view = _LoginView.manual), icon: const Icon(Icons.arrow_back))
             : null,
         title: Text(
           _view == _LoginView.manual ? l10n.loginDsm : l10n.historyDevices,
-          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18, color: primaryColor),
+          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 20, color: primaryColor),
         ),
-        centerTitle: false,
+        centerTitle: _view == _LoginView.manual,
+        actions: _view == _LoginView.manual && savedServers.isNotEmpty
+            ? [
+                TextButton.icon(
+                  onPressed: () => setState(() => _view = _LoginView.history),
+                  icon: const Icon(Icons.history_rounded, size: 18),
+                  label: Text(l10n.historyDevices),
+                ),
+                const SizedBox(width: 4),
+              ]
+            : null,
       ),
       body: SafeArea(
         child: Padding(
@@ -720,39 +785,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       _buildQuickLoginPanel(primaryColor, selectedServer)
                     else
                       Expanded(child: _buildManualForm(primaryColor)),
-                    const SizedBox(height: 12),
-                    // 底部：历史登录设备入口
-                    if (!_initialized && savedServers.isNotEmpty) const SizedBox.shrink()
-                    else if (savedServers.isNotEmpty && _view == _LoginView.manual)
-                      _buildHistoryButton(primaryColor)
-                    else if (savedServers.isEmpty)
-                      _buildHistoryButton(primaryColor),
                   ],
                 ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHistoryButton(Color primaryColor) {
-    return Center(
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(14),
-          onTap: () => setState(() => _view = _LoginView.history),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-            decoration: BoxDecoration(
-              border: Border.all(color: primaryColor.withValues(alpha: 0.30)),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Row(mainAxisSize: MainAxisSize.min, children: [
-              Icon(Icons.history_rounded, color: primaryColor, size: 18),
-              const SizedBox(width: 8),
-              Text(l10n.historyDevices, style: TextStyle(fontWeight: FontWeight.w600, color: primaryColor)),
-            ]),
-          ),
         ),
       ),
     );
