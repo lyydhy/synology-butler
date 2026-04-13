@@ -205,16 +205,19 @@ class TransferController extends StateNotifier<List<TransferTask>> {
     final downloadUrl = '$baseUrl/webapi/entry.cgi?api=SYNO.FileStation.Download&version=2&method=download&mode=download&path=$encodedPath';
 
     // 创建 background_downloader 任务
+    // directory 留空，文件直接存在 baseDirectory（applicationDocuments）下
     final bdTask = DownloadTask(
       taskId: id, // 用我们的 ID 作为 BD 任务 ID，方便映射
       url: downloadUrl,
       headers: {'Cookie': 'id=$sid'}, // 认证通过 header 传递（与 Dio 方式一致）
       filename: displayName,
-      directory: targetDir.path,
+      directory: '',
       allowPause: true,
       updates: Updates.statusAndProgress,
       retries: 3,
     );
+
+    print('[Download] bdTask taskId=${bdTask.taskId} taskType=${bdTask.taskType} url=${bdTask.url}');
 
     final task = TransferTask(
       id: id,
