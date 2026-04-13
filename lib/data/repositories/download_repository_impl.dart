@@ -24,10 +24,11 @@ class DownloadRepositoryImpl implements DownloadRepository {
   }
 
   @override
-  Future<void> createTask({
-    required String uri,
+  Future<List<String>> createTask({
+    required List<String> urls,
+    String destination = 'Download',
   }) {
-    return _api.createTask(uri: uri);
+    return _api.createTask(urls: urls, destination: destination);
   }
 
   @override

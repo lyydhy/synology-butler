@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 
 import '../../core/network/app_dio.dart';
@@ -9,8 +11,9 @@ abstract class DownloadStationApi {
 
   Future<List<DownloadTaskModel>> listTasks();
 
-  Future<void> createTask({
-    required String uri,
+  Future<List<String>> createTask({
+    required List<String> urls,
+    String destination = 'Download',
   });
 
   Future<void> pauseTask({
@@ -103,22 +106,28 @@ class DsmDownloadStationApi implements DownloadStationApi {
   }
 
   @override
-  Future<void> createTask({
-    required String uri,
+  Future<List<String>> createTask({
+    required List<String> urls,
+    String destination = 'Download',
   }) async {
     final response = await _dio.post(
       '/webapi/entry.cgi',
       data: {
-        'api': 'SYNO.DownloadStation.Task',
-        'version': '1',
+        'api': 'SYNO.DownloadStation2.Task',
+        'version': '2',
         'method': 'create',
-        'uri': uri,
+        'type': 'url',
+        'destination': destination,
+        'create_list': true,
+        'url': jsonEncode(urls),
       },
       options: Options(contentType: Headers.formUrlEncodedContentType),
     );
 
     if (response.data is Map && response.data['success'] == true) {
-      return;
+      final data = response.data['data'] as Map? ?? {};
+      final taskIds = (data['task_id'] as List?)?.cast<String>() ?? [];
+      return taskIds;
     }
 
     throw DioException(

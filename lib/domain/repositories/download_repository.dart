@@ -3,8 +3,9 @@ import '../entities/download_task.dart';
 abstract class DownloadRepository {
   Future<List<DownloadTask>> listTasks();
 
-  Future<void> createTask({
-    required String uri,
+  Future<List<String>> createTask({
+    required List<String> urls,
+    String destination = 'Download',
   });
 
   Future<void> pauseTask({

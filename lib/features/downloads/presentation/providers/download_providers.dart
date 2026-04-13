@@ -26,8 +26,15 @@ final downloadStationAvailableProvider = FutureProvider<bool>((ref) async {
 });
 
 final downloadActionProvider = Provider<Future<void> Function(String)>((ref) {
-  return (uri) async {
-    await ref.read(downloadRepositoryProvider).createTask(uri: uri);
+  return (rawInput) async {
+    // 支持多行输入，每行一个URL
+    final urls = rawInput
+        .split(RegExp(r'[\n,]'))
+        .map((s) => s.trim())
+        .where((s) => s.isNotEmpty)
+        .toList();
+    if (urls.isEmpty) return;
+    await ref.read(downloadRepositoryProvider).createTask(urls: urls);
     ref.invalidate(downloadListProvider);
   };
 });
