@@ -202,12 +202,13 @@ class TransferController extends StateNotifier<List<TransferTask>> {
     final sid = conn.session?.sid ?? '';
     print('[Download] start id=$id url=$baseUrl/... sid=${sid.isNotEmpty ? "present" : "MISSING"}');
     final encodedPath = Uri.encodeComponent(jsonEncode([remotePath]));
-    final downloadUrl = '$baseUrl/webapi/entry.cgi?api=SYNO.FileStation.Download&version=2&method=download&mode=download&path=$encodedPath&_sid=$sid';
+    final downloadUrl = '$baseUrl/webapi/entry.cgi?api=SYNO.FileStation.Download&version=2&method=download&mode=download&path=$encodedPath';
 
     // 创建 background_downloader 任务
     final bdTask = DownloadTask(
       taskId: id, // 用我们的 ID 作为 BD 任务 ID，方便映射
       url: downloadUrl,
+      headers: {'Cookie': 'id=$sid'}, // 认证通过 header 传递（与 Dio 方式一致）
       filename: displayName,
       directory: targetDir.path,
       allowPause: true,
