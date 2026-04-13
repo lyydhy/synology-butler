@@ -491,7 +491,6 @@ class _FilesPageState extends ConsumerState<FilesPage> {
               onSortSelected: _setSort,
               onTapSegment: _setCurrentPath,
               onGoUp: () => _setCurrentPath(actions.parentPathOf(_currentPath)),
-              onUpload: () => actions.showUploadDialog(context, ref, _currentPath, _pickSingleFile),
               onCreateFolder: () => actions.showCreateFolderDialog(context, ref, _currentPath),
               title: isDirectoryPickerMode ? l10n.selectUploadDir : l10n.filesTitle,
               showActionMenu: !isDirectoryPickerMode,

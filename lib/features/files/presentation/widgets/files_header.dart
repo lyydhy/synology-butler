@@ -13,7 +13,6 @@ class FilesHeader extends StatelessWidget {
     required this.onSortSelected,
     required this.onTapSegment,
     required this.onGoUp,
-    required this.onUpload,
     required this.onCreateFolder,
     this.title = '文件管理',
     this.showActionMenu = true,
@@ -26,7 +25,6 @@ class FilesHeader extends StatelessWidget {
   final ValueChanged<String> onSortSelected;
   final ValueChanged<String> onTapSegment;
   final VoidCallback onGoUp;
-  final VoidCallback onUpload;
   final VoidCallback onCreateFolder;
   final String title;
   final bool showActionMenu;
@@ -34,11 +32,11 @@ class FilesHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 操作按钮行：排序 + 新建文件夹 + 上传 + 菜单
+          // 操作按钮行：排序 + 新建文件夹 + 刷新
           Row(
             children: [
               // 排序胶囊
@@ -50,14 +48,6 @@ class FilesHeader extends StatelessWidget {
                   tooltip: l10n.createFolder,
                   onPressed: onCreateFolder,
                   icon: const Icon(Icons.create_new_folder_outlined),
-                  iconSize: 22,
-                ),
-              // 上传
-              if (showActionMenu)
-                IconButton(
-                  tooltip: l10n.uploadFile,
-                  onPressed: onUpload,
-                  icon: const Icon(Icons.upload_outlined),
                   iconSize: 22,
                 ),
               // 刷新
