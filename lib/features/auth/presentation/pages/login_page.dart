@@ -471,7 +471,12 @@ class _LoginPageState extends ConsumerState<LoginPage>
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
                 focusedBorder: InputBorder.none,
-                contentPadding: const EdgeInsets.fromLTRB(4, 0, 16, 0),
+                floatingLabelStyle: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: hasError ? Colors.redAccent : primaryColor.withValues(alpha: 0.80),
+                ),
+                contentPadding: const EdgeInsets.fromLTRB(4, 10, 16, 0),
                 suffixIcon: suffixIcon,
                 isDense: true,
               ),
@@ -696,16 +701,7 @@ class _LoginPageState extends ConsumerState<LoginPage>
                         ),
                         const Spacer(),
                         if (savedServers.isNotEmpty && widget.initialServer == null) ...[
-                          const SizedBox(height: 20),
-                          TextButton.icon(
-                            onPressed: () => context.push('/servers'),
-                            icon: Icon(Icons.history_rounded,
-                                color: primaryColor.withValues(alpha: 0.65), size: 18),
-                            label: Text(l10n.historyDevices,
-                                style: TextStyle(
-                                    color: primaryColor.withValues(alpha: 0.65),
-                                    fontWeight: FontWeight.w600)),
-                          ),
+                          const SizedBox(height: 12),
                         ],
                       ]),
                     ),
