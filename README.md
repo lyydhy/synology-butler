@@ -156,3 +156,7 @@ flutter build appbundle --release --obfuscate --split-debug-info=build/app/outpu
 ## License
 
 当前仓库处于活跃迭代阶段，请勿作为最终发布版本使用。
+
+---
+
+感谢 [dsm_helper](https://gitee.com/apaipai/dsm_helper) 本开源项目，部分设计思路与实现参考自该项目。
