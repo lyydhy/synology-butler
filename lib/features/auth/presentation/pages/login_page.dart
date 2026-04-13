@@ -39,26 +39,24 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   String? infoText;
   String? selectedServerId;
 
+  bool _autofilled = false;
+
   @override
   void initState() {
     super.initState();
-    // 初始化填充逻辑在 didChangeDependencies 里做，此时 providers 已准备好
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _autofillFromHistory();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _autofilled) return;
+      _autofilled = true;
+      _autofillFromHistory();
+    });
   }
 
   void _autofillFromHistory() {
     if (widget.initialServer != null) {
-      // 从历史页面跳转来，直接用传入的服务器数据
       _applyServer(widget.initialServer!);
       return;
     }
 
-    // 否则从 providers 读取最新历史记录
     final savedServers = ref.read(savedServersProvider);
     final savedServerLastUsed = ref.read(savedServerLastUsedProvider);
     final savedServerUsernames = ref.read(savedServerUsernamesProvider);
@@ -66,7 +64,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
     if (savedServers.isEmpty) return;
 
-    // 取最新一条
     final sorted = [...savedServers]
       ..sort((a, b) => (savedServerLastUsed[b.id] ?? 0).compareTo(savedServerLastUsed[a.id] ?? 0));
     final latest = sorted.first;
@@ -337,41 +334,46 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   Widget _buildForm(Color primaryColor) {
     return Column(children: [
       // HTTPS 切换 + 地址输入（同行对齐）
-      Row(children: [
-        _buildHttpsToggle(primaryColor),
-        const SizedBox(width: 8),
-        Expanded(
-          child: TextField(
-            controller: addressController,
-            onChanged: (_) => setState(() => _validateAddress()),
-            decoration: InputDecoration(
-              labelText: l10n.addressOrHost,
-              hintText: '192.168.1.2 或 192.168.1.2:5000',
-              prefixIcon: const Icon(Icons.language_outlined),
-              errorText: addressError,
-              filled: true,
-              fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.06)),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide(color: primaryColor, width: 1.5),
-              ),
-              errorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: Colors.redAccent, width: 1.1),
-              ),
-              focusedErrorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: Colors.redAccent, width: 1.4),
+      Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          _buildHttpsToggle(primaryColor),
+          const SizedBox(width: 8),
+          Expanded(
+            child: TextField(
+              controller: addressController,
+              onChanged: (_) => setState(() => _validateAddress()),
+              style: const TextStyle(fontSize: 15),
+              decoration: InputDecoration(
+                labelText: l10n.addressOrHost,
+                hintText: '192.168.1.2 或 192.168.1.2:5000',
+                prefixIcon: const Icon(Icons.language_outlined),
+                errorText: addressError,
+                filled: true,
+                fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.06)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide(color: primaryColor, width: 1.5),
+                ),
+                errorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: const BorderSide(color: Colors.redAccent, width: 1.1),
+                ),
+                focusedErrorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: const BorderSide(color: Colors.redAccent, width: 1.4),
+                ),
               ),
             ),
           ),
-        ),
-      ]),
+        ],
+      ),
       const SizedBox(height: 10),
       // 忽略证书
       _buildIgnoreCertToggle(primaryColor),
