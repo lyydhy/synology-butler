@@ -406,7 +406,7 @@ class _LoginPageState extends ConsumerState<LoginPage>
     );
   }
 
-  // ─── 输入字段 ─────────────────────────────────────────────────
+  // ─── 输入字段（统一高度56） ────────────────────────────────
   Widget _buildTextField({
     required TextEditingController controller,
     required String? errorText,
@@ -422,60 +422,64 @@ class _LoginPageState extends ConsumerState<LoginPage>
     final hasError = errorText != null;
     final theme = Theme.of(context);
 
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Container(
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: hasError
-                ? Colors.redAccent.withValues(alpha: 0.60)
-                : (errorText == null && controller.text.isNotEmpty
-                    ? primaryColor.withValues(alpha: 0.30)
-                    : Colors.black.withValues(alpha: 0.05)),
-            width: hasError ? 1.3 : 1,
-          ),
-        ),
-        child: TextField(
-          controller: controller,
-          obscureText: obscureText,
-          onTap: onTap,
-          onChanged: onChanged,
-          textInputAction: textInputAction,
-          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
-          decoration: InputDecoration(
-            labelText: labelText,
-            labelStyle: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              color: hasError
-                  ? Colors.redAccent
-                  : theme.colorScheme.onSurfaceVariant,
-            ),
-            prefixIcon: Container(
-              margin: const EdgeInsets.only(left: 14, right: 4),
-              child: Icon(
-                icon,
+    return SizedBox(
+      height: 56,
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+        Expanded(
+          child: Container(
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
                 color: hasError
-                    ? Colors.redAccent
+                    ? Colors.redAccent.withValues(alpha: 0.60)
                     : (controller.text.isNotEmpty
-                        ? primaryColor.withValues(alpha: 0.80)
-                        : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.70)),
-                size: 20,
+                        ? primaryColor.withValues(alpha: 0.30)
+                        : Colors.black.withValues(alpha: 0.05)),
+                width: hasError ? 1.3 : 1,
               ),
             ),
-            errorText: hasError ? errorText : null,
-            errorStyle: const TextStyle(fontSize: 11, height: 1.3),
-            filled: false,
-            border: InputBorder.none,
-            enabledBorder: InputBorder.none,
-            focusedBorder: InputBorder.none,
-            contentPadding: const EdgeInsets.fromLTRB(4, 18, 16, 18),
-            suffixIcon: suffixIcon,
+            child: TextField(
+              controller: controller,
+              obscureText: obscureText,
+              onTap: onTap,
+              onChanged: onChanged,
+              textInputAction: textInputAction,
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+              decoration: InputDecoration(
+                labelText: labelText,
+                labelStyle: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: hasError ? Colors.redAccent : theme.colorScheme.onSurfaceVariant,
+                ),
+                prefixIcon: Container(
+                  margin: const EdgeInsets.only(left: 14, right: 4),
+                  child: Icon(
+                    icon,
+                    color: hasError
+                        ? Colors.redAccent
+                        : (controller.text.isNotEmpty
+                            ? primaryColor.withValues(alpha: 0.80)
+                            : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.70)),
+                    size: 20,
+                  ),
+                ),
+                errorText: hasError ? errorText : null,
+                errorStyle: const TextStyle(fontSize: 11, height: 1.3),
+                filled: false,
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                contentPadding: const EdgeInsets.fromLTRB(4, 0, 16, 0),
+                suffixIcon: suffixIcon,
+                isDense: true,
+              ),
+            ),
           ),
         ),
-      ),
-    ]);
+      ]),
+    );
   }
 
   // ─── 主表单 ────────────────────────────────────────────────────
@@ -539,15 +543,14 @@ class _LoginPageState extends ConsumerState<LoginPage>
       _buildLoginButton(primaryColor),
       const SizedBox(height: 8),
       // 历史登录设备按钮
-      OutlinedButton.icon(
+      TextButton.icon(
         onPressed: () => context.push('/servers'),
         icon: const Icon(Icons.history_rounded, size: 18),
         label: Text(l10n.historyDevices),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: primaryColor,
+        style: TextButton.styleFrom(
+          foregroundColor: primaryColor.withValues(alpha: 0.70),
           padding: const EdgeInsets.symmetric(vertical: 13),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          side: BorderSide(color: primaryColor.withValues(alpha: 0.35), width: 1.2),
         ),
       ),
     ]);
