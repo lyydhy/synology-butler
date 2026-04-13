@@ -424,7 +424,7 @@ class _LoginPageState extends ConsumerState<LoginPage>
 
     return SizedBox(
       height: 56,
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+      child: Column(crossAxisAlignment: CrossAxisAlignment.center, mainAxisSize: MainAxisSize.min, children: [
         Expanded(
           child: Container(
             decoration: BoxDecoration(
@@ -473,7 +473,7 @@ class _LoginPageState extends ConsumerState<LoginPage>
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
                 focusedBorder: InputBorder.none,
-                contentPadding: const EdgeInsets.fromLTRB(4, 10, 16, 0),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
                 suffixIcon: suffixIcon,
                 isDense: true,
               ),
