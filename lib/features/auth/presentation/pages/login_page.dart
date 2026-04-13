@@ -500,10 +500,10 @@ class _LoginPageState extends ConsumerState<LoginPage>
           ),
         ],
       ),
-      const SizedBox(height: 12),
+      const SizedBox(height: 10),
       // 忽略证书
       _buildIgnoreCertToggle(primaryColor),
-      const SizedBox(height: 12),
+      const SizedBox(height: 10),
       // 用户名
       _buildTextField(
         controller: usernameController,
@@ -514,7 +514,7 @@ class _LoginPageState extends ConsumerState<LoginPage>
         textInputAction: TextInputAction.next,
         onChanged: (_) => setState(() => _validateUsername()),
       ),
-      const SizedBox(height: 12),
+      const SizedBox(height: 10),
       // 密码
       _buildTextField(
         controller: passwordController,
@@ -534,10 +534,10 @@ class _LoginPageState extends ConsumerState<LoginPage>
           onPressed: () => setState(() => obscurePassword = !obscurePassword),
         ),
       ),
-      const SizedBox(height: 22),
+      const SizedBox(height: 16),
       // 登录按钮（渐变色大按钮）
       _buildLoginButton(primaryColor),
-      const SizedBox(height: 10),
+      const SizedBox(height: 8),
       // 历史登录设备按钮
       OutlinedButton.icon(
         onPressed: () => context.push('/servers'),
@@ -663,12 +663,12 @@ class _LoginPageState extends ConsumerState<LoginPage>
                   SliverFillRemaining(
                     hasScrollBody: false,
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
+                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
                       child: Column(children: [
                         _buildHeader(primaryColor),
                         // 表单卡片
                         Container(
-                          padding: const EdgeInsets.all(20),
+                          padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
                             color: Theme.of(context).colorScheme.surfaceContainerLow,
                             borderRadius: BorderRadius.circular(24),
