@@ -369,11 +369,7 @@ class TransferController extends StateNotifier<List<TransferTask>> {
   Future<void> removeTask(String id, {bool deleteFile = false}) async {
     final task = state.firstWhere((t) => t.id == id, orElse: () => throw StateError('Task not found'));
 
-    // 取消通知
-    final transferType = task.type == TransferTaskType.download ? TransferType.download : TransferType.upload;
-    await _notificationService.cancel(id, transferType);
-
-    // 如果正在下载，需要取消后台任务
+    // 如果正在下载，需要取消后台任务（bd 插件会自动处理通知）
     if (task.status == TransferTaskStatus.running || task.status == TransferTaskStatus.queued) {
       if (task.type == TransferTaskType.download) {
         // 取消后台下载任务
@@ -391,6 +387,9 @@ class TransferController extends StateNotifier<List<TransferTask>> {
             await file.delete();
           } catch (_) {}
         }
+      } else {
+        // 上传任务取消通知
+        await _notificationService.cancel(id, TransferType.upload);
       }
     } else if (deleteFile && task.type == TransferTaskType.download && task.status == TransferTaskStatus.success) {
       // 已完成的下载，如果指定删除文件
