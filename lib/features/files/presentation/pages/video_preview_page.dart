@@ -90,22 +90,42 @@ class _VideoPreviewPageState extends State<VideoPreviewPage> {
           videoSourceConfiguration: VideoSourceConfiguration.network(
             videoUrl: Uri.parse(_streamUrl),
             httpHeaders: _httpHeaders,
+          ).copyWith(
+            allowSeeking: true,
+            autoPlay: true,
           ),
-          playerUIVisibilityOptions: const PlayerUIVisibilityOptions(
-            showPlaybackSpeedButton: true,
+          playerUIVisibilityOptions: PlayerUIVisibilityOptions().copyWith(
+            showSeekBar: true,
+            showCurrentTime: true,
+            showDurationTime: true,
+            showRemainingTime: true,
+            showLoadingWidget: true,
+            showErrorPlaceholder: true,
+            showReplayButton: true,
+            showThumbnailAtStart: true,
+            showVideoBottomControlsBar: true,
+            showBottomControlsBarOnEndedFullscreen: true,
             showFullScreenButton: true,
+            showPlaybackSpeedButton: true,
             showMuteUnMuteButton: true,
+            showPlayPauseReplayButton: true,
+            useSafeAreaForBottomControls: true,
+            showGradientBottomControl: true,
             enableForwardGesture: true,
             enableBackwardGesture: true,
             enableExitFullscreenOnVerticalSwipe: true,
-            alwaysShowBottomControlsBar: true,
-            controlsPersistenceDuration: Duration(seconds: 10),
+            enableOrientationLock: true,
+            controlsPersistenceDuration: const Duration(seconds: 3),
+            fitVideoToBounds: true,
+            showBottomControlsBarOnPause: false,
+            alwaysShowBottomControlsBar: false,
           ),
         ),
         callbacks: VideoPlayerCallbacks(
           onControllerCreated: (controller) {
             _controller = controller..addListener(_onUpdate);
           },
+          onSeekRequest: (target) => true,
         ),
       ),
     );
