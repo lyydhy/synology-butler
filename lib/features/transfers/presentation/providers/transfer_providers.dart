@@ -83,13 +83,17 @@ class TransferController extends StateNotifier<List<TransferTask>> {
         _update(ourId, status: TransferTaskStatus.running, forcePersist: true);
         break;
       case TaskStatus.complete:
-        // 验证文件是否存在
+        // 检查文件是否有效（存在且有内容）
         final task = state.firstWhere((t) => t.id == ourId, orElse: () => throw StateError('Task not found'));
         final file = File(task.targetPath);
-        if (await file.exists()) {
+        final exists = await file.exists();
+        final length = exists ? await file.length() : 0;
+        
+        if (exists && length > 0) {
           _update(ourId, status: TransferTaskStatus.success, progress: 1, forcePersist: true);
         } else {
-          _update(ourId, status: TransferTaskStatus.failed, progress: 1, errorMessage: '文件未找到，可能下载失败', forcePersist: true);
+          // 文件不存在或为空，视为下载失败，可重试
+          _update(ourId, status: TransferTaskStatus.failed, progress: 1, errorMessage: '下载失败（文件为空），请重试', forcePersist: true);
         }
         break;
       case TaskStatus.canceled:
