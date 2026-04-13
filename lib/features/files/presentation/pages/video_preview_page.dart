@@ -7,13 +7,13 @@ class VideoPreviewPage extends StatefulWidget {
     required this.baseUrl,
     required this.path,
     required this.name,
-    required this.synoToken,
+    required this.sid,
   });
 
   final String baseUrl;
   final String path;
   final String name;
-  final String? synoToken;
+  final String? sid;
 
   @override
   State<VideoPreviewPage> createState() => _VideoPreviewPageState();
@@ -35,7 +35,7 @@ class _VideoPreviewPageState extends State<VideoPreviewPage> {
     // 格式: /fbdownload/{filename}?dlink={path}&_sid={sid}&mode=open
     final encodedName = Uri.encodeComponent(widget.name);
     final encodedPath = Uri.encodeComponent('"${widget.path}"');
-    final sid = widget.synoToken ?? '';
+    final sid = widget.sid ?? '';
     return '${widget.baseUrl}/fbdownload/$encodedName?dlink=$encodedPath&_sid=%22$sid%22&mode=open';
   }
 

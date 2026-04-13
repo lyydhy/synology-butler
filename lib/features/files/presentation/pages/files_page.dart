@@ -549,7 +549,7 @@ class _FilesPageState extends ConsumerState<FilesPage> {
                               'baseUrl': ServerUrlHelper.buildBaseUrl(currentServer),
                               'path': item.path,
                               'name': item.name,
-                              'synoToken': currentSession.synoToken,
+                              'sid': currentSession.sid,
                             });
                             return;
                           }
