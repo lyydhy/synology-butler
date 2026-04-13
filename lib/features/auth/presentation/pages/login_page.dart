@@ -41,7 +41,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   String? infoText;
 
   @override
-  @override
   void initState() {
     super.initState();
     if (widget.initialServer != null) {
@@ -87,7 +86,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     return (trimmed, https ? 443 : 80);
   }
 
-  /// 用服务器数据填充表单
   void _applyServer(NasServer server, {String? username}) {
     setState(() {
       selectedServerId = server.id;
@@ -108,6 +106,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) passwordFocusNode.requestFocus();
     });
+  }
+
+  String _buildServerInitials(NasServer server) {
+    final value = server.name.trim();
+    if (value.isEmpty) return 'N';
+    return value.characters.first.toUpperCase();
   }
 
   void _validateAddress() {
@@ -231,11 +235,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     }
   }
 
-  String _buildServerInitials(NasServer server) {
-    final value = server.name.trim();
-    if (value.isEmpty) return 'N';
-    return value.characters.first.toUpperCase();
-  }
 
   // ─── 状态提示条 ────────────────────────────────────────────────
   Widget _buildStatusBanner() {
@@ -505,15 +504,18 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   Widget build(BuildContext context) {
     final themeColorOption = ref.watch(themeColorProvider);
     final primaryColor = seedColorFor(themeColorOption);
-    final connection = ref.watch(currentConnectionProvider);
-    final savedUsername = connection.username;
     final savedServers = ref.watch(savedServersProvider);
+    final savedServerLastUsed = ref.watch(savedServerLastUsedProvider);
 
-    // 自动填入用户名（已保存的）
-    if (usernameController.text.isEmpty && (savedUsername?.isNotEmpty ?? false)) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) usernameController.text = savedUsername!;
-      });
+    // 没有initialServer时，自动填充最新一条历史记录（仅填地址，不填用户名密码）
+    if (widget.initialServer == null && savedServers.isNotEmpty && addressController.text == '192.168.1.2') {
+      final sorted = [...savedServers]
+        ..sort((a, b) => (savedServerLastUsed[b.id] ?? 0).compareTo(savedServerLastUsed[a.id] ?? 0));
+      final latest = sorted.first;
+      final showPort = (latest.https && latest.port != 443) || (!latest.https && latest.port != 80);
+      addressController.text = showPort ? '${latest.host}:${latest.port}' : latest.host;
+      https = latest.https;
+      ignoreBadCertificate = latest.ignoreBadCertificate;
     }
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
