@@ -324,13 +324,16 @@ class DsmRealtimeApi implements RealtimeApi {
               load5: (((cpu['5min_load'] as num?) ?? 0).toDouble()) / 100,
               load15: (((cpu['15min_load'] as num?) ?? 0).toDouble()) / 100,
               memoryUsage: ((memory['real_usage'] as num?) ?? 0).toDouble(),
-              memoryTotalBytes:
-                  _toDouble(memory['total'] ?? memory['totalspace']),
-              memoryUsedBytes: _toDouble(memory['used']),
-              memoryBufferBytes: _toDouble(memory['buffer']),
-              memoryCachedBytes: _toDouble(memory['cached']),
-              memoryAvailableBytes:
-                  _toDouble(memory['available'] ?? memory['avail']),
+              memoryTotalBytes: _toDouble(
+                  memory['total'] ?? memory['totalspace'] ?? memory['memory_total']),
+              memoryUsedBytes:
+                  _toDouble(memory['used'] ?? memory['memory_used']),
+              memoryBufferBytes:
+                  _toDouble(memory['buffer'] ?? memory['memory_buff']),
+              memoryCachedBytes:
+                  _toDouble(memory['cached'] ?? memory['memory_cached']),
+              memoryAvailableBytes: _toDouble(
+                  memory['available'] ?? memory['avail'] ?? memory['memory_free']),
               storageUsage: ((totalSpace['used_percent'] as num?) ?? 0)
                   .toDouble(),
               networkUploadBytesPerSecond:
@@ -581,8 +584,13 @@ class DsmRealtimeApi implements RealtimeApi {
     int rx = 0;
     for (final item in network) {
       if (item is Map) {
-        tx += (item['tx_bytes_per_second'] as num?)?.toInt() ?? 0;
-        rx += (item['rx_bytes_per_second'] as num?)?.toInt() ?? 0;
+        // DSM API uses 'tx'/'rx' for bytes per second
+        tx += (item['tx'] as num?)?.toInt() ??
+            (item['tx_bytes_per_second'] as num?)?.toInt() ??
+            0;
+        rx += (item['rx'] as num?)?.toInt() ??
+            (item['rx_bytes_per_second'] as num?)?.toInt() ??
+            0;
       }
     }
     return {'tx_bytes_per_second': tx, 'rx_bytes_per_second': rx};
@@ -595,9 +603,11 @@ class DsmRealtimeApi implements RealtimeApi {
           (item) => NetworkInterfaceStatusModel(
             name: (item['name'] ?? '').toString(),
             uploadBytesPerSecond:
-                ((item['tx_bytes_per_second'] as num?) ?? 0).toDouble(),
+                ((item['tx'] as num?) ?? (item['tx_bytes_per_second'] as num?) ?? 0)
+                    .toDouble(),
             downloadBytesPerSecond:
-                ((item['rx_bytes_per_second'] as num?) ?? 0).toDouble(),
+                ((item['rx'] as num?) ?? (item['rx_bytes_per_second'] as num?) ?? 0)
+                    .toDouble(),
           ),
         )
         .toList();
