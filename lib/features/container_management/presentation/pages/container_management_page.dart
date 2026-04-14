@@ -129,10 +129,6 @@ class _ContainerManagementPageState extends ConsumerState<ContainerManagementPag
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-            child: _SourceBanner(source: dataSource),
-          ),
-          Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
             child: SlidingTabBar(
               tabController: _tabController,
@@ -202,57 +198,6 @@ class _ContainerManagementPageState extends ConsumerState<ContainerManagementPag
         ],
       ),
       backgroundColor: theme.colorScheme.surface,
-    );
-  }
-}
-
-class _SourceBanner extends StatelessWidget {
-  const _SourceBanner({required this.source});
-
-  final ContainerDataSourceOption source;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isSynology = source == ContainerDataSourceOption.synology;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.primaryContainer.withValues(alpha: 0.75),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surface.withValues(alpha: 0.8),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Icon(isSynology ? Icons.dns_outlined : Icons.developer_board_outlined),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.currentDataSource,
-                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  isSynology ? l10n.dsmDataSourceDescription : l10n.dpanelDataSourceDescription,
-                  style: theme.textTheme.bodyMedium,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
