@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cached_network_image_ce/cached_network_image.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -113,7 +113,7 @@ class PackageDetailPage extends ConsumerWidget {
                             ? CachedNetworkImage(
                                 imageUrl: item.thumbnailUrl!,
                                 fit: BoxFit.cover,
-                                errorWidget: (_, __, ___) =>
+                                errorBuilder: (_, __, ___) =>
                                     const Icon(Icons.apps_rounded, size: 36, color: Colors.grey),
                               )
                             : const Icon(Icons.apps_rounded, size: 36, color: Colors.grey),
@@ -373,7 +373,7 @@ class _ScreenshotSwiperState extends State<_ScreenshotSwiper> {
                           ? CachedNetworkImage(
                               imageUrl: screenshot,
                               fit: BoxFit.cover,
-                              errorWidget: (_, __, ___) => _FallbackContent(url: screenshot),
+                              errorBuilder: (_, __, ___) => _FallbackContent(url: screenshot),
                             )
                           : _FallbackContent(url: screenshot),
                     ),
@@ -422,7 +422,7 @@ class _ScreenshotSwiperState extends State<_ScreenshotSwiper> {
               child: CachedNetworkImage(
                 imageUrl: url,
                 fit: BoxFit.contain,
-                errorWidget: (_, __, ___) => _FallbackContent(url: url),
+                errorBuilder: (_, __, ___) => _FallbackContent(url: url),
               ),
             ),
           ),

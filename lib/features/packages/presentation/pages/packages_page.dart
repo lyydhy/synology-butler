@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cached_network_image_ce/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/utils/l10n.dart';
@@ -246,7 +246,7 @@ class _PackageCard extends ConsumerWidget {
                     ? CachedNetworkImage(
                         imageUrl: item.thumbnailUrl!,
                         fit: BoxFit.cover,
-                        errorWidget: (_, __, ___) =>
+                        errorBuilder: (_, __, ___) =>
                             const Icon(Icons.apps_rounded, color: Colors.grey),
                       )
                     : const Icon(Icons.apps_rounded, color: Colors.grey),
