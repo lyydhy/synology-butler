@@ -13,6 +13,7 @@ import '../../../../core/utils/l10n.dart';
 import '../../../../core/utils/format_utils.dart';
 import '../../../auth/presentation/providers/current_connection_readers.dart';
 import '../../../packages/presentation/providers/package_providers.dart';
+import '../../data/dashboard_apps.dart';
 import '../providers/dashboard_providers.dart';
 import '../providers/dashboard_realtime_global.dart';
 import '../widgets/summary_card.dart';
@@ -73,7 +74,6 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with WidgetsBindi
     final connection = ref.watch(currentConnectionProvider);
     final currentServer = connection.server;
     final currentSession = connection.session;
-    final dockerInstalledAsync = ref.watch(dockerFeatureInstalledProvider);
 
     if (currentServer == null || currentSession == null) {
       return Scaffold(
@@ -123,51 +123,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with WidgetsBindi
           _AppSection(
             title: l10n.dashboardSectionApps,
             subtitle: l10n.dashboardSectionAppsSubtitle,
-            items: [
-              if (dockerInstalledAsync.valueOrNull == true)
-                _AppEntryItem(
-                  icon: Icons.inventory_2_outlined,
-                  label: l10n.dashboardContainerManagement,
-                  description: l10n.dashboardContainerManagementDesc,
-                  color: Colors.blueGrey,
-                  onTap: () => context.push('/container-management'),
-                ),
-              _AppEntryItem(
-                icon: Icons.apps_rounded,
-                label: l10n.packageCenter,
-                description: l10n.packageCenterDesc,
-                color: Colors.amber.shade700,
-                onTap: () => context.push('/packages'),
-              ),
-              _AppEntryItem(
-                icon: Icons.sync_alt_rounded,
-                label: l10n.dashboardTransfers,
-                description: l10n.dashboardTransfersDesc,
-                color: Colors.deepOrange,
-                onTap: () => context.push('/transfers'),
-              ),
-              _AppEntryItem(
-                icon: Icons.tune_rounded,
-                label: l10n.dashboardControlPanel,
-                description: l10n.dashboardControlPanelDesc,
-                color: Colors.deepPurple,
-                onTap: () => context.push('/control-panel'),
-              ),
-              _AppEntryItem(
-                icon: Icons.info_outline_rounded,
-                label: l10n.dashboardInformationCenter,
-                description: l10n.dashboardInformationCenterDesc,
-                color: Colors.indigo,
-                onTap: () => context.push('/information-center'),
-              ),
-              _AppEntryItem(
-                icon: Icons.monitor_heart_outlined,
-                label: l10n.dashboardPerformance,
-                description: l10n.dashboardPerformanceDesc,
-                color: Colors.teal,
-                onTap: () => context.push('/performance'),
-              ),
-            ],
+            apps: _buildVisibleApps(),
           ),
           const SizedBox(height: 16),
           Row(
@@ -209,6 +165,14 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with WidgetsBindi
     }
 
     return version;
+  }
+
+  List<DashboardAppEntry> _buildVisibleApps() {
+    final dockerInstalled = ref.watch(dockerFeatureInstalledProvider).valueOrNull;
+    return dashboardHomeApps.where((app) {
+      if (app.route == '/container-management') return dockerInstalled == true;
+      return true;
+    }).toList();
   }
 
   String _maskUrl(String url) {
@@ -327,12 +291,12 @@ class _AppSection extends StatelessWidget {
   const _AppSection({
     required this.title,
     required this.subtitle,
-    required this.items,
+    required this.apps,
   });
 
   final String title;
   final String subtitle;
-  final List<_AppEntryItem> items;
+  final List<DashboardAppEntry> apps;
 
   @override
   Widget build(BuildContext context) {
@@ -358,13 +322,13 @@ class _AppSection extends StatelessWidget {
             style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
           ),
           const SizedBox(height: 14),
-          _buildAppWrap(items),
+          _buildAppWrap(apps),
         ],
       ),
     );
   }
 
-  Widget _buildAppWrap(List<_AppEntryItem> allItems) {
+  Widget _buildAppWrap(List<DashboardAppEntry> allItems) {
     const maxVisible = 10;
     final hasMore = allItems.length > maxVisible;
     final displayItems = hasMore ? allItems.sublist(0, maxVisible - 1) : allItems;
@@ -401,7 +365,7 @@ class _MoreEntryCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap: () {},
+        onTap: () => context.push('/apps'),
         child: Ink(
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: Column(
@@ -442,26 +406,11 @@ class _MoreEntryCard extends StatelessWidget {
   }
 }
 
-class _AppEntryItem {
-  const _AppEntryItem({
-    required this.icon,
-    required this.label,
-    required this.description,
-    required this.color,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final String description;
-  final Color color;
-  final VoidCallback onTap;
-}
 
 class _AppEntryCard extends StatelessWidget {
   const _AppEntryCard({required this.item});
 
-  final _AppEntryItem item;
+  final DashboardAppEntry item;
 
   @override
   Widget build(BuildContext context) {
@@ -471,7 +420,7 @@ class _AppEntryCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap: item.onTap,
+        onTap: () => context.push(item.route),
         child: Ink(
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: Column(

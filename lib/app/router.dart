@@ -31,6 +31,7 @@ import '../features/files/presentation/pages/share_link_page.dart';
 import '../features/files/presentation/pages/video_preview_page.dart';
 import '../features/index_service/presentation/pages/index_service_page.dart';
 import '../features/information_center/presentation/pages/information_center_page.dart';
+import '../features/apps/presentation/pages/apps_page.dart';
 import '../features/packages/presentation/pages/package_detail_page.dart';
 import '../features/packages/presentation/pages/packages_page.dart';
 import '../features/performance/presentation/pages/performance_page.dart';
@@ -70,6 +71,7 @@ GoRouter createAppRouter({required String initialLocation}) {
     GoRoute(path: '/power', builder: (context, state) => const PowerPage()),
     GoRoute(path: '/upgrade', builder: (context, state) => const UpgradePage()),
     GoRoute(path: '/packages', builder: (context, state) => const PackagesPage()),
+    GoRoute(path: '/apps', builder: (context, state) => const AppsPage()),
     GoRoute(path: '/performance', builder: (context, state) => const PerformancePage()),
     GoRoute(path: '/container-management', builder: (context, state) => const ContainerManagementPage()),
     GoRoute(path: '/control-panel', builder: (context, state) => const ControlPanelPage()),
