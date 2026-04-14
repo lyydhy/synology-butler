@@ -358,19 +358,85 @@ class _AppSection extends StatelessWidget {
             style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
           ),
           const SizedBox(height: 14),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: items.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              mainAxisSpacing: 10,
-              crossAxisSpacing: 10,
-              childAspectRatio: 2.5,
-            ),
-            itemBuilder: (context, index) => _AppEntryCard(item: items[index]),
-          ),
+          _buildAppWrap(items),
         ],
+      ),
+    );
+  }
+
+  Widget _buildAppWrap(List<_AppEntryItem> allItems) {
+    const maxVisible = 10;
+    final hasMore = allItems.length > maxVisible;
+    final displayItems = hasMore ? allItems.sublist(0, maxVisible - 1) : allItems;
+
+    return Wrap(
+      spacing: 12,
+      runSpacing: 12,
+      children: [
+        for (final item in displayItems)
+          SizedBox(
+            width: 64,
+            child: _AppEntryCard(item: item),
+          ),
+        if (hasMore)
+          SizedBox(
+            width: 64,
+            child: _MoreEntryCard(extraCount: allItems.length - maxVisible + 1),
+          ),
+      ],
+    );
+  }
+}
+
+class _MoreEntryCard extends StatelessWidget {
+  final int extraCount;
+
+  const _MoreEntryCard({required this.extraCount});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () {},
+        child: Ink(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Center(
+                  child: Text(
+                    '+$extraCount',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                '更多',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -404,36 +470,33 @@ class _AppEntryCard extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         onTap: item.onTap,
         child: Ink(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            color: item.color.withValues(alpha: 0.08),
-            border: Border.all(color: item.color.withValues(alpha: 0.14)),
-          ),
-          child: Row(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                width: 44,
-                height: 44,
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.surface,
+                  color: item.color.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: Icon(item.icon, color: item.color, size: 22),
+                child: Icon(item.icon, color: item.color, size: 24),
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  item.label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+              const SizedBox(height: 6),
+              Text(
+                item.label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.onSurface,
                 ),
+                textAlign: TextAlign.center,
               ),
-              Icon(Icons.chevron_right_rounded, color: item.color, size: 20),
             ],
           ),
         ),
