@@ -5,12 +5,10 @@ version: 1.0.0+1
 
 environment:
   sdk: ">=3.3.0 <4.0.0"
-
 dependencies:
   flutter:
     sdk: flutter
   flutter_localizations:
-    sdk: flutter
   cupertino_icons: ^1.0.8
   dio: ^5.4.3+1
   background_downloader: ^9.5.4
@@ -19,8 +17,11 @@ dependencies:
   flutter_secure_storage: ^9.2.2
   shared_preferences: ^2.2.3
   path_provider: ^2.1.5
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
   file_picker: ^8.0.7
   photo_manager: ^3.7.1
+  native_workmanager: ^1.1.2
   video_player: ^2.9.2
   omni_video_player: ^3.9.4
   intl: ^0.20.2
@@ -37,18 +38,14 @@ dependencies:
   package_info_plus: ^9.0.1
 dev_dependencies:
   flutter_test:
-    sdk: flutter
   flutter_lints: ^4.0.0
   flutter_launcher_icons: ^0.14.3
-
 flutter_launcher_icons:
   android: true
   ios: true
   image_path: "assets/icon.png"
   adaptive_icon_background: "#1a1a2e"
   adaptive_icon_foreground: "assets/icon.png"
-
-flutter:
   uses-material-design: true
   generate: true
   assets:
