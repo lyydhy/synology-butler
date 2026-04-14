@@ -121,8 +121,6 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with WidgetsBindi
           ),
           const SizedBox(height: 16),
           _AppSection(
-            title: l10n.dashboardSectionApps,
-            subtitle: l10n.dashboardSectionAppsSubtitle,
             apps: _buildVisibleApps(),
           ),
           const SizedBox(height: 16),
@@ -288,50 +286,15 @@ class _HeroCard extends StatelessWidget {
 }
 
 class _AppSection extends StatelessWidget {
-  const _AppSection({
-    required this.title,
-    required this.subtitle,
-    required this.apps,
-  });
+  const _AppSection({required this.apps});
 
-  final String title;
-  final String subtitle;
   final List<DashboardAppEntry> apps;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.45)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-          ),
-          const SizedBox(height: 14),
-          _buildAppWrap(apps),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAppWrap(List<DashboardAppEntry> allItems) {
     const maxVisible = 10;
-    final hasMore = allItems.length > maxVisible;
-    final displayItems = hasMore ? allItems.sublist(0, maxVisible - 1) : allItems;
+    final hasMore = apps.length > maxVisible;
+    final displayItems = hasMore ? apps.sublist(0, maxVisible - 1) : apps;
 
     return Wrap(
       spacing: 12,
@@ -345,7 +308,7 @@ class _AppSection extends StatelessWidget {
         if (hasMore)
           SizedBox(
             width: 64,
-            child: _MoreEntryCard(extraCount: allItems.length - maxVisible + 1),
+            child: _MoreEntryCard(extraCount: apps.length - maxVisible + 1),
           ),
       ],
     );
