@@ -18,6 +18,8 @@ class PackageItem {
   final String? status;
   final String? installPath;
   final String? dsmAppName;
+  final String? changelog;
+  final int? downloadCount;
 
   const PackageItem({
     required this.id,
@@ -39,5 +41,7 @@ class PackageItem {
     required this.status,
     required this.installPath,
     required this.dsmAppName,
+    this.changelog,
+    this.downloadCount,
   });
 }

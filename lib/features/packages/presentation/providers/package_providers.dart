@@ -24,6 +24,11 @@ final storePackagesProvider = FutureProvider<List<PackageItem>>((ref) async {
   return ref.read(packageRepositoryProvider).fetchStorePackages();
 });
 
+/// 社群/第三方套件
+final thirdPartyPackagesProvider = FutureProvider<List<PackageItem>>((ref) async {
+  return ref.read(packageRepositoryProvider).fetchStorePackages(others: true);
+});
+
 final installedPackagesProvider = FutureProvider<List<PackageItem>>((ref) async {
   return ref.read(packageRepositoryProvider).fetchInstalledPackages();
 });
@@ -59,11 +64,12 @@ final dockerFeatureInstalledProvider = FutureProvider<bool>((ref) async {
 
 final mergedPackagesProvider = FutureProvider<List<PackageItem>>((ref) async {
   final store = await ref.watch(storePackagesProvider.future);
+  final thirdParty = await ref.watch(thirdPartyPackagesProvider.future);
   final installed = await ref.watch(installedPackagesProvider.future);
 
   final installedMap = {for (final item in installed) item.id: item};
 
-  final merged = store.map((item) {
+  PackageItem merge(PackageItem item) {
     final installedItem = installedMap[item.id];
     if (installedItem == null) return item;
 
@@ -88,12 +94,18 @@ final mergedPackagesProvider = FutureProvider<List<PackageItem>>((ref) async {
       status: installedItem.status ?? item.status,
       installPath: installedItem.installPath,
       dsmAppName: installedItem.dsmAppName ?? item.dsmAppName,
+      changelog: item.changelog,
+      downloadCount: item.downloadCount,
     );
-  }).toList();
+  }
 
-  final existingIds = merged.map((e) => e.id).toSet();
+  // 官方套件优先（同一 id 不会同时出现在两边）
+  final merged = [...store.map(merge), ...thirdParty.map(merge)];
+  final mergedIds = merged.map((e) => e.id).toSet();
+
+  // 补充只安装在本地、不在商店的套件
   for (final item in installed) {
-    if (!existingIds.contains(item.id)) {
+    if (!mergedIds.contains(item.id)) {
       merged.add(item);
     }
   }
@@ -121,6 +133,7 @@ final packageUninstallProvider = Provider<Future<void> Function(PackageItem)>((r
   return (item) async {
     await ref.read(packageRepositoryProvider).uninstallPackage(packageId: item.id);
     ref.invalidate(storePackagesProvider);
+    ref.invalidate(thirdPartyPackagesProvider);
     ref.invalidate(installedPackagesProvider);
     ref.invalidate(mergedPackagesProvider);
   };
@@ -180,6 +193,7 @@ final packageInstallProvider = Provider<Future<void> Function(PackageItem, Strin
       }
 
       ref.invalidate(storePackagesProvider);
+    ref.invalidate(thirdPartyPackagesProvider);
       ref.invalidate(installedPackagesProvider);
       ref.invalidate(mergedPackagesProvider);
       ref.invalidate(packageVolumesProvider);

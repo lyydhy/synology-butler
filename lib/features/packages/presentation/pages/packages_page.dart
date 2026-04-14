@@ -16,8 +16,8 @@ import '../providers/package_providers.dart';
 
 /// 套件中心首页。
 ///
-/// 使用通用 SlidingTabBar + TabBarView 统一页签交互，
-/// 安装流程状态仍通过 provider 在列表页和详情页之间共享。
+/// 5 个页签：全部 / 已安装 / 可更新 / Beta / 社群
+/// 安装流程状态通过 provider 在列表页和详情页之间共享。
 class PackagesPage extends ConsumerStatefulWidget {
   const PackagesPage({super.key});
 
@@ -31,7 +31,8 @@ class _PackagesPageState extends ConsumerState<PackagesPage> with SingleTickerPr
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    // 0=全部 1=已安装 2=可更新 3=Beta 4=社群
+    _tabController = TabController(length: 5, vsync: this);
   }
 
   @override
@@ -40,21 +41,25 @@ class _PackagesPageState extends ConsumerState<PackagesPage> with SingleTickerPr
     super.dispose();
   }
 
-  /// 根据页签下标过滤展示的套件列表。
   List<PackageItem> _filterItems(List<PackageItem> items, int tabIndex) {
     switch (tabIndex) {
       case 1:
         return items.where((item) => item.isInstalled).toList();
       case 2:
         return items.where((item) => item.canUpdate).toList();
+      case 3:
+        return items.where((item) => item.isBeta).toList();
+      case 4:
+        // 社群：未安装且非 Beta（排除官方商店的官方套件）
+        return items.where((item) => !item.isInstalled && !item.isBeta).toList();
       default:
         return items;
     }
   }
 
-  /// 刷新套件列表相关数据。
   void _refreshPackages() {
     ref.invalidate(storePackagesProvider);
+    ref.invalidate(thirdPartyPackagesProvider);
     ref.invalidate(installedPackagesProvider);
     ref.invalidate(mergedPackagesProvider);
   }
@@ -99,10 +104,12 @@ class _PackagesPageState extends ConsumerState<PackagesPage> with SingleTickerPr
                 SlidingTabItem(icon: Icons.apps_rounded, label: l10n.packageAll),
                 SlidingTabItem(icon: Icons.check_circle_outline_rounded, label: l10n.packageInstalled),
                 SlidingTabItem(icon: Icons.system_update_alt_rounded, label: l10n.packageUpdatable),
+                const SlidingTabItem(icon: Icons.science_rounded, label: 'Beta'),
+                const SlidingTabItem(icon: Icons.groups_rounded, label: '社群'),
               ],
             ),
           ),
-          if (installStatus != null && installStatus.isNotEmpty)
+          if (installState.installingId != null && installState.installingId!.isNotEmpty)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
               child: Material(
@@ -118,7 +125,7 @@ class _PackagesPageState extends ConsumerState<PackagesPage> with SingleTickerPr
                         child: CircularProgressIndicator(strokeWidth: 2),
                       ),
                       const SizedBox(width: 12),
-                      Expanded(child: Text(l10n.packageTask(installStatus))),
+                      Expanded(child: Text(l10n.packageTask(installStatus ?? ''))),
                     ],
                   ),
                 ),
@@ -132,6 +139,8 @@ class _PackagesPageState extends ConsumerState<PackagesPage> with SingleTickerPr
                   _PackageListView(items: _filterItems(items, 0)),
                   _PackageListView(items: _filterItems(items, 1)),
                   _PackageListView(items: _filterItems(items, 2)),
+                  _PackageListView(items: _filterItems(items, 3)),
+                  _PackageListView(items: _filterItems(items, 4)),
                 ],
               ),
               loading: () => const Center(child: CircularProgressIndicator()),
@@ -173,7 +182,6 @@ class _PackageCard extends ConsumerWidget {
 
   final PackageItem item;
 
-  /// 弹出底部面板，让用户选择安装卷。
   Future<String?> _pickVolume(BuildContext context, WidgetRef ref) async {
     final volumes = await ref.read(packageVolumesProvider.future);
     if (volumes.isEmpty || !context.mounted) return null;
@@ -198,7 +206,6 @@ class _PackageCard extends ConsumerWidget {
     );
   }
 
-  /// 当前套件状态对应的标签颜色。
   Color _statusColor(BuildContext context) {
     if (item.canUpdate) return Colors.orange;
     if (item.isRunning) return Colors.green;
@@ -206,7 +213,6 @@ class _PackageCard extends ConsumerWidget {
     return Colors.grey;
   }
 
-  /// 当前套件状态对应的标签文案。
   String _statusText() {
     if (item.canUpdate) return '可更新';
     if (item.isRunning) return '运行中';
@@ -224,171 +230,179 @@ class _PackageCard extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: 52,
-                    height: 52,
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primaryContainer,
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: const Icon(Icons.apps_rounded),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: item.thumbnailUrl != null && item.thumbnailUrl!.isNotEmpty
+                    ? Image.network(
+                        item.thumbnailUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) =>
+                            const Icon(Icons.apps_rounded),
+                      )
+                    : const Icon(Icons.apps_rounded),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
                       children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                item.displayName,
-                                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-                              ),
+                        Expanded(
+                          child: Text(
+                            item.displayName,
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+                          ),
+                        ),
+                        if (item.isBeta)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.deepPurple.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(999),
                             ),
-                            if (item.isBeta)
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: Colors.deepPurple.withValues(alpha: 0.12),
-                                  borderRadius: BorderRadius.circular(999),
-                                ),
-                                child: const Text('Beta', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
-                              ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          item.description.isEmpty ? '暂无描述' : item.description,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(color: Colors.grey.shade700),
-                        ),
-                        const SizedBox(height: 10),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: [
-                            AppStatusChip(label: _statusText(), color: _statusColor(context)),
-                            AppStatusChip(label: l10n.storeVersion(item.version), color: Colors.blue),
-                            if (item.installedVersion != null && item.installedVersion!.isNotEmpty)
-                              AppStatusChip(label: l10n.installedVersion(item.installedVersion!), color: Colors.teal),
-                          ],
-                        ),
+                            child: const Text('Beta', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                          ),
                       ],
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 14),
-              Row(
-                children: [
-                  if (item.isInstalled && !item.isRunning)
-                    OutlinedButton.icon(
-                      onPressed: () async {
-                        await ref.read(packageStartProvider)(item);
-                        if (context.mounted) {
-                          Toast.show(l10n.startRequestSent(item.displayName));
-                        }
-                      },
-                      icon: const Icon(Icons.play_arrow_rounded),
-                      label: Text(l10n.start),
+                    const SizedBox(height: 6),
+                    Text(
+                      item.description.isEmpty ? '暂无描述' : item.description,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(color: Colors.grey.shade700),
                     ),
-                  if (item.isInstalled && item.isRunning)
-                    OutlinedButton.icon(
-                      onPressed: () async {
-                        await ref.read(packageStopProvider)(item);
-                        if (context.mounted) {
-                          Toast.show(l10n.stopRequestSent(item.displayName));
-                        }
-                      },
-                      icon: const Icon(Icons.stop_rounded),
-                      label: Text(l10n.stop),
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        AppStatusChip(label: _statusText(), color: _statusColor(context)),
+                        AppStatusChip(label: l10n.storeVersion(item.version), color: Colors.blue),
+                        if (item.installedVersion != null && item.installedVersion!.isNotEmpty)
+                          AppStatusChip(label: l10n.installedVersion(item.installedVersion!), color: Colors.teal),
+                      ],
                     ),
-                  if (item.isInstalled) const SizedBox(width: 10),
-                  if (item.isInstalled)
-                    TextButton.icon(
-                      onPressed: () async {
-                        final confirmed = await showDialog<bool>(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: Text(l10n.confirmUninstall),
-                                content: Text(l10n.confirmUninstallMessage(item.displayName)),
-                                actions: [
-                                  TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n.cancel)),
-                                  FilledButton(onPressed: () => Navigator.of(context).pop(true), child: Text(l10n.uninstall)),
-                                ],
-                              ),
-                            ) ??
-                            false;
-                        if (!confirmed) return;
-
-                        await ref.read(packageUninstallProvider)(item);
-                        if (context.mounted) {
-                          Toast.show(l10n.uninstallRequestSent(item.displayName));
-                        }
-                      },
-                      icon: const Icon(Icons.delete_outline),
-                      label: Text(l10n.uninstall),
-                    ),
-                  const Spacer(),
-                  FilledButton(
-                    onPressed: (item.isInstalled && !item.canUpdate) || isInstallingThis
-                        ? null
-                        : () async {
-                            final volumePath = await _pickVolume(context, ref);
-                            if (volumePath == null || volumePath.isEmpty) return;
-
-                            await ref.read(packagePrepareInstallProvider)(item);
-                            if (!context.mounted) return;
-
-                            final impact = ref.read(packageInstallStateProvider).pendingQueueImpact;
-                            if (impact != null && impact.pausedPackages.isNotEmpty) {
-                              final confirmed = await showDialog<bool>(
-                                    context: context,
-                                    builder: (context) => AlertDialog(
-                                      title: Text(l10n.confirmUpdateImpact),
-                                      content: Text(
-                                        '继续安装/更新 ${item.displayName} 时，以下套件可能会被暂停：\n\n${impact.pausedPackages.join('、')}',
-                                      ),
-                                      actions: [
-                                        TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n.cancel)),
-                                        FilledButton(onPressed: () => Navigator.of(context).pop(true), child: Text(l10n.continueAction)),
-                                      ],
-                                    ),
-                                  ) ??
-                                  false;
-                              if (!confirmed) return;
-                            }
-
-                            try {
-                              await ref.read(packageInstallProvider)(item, volumePath);
-                              if (context.mounted) {
-                                Toast.success(l10n.packageTaskComplete(item.displayName));
-                              }
-                            } catch (e) {
-                              if (context.mounted) {
-                                Toast.error(l10n.packageInstallFailed(e.toString()));
-                              }
-                            }
-                          },
-                    child: Text(
-                      isInstallingThis
-                          ? '进行中'
-                          : item.canUpdate
-                              ? '更新'
-                              : item.isInstalled
-                                  ? '已安装'
-                                  : '安装',
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              if (item.isInstalled && !item.isRunning)
+                OutlinedButton.icon(
+                  onPressed: () async {
+                    await ref.read(packageStartProvider)(item);
+                    if (context.mounted) {
+                      Toast.show(l10n.startRequestSent(item.displayName));
+                    }
+                  },
+                  icon: const Icon(Icons.play_arrow_rounded),
+                  label: Text(l10n.start),
+                ),
+              if (item.isInstalled && item.isRunning)
+                OutlinedButton.icon(
+                  onPressed: () async {
+                    await ref.read(packageStopProvider)(item);
+                    if (context.mounted) {
+                      Toast.show(l10n.stopRequestSent(item.displayName));
+                    }
+                  },
+                  icon: const Icon(Icons.stop_rounded),
+                  label: Text(l10n.stop),
+                ),
+              if (item.isInstalled) const SizedBox(width: 10),
+              if (item.isInstalled)
+                TextButton.icon(
+                  onPressed: () async {
+                    final confirmed = await showDialog<bool>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: Text(l10n.confirmUninstall),
+                            content: Text(l10n.confirmUninstallMessage(item.displayName)),
+                            actions: [
+                              TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n.cancel)),
+                              FilledButton(onPressed: () => Navigator.of(context).pop(true), child: Text(l10n.uninstall)),
+                            ],
+                          ),
+                        ) ??
+                        false;
+                    if (!confirmed) return;
+
+                    await ref.read(packageUninstallProvider)(item);
+                    if (context.mounted) {
+                      Toast.show(l10n.uninstallRequestSent(item.displayName));
+                    }
+                  },
+                  icon: const Icon(Icons.delete_outline),
+                  label: Text(l10n.uninstall),
+                ),
+              const Spacer(),
+              FilledButton(
+                onPressed: (item.isInstalled && !item.canUpdate) || isInstallingThis
+                    ? null
+                    : () async {
+                        final volumePath = await _pickVolume(context, ref);
+                        if (volumePath == null || volumePath.isEmpty) return;
+
+                        await ref.read(packagePrepareInstallProvider)(item);
+                        if (!context.mounted) return;
+
+                        final impact = ref.read(packageInstallStateProvider).pendingQueueImpact;
+                        if (impact != null && impact.pausedPackages.isNotEmpty) {
+                          final confirmed = await showDialog<bool>(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: Text(l10n.confirmUpdateImpact),
+                                  content: Text(
+                                    '继续安装/更新 ${item.displayName} 时，以下套件可能会被暂停：\n\n${impact.pausedPackages.join('、')}',
+                                  ),
+                                  actions: [
+                                    TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n.cancel)),
+                                    FilledButton(onPressed: () => Navigator.of(context).pop(true), child: Text(l10n.continueAction)),
+                                  ],
+                                ),
+                              ) ??
+                              false;
+                          if (!confirmed) return;
+                        }
+
+                        try {
+                          await ref.read(packageInstallProvider)(item, volumePath);
+                          if (context.mounted) {
+                            Toast.success(l10n.packageTaskComplete(item.displayName));
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            Toast.error(l10n.packageInstallFailed(e.toString()));
+                          }
+                        }
+                      },
+                child: Text(
+                  isInstallingThis
+                      ? '进行中'
+                      : item.canUpdate
+                          ? '更新'
+                          : item.isInstalled
+                              ? '已安装'
+                              : '安装',
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
@@ -414,4 +428,3 @@ class _VolumeTile extends StatelessWidget {
     );
   }
 }
-

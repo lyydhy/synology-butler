@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/network/realtime_reconnect_bridge.dart';
@@ -12,6 +13,7 @@ import '../../../../core/utils/l10n.dart';
 import '../../../../core/utils/format_utils.dart';
 import '../../../auth/presentation/providers/current_connection_readers.dart';
 import '../../../packages/presentation/providers/package_providers.dart';
+import '../../data/dashboard_apps.dart';
 import '../providers/dashboard_providers.dart';
 import '../providers/dashboard_realtime_global.dart';
 import '../widgets/summary_card.dart';
@@ -72,7 +74,6 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with WidgetsBindi
     final connection = ref.watch(currentConnectionProvider);
     final currentServer = connection.server;
     final currentSession = connection.session;
-    final dockerInstalledAsync = ref.watch(dockerFeatureInstalledProvider);
 
     if (currentServer == null || currentSession == null) {
       return Scaffold(
@@ -97,6 +98,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with WidgetsBindi
     final realtimeFailed = realtimeState.hasError;
     final realtimeLoading = realtimeState.isLoading;
 
+    final fullUrl = ServerUrlHelper.buildBaseUrl(currentServer);
+    final maskedUrl = _maskUrl(fullUrl);
+
     return Scaffold(
       appBar: AppBar(title: Text(l10n.dashboardTitle)),
       body: ListView(
@@ -105,7 +109,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with WidgetsBindi
           _HeroCard(
             title: data?.serverName ?? currentServer.name,
             subtitle: _buildSystemVersionText(data),
-            connection: ServerUrlHelper.buildBaseUrl(currentServer),
+            connection: maskedUrl,
+            fullUrl: fullUrl,
             realtimeText: currentSession.synoToken == null || currentSession.synoToken!.isEmpty
                 ? l10n.realtimePreparing
                 : realtimeLoading
@@ -116,46 +121,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with WidgetsBindi
           ),
           const SizedBox(height: 16),
           _AppSection(
-            title: l10n.dashboardSectionApps,
-            subtitle: l10n.dashboardSectionAppsSubtitle,
-            items: [
-              if (dockerInstalledAsync.valueOrNull == true)
-                _AppEntryItem(
-                  icon: Icons.inventory_2_outlined,
-                  label: l10n.dashboardContainerManagement,
-                  description: l10n.dashboardContainerManagementDesc,
-                  color: Colors.blueGrey,
-                  onTap: () => context.push('/container-management'),
-                ),
-              _AppEntryItem(
-                icon: Icons.sync_alt_rounded,
-                label: l10n.dashboardTransfers,
-                description: l10n.dashboardTransfersDesc,
-                color: Colors.deepOrange,
-                onTap: () => context.push('/transfers'),
-              ),
-              _AppEntryItem(
-                icon: Icons.tune_rounded,
-                label: l10n.dashboardControlPanel,
-                description: l10n.dashboardControlPanelDesc,
-                color: Colors.deepPurple,
-                onTap: () => context.push('/control-panel'),
-              ),
-              _AppEntryItem(
-                icon: Icons.info_outline_rounded,
-                label: l10n.dashboardInformationCenter,
-                description: l10n.dashboardInformationCenterDesc,
-                color: Colors.indigo,
-                onTap: () => context.push('/information-center'),
-              ),
-              _AppEntryItem(
-                icon: Icons.monitor_heart_outlined,
-                label: l10n.dashboardPerformance,
-                description: l10n.dashboardPerformanceDesc,
-                color: Colors.teal,
-                onTap: () => context.push('/performance'),
-              ),
-            ],
+            apps: _buildVisibleApps(),
           ),
           const SizedBox(height: 16),
           Row(
@@ -166,6 +132,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with WidgetsBindi
                   value: data == null ? '--' : '${data.cpuUsage.toStringAsFixed(0)}%',
                   icon: Icons.memory_outlined,
                   color: Colors.blue,
+                  onTap: () => context.push('/performance?tab=0'),
                 ),
               ),
               const SizedBox(width: 12),
@@ -175,6 +142,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with WidgetsBindi
                   value: data == null ? '--' : '${data.memoryUsage.toStringAsFixed(0)}%',
                   icon: Icons.developer_board_outlined,
                   color: Colors.green,
+                  onTap: () => context.push('/performance?tab=1'),
                 ),
               ),
             ],
@@ -198,18 +166,42 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with WidgetsBindi
 
     return version;
   }
+
+  List<DashboardAppEntry> _buildVisibleApps() {
+    final dockerInstalled = ref.watch(dockerFeatureInstalledProvider).valueOrNull;
+    return dashboardHomeApps.where((app) {
+      if (app.route == '/container-management') return dockerInstalled == true;
+      return true;
+    }).toList();
+  }
+
+  String _maskUrl(String url) {
+    final uri = Uri.tryParse(url);
+    if (uri == null) return url;
+    final host = uri.host;
+    final parts = host.split('.');
+    if (parts.length == 4 && int.tryParse(parts[3]) != null) {
+      return '${parts[0].replaceAll(RegExp(r'.'), '*')}.${parts[1].replaceAll(RegExp(r'.'), '*')}.${parts[2]}.${parts[3]}:${uri.port}';
+    }
+    if (parts.length > 2) {
+      return '${parts[0].replaceAll(RegExp(r'.'), '*')}.${parts.sublist(2).join('.')}:${uri.port}';
+    }
+    return '${host.replaceAll(RegExp(r'.'), '*')}:${uri.port}';
+  }
 }
 
 class _HeroCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final String connection;
+  final String fullUrl;
   final String realtimeText;
 
   const _HeroCard({
     required this.title,
     required this.subtitle,
     required this.connection,
+    required this.fullUrl,
     required this.realtimeText,
   });
 
@@ -260,9 +252,29 @@ class _HeroCard extends StatelessWidget {
                       style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                     ),
                     const SizedBox(height: 8),
-                    Text(
-                      connection,
-                      style: theme.textTheme.labelLarge?.copyWith(color: theme.colorScheme.primary),
+                    GestureDetector(
+                      onTap: () {
+                        Clipboard.setData(ClipboardData(text: fullUrl));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('地址已复制: $fullUrl'),
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      },
+                      child: Row(
+                        children: [
+                          Icon(Icons.link_rounded, size: 16, color: theme.colorScheme.primary),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              connection,
+                              style: theme.textTheme.labelLarge?.copyWith(color: theme.colorScheme.primary),
+                            ),
+                          ),
+                          Icon(Icons.copy_rounded, size: 14, color: theme.colorScheme.outline),
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -276,78 +288,39 @@ class _HeroCard extends StatelessWidget {
 }
 
 class _AppSection extends StatelessWidget {
-  const _AppSection({
-    required this.title,
-    required this.subtitle,
-    required this.items,
-  });
+  const _AppSection({required this.apps});
 
-  final String title;
-  final String subtitle;
-  final List<_AppEntryItem> items;
+  final List<DashboardAppEntry> apps;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    const maxVisible = 10;
+    final hasMore = apps.length > maxVisible;
+    final displayCount = hasMore ? maxVisible - 1 : apps.length;
 
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.45)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return SizedBox(
+      height: 180,
+      child: GridView.count(
+        crossAxisCount: 5,
+        mainAxisSpacing: 8,
+        crossAxisSpacing: 8,
+        childAspectRatio: 0.85,
+        physics: const NeverScrollableScrollPhysics(),
         children: [
-          Text(
-            title,
-            style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-          ),
-          const SizedBox(height: 14),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: items.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              mainAxisSpacing: 10,
-              crossAxisSpacing: 10,
-              childAspectRatio: 1.3,
-            ),
-            itemBuilder: (context, index) => _AppEntryCard(item: items[index]),
-          ),
+          for (int i = 0; i < displayCount; i++)
+            _AppEntryCard(item: apps[i]),
+          if (hasMore)
+            _MoreEntryCard(extraCount: apps.length - maxVisible + 1),
         ],
       ),
     );
   }
 }
 
-class _AppEntryItem {
-  const _AppEntryItem({
-    required this.icon,
-    required this.label,
-    required this.description,
-    required this.color,
-    required this.onTap,
-  });
+class _MoreEntryCard extends StatelessWidget {
+  final int extraCount;
 
-  final IconData icon;
-  final String label;
-  final String description;
-  final Color color;
-  final VoidCallback onTap;
-}
-
-class _AppEntryCard extends StatelessWidget {
-  const _AppEntryCard({required this.item});
-
-  final _AppEntryItem item;
+  const _MoreEntryCard({required this.extraCount});
 
   @override
   Widget build(BuildContext context) {
@@ -356,41 +329,88 @@ class _AppEntryCard extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(20),
-        onTap: item.onTap,
+        borderRadius: BorderRadius.circular(16),
+        onTap: () => context.push('/apps'),
         child: Ink(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            color: item.color.withValues(alpha: 0.08),
-            border: Border.all(color: item.color.withValues(alpha: 0.14)),
-          ),
+          padding: const EdgeInsets.symmetric(vertical: 8),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Row(
-                children: [
-                  Container(
-                    width: 42,
-                    height: 42,
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surface.withValues(alpha: 0.9),
-                      borderRadius: BorderRadius.circular(14),
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Center(
+                  child: Text(
+                    '+$extraCount',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: theme.colorScheme.primary,
                     ),
-                    child: Icon(item.icon, color: item.color, size: 20),
                   ),
-                  const Spacer(),
-                  Icon(Icons.chevron_right_rounded, color: theme.colorScheme.onSurfaceVariant, size: 20),
-                ],
+                ),
               ),
-              const Spacer(),
+              const SizedBox(height: 6),
+              Text(
+                '更多',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+
+class _AppEntryCard extends StatelessWidget {
+  const _AppEntryCard({required this.item});
+
+  final DashboardAppEntry item;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () => context.push(item.route),
+        child: Ink(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: item.color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(item.icon, color: item.color, size: 24),
+              ),
+              const SizedBox(height: 6),
               Text(
                 item.label,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+                style: theme.textTheme.labelSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.onSurface,
+                ),
+                textAlign: TextAlign.center,
               ),
-
             ],
           ),
         ),
@@ -405,12 +425,14 @@ class _MetricCard extends StatelessWidget {
   final String value;
   final IconData icon;
   final Color color;
+  final VoidCallback? onTap;
 
   const _MetricCard({
     required this.title,
     required this.value,
     required this.icon,
     required this.color,
+    this.onTap,
   });
 
   @override
@@ -418,28 +440,32 @@ class _MetricCard extends StatelessWidget {
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: Container(
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: color.withValues(alpha: 0.25)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            CircleAvatar(
-              radius: 18,
-              backgroundColor: color.withValues(alpha: 0.12),
-              child: Icon(icon, color: color),
-            ),
-            const SizedBox(height: 16),
-            Text(title, style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8),
-            Text(
-              value,
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
-            ),
-          ],
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: color.withValues(alpha: 0.25)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              CircleAvatar(
+                radius: 18,
+                backgroundColor: color.withValues(alpha: 0.12),
+                child: Icon(icon, color: color),
+              ),
+              const SizedBox(height: 16),
+              Text(title, style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 8),
+              Text(
+                value,
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
+              ),
+            ],
+          ),
         ),
       ),
     );

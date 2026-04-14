@@ -1047,6 +1047,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get packageCenter => 'Package Center';
 
   @override
+  String get packageCenterDesc => 'Browse and install packages';
+
+  @override
   String get packageAll => 'All';
 
   @override

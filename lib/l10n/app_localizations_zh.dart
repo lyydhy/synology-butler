@@ -1024,6 +1024,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get packageCenter => '套件中心';
 
   @override
+  String get packageCenterDesc => '浏览和安装套件';
+
+  @override
   String get packageAll => '全部';
 
   @override

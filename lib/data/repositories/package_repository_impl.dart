@@ -36,6 +36,8 @@ class PackageRepositoryImpl implements PackageRepository {
             status: item.status,
             installPath: item.installPath,
             dsmAppName: item.dsmAppName,
+            changelog: item.changelog,
+            downloadCount: item.downloadCount,
           ),
         )
         .toList();
@@ -67,6 +69,8 @@ class PackageRepositoryImpl implements PackageRepository {
             status: item.status,
             installPath: item.installPath,
             dsmAppName: item.dsmAppName,
+            changelog: item.changelog,
+            downloadCount: item.downloadCount,
           ),
         )
         .toList();
