@@ -296,23 +296,23 @@ class _AppSection extends StatelessWidget {
   Widget build(BuildContext context) {
     const maxVisible = 10;
     final hasMore = apps.length > maxVisible;
-    final displayItems = hasMore ? apps.sublist(0, maxVisible - 1) : apps;
+    final displayCount = hasMore ? maxVisible - 1 : apps.length;
 
-    return Wrap(
-      spacing: 12,
-      runSpacing: 12,
-      children: [
-        for (final item in displayItems)
-          SizedBox(
-            width: 64,
-            child: _AppEntryCard(item: item),
-          ),
-        if (hasMore)
-          SizedBox(
-            width: 64,
-            child: _MoreEntryCard(extraCount: apps.length - maxVisible + 1),
-          ),
-      ],
+    return SizedBox(
+      height: 180,
+      child: GridView.count(
+        crossAxisCount: 5,
+        mainAxisSpacing: 8,
+        crossAxisSpacing: 8,
+        childAspectRatio: 0.85,
+        physics: const NeverScrollableScrollPhysics(),
+        children: [
+          for (int i = 0; i < displayCount; i++)
+            _AppEntryCard(item: apps[i]),
+          if (hasMore)
+            _MoreEntryCard(extraCount: apps.length - maxVisible + 1),
+        ],
+      ),
     );
   }
 }
