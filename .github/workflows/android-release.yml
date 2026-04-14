@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
-      contents: read
+      contents: write
 
     steps:
       - name: 检出代码
@@ -63,23 +63,24 @@ jobs:
             --obfuscate \
             --split-debug-info=build/app/outputs/symbols
 
-      - name: 上传 APK 产物
-        uses: actions/upload-artifact@v4
+      - name: 上传 APK 到 Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: android-apk-release
-          path: build/app/outputs/flutter-apk/*.apk
-          retention-days: 1
+          files: build/app/outputs/flutter-apk/*.apk
+          body: "🎉 群晖管家 v1.0.0 正式发布\n\nAPK 安装包，可直接安装使用。\n\n构建产物，签名已混淆。"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: 上传混淆符号
         uses: actions/upload-artifact@v4
         with:
           name: android-obfuscation-symbols
           path: build/app/outputs/symbols/**
-          retention-days: 1
+          retention-days: 30
 
       - name: 上传 R8 mapping
         uses: actions/upload-artifact@v4
         with:
           name: android-r8-mapping
           path: android/app/build/outputs/mapping/release/**
-          retention-days: 1
+          retention-days: 30
