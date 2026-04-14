@@ -304,10 +304,11 @@ class SettingsPage extends ConsumerWidget {
                   if (context.mounted) context.go('/login');
                 },
               ),
-              _SettingsStaticTile(
+              _SettingsActionTile(
                 icon: Icons.info_outline_rounded,
                 title: l10n.settingsAbout,
                 subtitle: l10n.settingsAboutSubtitle,
+                onTap: () => context.push('/about'),
               ),
             ],
           ),
@@ -401,40 +402,6 @@ class _SettingsActionTile extends StatelessWidget {
         subtitle: Text(subtitle),
         trailing: const Icon(Icons.chevron_right_rounded),
         onTap: onTap,
-      ),
-    );
-  }
-}
-
-class _SettingsStaticTile extends StatelessWidget {
-  const _SettingsStaticTile({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-  });
-
-  final IconData icon;
-  final String title;
-  final String subtitle;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Material(
-      color: Colors.transparent,
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-        leading: Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: theme.colorScheme.primary.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: Icon(icon, color: theme.colorScheme.primary),
-        ),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-        subtitle: Text(subtitle),
       ),
     );
   }
