@@ -2,12 +2,15 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../../../core/utils/l10n.dart';
 import '../../../../core/utils/toast.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../auth/presentation/providers/current_connection_readers.dart';
 import '../../../preferences/providers/preferences_providers.dart';
+
+final _packageInfoProvider = FutureProvider((ref) => PackageInfo.fromPlatform());
 
 class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
@@ -226,6 +229,7 @@ class SettingsPage extends ConsumerWidget {
     final themeColor = ref.watch(themeColorProvider);
     final locale = ref.watch(localeProvider);
     final downloadDirectory = ref.watch(downloadDirectoryProvider);
+    final packageInfo = ref.watch(_packageInfoProvider);
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settingsTitle)),
@@ -307,7 +311,7 @@ class SettingsPage extends ConsumerWidget {
               _SettingsActionTile(
                 icon: Icons.info_outline_rounded,
                 title: l10n.settingsAbout,
-                subtitle: l10n.settingsAboutSubtitle,
+                subtitle: 'v${packageInfo.valueOrNull?.version ?? '-'}',
                 onTap: () => context.push('/about'),
               ),
             ],

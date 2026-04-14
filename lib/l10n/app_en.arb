@@ -470,7 +470,7 @@
   "aboutTitle": "About",
   "aboutSubtitle": "Synology Butler v0.1",
   "settingsAbout": "About",
-  "settingsAboutSubtitle": "Synology Manager v0.1.0",
+  "settingsAboutSubtitle": "About app",
   "packageCenter": "Package Center",
   "packageCenterDesc": "Browse and install packages",
   "packageAll": "All",
