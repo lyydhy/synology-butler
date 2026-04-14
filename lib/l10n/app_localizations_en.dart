@@ -1041,7 +1041,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsAbout => 'About';
 
   @override
-  String get settingsAboutSubtitle => 'Synology Manager v0.1';
+  String get settingsAboutSubtitle => 'Synology Manager v0.1.0';
 
   @override
   String get packageCenter => 'Package Center';

@@ -497,7 +497,7 @@
   "settingsLogout": "退出登录",
   "settingsLogoutSubtitle": "清除当前会话和本地保存的登录态",
   "settingsAbout": "关于",
-  "settingsAboutSubtitle": "群晖管家 v0.1",
+  "settingsAboutSubtitle": "群晖管家 v0.1.0",
   "packageCenter": "套件中心",
   "packageCenterDesc": "浏览和安装套件",
   "packageAll": "全部",

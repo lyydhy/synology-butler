@@ -1991,7 +1991,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsAboutSubtitle.
   ///
   /// In zh, this message translates to:
-  /// **'群晖管家 v0.1'**
+  /// **'群晖管家 v0.1.0'**
   String get settingsAboutSubtitle;
 
   /// No description provided for @packageCenter.

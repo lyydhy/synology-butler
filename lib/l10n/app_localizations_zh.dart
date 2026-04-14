@@ -1018,7 +1018,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsAbout => '关于';
 
   @override
-  String get settingsAboutSubtitle => '群晖管家 v0.1';
+  String get settingsAboutSubtitle => '群晖管家 v0.1.0';
 
   @override
   String get packageCenter => '套件中心';
