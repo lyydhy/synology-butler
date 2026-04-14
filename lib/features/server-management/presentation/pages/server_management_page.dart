@@ -117,51 +117,12 @@ class _ServerManagementPageState extends ConsumerState<ServerManagementPage>
     final savedServerLastUsed = ref.watch(savedServerLastUsedProvider);
     final isDark = theme.brightness == Brightness.dark;
 
-    final bgColor = isDark
-        ? HSLColor.fromColor(primaryColor).withLightness(0.06).toColor()
-        : HSLColor.fromColor(primaryColor).withLightness(0.93).withSaturation(0.25).toColor();
-
     final sortedServers = [...servers]
       ..sort((a, b) => (savedServerLastUsed[b.id] ?? 0).compareTo(savedServerLastUsed[a.id] ?? 0));
 
     return Scaffold(
-      backgroundColor: bgColor,
+      backgroundColor: theme.colorScheme.surface,
       body: Stack(children: [
-        // 背景装饰
-        Positioned(
-          top: -100,
-          right: -80,
-          child: Container(
-            width: 300,
-            height: 300,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: RadialGradient(
-                colors: [
-                  primaryColor.withValues(alpha: 0.12),
-                  primaryColor.withValues(alpha: 0.0),
-                ],
-              ),
-            ),
-          ),
-        ),
-        Positioned(
-          bottom: -60,
-          left: -60,
-          child: Container(
-            width: 200,
-            height: 200,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: RadialGradient(
-                colors: [
-                  primaryColor.withValues(alpha: 0.08),
-                  primaryColor.withValues(alpha: 0.0),
-                ],
-              ),
-            ),
-          ),
-        ),
         // 主内容
         FadeTransition(
           opacity: _fadeAnim,

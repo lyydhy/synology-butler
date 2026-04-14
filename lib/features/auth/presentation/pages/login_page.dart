@@ -8,8 +8,8 @@ import '../../../../core/utils/l10n.dart';
 import '../../../../core/utils/server_url_helper.dart';
 import '../../../../domain/entities/nas_server.dart';
 import '../../../../core/network/app_dio.dart';
+import '../../../../core/constants/app_constants.dart';
 import '../providers/auth_providers.dart';
-import '../providers/current_connection_readers.dart';
 import '../../../preferences/providers/preferences_providers.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
@@ -66,7 +66,7 @@ class _LoginPageState extends ConsumerState<LoginPage>
     _animController.forward();
   }
 
-  void _autofillFromHistory() {
+  Future<void> _autofillFromHistory() async {
     if (widget.initialServer != null) {
       _applyServer(widget.initialServer!);
       return;
@@ -75,8 +75,6 @@ class _LoginPageState extends ConsumerState<LoginPage>
     final savedServers = ref.read(savedServersProvider);
     final savedServerLastUsed = ref.read(savedServerLastUsedProvider);
     final savedServerUsernames = ref.read(savedServerUsernamesProvider);
-    // use watch so we get the value after restoreSessionProvider completes
-    final connection = ref.watch(currentConnectionProvider);
 
     if (savedServers.isEmpty) return;
 
@@ -84,6 +82,11 @@ class _LoginPageState extends ConsumerState<LoginPage>
       ..sort((a, b) => (savedServerLastUsed[b.id] ?? 0).compareTo(savedServerLastUsed[a.id] ?? 0));
     final latest = sorted.first;
 
+    // 直接从 secureStorage 读取密码，确保拿到持久化数据
+    final secureStorage = ref.read(secureStorageProvider);
+    final savedPassword = await secureStorage.read('${AppConstants.savedPasswordPrefix}${latest.id}');
+
+    if (!mounted) return;
     setState(() {
       selectedServerId = latest.id;
       https = latest.https;
@@ -94,7 +97,7 @@ class _LoginPageState extends ConsumerState<LoginPage>
       if (savedUsername != null && savedUsername.isNotEmpty) {
         usernameController.text = savedUsername;
       }
-      passwordController.text = connection.password ?? '';
+      passwordController.text = savedPassword ?? '';
     });
   }
 
