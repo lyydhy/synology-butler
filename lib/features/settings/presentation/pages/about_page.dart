@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 /// 关于页面。
 class AboutPage extends StatelessWidget {
@@ -23,7 +24,6 @@ class AboutPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final info = _loadPackageInfo();
 
     return Scaffold(
       appBar: AppBar(
@@ -33,38 +33,40 @@ class AboutPage extends StatelessWidget {
         padding: const EdgeInsets.all(20),
         children: [
           // Logo + 名称
-          Center(
-            child: Column(
-              children: [
-                Container(
-                  width: 88,
-                  height: 88,
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(24),
+          FutureBuilder<PackageInfo>(
+            future: PackageInfo.fromPlatform(),
+            builder: (context, snapshot) {
+              final version = snapshot.data?.version ?? '-';
+              return Column(
+                children: [
+                  Container(
+                    width: 88,
+                    height: 88,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(24),
+                      image: const DecorationImage(
+                        image: AssetImage('assets/icon.png'),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
                   ),
-                  child: Icon(
-                    Icons.storage_rounded,
-                    size: 48,
-                    color: theme.colorScheme.onPrimaryContainer,
+                  const SizedBox(height: 16),
+                  Text(
+                    '群晖管家',
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  '群晖管家',
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w800,
+                  const SizedBox(height: 4),
+                  Text(
+                    'Synology Butler · v$version',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Synology Butler · v${info['version'] ?? '1.0.0'}',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 32),
 
@@ -139,11 +141,6 @@ class AboutPage extends StatelessWidget {
     );
   }
 
-  Map<String, String> _loadPackageInfo() {
-    return {
-      'version': '1.0.0',
-    };
-  }
 }
 
 class _LinkCard extends StatelessWidget {

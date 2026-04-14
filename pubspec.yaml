@@ -34,6 +34,7 @@ dependencies:
   url_launcher: ^6.3.2
   cached_network_image_ce: ^4.6.4
   flutter_html: ^3.0.0-beta.2
+  package_info_plus: ^9.0.1
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -50,3 +51,5 @@ flutter_launcher_icons:
 flutter:
   uses-material-design: true
   generate: true
+  assets:
+    - assets/icon.png
