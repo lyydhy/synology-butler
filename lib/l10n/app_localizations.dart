@@ -2000,6 +2000,12 @@ abstract class AppLocalizations {
   /// **'套件中心'**
   String get packageCenter;
 
+  /// No description provided for @packageCenterDesc.
+  ///
+  /// In zh, this message translates to:
+  /// **'浏览和安装套件'**
+  String get packageCenterDesc;
+
   /// No description provided for @packageAll.
   ///
   /// In zh, this message translates to:

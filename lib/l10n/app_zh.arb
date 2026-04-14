@@ -499,6 +499,7 @@
   "settingsAbout": "关于",
   "settingsAboutSubtitle": "群晖管家 v0.1",
   "packageCenter": "套件中心",
+  "packageCenterDesc": "浏览和安装套件",
   "packageAll": "全部",
   "packageInstalled": "已安装",
   "packageUpdatable": "可更新",

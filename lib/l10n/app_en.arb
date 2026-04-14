@@ -472,6 +472,7 @@
   "settingsAbout": "About",
   "settingsAboutSubtitle": "Synology Manager v0.1",
   "packageCenter": "Package Center",
+  "packageCenterDesc": "Browse and install packages",
   "packageAll": "All",
   "packageInstalled": "Installed",
   "packageUpdatable": "Updatable",

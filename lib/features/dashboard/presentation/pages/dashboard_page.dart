@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/network/realtime_reconnect_bridge.dart';
@@ -97,6 +98,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with WidgetsBindi
     final realtimeFailed = realtimeState.hasError;
     final realtimeLoading = realtimeState.isLoading;
 
+    final fullUrl = ServerUrlHelper.buildBaseUrl(currentServer);
+    final maskedUrl = _maskUrl(fullUrl);
+
     return Scaffold(
       appBar: AppBar(title: Text(l10n.dashboardTitle)),
       body: ListView(
@@ -105,7 +109,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with WidgetsBindi
           _HeroCard(
             title: data?.serverName ?? currentServer.name,
             subtitle: _buildSystemVersionText(data),
-            connection: ServerUrlHelper.buildBaseUrl(currentServer),
+            connection: maskedUrl,
+            fullUrl: fullUrl,
             realtimeText: currentSession.synoToken == null || currentSession.synoToken!.isEmpty
                 ? l10n.realtimePreparing
                 : realtimeLoading
@@ -127,6 +132,13 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with WidgetsBindi
                   color: Colors.blueGrey,
                   onTap: () => context.push('/container-management'),
                 ),
+              _AppEntryItem(
+                icon: Icons.apps_rounded,
+                label: l10n.packageCenter,
+                description: l10n.packageCenterDesc,
+                color: Colors.amber.shade700,
+                onTap: () => context.push('/packages'),
+              ),
               _AppEntryItem(
                 icon: Icons.sync_alt_rounded,
                 label: l10n.dashboardTransfers,
@@ -198,18 +210,34 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with WidgetsBindi
 
     return version;
   }
+
+  String _maskUrl(String url) {
+    final uri = Uri.tryParse(url);
+    if (uri == null) return url;
+    final host = uri.host;
+    final parts = host.split('.');
+    if (parts.length == 4 && int.tryParse(parts[3]) != null) {
+      return '${parts[0].replaceAll(RegExp(r'.'), '*')}.${parts[1].replaceAll(RegExp(r'.'), '*')}.${parts[2]}.${parts[3]}:${uri.port}';
+    }
+    if (parts.length > 2) {
+      return '${parts[0].replaceAll(RegExp(r'.'), '*')}.${parts.sublist(2).join('.')}:${uri.port}';
+    }
+    return '${host.replaceAll(RegExp(r'.'), '*')}:${uri.port}';
+  }
 }
 
 class _HeroCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final String connection;
+  final String fullUrl;
   final String realtimeText;
 
   const _HeroCard({
     required this.title,
     required this.subtitle,
     required this.connection,
+    required this.fullUrl,
     required this.realtimeText,
   });
 
@@ -260,9 +288,29 @@ class _HeroCard extends StatelessWidget {
                       style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                     ),
                     const SizedBox(height: 8),
-                    Text(
-                      connection,
-                      style: theme.textTheme.labelLarge?.copyWith(color: theme.colorScheme.primary),
+                    GestureDetector(
+                      onTap: () {
+                        Clipboard.setData(ClipboardData(text: fullUrl));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('地址已复制: $fullUrl'),
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      },
+                      child: Row(
+                        children: [
+                          Icon(Icons.link_rounded, size: 16, color: theme.colorScheme.primary),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              connection,
+                              style: theme.textTheme.labelLarge?.copyWith(color: theme.colorScheme.primary),
+                            ),
+                          ),
+                          Icon(Icons.copy_rounded, size: 14, color: theme.colorScheme.outline),
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -318,7 +366,7 @@ class _AppSection extends StatelessWidget {
               crossAxisCount: 2,
               mainAxisSpacing: 10,
               crossAxisSpacing: 10,
-              childAspectRatio: 1.3,
+              childAspectRatio: 2.5,
             ),
             itemBuilder: (context, index) => _AppEntryCard(item: items[index]),
           ),
@@ -365,32 +413,27 @@ class _AppEntryCard extends StatelessWidget {
             color: item.color.withValues(alpha: 0.08),
             border: Border.all(color: item.color.withValues(alpha: 0.14)),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Row(
             children: [
-              Row(
-                children: [
-                  Container(
-                    width: 42,
-                    height: 42,
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surface.withValues(alpha: 0.9),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Icon(item.icon, color: item.color, size: 20),
-                  ),
-                  const Spacer(),
-                  Icon(Icons.chevron_right_rounded, color: theme.colorScheme.onSurfaceVariant, size: 20),
-                ],
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(item.icon, color: item.color, size: 22),
               ),
-              const Spacer(),
-              Text(
-                item.label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  item.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+                ),
               ),
-
+              Icon(Icons.chevron_right_rounded, color: item.color, size: 20),
             ],
           ),
         ),
