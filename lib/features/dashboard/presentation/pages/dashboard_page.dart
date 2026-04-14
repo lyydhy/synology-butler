@@ -132,6 +132,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with WidgetsBindi
                   value: data == null ? '--' : '${data.cpuUsage.toStringAsFixed(0)}%',
                   icon: Icons.memory_outlined,
                   color: Colors.blue,
+                  onTap: () => context.push('/performance?tab=0'),
                 ),
               ),
               const SizedBox(width: 12),
@@ -141,6 +142,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with WidgetsBindi
                   value: data == null ? '--' : '${data.memoryUsage.toStringAsFixed(0)}%',
                   icon: Icons.developer_board_outlined,
                   color: Colors.green,
+                  onTap: () => context.push('/performance?tab=1'),
                 ),
               ),
             ],
@@ -423,12 +425,14 @@ class _MetricCard extends StatelessWidget {
   final String value;
   final IconData icon;
   final Color color;
+  final VoidCallback? onTap;
 
   const _MetricCard({
     required this.title,
     required this.value,
     required this.icon,
     required this.color,
+    this.onTap,
   });
 
   @override
@@ -436,28 +440,32 @@ class _MetricCard extends StatelessWidget {
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: Container(
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: color.withValues(alpha: 0.25)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            CircleAvatar(
-              radius: 18,
-              backgroundColor: color.withValues(alpha: 0.12),
-              child: Icon(icon, color: color),
-            ),
-            const SizedBox(height: 16),
-            Text(title, style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8),
-            Text(
-              value,
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
-            ),
-          ],
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: color.withValues(alpha: 0.25)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              CircleAvatar(
+                radius: 18,
+                backgroundColor: color.withValues(alpha: 0.12),
+                child: Icon(icon, color: color),
+              ),
+              const SizedBox(height: 16),
+              Text(title, style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 8),
+              Text(
+                value,
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
+              ),
+            ],
+          ),
         ),
       ),
     );
