@@ -8,6 +8,7 @@ import '../../../../core/error/error_mapper.dart';
 import '../../../../core/utils/toast.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../core/network/app_dio.dart';
+import '../../../../core/constants/app_constants.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../auth/presentation/providers/current_connection_readers.dart';
 import '../../../preferences/providers/preferences_providers.dart';
@@ -42,7 +43,9 @@ class _ServerManagementPageState extends ConsumerState<ServerManagementPage>
   }
 
   Future<void> _doQuickLogin(BuildContext context, dynamic server, String? username) async {
-    final savedPassword = ref.read(currentConnectionProvider).password;
+    // 直接从 secureStorage 读取对应服务器的密码
+    final secureStorage = ref.read(secureStorageProvider);
+    final savedPassword = await secureStorage.read('${AppConstants.savedPasswordPrefix}${server.id}');
     if (username == null || username.isEmpty || savedPassword == null || savedPassword.isEmpty) {
       if (context.mounted) Toast.show('账号或密码数据异常，请到登录页重新输入');
       return;
