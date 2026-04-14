@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_html/flutter_html.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/utils/file_size_formatter.dart';
@@ -108,10 +110,10 @@ class PackageDetailPage extends ConsumerWidget {
                         ),
                         clipBehavior: Clip.antiAlias,
                         child: item.thumbnailUrl != null && item.thumbnailUrl!.isNotEmpty
-                            ? Image.network(
-                                item.thumbnailUrl!,
+                            ? CachedNetworkImage(
+                                imageUrl: item.thumbnailUrl!,
                                 fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) =>
+                                errorWidget: (_, __, ___) =>
                                     const Icon(Icons.apps_rounded, size: 36, color: Colors.grey),
                               )
                             : const Icon(Icons.apps_rounded, size: 36, color: Colors.grey),
@@ -192,9 +194,12 @@ class PackageDetailPage extends ConsumerWidget {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               child: Padding(
                 padding: const EdgeInsets.all(16),
-                child: Text(
-                  item.changelog!,
-                  style: Theme.of(context).textTheme.bodyMedium,
+                child: Html(
+                  data: item.changelog!,
+                  style: {
+                    'body': Style(margin: Margins.zero, padding: HtmlPaddings.zero),
+                    'p': Style(fontSize: FontSize(14)),
+                  },
                 ),
               ),
             ),
@@ -362,13 +367,16 @@ class _ScreenshotSwiperState extends State<_ScreenshotSwiper> {
                   borderRadius: BorderRadius.circular(16),
                   child: Container(
                     color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                    child: isHttp
-                        ? Image.network(
-                            screenshot,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => _FallbackContent(url: screenshot),
-                          )
-                        : _FallbackContent(url: screenshot),
+                    child: GestureDetector(
+                      onTap: () => _openFullScreen(context, screenshot),
+                      child: isHttp
+                          ? CachedNetworkImage(
+                              imageUrl: screenshot,
+                              fit: BoxFit.cover,
+                              errorWidget: (_, __, ___) => _FallbackContent(url: screenshot),
+                            )
+                          : _FallbackContent(url: screenshot),
+                    ),
                   ),
                 ),
               );
@@ -397,6 +405,29 @@ class _ScreenshotSwiperState extends State<_ScreenshotSwiper> {
           ),
         ],
       ],
+    );
+  }
+  void _openFullScreen(BuildContext context, String url) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => Scaffold(
+          backgroundColor: Colors.black,
+          appBar: AppBar(
+            backgroundColor: Colors.black,
+            foregroundColor: Colors.white,
+            elevation: 0,
+          ),
+          body: Center(
+            child: InteractiveViewer(
+              child: CachedNetworkImage(
+                imageUrl: url,
+                fit: BoxFit.contain,
+                errorWidget: (_, __, ___) => _FallbackContent(url: url),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

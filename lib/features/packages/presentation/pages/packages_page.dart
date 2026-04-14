@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/utils/l10n.dart';
@@ -242,10 +243,10 @@ class _PackageCard extends ConsumerWidget {
                 ),
                 clipBehavior: Clip.antiAlias,
                 child: item.thumbnailUrl != null && item.thumbnailUrl!.isNotEmpty
-                    ? Image.network(
-                        item.thumbnailUrl!,
+                    ? CachedNetworkImage(
+                        imageUrl: item.thumbnailUrl!,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) =>
+                        errorWidget: (_, __, ___) =>
                             const Icon(Icons.apps_rounded, color: Colors.grey),
                       )
                     : const Icon(Icons.apps_rounded, color: Colors.grey),
