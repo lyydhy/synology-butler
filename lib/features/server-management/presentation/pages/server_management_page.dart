@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -118,7 +117,6 @@ class _ServerManagementPageState extends ConsumerState<ServerManagementPage>
     final currentServer = ref.watch(currentConnectionProvider).server;
     final savedServerUsernames = ref.watch(savedServerUsernamesProvider);
     final savedServerLastUsed = ref.watch(savedServerLastUsedProvider);
-    final isDark = theme.brightness == Brightness.dark;
 
     final sortedServers = [...servers]
       ..sort((a, b) => (savedServerLastUsed[b.id] ?? 0).compareTo(savedServerLastUsed[a.id] ?? 0));
@@ -131,24 +129,13 @@ class _ServerManagementPageState extends ConsumerState<ServerManagementPage>
           opacity: _fadeAnim,
           child: CustomScrollView(
             slivers: [
-              // 毛玻璃 AppBar
+              // AppBar
               SliverAppBar(
-                backgroundColor: isDark
-                    ? Colors.black.withValues(alpha: 0.60)
-                    : Colors.white.withValues(alpha: 0.75),
-                expandedHeight: 80,
+                backgroundColor: theme.colorScheme.surface,
                 floating: true,
                 pinned: true,
                 snap: false,
-                stretch: true,
-                flexibleSpace: FlexibleSpaceBar(
-                  background: ClipRect(
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                      child: Container(color: Colors.transparent),
-                    ),
-                  ),
-                ),
+                stretch: false,
                 title: Text(
                   l10n.historyDevices,
                   style: TextStyle(
@@ -159,7 +146,7 @@ class _ServerManagementPageState extends ConsumerState<ServerManagementPage>
                 ),
                 centerTitle: true,
                 elevation: 0,
-                scrolledUnderElevation: 0,
+                scrolledUnderElevation: 0.5,
               ),
               // 设备列表
               if (sortedServers.isEmpty)
