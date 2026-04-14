@@ -324,16 +324,11 @@ class DsmRealtimeApi implements RealtimeApi {
               load5: (((cpu['5min_load'] as num?) ?? 0).toDouble()) / 100,
               load15: (((cpu['15min_load'] as num?) ?? 0).toDouble()) / 100,
               memoryUsage: ((memory['real_usage'] as num?) ?? 0).toDouble(),
-              memoryTotalBytes: _toDouble(
-                  memory['total'] ?? memory['totalspace'] ?? memory['memory_total']),
-              memoryUsedBytes:
-                  _toDouble(memory['used'] ?? memory['memory_used']),
-              memoryBufferBytes:
-                  _toDouble(memory['buffer'] ?? memory['memory_buff']),
-              memoryCachedBytes:
-                  _toDouble(memory['cached'] ?? memory['memory_cached']),
-              memoryAvailableBytes: _toDouble(
-                  memory['available'] ?? memory['avail'] ?? memory['memory_free']),
+              memoryTotalBytes: _toDouble(memory['total_real'] ?? memory['memory_size'] ?? memory['total']) * 1024,
+              memoryUsedBytes: ((memory['total_real'] as num? ?? 0) - (memory['avail_real'] as num? ?? 0)).toDouble() * 1024,
+              memoryBufferBytes: _toDouble(memory['buffer']) * 1024,
+              memoryCachedBytes: _toDouble(memory['cached']) * 1024,
+              memoryAvailableBytes: _toDouble(memory['avail_real']) * 1024,
               storageUsage: ((totalSpace['used_percent'] as num?) ?? 0)
                   .toDouble(),
               networkUploadBytesPerSecond:
