@@ -104,12 +104,12 @@ class _PackagesPageState extends ConsumerState<PackagesPage> with SingleTickerPr
                 SlidingTabItem(icon: Icons.apps_rounded, label: l10n.packageAll),
                 SlidingTabItem(icon: Icons.check_circle_outline_rounded, label: l10n.packageInstalled),
                 SlidingTabItem(icon: Icons.system_update_alt_rounded, label: l10n.packageUpdatable),
-                SlidingTabItem(icon: Icons.science_rounded, label: 'Beta'),
-                SlidingTabItem(icon: Icons.groups_rounded, label: '社群'),
+                const SlidingTabItem(icon: Icons.science_rounded, label: 'Beta'),
+                const SlidingTabItem(icon: Icons.groups_rounded, label: '社群'),
               ],
             ),
           ),
-          if (installStatus != null && installStatus.isNotEmpty)
+          if (installState.installingId != null && installState.installingId!.isNotEmpty)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
               child: Material(
@@ -125,7 +125,7 @@ class _PackagesPageState extends ConsumerState<PackagesPage> with SingleTickerPr
                         child: CircularProgressIndicator(strokeWidth: 2),
                       ),
                       const SizedBox(width: 12),
-                      Expanded(child: Text(l10n.packageTask(installStatus))),
+                      Expanded(child: Text(l10n.packageTask(installStatus ?? ''))),
                     ],
                   ),
                 ),
@@ -240,7 +240,15 @@ class _PackageCard extends ConsumerWidget {
                   color: Theme.of(context).colorScheme.primaryContainer,
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: const Icon(Icons.apps_rounded),
+                clipBehavior: Clip.antiAlias,
+                child: item.thumbnailUrl != null && item.thumbnailUrl!.isNotEmpty
+                    ? Image.network(
+                        item.thumbnailUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) =>
+                            const Icon(Icons.apps_rounded),
+                      )
+                    : const Icon(Icons.apps_rounded),
               ),
               const SizedBox(width: 12),
               Expanded(

@@ -106,7 +106,15 @@ class PackageDetailPage extends ConsumerWidget {
                           color: Theme.of(context).colorScheme.primaryContainer,
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        child: const Icon(Icons.apps_rounded, size: 36),
+                        clipBehavior: Clip.antiAlias,
+                        child: item.thumbnailUrl != null && item.thumbnailUrl!.isNotEmpty
+                            ? Image.network(
+                                item.thumbnailUrl!,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) =>
+                                    const Icon(Icons.apps_rounded, size: 36),
+                              )
+                            : const Icon(Icons.apps_rounded, size: 36),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
