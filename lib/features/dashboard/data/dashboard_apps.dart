@@ -27,7 +27,7 @@ const List<DashboardAppEntry> dashboardHomeApps = [
   DashboardAppEntry(
     icon: Icons.apps_rounded,
     label: '套件中心',
-    color: Colors.amber.shade700,
+    color: Color(0xFFF59E0B), // amber.shade700
     route: '/packages',
   ),
   DashboardAppEntry(

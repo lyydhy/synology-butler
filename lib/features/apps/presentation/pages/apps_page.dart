@@ -9,7 +9,7 @@ class AppsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const apps = dashboardHomeApps;
+    final apps = dashboardHomeApps;
 
     return Scaffold(
       appBar: AppBar(
