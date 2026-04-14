@@ -96,6 +96,7 @@ final mergedPackagesProvider = FutureProvider<List<PackageItem>>((ref) async {
       dsmAppName: installedItem.dsmAppName ?? item.dsmAppName,
       changelog: item.changelog,
       downloadCount: item.downloadCount,
+      isThirdParty: item.isThirdParty,
     );
   }
 

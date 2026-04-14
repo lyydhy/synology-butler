@@ -38,6 +38,7 @@ class PackageRepositoryImpl implements PackageRepository {
             dsmAppName: item.dsmAppName,
             changelog: item.changelog,
             downloadCount: item.downloadCount,
+            isThirdParty: others,
           ),
         )
         .toList();

@@ -103,7 +103,7 @@ class PackageDetailPage extends ConsumerWidget {
                         width: 72,
                         height: 72,
                         decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primaryContainer,
+                          color: Theme.of(context).colorScheme.surfaceContainerHighest,
                           borderRadius: BorderRadius.circular(20),
                         ),
                         clipBehavior: Clip.antiAlias,
@@ -112,9 +112,9 @@ class PackageDetailPage extends ConsumerWidget {
                                 item.thumbnailUrl!,
                                 fit: BoxFit.cover,
                                 errorBuilder: (_, __, ___) =>
-                                    const Icon(Icons.apps_rounded, size: 36),
+                                    const Icon(Icons.apps_rounded, size: 36, color: Colors.grey),
                               )
-                            : const Icon(Icons.apps_rounded, size: 36),
+                            : const Icon(Icons.apps_rounded, size: 36, color: Colors.grey),
                       ),
                       const SizedBox(width: 16),
                       Expanded(

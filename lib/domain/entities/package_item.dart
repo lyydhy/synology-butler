@@ -20,6 +20,7 @@ class PackageItem {
   final String? dsmAppName;
   final String? changelog;
   final int? downloadCount;
+  final bool isThirdParty;
 
   const PackageItem({
     required this.id,
@@ -43,5 +44,6 @@ class PackageItem {
     required this.dsmAppName,
     this.changelog,
     this.downloadCount,
+    this.isThirdParty = false,
   });
 }

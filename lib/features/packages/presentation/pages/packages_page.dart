@@ -50,8 +50,8 @@ class _PackagesPageState extends ConsumerState<PackagesPage> with SingleTickerPr
       case 3:
         return items.where((item) => item.isBeta).toList();
       case 4:
-        // 社群：未安装且非 Beta（排除官方商店的官方套件）
-        return items.where((item) => !item.isInstalled && !item.isBeta).toList();
+        // 社群：第三方套件（isThirdParty=true）且未安装且非 Beta
+        return items.where((item) => item.isThirdParty && !item.isInstalled && !item.isBeta).toList();
       default:
         return items;
     }
@@ -237,7 +237,7 @@ class _PackageCard extends ConsumerWidget {
                 width: 52,
                 height: 52,
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer,
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(14),
                 ),
                 clipBehavior: Clip.antiAlias,
@@ -246,9 +246,9 @@ class _PackageCard extends ConsumerWidget {
                         item.thumbnailUrl!,
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) =>
-                            const Icon(Icons.apps_rounded),
+                            const Icon(Icons.apps_rounded, color: Colors.grey),
                       )
-                    : const Icon(Icons.apps_rounded),
+                    : const Icon(Icons.apps_rounded, color: Colors.grey),
               ),
               const SizedBox(width: 12),
               Expanded(
