@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/utils/file_size_formatter.dart';
 import '../../../../core/utils/toast.dart';
@@ -69,6 +70,12 @@ class PackageDetailPage extends ConsumerWidget {
         false;
   }
 
+  String _formatCount(int count) {
+    if (count >= 1000000) return '${(count / 1000000).toStringAsFixed(1)}M';
+    if (count >= 1000) return '${(count / 1000).toStringAsFixed(1)}K';
+    return count.toString();
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final installState = ref.watch(packageInstallStateProvider);
@@ -80,6 +87,7 @@ class PackageDetailPage extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          // 头部信息卡片
           Card(
             elevation: 0,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
@@ -137,53 +145,56 @@ class PackageDetailPage extends ConsumerWidget {
                   _InfoRow(label: '商店版本', value: item.version),
                   if (item.installedVersion != null && item.installedVersion!.isNotEmpty)
                     _InfoRow(label: '已安装版本', value: item.installedVersion!),
-                  if (item.status != null && item.status!.isNotEmpty) _InfoRow(label: '状态', value: item.status!),
+                  if (item.status != null && item.status!.isNotEmpty)
+                    _InfoRow(label: '状态', value: item.status!),
                   if (item.distributor != null && item.distributor!.isNotEmpty)
-                    _InfoRow(label: '发行方', value: item.distributor!),
+                    _InfoRow(label: '发行方', value: item.distributor!, url: item.distributorUrl),
                   if (item.maintainer != null && item.maintainer!.isNotEmpty)
-                    _InfoRow(label: '维护者', value: item.maintainer!),
+                    _InfoRow(label: '维护者', value: item.maintainer!, url: item.maintainerUrl),
                   if (item.installPath != null && item.installPath!.isNotEmpty)
                     _InfoRow(label: '安装路径', value: item.installPath!),
+                  if (item.downloadCount != null && item.downloadCount! > 0)
+                    _InfoRow(label: '下载次数', value: _formatCount(item.downloadCount!)),
                 ],
               ),
             ),
           ),
+
+          // 截图轮播
           if (item.screenshots.isNotEmpty) ...[
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             Text(
               '截图',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 12),
-            SizedBox(
-              height: 180,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: item.screenshots.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 12),
-                itemBuilder: (context, index) {
-                  final screenshot = item.screenshots[index];
-                  final isHttp = screenshot.startsWith('http://') || screenshot.startsWith('https://');
-                  return ClipRRect(
-                    borderRadius: BorderRadius.circular(18),
-                    child: Container(
-                      width: 280,
-                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                      child: isHttp
-                          ? Image.network(
-                              screenshot,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) => _ScreenshotFallback(url: screenshot),
-                            )
-                          : _ScreenshotFallback(url: screenshot),
-                    ),
-                  );
-                },
+            _ScreenshotSwiper(screenshots: item.screenshots),
+          ],
+
+          // 更新日志
+          if (item.changelog != null && item.changelog!.isNotEmpty) ...[
+            const SizedBox(height: 20),
+            Text(
+              '更新日志',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 12),
+            Card(
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  item.changelog!,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
               ),
             ),
           ],
-          const SizedBox(height: 20),
-          if (installStatus != null && installStatus.isNotEmpty)
+
+          // 安装进度提示
+          if (installStatus != null && installStatus.isNotEmpty) ...[
+            const SizedBox(height: 20),
             Card(
               elevation: 0,
               color: Theme.of(context).colorScheme.primaryContainer,
@@ -202,6 +213,9 @@ class PackageDetailPage extends ConsumerWidget {
                 ),
               ),
             ),
+          ],
+
+          // 操作按钮
           const SizedBox(height: 20),
           Wrap(
             spacing: 12,
@@ -301,8 +315,86 @@ class PackageDetailPage extends ConsumerWidget {
   }
 }
 
-class _ScreenshotFallback extends StatelessWidget {
-  const _ScreenshotFallback({required this.url});
+/// 截图轮播组件，使用 PageView 实现
+class _ScreenshotSwiper extends StatefulWidget {
+  const _ScreenshotSwiper({required this.screenshots});
+
+  final List<String> screenshots;
+
+  @override
+  State<_ScreenshotSwiper> createState() => _ScreenshotSwiperState();
+}
+
+class _ScreenshotSwiperState extends State<_ScreenshotSwiper> {
+  final PageController _pageController = PageController();
+  int _currentPage = 0;
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        SizedBox(
+          height: 200,
+          child: PageView.builder(
+            controller: _pageController,
+            onPageChanged: (index) => setState(() => _currentPage = index),
+            itemCount: widget.screenshots.length,
+            itemBuilder: (context, index) {
+              final screenshot = widget.screenshots[index];
+              final isHttp = screenshot.startsWith('http');
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                    child: isHttp
+                        ? Image.network(
+                            screenshot,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => _FallbackContent(url: screenshot),
+                          )
+                        : _FallbackContent(url: screenshot),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        if (widget.screenshots.length > 1) ...[
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(
+              widget.screenshots.length,
+              (index) => AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                width: _currentPage == index ? 24 : 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: _currentPage == index
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(context).colorScheme.outline.withValues(alpha: 0.4),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _FallbackContent extends StatelessWidget {
+  const _FallbackContent({required this.url});
 
   final String url;
 
@@ -314,13 +406,14 @@ class _ScreenshotFallback extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.image_not_supported_outlined, size: 32),
-            const SizedBox(height: 10),
+            Icon(Icons.image_not_supported_outlined, size: 32, color: Colors.grey.shade500),
+            const SizedBox(height: 8),
             Text(
               url,
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
             ),
           ],
         ),
@@ -329,31 +422,7 @@ class _ScreenshotFallback extends StatelessWidget {
   }
 }
 
-class _InfoRow extends StatelessWidget {
-  const _InfoRow({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 92,
-            child: Text(label, style: TextStyle(color: Colors.grey.shade700)),
-          ),
-          const SizedBox(width: 8),
-          Expanded(child: Text(value)),
-        ],
-      ),
-    );
-  }
-}
-
+/// 状态标签
 class _DetailChip extends StatelessWidget {
   const _DetailChip({required this.text, required this.color});
 
@@ -376,6 +445,50 @@ class _DetailChip extends StatelessWidget {
   }
 }
 
+/// 信息行组件，支持链接
+class _InfoRow extends StatelessWidget {
+  const _InfoRow({required this.label, required this.value, this.url});
+
+  final String label;
+  final String value;
+  final String? url;
+
+  @override
+  Widget build(BuildContext context) {
+    final isLink = url != null && url!.isNotEmpty;
+    final content = Text(
+      value,
+      style: TextStyle(
+        color: isLink ? Theme.of(context).colorScheme.primary : null,
+        decoration: isLink ? TextDecoration.underline : null,
+      ),
+    );
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 92,
+            child: Text(label, style: TextStyle(color: Colors.grey.shade700)),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: isLink
+                ? InkWell(
+                    onTap: () => launchUrl(Uri.parse(url!)),
+                    child: content,
+                  )
+                : content,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 存储卷选择 Tile
 class _DetailVolumeTile extends StatelessWidget {
   const _DetailVolumeTile({required this.volume});
 

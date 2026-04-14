@@ -20,6 +20,8 @@ class PackageItemModel {
   final String? status;
   final String? installPath;
   final String? dsmAppName;
+  final String? changelog;
+  final int? downloadCount;
 
   const PackageItemModel({
     required this.id,
@@ -41,6 +43,8 @@ class PackageItemModel {
     required this.status,
     required this.installPath,
     required this.dsmAppName,
+    this.changelog,
+    this.downloadCount,
   });
 
   /// 兼容 DSM 套件接口里 `dsm_apps` 的多种返回形式：
@@ -89,6 +93,12 @@ class PackageItemModel {
     return null;
   }
 
+  static int? _parseInt(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    return int.tryParse(value.toString());
+  }
+
   factory PackageItemModel.fromStorePayload(Map map) {
     final thumbnails = (map['thumbnail'] as List?)?.map((e) => e.toString()).where((e) => e.isNotEmpty).toList() ?? const <String>[];
     final snapshots = (map['snapshot'] as List?)?.map((e) => e.toString()).where((e) => e.isNotEmpty).toList() ?? const <String>[];
@@ -115,6 +125,8 @@ class PackageItemModel {
           ? map['additional']['installed_info']['path']?.toString()
           : null,
       dsmAppName: _extractDsmAppName(map['dsm_apps']),
+      changelog: map['changelog']?.toString(),
+      downloadCount: _parseInt(map['download_count']),
     );
   }
 

@@ -88,6 +88,8 @@ final mergedPackagesProvider = FutureProvider<List<PackageItem>>((ref) async {
       status: installedItem.status ?? item.status,
       installPath: installedItem.installPath,
       dsmAppName: installedItem.dsmAppName ?? item.dsmAppName,
+      changelog: item.changelog,
+      downloadCount: item.downloadCount,
     );
   }).toList();
 
