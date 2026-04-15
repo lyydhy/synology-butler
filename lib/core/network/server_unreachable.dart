@@ -1,27 +1,12 @@
-import 'dart:async';
-
 import 'package:dio/dio.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../app/router.dart';
 import '../../core/utils/local_app_logger.dart';
 import 'current_connection_store.dart';
 
-/// Stream that fires when server becomes unreachable.
-/// Use [unreachableRedirectController.stream] in app.dart to listen.
-final unreachableRedirectController = StreamController<void>.broadcast();
-
 /// Global flag to prevent multiple redirects within the same interceptor chain.
 bool _redirectInProgress = false;
-
-/// Notifies the app to redirect to /login when the server is unreachable.
-/// Safe to call multiple times — only the first call has effect.
-void markServerUnreachable() {
-  if (_redirectInProgress) return;
-  _redirectInProgress = true;
-  unreachableRedirectController.add(null);
-}
-
-/// Returns true if a redirect is already in progress.
-bool get isRedirectInProgress => _redirectInProgress;
 
 /// Resets the redirect flag (called after successful re-login).
 void resetUnreachableState() {
@@ -64,13 +49,14 @@ class UnreachableRedirectInterceptor extends Interceptor {
     ));
 
     if (isLanError && !_redirectInProgress) {
+      _redirectInProgress = true;
       unawaited(LocalAppLogger.log(
         level: 'info',
         module: 'network',
         event: 'unreachable_trigger',
-        message: 'Triggering redirect to /login (host=$host)',
+        message: 'Redirecting to /login (host=$host)',
       ));
-      markServerUnreachable();
+      appNavigatorKey.currentContext?.go('/login');
     }
 
     handler.next(err);

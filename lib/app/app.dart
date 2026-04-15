@@ -8,7 +8,6 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 import '../domain/entities/transfer_task.dart';
 import '../core/utils/local_app_logger.dart';
-import '../core/network/server_unreachable.dart';
 import '../features/auth/presentation/providers/auth_providers.dart';
 import '../features/dashboard/presentation/providers/dashboard_realtime_global.dart';
 import '../features/external_share/models/shared_incoming_file.dart';
@@ -34,7 +33,6 @@ class QunhuiManagerApp extends ConsumerStatefulWidget {
 
 class _QunhuiManagerAppState extends ConsumerState<QunhuiManagerApp> {
   StreamSubscription? _externalShareSubscription;
-  StreamSubscription? _unreachableSubscription;
   final ExternalSharePendingStore _pendingStore = const ExternalSharePendingStore();
   late final _router = createAppRouter(initialLocation: widget.initialLocation);
 
@@ -75,7 +73,6 @@ class _QunhuiManagerAppState extends ConsumerState<QunhuiManagerApp> {
   @override
   void dispose() {
     _externalShareSubscription?.cancel();
-    _unreachableSubscription?.cancel();
     super.dispose();
   }
 
@@ -138,13 +135,6 @@ class _QunhuiManagerAppState extends ConsumerState<QunhuiManagerApp> {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           ref.read(downloadCompletedEventProvider.notifier).state = null;
         });
-      }
-    });
-
-    // 监听网络不可达，直接跳转登录页
-    _unreachableSubscription ??= unreachableRedirectController.stream.listen((_) {
-      if (appNavigatorKey.currentContext != null) {
-        appNavigatorKey.currentContext!.go('/login');
       }
     });
 
