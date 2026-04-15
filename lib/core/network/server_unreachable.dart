@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/router.dart';
 import '../../core/utils/local_app_logger.dart';
+import '../../core/utils/toast.dart';
 import 'current_connection_store.dart';
 
 /// Global flag to prevent multiple redirects within the same interceptor chain.
@@ -58,6 +59,7 @@ class UnreachableRedirectInterceptor extends Interceptor {
         event: 'unreachable_trigger',
         message: 'Redirecting to /login (host=$host)',
       ));
+      Toast.warning('网络不可达，正在返回登录页...');
       appNavigatorKey.currentContext?.go('/login');
     }
 

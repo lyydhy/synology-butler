@@ -2,6 +2,9 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../packages/presentation/providers/package_providers.dart';
+import '../../../dashboard/presentation/providers/dashboard_realtime_global.dart';
+
 import 'current_connection_readers.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -108,6 +111,10 @@ final restoreSessionProvider = FutureProvider<bool>((ref) async {
       authToken: savedAuthToken,
     ),
   );
+
+  // Re-login successful — invalidate cached data so it re-fetches from new session
+  ref.invalidate(installedPackagesProvider);
+  ref.invalidate(globalRealtimeOverviewProvider);
 
   return true;
 });
