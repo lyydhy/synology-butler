@@ -42,7 +42,8 @@ final savedServerUsernamesProvider = StateProvider<Map<String, String>>((ref) =>
 final savedServerLastUsedProvider = StateProvider<Map<String, int>>((ref) => {});
 
 /// 所有需要跟随会话刷新的 providers，登录或切换服务器时统一 invalidate
-final sessionRelatedProviders = [
+// ignore: invalid_use_of_protected_member
+final sessionRelatedProviders = <ProviderBase>[
   dashboardBaseOverviewProvider,
   globalRealtimeOverviewProvider,
   informationCenterProvider,
