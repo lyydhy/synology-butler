@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import '../domain/entities/transfer_task.dart';
+import '../core/network/server_unreachable.dart';
 import '../features/auth/presentation/providers/auth_providers.dart';
 import '../features/dashboard/presentation/providers/dashboard_realtime_global.dart';
 import '../features/external_share/models/shared_incoming_file.dart';
@@ -31,6 +32,8 @@ class QunhuiManagerApp extends ConsumerStatefulWidget {
 
 class _QunhuiManagerAppState extends ConsumerState<QunhuiManagerApp> {
   StreamSubscription? _externalShareSubscription;
+  Timer? _unreachableTimer;
+  bool _redirectHandled = false;
   final ExternalSharePendingStore _pendingStore = const ExternalSharePendingStore();
   late final _router = createAppRouter(initialLocation: widget.initialLocation);
 
@@ -49,6 +52,14 @@ class _QunhuiManagerAppState extends ConsumerState<QunhuiManagerApp> {
       await ExternalShareService.instance.reset();
       if (mounted && file != null) {
         await _handleIncomingShare(file);
+      }
+    });
+
+    // 定期检查是否需要跳转到登录页（网络不可达时）
+    _unreachableTimer = Timer.periodic(const Duration(milliseconds: 500), (_) {
+      if (isRedirectInProgress && !_redirectHandled) {
+        _redirectHandled = true;
+        _router.go('/login');
       }
     });
   }
@@ -70,6 +81,7 @@ class _QunhuiManagerAppState extends ConsumerState<QunhuiManagerApp> {
   @override
   void dispose() {
     _externalShareSubscription?.cancel();
+    _unreachableTimer?.cancel();
     super.dispose();
   }
 
@@ -131,17 +143,6 @@ class _QunhuiManagerAppState extends ConsumerState<QunhuiManagerApp> {
         // 清除事件，避免重复消费
         WidgetsBinding.instance.addPostFrameCallback((_) {
           ref.read(downloadCompletedEventProvider.notifier).state = null;
-        });
-      }
-    });
-
-    // 监听服务器不可达，强制跳转登录页
-    ref.listenManual<bool>(serverUnreachableProvider, (previous, next) {
-      if (next) {
-        _router.go('/login');
-        // 重置状态，避免重复触发
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          ref.read(serverUnreachableProvider.notifier).state = false;
         });
       }
     });

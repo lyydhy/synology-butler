@@ -7,6 +7,7 @@ import '../../domain/entities/nas_server.dart';
 import '../../domain/entities/nas_session.dart';
 import 'current_connection_store.dart';
 import 'request_log_interceptor.dart';
+import 'server_unreachable.dart';
 import 'session_attach_interceptor.dart';
 import 'session_recovery_interceptor.dart';
 
@@ -24,6 +25,7 @@ Dio businessDio({bool ignoreBadCertificate = false}) {
       SessionAttachInterceptor(connectionStore),
       RequestLogInterceptor(),
       SessionRecoveryInterceptor(ignoreBadCertificate: ignoreBadCertificate),
+      UnreachableRedirectInterceptor(),
     ],
   ).dio;
 }

@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'current_connection_readers.dart';
@@ -362,10 +361,6 @@ final deleteServerProvider = Provider<Future<void> Function(NasServer)>((ref) {
   };
 });
 
-/// Notifies the app to force navigate to /login when the NAS server is unreachable.
-/// This is set when an API call fails due to network-level errors (not auth errors).
-final serverUnreachableProvider = StateProvider<bool>((ref) => false);
-
 final logoutProvider = Provider<Future<void> Function()>((ref) {
   return () async {
     final server = connectionStore.server;
@@ -377,14 +372,10 @@ final logoutProvider = Provider<Future<void> Function()>((ref) {
           const Duration(seconds: 5),
           onTimeout: () {},
         );
-      } catch (e) {
-        if (_isConnectionError(e)) {
-          // Server unreachable — mark for redirect to login
-          ref.read(serverUnreachableProvider.notifier).state = true;
-        } else {
-          // Re-throw auth/session errors so they can be handled separately
-          rethrow;
-        }
+      } catch (_) {
+        // Network errors are handled by UnreachableRedirectInterceptor.
+        // For logout, we just need to ensure local state is cleared even if
+        // the server cannot be reached.
       }
     }
 
@@ -397,31 +388,3 @@ final logoutProvider = Provider<Future<void> Function()>((ref) {
     await ref.read(clearSessionProvider)(markExpired: false);
   };
 });
-
-bool _isConnectionError(Object error) {
-  if (error is DioException) {
-    if (error.type == DioExceptionType.connectionError) return true;
-    // connectionTimeout + internal IP = trying to access LAN from WAN
-    if (error.type == DioExceptionType.connectionTimeout && _isInternalServerAddress()) return true;
-  }
-  return false;
-}
-
-/// Checks if the currently connected server has an internal (LAN) IP address.
-/// If true, a connectionTimeout likely means the user is outside the LAN
-/// and should be redirected to login.
-bool _isInternalServerAddress() {
-  final server = connectionStore.server;
-  if (server == null) return false;
-  final host = server.host;
-  return host.startsWith('192.168.') ||
-      host.startsWith('10.') ||
-      (host.startsWith('172.') && _is172Internal(host));
-}
-
-bool _is172Internal(String host) {
-  final parts = host.split('.');
-  if (parts.length < 2) return false;
-  final second = int.tryParse(parts[1]) ?? 0;
-  return second >= 16 && second <= 31;
-}
