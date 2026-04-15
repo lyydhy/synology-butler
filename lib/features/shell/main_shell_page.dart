@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../dashboard/presentation/pages/dashboard_page.dart';
-import '../downloads/presentation/pages/downloads_page.dart';
+import '../transfers/presentation/pages/transfers_page.dart';
 import '../files/presentation/pages/files_page.dart';
 import '../settings/presentation/pages/settings_page.dart';
 import '../transfers/presentation/providers/transfer_providers.dart';
@@ -20,7 +20,7 @@ class _MainShellPageState extends ConsumerState<MainShellPage> {
   final pages = const [
     DashboardPage(),
     FilesPage(),
-    DownloadsPage(),
+    TransfersPage(),
     SettingsPage(),
   ];
 

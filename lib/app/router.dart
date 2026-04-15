@@ -42,8 +42,8 @@ import '../features/shell/main_shell_page.dart';
 import '../features/task_scheduler/presentation/pages/task_scheduler_page.dart';
 import '../features/terminal/presentation/pages/terminal_page.dart';
 import '../features/transfers/presentation/pages/transfers_page.dart';
-import '../features/upgrade/presentation/pages/upgrade_page.dart';
 import '../features/downloads/presentation/pages/downloads_page.dart';
+import '../features/upgrade/presentation/pages/upgrade_page.dart';
 
 final GlobalKey<NavigatorState> appNavigatorKey = GlobalKey<NavigatorState>();
 
