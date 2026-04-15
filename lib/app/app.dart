@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bot_toast/bot_toast.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -147,7 +148,7 @@ class _QunhuiManagerAppState extends ConsumerState<QunhuiManagerApp> {
       }
     });
 
-    return MaterialApp.router
+    return MaterialApp.router(
       title: '群晖管家',
       theme: AppTheme.light(seedColor),
       darkTheme: AppTheme.dark(seedColor),
