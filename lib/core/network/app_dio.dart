@@ -65,6 +65,7 @@ class DioClient {
     dio.interceptors.addAll(interceptors ?? [
       RequestLogInterceptor(),
       SessionRecoveryInterceptor(ignoreBadCertificate: ignoreBadCertificate),
+      UnreachableRedirectInterceptor(),
     ]);
 
     if (ignoreBadCertificate) {
