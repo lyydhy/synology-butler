@@ -5,14 +5,19 @@ import 'package:dio/dio.dart';
 import '../../core/utils/local_app_logger.dart';
 import 'current_connection_store.dart';
 
+/// Stream that fires when server becomes unreachable.
+/// Use [unreachableRedirectController.stream] in app.dart to listen.
+final unreachableRedirectController = StreamController<void>.broadcast();
+
 /// Global flag to prevent multiple redirects within the same interceptor chain.
 bool _redirectInProgress = false;
 
 /// Notifies the app to redirect to /login when the server is unreachable.
-/// Set by UnreachableRedirectInterceptor or logoutProvider.
+/// Safe to call multiple times — only the first call has effect.
 void markServerUnreachable() {
   if (_redirectInProgress) return;
   _redirectInProgress = true;
+  unreachableRedirectController.add(null);
 }
 
 /// Returns true if a redirect is already in progress.

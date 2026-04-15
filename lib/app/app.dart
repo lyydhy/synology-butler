@@ -33,8 +33,7 @@ class QunhuiManagerApp extends ConsumerStatefulWidget {
 
 class _QunhuiManagerAppState extends ConsumerState<QunhuiManagerApp> {
   StreamSubscription? _externalShareSubscription;
-  Timer? _unreachableTimer;
-  bool _redirectHandled = false;
+  StreamSubscription? _unreachableSubscription;
   final ExternalSharePendingStore _pendingStore = const ExternalSharePendingStore();
   late final _router = createAppRouter(initialLocation: widget.initialLocation);
 
@@ -56,19 +55,6 @@ class _QunhuiManagerAppState extends ConsumerState<QunhuiManagerApp> {
       }
     });
 
-    // 定期检查是否需要跳转到登录页（网络不可达时）
-    _unreachableTimer = Timer.periodic(const Duration(milliseconds: 500), (_) {
-      if (isRedirectInProgress && !_redirectHandled) {
-        _redirectHandled = true;
-        unawaited(LocalAppLogger.log(
-          level: 'info',
-          module: 'app',
-          event: 'redirect_to_login',
-          message: 'Redirecting to /login due to unreachable server',
-        ));
-        _router.go('/login');
-      }
-    });
   }
 
   Future<void> _handleIncomingShare(SharedIncomingFile file) async {
@@ -88,7 +74,7 @@ class _QunhuiManagerAppState extends ConsumerState<QunhuiManagerApp> {
   @override
   void dispose() {
     _externalShareSubscription?.cancel();
-    _unreachableTimer?.cancel();
+    _unreachableSubscription?.cancel();
     super.dispose();
   }
 
@@ -154,7 +140,14 @@ class _QunhuiManagerAppState extends ConsumerState<QunhuiManagerApp> {
       }
     });
 
-    return MaterialApp.router(
+    // 监听网络不可达，直接跳转登录页
+    _unreachableSubscription ??= unreachableRedirectController.stream.listen((_) {
+      if (appNavigatorKey.currentContext != null) {
+        appNavigatorKey.currentContext!.go('/login');
+      }
+    });
+
+    return MaterialApp.router
       title: '群晖管家',
       theme: AppTheme.light(seedColor),
       darkTheme: AppTheme.dark(seedColor),
