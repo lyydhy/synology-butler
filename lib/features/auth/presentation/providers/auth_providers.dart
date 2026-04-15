@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'current_connection_readers.dart';
@@ -366,7 +368,10 @@ final logoutProvider = Provider<Future<void> Function()>((ref) {
 
     if (server != null && session != null) {
       try {
-        await ref.read(authRepositoryProvider).logout(server: server, session: session);
+        await ref.read(authRepositoryProvider).logout(server: server, session: session).timeout(
+          const Duration(seconds: 5),
+          onTimeout: () {},
+        );
       } catch (_) {}
     }
 
