@@ -1,4 +1,8 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
+
+import '../../core/utils/local_app_logger.dart';
 
 /// Global flag to prevent multiple redirects within the same interceptor chain.
 bool _redirectInProgress = false;
@@ -20,18 +24,45 @@ void resetUnreachableState() {
 
 /// Interceptor that detects when the NAS server is unreachable
 /// (WAN trying to access LAN IP) and triggers a redirect to login.
-/// Call [markServerUnreachable] to signal the app to redirect.
 class UnreachableRedirectInterceptor extends Interceptor {
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
+    final uri = err.requestOptions.uri;
+    final path = uri.path;
+    final host = uri.host;
+    final errorType = err.type.name;
+
     // Skip login/auth/logout endpoints
-    final path = err.requestOptions.uri.path;
     if (path.contains('auth') || path.contains('login') || path.contains('logout')) {
       handler.next(err);
       return;
     }
 
-    if (_isLanAccessError(err) && !_redirectInProgress) {
+    final isInternal = _isInternalServerAddress(host);
+    final isLanError = _isLanAccessError(err);
+
+    unawaited(LocalAppLogger.log(
+      level: 'warn',
+      module: 'network',
+      event: 'unreachable_check',
+      message: 'API error: host=$host type=$errorType isInternal=$isInternal isLanError=$isLanError path=$path',
+      extra: {
+        'host': host,
+        'errorType': errorType,
+        'isInternal': isInternal,
+        'isLanError': isLanError,
+        'path': path,
+        'redirectInProgress': _redirectInProgress,
+      },
+    ));
+
+    if (isLanError && !_redirectInProgress) {
+      unawaited(LocalAppLogger.log(
+        level: 'info',
+        module: 'network',
+        event: 'unreachable_trigger',
+        message: 'Triggering redirect to /login (host=$host)',
+      ));
       markServerUnreachable();
     }
 
@@ -40,12 +71,11 @@ class UnreachableRedirectInterceptor extends Interceptor {
 
   bool _isLanAccessError(DioException err) {
     if (err.type == DioExceptionType.connectionError) return true;
-    if (err.type == DioExceptionType.connectionTimeout && _isInternalServerAddress(err)) return true;
+    if (err.type == DioExceptionType.connectionTimeout && _isInternalServerAddress(err.requestOptions.uri.host)) return true;
     return false;
   }
 
-  bool _isInternalServerAddress(DioException err) {
-    final host = err.requestOptions.uri.host;
+  bool _isInternalServerAddress(String host) {
     if (host.isEmpty) return false;
     return host.startsWith('192.168.') ||
         host.startsWith('10.') ||

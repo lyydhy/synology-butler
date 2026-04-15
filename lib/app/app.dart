@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import '../domain/entities/transfer_task.dart';
+import '../core/utils/local_app_logger.dart';
 import '../core/network/server_unreachable.dart';
 import '../features/auth/presentation/providers/auth_providers.dart';
 import '../features/dashboard/presentation/providers/dashboard_realtime_global.dart';
@@ -59,6 +60,12 @@ class _QunhuiManagerAppState extends ConsumerState<QunhuiManagerApp> {
     _unreachableTimer = Timer.periodic(const Duration(milliseconds: 500), (_) {
       if (isRedirectInProgress && !_redirectHandled) {
         _redirectHandled = true;
+        unawaited(LocalAppLogger.log(
+          level: 'info',
+          module: 'app',
+          event: 'redirect_to_login',
+          message: 'Redirecting to /login due to unreachable server',
+        ));
         _router.go('/login');
       }
     });
