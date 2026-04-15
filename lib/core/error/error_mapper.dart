@@ -34,10 +34,12 @@ class ErrorMapper {
   }
 
   /// Returns true if the error indicates the NAS server is unreachable
-  /// (TCP handshake failure, not slow network)
+  /// or the client is outside the LAN trying to access an internal IP.
   static bool isUnreachableError(Object error) {
     if (error is DioException) {
-      return error.type == DioExceptionType.connectionError;
+      if (error.type == DioExceptionType.connectionError) return true;
+      // connectionTimeout alone is ambiguous; caller should check internal IP
+      // if they want to distinguish WAN-accessing-LAN from network jitter.
     }
     return false;
   }

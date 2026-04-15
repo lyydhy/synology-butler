@@ -400,9 +400,28 @@ final logoutProvider = Provider<Future<void> Function()>((ref) {
 
 bool _isConnectionError(Object error) {
   if (error is DioException) {
-    // Only connectionError (TCP handshake failure) means the server is
-    // truly unreachable — timeouts could be slow network/server load.
-    return error.type == DioExceptionType.connectionError;
+    if (error.type == DioExceptionType.connectionError) return true;
+    // connectionTimeout + internal IP = trying to access LAN from WAN
+    if (error.type == DioExceptionType.connectionTimeout && _isInternalServerAddress()) return true;
   }
   return false;
+}
+
+/// Checks if the currently connected server has an internal (LAN) IP address.
+/// If true, a connectionTimeout likely means the user is outside the LAN
+/// and should be redirected to login.
+bool _isInternalServerAddress() {
+  final server = connectionStore.server;
+  if (server == null) return false;
+  final host = server.host;
+  return host.startsWith('192.168.') ||
+      host.startsWith('10.') ||
+      (host.startsWith('172.') && _is172Internal(host));
+}
+
+bool _is172Internal(String host) {
+  final parts = host.split('.');
+  if (parts.length < 2) return false;
+  final second = int.tryParse(parts[1]) ?? 0;
+  return second >= 16 && second <= 31;
 }
