@@ -45,8 +45,9 @@ class UnreachableRedirectInterceptor extends Interceptor {
       level: 'warn',
       module: 'network',
       event: 'unreachable_check',
-      message: 'API error: host=$host type=$errorType isInternal=$isInternal isLanError=$isLanError path=$path',
+      message: 'API error: uri=${uri.toString()} host=$host type=$errorType isInternal=$isInternal isLanError=$isLanError path=$path',
       extra: {
+        'uri': uri.toString(),
         'host': host,
         'errorType': errorType,
         'isInternal': isInternal,
