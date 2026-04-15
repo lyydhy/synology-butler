@@ -11,8 +11,6 @@ import '../../../../core/network/app_dio.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../providers/auth_providers.dart';
 import '../../../preferences/providers/preferences_providers.dart';
-import '../../../packages/presentation/providers/package_providers.dart';
-import '../../../dashboard/presentation/providers/dashboard_realtime_global.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   final NasServer? initialServer;
@@ -236,8 +234,9 @@ class _LoginPageState extends ConsumerState<LoginPage>
         rememberPassword: true,
       );
       // Invalidate cached providers so they re-fetch with the new session
-      ref.invalidate(installedPackagesProvider);
-      ref.invalidate(globalRealtimeOverviewProvider);
+      for (final p in sessionRelatedProviders) {
+        ref.invalidate(p);
+      }
       if (mounted) context.go('/home');
     } catch (e) {
       setState(() => errorText = ErrorMapper.map(e).message);

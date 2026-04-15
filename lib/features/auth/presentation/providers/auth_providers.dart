@@ -41,6 +41,15 @@ final savedRememberPasswordProvider = StateProvider<bool>((ref) => false);
 final savedServerUsernamesProvider = StateProvider<Map<String, String>>((ref) => {});
 final savedServerLastUsedProvider = StateProvider<Map<String, int>>((ref) => {});
 
+/// 所有需要跟随会话刷新的 providers，登录或切换服务器时统一 invalidate
+final sessionRelatedProviders = [
+  dashboardBaseOverviewProvider,
+  globalRealtimeOverviewProvider,
+  informationCenterProvider,
+  installedPackagesProvider,
+  dockerFeatureInstalledProvider,
+];
+
 Future<void> _persistServers(Ref ref, List<NasServer> servers) async {
   final localStorage = ref.read(localStorageProvider);
   final encoded = servers.map((s) => ServerMapper.toModel(s).encode()).toList();
@@ -284,11 +293,9 @@ final switchCurrentServerProvider = Provider<Future<void> Function(NasServer)>((
     clearSession();
 
     // 重置所有业务状态
-    ref.invalidate(dashboardBaseOverviewProvider);
-    ref.invalidate(globalRealtimeOverviewProvider);
-    ref.invalidate(informationCenterProvider);
-    ref.invalidate(installedPackagesProvider);
-    ref.invalidate(dockerFeatureInstalledProvider);
+    for (final p in sessionRelatedProviders) {
+      ref.invalidate(p);
+    }
 
     final localStorage = ref.read(localStorageProvider);
     final secureStorage = ref.read(secureStorageProvider);
