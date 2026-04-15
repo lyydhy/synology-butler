@@ -32,4 +32,16 @@ class ErrorMapper {
 
     return AppException(error.toString());
   }
+
+  /// Returns true if the error indicates the NAS server is unreachable
+  /// (network-level failure, not auth/session error)
+  static bool isUnreachableError(Object error) {
+    if (error is DioException) {
+      return error.type == DioExceptionType.connectionError ||
+          error.type == DioExceptionType.connectionTimeout ||
+          error.type == DioExceptionType.receiveTimeout ||
+          error.type == DioExceptionType.sendTimeout;
+    }
+    return false;
+  }
 }

@@ -135,6 +135,17 @@ class _QunhuiManagerAppState extends ConsumerState<QunhuiManagerApp> {
       }
     });
 
+    // 监听服务器不可达，强制跳转登录页
+    ref.listenManual<bool>(serverUnreachableProvider, (previous, next) {
+      if (next) {
+        _router.go('/login');
+        // 重置状态，避免重复触发
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          ref.read(serverUnreachableProvider.notifier).state = false;
+        });
+      }
+    });
+
     return MaterialApp.router(
       title: '群晖管家',
       theme: AppTheme.light(seedColor),

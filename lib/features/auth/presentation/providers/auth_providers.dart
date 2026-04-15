@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'current_connection_readers.dart';
@@ -361,6 +362,10 @@ final deleteServerProvider = Provider<Future<void> Function(NasServer)>((ref) {
   };
 });
 
+/// Notifies the app to force navigate to /login when the NAS server is unreachable.
+/// This is set when an API call fails due to network-level errors (not auth errors).
+final serverUnreachableProvider = StateProvider<bool>((ref) => false);
+
 final logoutProvider = Provider<Future<void> Function()>((ref) {
   return () async {
     final server = connectionStore.server;
@@ -372,7 +377,15 @@ final logoutProvider = Provider<Future<void> Function()>((ref) {
           const Duration(seconds: 5),
           onTimeout: () {},
         );
-      } catch (_) {}
+      } catch (e) {
+        if (_isConnectionError(e)) {
+          // Server unreachable — mark for redirect to login
+          ref.read(serverUnreachableProvider.notifier).state = true;
+        } else {
+          // Re-throw auth/session errors so they can be handled separately
+          rethrow;
+        }
+      }
     }
 
     clearAll();
@@ -384,3 +397,13 @@ final logoutProvider = Provider<Future<void> Function()>((ref) {
     await ref.read(clearSessionProvider)(markExpired: false);
   };
 });
+
+bool _isConnectionError(Object error) {
+  if (error is DioException) {
+    return error.type == DioExceptionType.connectionError ||
+        error.type == DioExceptionType.connectionTimeout ||
+        error.type == DioExceptionType.receiveTimeout ||
+        error.type == DioExceptionType.sendTimeout;
+  }
+  return false;
+}
