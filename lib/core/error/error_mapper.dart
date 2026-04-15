@@ -34,13 +34,10 @@ class ErrorMapper {
   }
 
   /// Returns true if the error indicates the NAS server is unreachable
-  /// (network-level failure, not auth/session error)
+  /// (TCP handshake failure, not slow network)
   static bool isUnreachableError(Object error) {
     if (error is DioException) {
-      return error.type == DioExceptionType.connectionError ||
-          error.type == DioExceptionType.connectionTimeout ||
-          error.type == DioExceptionType.receiveTimeout ||
-          error.type == DioExceptionType.sendTimeout;
+      return error.type == DioExceptionType.connectionError;
     }
     return false;
   }

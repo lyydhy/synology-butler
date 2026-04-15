@@ -400,10 +400,9 @@ final logoutProvider = Provider<Future<void> Function()>((ref) {
 
 bool _isConnectionError(Object error) {
   if (error is DioException) {
-    return error.type == DioExceptionType.connectionError ||
-        error.type == DioExceptionType.connectionTimeout ||
-        error.type == DioExceptionType.receiveTimeout ||
-        error.type == DioExceptionType.sendTimeout;
+    // Only connectionError (TCP handshake failure) means the server is
+    // truly unreachable — timeouts could be slow network/server load.
+    return error.type == DioExceptionType.connectionError;
   }
   return false;
 }
