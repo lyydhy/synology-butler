@@ -43,6 +43,7 @@ import '../features/task_scheduler/presentation/pages/task_scheduler_page.dart';
 import '../features/terminal/presentation/pages/terminal_page.dart';
 import '../features/transfers/presentation/pages/transfers_page.dart';
 import '../features/upgrade/presentation/pages/upgrade_page.dart';
+import '../features/downloads/presentation/pages/downloads_page.dart';
 
 final GlobalKey<NavigatorState> appNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -61,6 +62,7 @@ GoRouter createAppRouter({required String initialLocation}) {
     GoRoute(path: '/sharing-links', builder: (context, state) => const SharingLinksPage()),
     GoRoute(path: '/diagnostics', builder: (context, state) => const DiagnosticsPage()),
     GoRoute(path: '/transfers', builder: (context, state) => const TransfersPage()),
+    GoRoute(path: '/downloads', builder: (context, state) => const DownloadsPage()),
     GoRoute(path: '/external-access', builder: (context, state) => const ExternalAccessPage()),
     GoRoute(path: '/index-service', builder: (context, state) => const IndexServicePage()),
     GoRoute(path: '/task-scheduler', builder: (context, state) => const TaskSchedulerPage()),

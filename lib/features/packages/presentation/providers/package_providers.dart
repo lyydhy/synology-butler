@@ -38,11 +38,11 @@ final packageVolumesProvider = FutureProvider<List<PackageVolume>>((ref) async {
 });
 
 /// 判断当前 NAS 是否已安装 Docker / Container Manager。
-///
-/// 这里复用套件列表数据做能力判断，避免额外新增一套探测链路。
-/// dsm_helper 里也是基于 DSM 应用标识来识别 Docker 入口：
-/// - `SYNO.SDS.Docker.Application`
-/// - `SYNO.SDS.ContainerManager.Application`
+ ///
+ /// 这里复用套件列表数据做能力判断，避免额外新增一套探测链路。
+ /// dsm_helper 里也是基于 DSM 应用标识来识别 Docker 入口：
+ /// - `SYNO.SDS.Docker.Application`
+ /// - `SYNO.SDS.ContainerManager.Application`
 final dockerFeatureInstalledProvider = FutureProvider<bool>((ref) async {
   final installed = await ref.watch(installedPackagesProvider.future);
 
@@ -57,6 +57,23 @@ final dockerFeatureInstalledProvider = FutureProvider<bool>((ref) async {
         name == 'container manager' ||
         displayName == 'docker' ||
         displayName == 'container manager';
+  }
+
+  return installed.any(matches);
+});
+
+/// 判断当前 NAS 是否已安装 Download Station。
+final downloadStationFeatureInstalledProvider = FutureProvider<bool>((ref) async {
+  final installed = await ref.watch(installedPackagesProvider.future);
+
+  bool matches(PackageItem item) {
+    final appName = item.dsmAppName?.trim() ?? '';
+    final name = item.name.trim().toLowerCase();
+    final displayName = item.displayName.trim().toLowerCase();
+
+    return appName == 'SYNO.SDS.DownloadStation.Application' ||
+        name == 'download station' ||
+        displayName == 'download station';
   }
 
   return installed.any(matches);

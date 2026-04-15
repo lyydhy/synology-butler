@@ -31,10 +31,10 @@ const List<DashboardAppEntry> dashboardHomeApps = [
     route: '/packages',
   ),
   DashboardAppEntry(
-    icon: Icons.sync_alt_rounded,
-    label: '传输中心',
-    color: Colors.deepOrange,
-    route: '/transfers',
+    icon: Icons.download_rounded,
+    label: '下载中心',
+    color: Colors.green,
+    route: '/downloads',
   ),
   DashboardAppEntry(
     icon: Icons.tune_rounded,

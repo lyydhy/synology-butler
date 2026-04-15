@@ -1,0 +1,40 @@
+# 统一换行符：提交时转换为 LF，检出时不转换
+* text=auto
+
+# 强制 Git 不处理以下文件
+*.bat binary
+*.exe binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.so binary
+*.aar binary
+*.jar binary
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary
+*.eot binary
+
+# Dart/Flutter 文件强制 LF
+*.dart text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.xml text eol=lf
+*.plist text eol=lf
+*.kt text eol=lf
+*.swift text eol=lf
+*.h text eol=lf
+*.m text eol=lf
+*.rb text eol=lf
+*.sh text eol=lf
+*.gradle text eol=lf
+*.properties text eol=lf
+*.gradle.kts text eol=lf
+
+# ARB 文件（Flutter 国际化）
+*.arb text eol=lf

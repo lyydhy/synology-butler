@@ -81,7 +81,6 @@ class PackageDetailPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final installState = ref.watch(packageInstallStateProvider);
-    final installStatus = installState.statusText;
     final isInstallingThis = installState.isInstalling(item.id);
 
     return Scaffold(
@@ -200,29 +199,6 @@ class PackageDetailPage extends ConsumerWidget {
                     'body': Style(margin: Margins.zero, padding: HtmlPaddings.zero),
                     'p': Style(fontSize: FontSize(14)),
                   },
-                ),
-              ),
-            ),
-          ],
-
-          // 安装进度提示
-          if (installStatus != null && installStatus.isNotEmpty) ...[
-            const SizedBox(height: 20),
-            Card(
-              elevation: 0,
-              color: Theme.of(context).colorScheme.primaryContainer,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(child: Text('当前任务：$installStatus')),
-                  ],
                 ),
               ),
             ),

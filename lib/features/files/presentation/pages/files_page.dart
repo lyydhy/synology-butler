@@ -408,7 +408,6 @@ class _FilesPageState extends ConsumerState<FilesPage> {
     final actions = ref.read(filePageActionsProvider);
     final filesAsync = ref.watch(fileListProvider(_fileQuery));
     final canGoUp = _currentPath != _rootPath;
-    final activeTransferCount = ref.watch(activeTransferCountProvider);
     final backgroundTasksAsync = ref.watch(fileBackgroundTasksProvider);
     final backgroundTasks = backgroundTasksAsync.valueOrNull ?? const <FileBackgroundTask>[];
     final isDirectoryPickerMode = widget.directoryPickerMode;
@@ -436,40 +435,7 @@ class _FilesPageState extends ConsumerState<FilesPage> {
                   )
                 : AppBar(
                     title: Text(l10n.filesTitle),
-                    actions: [
-                      Stack(
-                        alignment: Alignment.topRight,
-                        children: [
-                          IconButton(
-                            tooltip: '传输',
-                            onPressed: () => GoRouter.of(context).push('/transfers'),
-                            icon: AnimatedRotation(
-                              turns: activeTransferCount > 0 ? 0.125 : 0,
-                              duration: const Duration(milliseconds: 300),
-                              child: Icon(activeTransferCount > 0 ? Icons.sync_rounded : Icons.swap_horiz_rounded),
-                            ),
-                          ),
-                          if (activeTransferCount > 0)
-                            Positioned(
-                              right: 8,
-                              top: 8,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                                decoration: BoxDecoration(
-                                  color: Colors.redAccent,
-                                  borderRadius: BorderRadius.circular(999),
-                                ),
-                                constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
-                                child: Text(
-                                  activeTransferCount > 99 ? '99+' : '$activeTransferCount',
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w700),
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ],
+                    actions: const [],
                   ),
         body: Column(
           children: [
