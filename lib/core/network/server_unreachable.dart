@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 
 import '../../core/utils/local_app_logger.dart';
+import 'current_connection_store.dart';
 
 /// Global flag to prevent multiple redirects within the same interceptor chain.
 bool _redirectInProgress = false;
@@ -72,11 +73,24 @@ class UnreachableRedirectInterceptor extends Interceptor {
 
   bool _isLanAccessError(DioException err) {
     if (err.type == DioExceptionType.connectionError) return true;
-    if (err.type == DioExceptionType.connectionTimeout && _isInternalServerAddress(err.requestOptions.uri.host)) return true;
+    if (err.type == DioExceptionType.connectionTimeout) return true;
+    // unknown type + internal server in connectionStore → likely proxy/networking issue
+    // to internal NAS while on WAN (e.g. proxy unreachable from device's network)
+    if (err.type == DioExceptionType.unknown && _isInternalServerAddress('')) return true;
     return false;
   }
 
   bool _isInternalServerAddress(String host) {
+    // Use the error host first (actual destination of the request).
+    // When going through a proxy, this will be the proxy IP, so also
+    // check connectionStore.server.host as fallback.
+    if (_isPrivateIp(host)) return true;
+    final serverHost = connectionStore.server?.host;
+    if (serverHost != null && _isPrivateIp(serverHost)) return true;
+    return false;
+  }
+
+  bool _isPrivateIp(String host) {
     if (host.isEmpty) return false;
     return host.startsWith('192.168.') ||
         host.startsWith('10.') ||
