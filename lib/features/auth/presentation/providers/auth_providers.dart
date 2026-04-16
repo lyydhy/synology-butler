@@ -47,7 +47,7 @@ final sessionRelatedProviders = <ProviderBase>[
   dashboardBaseOverviewProvider,
   globalRealtimeOverviewProvider,
   informationCenterProvider,
-  installedPackagesProvider,
+  packagesProvider(PackageSource.installed),
 ];
 
 Future<void> _persistServers(Ref ref, List<NasServer> servers) async {
@@ -122,7 +122,7 @@ final restoreSessionProvider = FutureProvider<bool>((ref) async {
   );
 
   // Re-login successful — invalidate cached data so it re-fetches from new session
-  ref.invalidate(installedPackagesProvider);
+  ref.invalidate(packagesProvider(PackageSource.installed));
   ref.invalidate(globalRealtimeOverviewProvider);
 
   return true;

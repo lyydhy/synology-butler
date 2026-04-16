@@ -36,19 +36,6 @@ final packagesProvider = FutureProvider.family<List<PackageItem>, PackageSource>
 });
 
 /// 兼容性别名
-final storePackagesProvider = FutureProvider<List<PackageItem>>((ref) async {
-  return ref.watch(packagesProvider(PackageSource.store).future);
-});
-
-/// 兼容性别名
-final thirdPartyPackagesProvider = FutureProvider<List<PackageItem>>((ref) async {
-  return ref.watch(packagesProvider(PackageSource.thirdParty).future);
-});
-
-/// 兼容性别名
-final installedPackagesProvider = FutureProvider<List<PackageItem>>((ref) async {
-  return ref.watch(packagesProvider(PackageSource.installed).future);
-});
 
 final packageVolumesProvider = FutureProvider<List<PackageVolume>>((ref) async {
   return ref.read(packageRepositoryProvider).fetchVolumes();
