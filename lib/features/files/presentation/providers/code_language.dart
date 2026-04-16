@@ -1,45 +1,44 @@
 import 'package:flutter/material.dart';
-import 'package:re_highlight/re_highlight.dart';
-import 'package:re_highlight/languages/plaintext.dart';
-import 'package:re_highlight/languages/bash.dart';
-import 'package:re_highlight/languages/c.dart';
-import 'package:re_highlight/languages/cpp.dart';
-import 'package:re_highlight/languages/csharp.dart';
-import 'package:re_highlight/languages/css.dart';
-import 'package:re_highlight/languages/dart.dart';
-import 'package:re_highlight/languages/dockerfile.dart';
-import 'package:re_highlight/languages/go.dart';
-import 'package:re_highlight/languages/graphql.dart';
-import 'package:re_highlight/languages/xml.dart';
-import 'package:re_highlight/languages/ini.dart';
-import 'package:re_highlight/languages/java.dart';
-import 'package:re_highlight/languages/javascript.dart';
-import 'package:re_highlight/languages/json.dart';
-import 'package:re_highlight/languages/kotlin.dart';
-import 'package:re_highlight/languages/makefile.dart';
-import 'package:re_highlight/languages/markdown.dart';
-import 'package:re_highlight/languages/nginx.dart';
-import 'package:re_highlight/languages/objectivec.dart';
-import 'package:re_highlight/languages/perl.dart';
-import 'package:re_highlight/languages/php.dart';
-import 'package:re_highlight/languages/powershell.dart';
-import 'package:re_highlight/languages/python.dart';
-import 'package:re_highlight/languages/r.dart';
-import 'package:re_highlight/languages/ruby.dart';
-import 'package:re_highlight/languages/rust.dart';
-import 'package:re_highlight/languages/scala.dart';
-import 'package:re_highlight/languages/scss.dart';
-import 'package:re_highlight/languages/sql.dart';
-import 'package:re_highlight/languages/swift.dart';
-import 'package:re_highlight/languages/typescript.dart';
-import 'package:re_highlight/languages/yaml.dart';
-import 'package:re_highlight/languages/cmake.dart';
-import 'package:re_highlight/languages/vim.dart';
-import 'package:re_highlight/styles/all.dart';
-import 'package:re_editor/re_editor.dart';
+import 'package:flutter_code_editor/flutter_code_editor.dart';
+import 'package:flutter_highlight/themes/a11y-dark.dart';
+import 'package:highlight/highlight_core.dart';
+import 'package:highlight/languages/bash.dart';
+import 'package:highlight/languages/cmake.dart';
+import 'package:highlight/languages/cpp.dart';
+import 'package:highlight/languages/cs.dart';
+import 'package:highlight/languages/css.dart';
+import 'package:highlight/languages/dart.dart';
+import 'package:highlight/languages/dockerfile.dart';
+import 'package:highlight/languages/go.dart';
+import 'package:highlight/languages/graphql.dart';
+import 'package:highlight/languages/ini.dart';
+import 'package:highlight/languages/java.dart';
+import 'package:highlight/languages/javascript.dart';
+import 'package:highlight/languages/json.dart';
+import 'package:highlight/languages/kotlin.dart';
+import 'package:highlight/languages/makefile.dart';
+import 'package:highlight/languages/markdown.dart';
+import 'package:highlight/languages/nginx.dart';
+import 'package:highlight/languages/objectivec.dart';
+import 'package:highlight/languages/perl.dart';
+import 'package:highlight/languages/php.dart';
+import 'package:highlight/languages/plaintext.dart';
+import 'package:highlight/languages/powershell.dart';
+import 'package:highlight/languages/python.dart';
+import 'package:highlight/languages/r.dart';
+import 'package:highlight/languages/ruby.dart';
+import 'package:highlight/languages/rust.dart';
+import 'package:highlight/languages/scala.dart';
+import 'package:highlight/languages/scss.dart';
+import 'package:highlight/languages/sql.dart';
+import 'package:highlight/languages/swift.dart';
+import 'package:highlight/languages/typescript.dart';
+import 'package:highlight/languages/vim.dart';
+import 'package:highlight/languages/xml.dart';
+import 'package:highlight/languages/yaml.dart';
 
-/// 文件扩展名 → 语言名
-/// 注：html/htm 无原生高亮，用 xml 代替（结构相近）
+/// 文件扩展名 → highlight 语言名
+/// 注：highlight 包无单独 C 语言，.c/.h 使用 cpp 高亮（C++ 高亮基本覆盖 C 语法）
 const _extToLang = <String, String>{
   'txt': 'plaintext',
   'json': 'json',
@@ -80,8 +79,8 @@ const _extToLang = <String, String>{
   'rs': 'rust',
   'php': 'php',
   'rb': 'ruby',
-  'c': 'c',
-  'h': 'c',
+  'c': 'cpp',
+  'h': 'cpp',
   'cpp': 'cpp',
   'cc': 'cpp',
   'cxx': 'cpp',
@@ -108,60 +107,68 @@ const _extToLang = <String, String>{
   'gql': 'graphql',
 };
 
-/// 语言名 → Mode 映射
+/// 语言名 → Mode 映射（highlight 包）
 final _langModes = <String, Mode>{
-  'plaintext': langPlaintext,
-  'json': langJson,
-  'yaml': langYaml,
-  'xml': langXml,
-  'ini': langIni,
-  'bash': langBash,
-  'python': langPython,
-  'javascript': langJavascript,
-  'typescript': langTypescript,
-  'css': langCss,
-  'scss': langScss,
-  'markdown': langMarkdown,
-  'sql': langSql,
-  'dart': langDart,
-  'java': langJava,
-  'kotlin': langKotlin,
-  'go': langGo,
-  'rust': langRust,
-  'php': langPhp,
-  'ruby': langRuby,
-  'c': langC,
-  'cpp': langCpp,
-  'csharp': langCsharp,
-  'objectivec': langObjectivec,
-  'swift': langSwift,
-  'perl': langPerl,
-  'r': langR,
-  'scala': langScala,
-  'powershell': langPowershell,
-  'dockerfile': langDockerfile,
-  'nginx': langNginx,
-  'makefile': langMakefile,
-  'cmake': langCmake,
-  'vim': langVim,
-  'graphql': langGraphql,
+  'plaintext': plaintext,
+  'json': json,
+  'yaml': yaml,
+  'xml': xml,
+  'ini': ini,
+  'bash': bash,
+  'python': python,
+  'javascript': javascript,
+  'typescript': typescript,
+  'css': css,
+  'scss': scss,
+  'markdown': markdown,
+  'sql': sql,
+  'dart': dart,
+  'java': java,
+  'kotlin': kotlin,
+  'go': go,
+  'rust': rust,
+  'php': php,
+  'ruby': ruby,
+  'cpp': cpp,
+  'csharp': cs,
+  'objectivec': objectivec,
+  'swift': swift,
+  'perl': perl,
+  'r': r,
+  'scala': scala,
+  'powershell': powershell,
+  'dockerfile': dockerfile,
+  'nginx': nginx,
+  'makefile': makefile,
+  'cmake': cmake,
+  'vim': vim,
+  'graphql': graphql,
 };
 
-Mode _getMode(String name) => _langModes[name] ?? langPlaintext;
+Mode _getMode(String name) => _langModes[name] ?? plaintext;
 
-/// 根据文件扩展名获取语言 mode
+/// 根据文件扩展名获取语言 Mode
 Mode getModeByExtension(String ext) {
   final name = _extToLang[ext.toLowerCase()];
-  return name != null ? _getMode(name) : langPlaintext;
+  return name != null ? _getMode(name) : plaintext;
 }
 
-/// 根据完整文件名获取语言 mode
+/// 根据完整文件名获取语言 Mode
 Mode getModeByFilename(String filename) {
   final dot = filename.lastIndexOf('.');
   if (dot == -1 || dot == filename.length - 1) {
-    return langPlaintext;
+    return plaintext;
   }
   return getModeByExtension(filename.substring(dot + 1));
+}
+
+/// 根据完整文件名获取语言名称字符串（用于显示）
+String getLanguageNameByFilename(String filename) {
+  final dot = filename.lastIndexOf('.');
+  if (dot == -1 || dot == filename.length - 1) {
+    return 'plaintext';
+  }
+  return _extToLang[filename.substring(dot + 1).toLowerCase()] ?? 'plaintext';
 }
 
 /// 语言显示名
@@ -186,7 +193,6 @@ const _displayNames = <String, String>{
   'rust': 'Rust',
   'php': 'PHP',
   'ruby': 'Ruby',
-  'c': 'C',
   'cpp': 'C++',
   'csharp': 'C#',
   'objectivec': 'Objective-C',
@@ -212,33 +218,10 @@ const supportedLanguages = [
   'plaintext', 'json', 'yaml', 'xml', 'ini', 'bash', 'python',
   'javascript', 'typescript', 'css', 'scss', 'markdown', 'sql',
   'dart', 'java', 'kotlin', 'go', 'rust', 'php', 'ruby',
-  'c', 'cpp', 'csharp', 'objectivec', 'swift', 'perl', 'r',
+  'cpp', 'csharp', 'objectivec', 'swift', 'perl', 'r',
   'scala', 'powershell', 'dockerfile', 'nginx', 'makefile',
   'cmake', 'vim', 'graphql',
 ];
 
-/// 主题样式
-final _themeStyles = builtThemes['a11y-dark']!;
-
-/// 构建 CodeHighlightTheme（单语言，用于编辑器）
-CodeHighlightTheme buildSingleLanguageTheme(String langName) {
-  final mode = _getMode(langName);
-  return CodeHighlightTheme(
-    languages: {langName: mode.themeMode},
-    theme: _themeStyles,
-  );
-}
-
-/// 全量主题（所有语言，用于预览自动检测）
-final codeEditorTheme = CodeHighlightTheme(
-  languages: {
-    for (final name in supportedLanguages) name: _getMode(name).themeMode,
-  },
-  theme: _themeStyles,
-);
-
-/// 默认编辑器样式
-final codeEditorStyle = CodeEditorStyle(
-  fontSize: 14,
-  codeTheme: codeEditorTheme,
-);
+/// CodeThemeData（flutter_code_editor 使用）
+final codeEditorTheme = CodeThemeData(styles: a11yDarkTheme);

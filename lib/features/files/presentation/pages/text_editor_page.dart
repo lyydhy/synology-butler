@@ -1,16 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_code_editor/flutter_code_editor.dart';
 import 'package:go_router/go_router.dart';
-import 'package:re_editor/re_editor.dart';
 
 import '../../../../core/error/error_mapper.dart';
 import '../../../../core/utils/l10n.dart';
 import '../../../../core/utils/toast.dart';
 import '../providers/text_editor_providers.dart';
 import '../providers/code_language.dart';
-import '../widgets/copy_toolbar.dart';
-import '../widgets/find_panel.dart';
 
 class TextEditorPage extends ConsumerStatefulWidget {
   const TextEditorPage({
@@ -27,28 +24,17 @@ class TextEditorPage extends ConsumerStatefulWidget {
 }
 
 class _TextEditorPageState extends ConsumerState<TextEditorPage> {
-  late final CodeLineEditingController _controller;
-  late final CodeFindController _findController;
+  late final CodeController _controller;
   bool _dirty = false;
   String _lastPath = '';
 
   @override
   void initState() {
     super.initState();
-    _controller = CodeLineEditingController.fromTextAsync(null);
-    _findController = CodeFindController(_controller);
+    _controller = CodeController(
+      language: getModeByFilename(widget.name),
+    );
     _controller.addListener(_onTextChanged);
-    // 等第一帧渲染完再显示搜索面板，避免 PreferredSize 在 layout 前为 0
-    SchedulerBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _findController.value = CodeFindValue.empty();
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller.removeListener(_onTextChanged);
-    _controller.dispose();
-    super.dispose();
   }
 
   @override
@@ -57,7 +43,8 @@ class _TextEditorPageState extends ConsumerState<TextEditorPage> {
     if (oldWidget.path != widget.path) {
       _lastPath = widget.path;
       _dirty = false;
-      _controller.codeLines = CodeLines.fromText('');
+      _controller.language = getModeByFilename(widget.name);
+      _controller.text = '';
     }
   }
 
@@ -68,12 +55,20 @@ class _TextEditorPageState extends ConsumerState<TextEditorPage> {
   }
 
   @override
+  void dispose() {
+    _controller.removeListener(_onTextChanged);
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final fileAsync = ref.watch(textFileProvider(widget.path));
 
+    // 注入内容到 controller
     fileAsync.whenData((value) {
       if (_lastPath != widget.path) {
-        _controller.codeLines = CodeLines.fromText(value);
+        _controller.text = value;
         _lastPath = widget.path;
       }
     });
@@ -126,7 +121,7 @@ class _TextEditorPageState extends ConsumerState<TextEditorPage> {
           actions: [
             IconButton(
               tooltip: '搜索',
-              onPressed: () => _findController.value = CodeFindValue.empty(),
+              onPressed: () => _controller.showSearch(),
               icon: const Icon(Icons.search),
             ),
             IconButton(
@@ -142,8 +137,7 @@ class _TextEditorPageState extends ConsumerState<TextEditorPage> {
             TextButton(
               onPressed: () async {
                 try {
-                  final content = _controller.codeLines.asString(TextLineBreak.lf);
-                  await ref.read(saveTextFileProvider)(widget.path, content);
+                  await ref.read(saveTextFileProvider)(widget.path, _controller.text);
                   if (!mounted) return;
                   setState(() => _dirty = false);
                   Toast.success(l10n.saveSuccess);
@@ -159,10 +153,6 @@ class _TextEditorPageState extends ConsumerState<TextEditorPage> {
         ),
         body: Column(
           children: [
-            CodeFindPanelView(
-              controller: _findController,
-              readOnly: false,
-            ),
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -174,12 +164,11 @@ class _TextEditorPageState extends ConsumerState<TextEditorPage> {
             ),
             Expanded(
               child: fileAsync.when(
-                data: (_) => CodeEditor(
-                  controller: _controller,
-                  findController: _findController,
-                  style: CodeEditorStyle(fontSize: 14, codeTheme: codeEditorTheme),
-                  scrollController: CodeScrollController(),
-                  toolbarController: const EditorToolbarController(),
+                data: (_) => CodeTheme(
+                  data: codeEditorTheme,
+                  child: CodeField(
+                    controller: _controller,
+                  ),
                 ),
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (error, _) => Center(child: Text(ErrorMapper.map(error).message)),

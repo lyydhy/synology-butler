@@ -1,16 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_code_editor/flutter_code_editor.dart';
 import 'package:go_router/go_router.dart';
-import 'package:re_editor/re_editor.dart';
 
 import '../../../../core/error/error_mapper.dart';
-import '../../../../core/utils/l10n.dart';
 import '../providers/text_editor_providers.dart';
 import '../providers/code_language.dart';
 import '../widgets/file_type_helper.dart';
-import '../widgets/copy_toolbar.dart';
-import '../widgets/find_panel.dart';
 
 class TextPreviewPage extends ConsumerStatefulWidget {
   const TextPreviewPage({
@@ -27,20 +23,28 @@ class TextPreviewPage extends ConsumerStatefulWidget {
 }
 
 class _TextPreviewPageState extends ConsumerState<TextPreviewPage> {
-  late final CodeLineEditingController _controller;
-  late final CodeFindController _findController;
+  late final CodeController _controller;
   String _lastPath = '';
+  String _lastContent = '';
 
   @override
   void initState() {
     super.initState();
-    _controller = CodeLineEditingController();
-    _findController = CodeFindController(_controller);
+    _controller = CodeController(
+      language: getModeByFilename(widget.name),
+    );
     _lastPath = widget.path;
-    // 等第一帧渲染完再显示搜索面板
-    SchedulerBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _findController.value = CodeFindValue.empty();
-    });
+  }
+
+  @override
+  void didUpdateWidget(covariant TextPreviewPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.path != widget.path) {
+      _lastPath = widget.path;
+      _lastContent = '';
+      _controller.language = getModeByFilename(widget.name);
+      _controller.text = '';
+    }
   }
 
   @override
@@ -50,22 +54,15 @@ class _TextPreviewPageState extends ConsumerState<TextPreviewPage> {
   }
 
   @override
-  void didUpdateWidget(covariant TextPreviewPage oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.path != widget.path) {
-      _lastPath = widget.path;
-      _controller.codeLines = CodeLines.fromText('');
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
     final fileAsync = ref.watch(textFileProvider(widget.path));
     final canEdit = FileTypeHelper.isTextEditableName(widget.name) && !FileTypeHelper.isNfoName(widget.name);
 
+    // 注入内容到 controller（支持同一文件第二次打开）
     fileAsync.whenData((value) {
-      if (_lastPath != widget.path || _controller.codeLines.toString() != value) {
-        _controller.codeLines = CodeLines.fromText(value);
+      if (_lastPath != widget.path || _lastContent != value) {
+        _controller.text = value;
+        _lastContent = value;
         _lastPath = widget.path;
       }
     });
@@ -76,7 +73,7 @@ class _TextPreviewPageState extends ConsumerState<TextPreviewPage> {
         actions: [
           IconButton(
             tooltip: '搜索',
-            onPressed: () => _findController.value = CodeFindValue.empty(),
+            onPressed: () => _controller.showSearch(),
             icon: const Icon(Icons.search),
           ),
           if (canEdit)
@@ -94,10 +91,6 @@ class _TextPreviewPageState extends ConsumerState<TextPreviewPage> {
       ),
       body: Column(
         children: [
-          CodeFindPanelView(
-            controller: _findController,
-            readOnly: true,
-          ),
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -109,16 +102,12 @@ class _TextPreviewPageState extends ConsumerState<TextPreviewPage> {
           ),
           Expanded(
             child: fileAsync.when(
-              data: (_) => CodeEditor(
-                controller: _controller,
-                findController: _findController,
-                style: CodeEditorStyle(
-                  fontSize: 14,
-                  codeTheme: codeEditorTheme,
+              data: (_) => CodeTheme(
+                data: codeEditorTheme,
+                child: CodeField(
+                  controller: _controller,
+                  readOnly: true,
                 ),
-                scrollController: CodeScrollController(),
-                readOnly: true,
-                toolbarController: const PreviewToolbarController(),
               ),
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (error, _) => Center(child: Text(ErrorMapper.map(error).message)),

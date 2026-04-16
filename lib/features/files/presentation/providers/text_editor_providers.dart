@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'file_providers.dart';
 import 'code_language.dart';
 
-export 'code_language.dart' show codeEditorStyle, buildSingleLanguageTheme, getLanguageDisplayName;
+export 'code_language.dart' show codeEditorTheme, getLanguageDisplayName, getLanguageNameByFilename, getModeByFilename;
 
 final textFileProvider = FutureProvider.family<String, String>((ref, path) async {
   return ref.read(fileRepositoryProvider).readTextFile(
@@ -22,5 +22,5 @@ final saveTextFileProvider = Provider<Future<void> Function(String path, String 
 
 /// 根据文件名获取语言显示名
 final fileLanguageNameProvider = Provider.family<String, String>((ref, filename) {
-  return getLanguageDisplayName(getModeByFilename(filename).name ?? 'plaintext');
+  return getLanguageDisplayName(getLanguageNameByFilename(filename));
 });
