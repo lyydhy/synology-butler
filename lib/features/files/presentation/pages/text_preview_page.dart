@@ -28,6 +28,7 @@ class _TextPreviewPageState extends ConsumerState<TextPreviewPage> {
   late final CodeLineEditingController _controller;
   String _lastPath = '';
   bool _hasSelection = false;
+  String _cachedSelectedText = '';
 
   @override
   void initState() {
@@ -45,9 +46,15 @@ class _TextPreviewPageState extends ConsumerState<TextPreviewPage> {
   }
 
   void _onSelectionChanged() {
-    final hasSelection = _controller.selectedText.isNotEmpty;
+    final text = _controller.selectedText;
+    final hasSelection = text.isNotEmpty;
     if (hasSelection != _hasSelection) {
-      setState(() => _hasSelection = hasSelection);
+      setState(() {
+        _hasSelection = hasSelection;
+        _cachedSelectedText = hasSelection ? text : '';
+      });
+    } else if (hasSelection) {
+      _cachedSelectedText = text;
     }
   }
 
@@ -62,9 +69,8 @@ class _TextPreviewPageState extends ConsumerState<TextPreviewPage> {
   }
 
   void _copySelectedText() {
-    final selectedText = _controller.selectedText;
-    if (selectedText.isNotEmpty) {
-      Clipboard.setData(ClipboardData(text: selectedText));
+    if (_cachedSelectedText.isNotEmpty) {
+      Clipboard.setData(ClipboardData(text: _cachedSelectedText));
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('已复制'),
