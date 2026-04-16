@@ -52,9 +52,6 @@ class _FilesPageState extends ConsumerState<FilesPage> {
   ProviderSubscription<AsyncValue<List<FileBackgroundTask>>>? _backgroundTaskListener;
   Set<String> _lastBackgroundTaskIds = <String>{};
 
-  /// 当前页面所在目录。
-  String _currentPath = _rootPath;
-
   /// 当前页面文件排序方式。
   String _sort = _defaultSort;
 
@@ -65,12 +62,11 @@ class _FilesPageState extends ConsumerState<FilesPage> {
   bool get _selectionMode => _selectedPaths.isNotEmpty;
 
   /// 当前文件列表查询条件。
-  FileListQuery get _fileQuery => FileListQuery(path: _currentPath, sort: _sort);
+  FileListQuery get _fileQuery => FileListQuery(path: ref.watch(currentFilePathProvider), sort: _sort);
 
   @override
   void initState() {
     super.initState();
-    _currentPath = widget.initialPath;
     _pollTimer = Timer.periodic(const Duration(seconds: 10), (_) {
       if (!mounted) return;
       final connection = ref.read(currentConnectionProvider);
@@ -121,10 +117,11 @@ class _FilesPageState extends ConsumerState<FilesPage> {
   }
 
   bool _taskAffectsCurrentPath(FileBackgroundTask task) {
+    final currentPath = ref.read(currentFilePathProvider);
     final taskPath = task.path.trim();
     if (taskPath.isEmpty) return true;
-    if (_currentPath == _rootPath) return true;
-    return taskPath == _currentPath || taskPath.startsWith('$_currentPath/');
+    if (currentPath == _rootPath) return true;
+    return taskPath == currentPath || taskPath.startsWith('$currentPath/');
   }
 
   bool _isDownloadBackgroundTask(FileBackgroundTask task) {
@@ -133,8 +130,8 @@ class _FilesPageState extends ConsumerState<FilesPage> {
 
   /// 进入指定目录并清空多选状态。
   void _setCurrentPath(String path) {
+    ref.read(currentFilePathProvider.notifier).state = path;
     setState(() {
-      _currentPath = path;
       _selectedPaths = <String>{};
     });
     _refreshCurrentPath();
@@ -407,7 +404,7 @@ class _FilesPageState extends ConsumerState<FilesPage> {
 
     final actions = ref.read(filePageActionsProvider);
     final filesAsync = ref.watch(fileListProvider(_fileQuery));
-    final canGoUp = _currentPath != _rootPath;
+    final canGoUp = ref.read(currentFilePathProvider) != _rootPath;
     final backgroundTasksAsync = ref.watch(fileBackgroundTasksProvider);
     final backgroundTasks = backgroundTasksAsync.valueOrNull ?? const <FileBackgroundTask>[];
     final isDirectoryPickerMode = widget.directoryPickerMode;
@@ -417,7 +414,7 @@ class _FilesPageState extends ConsumerState<FilesPage> {
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
         if (canGoUp) {
-          _setCurrentPath(actions.parentPathOf(_currentPath));
+          _setCurrentPath(actions.parentPathOf(ref.read(currentFilePathProvider)));
         }
       },
       child: Scaffold(
@@ -450,14 +447,14 @@ class _FilesPageState extends ConsumerState<FilesPage> {
                 },
               ),
             FilesHeader(
-              path: _currentPath,
+              path: ref.read(currentFilePathProvider),
               sort: _sort,
               canGoUp: canGoUp,
               onRefresh: _refreshCurrentPath,
               onSortSelected: _setSort,
               onTapSegment: _setCurrentPath,
-              onGoUp: () => _setCurrentPath(actions.parentPathOf(_currentPath)),
-              onCreateFolder: () => actions.showCreateFolderDialog(context, ref, _currentPath),
+              onGoUp: () => _setCurrentPath(actions.parentPathOf(ref.read(currentFilePathProvider))),
+              onCreateFolder: () => actions.showCreateFolderDialog(context, ref, ref.read(currentFilePathProvider)),
               title: isDirectoryPickerMode ? l10n.selectUploadDir : l10n.filesTitle,
               showActionMenu: !isDirectoryPickerMode,
             ),
@@ -551,9 +548,9 @@ class _FilesPageState extends ConsumerState<FilesPage> {
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                   child: FilledButton.icon(
-                    onPressed: () => context.pop(_currentPath),
+                    onPressed: () => context.pop(ref.read(currentFilePathProvider)),
                     icon: const Icon(Icons.check_circle_outline),
-                    label: Text(l10n.selectCurrentDir(_currentPath)),
+                    label: Text(l10n.selectCurrentDir(ref.read(currentFilePathProvider))),
                   ),
                 ),
               )
@@ -565,7 +562,7 @@ class _FilesPageState extends ConsumerState<FilesPage> {
                 children: [
                   FloatingActionButton.small(
                     heroTag: 'fab_upload',
-                    onPressed: () => actions.showUploadDialog(context, ref, _currentPath, _pickSingleFile),
+                    onPressed: () => actions.showUploadDialog(context, ref, ref.read(currentFilePathProvider), _pickSingleFile),
                     tooltip: l10n.uploadFile,
                     child: const Icon(Icons.upload_rounded),
                   ),

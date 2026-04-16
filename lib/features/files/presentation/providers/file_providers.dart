@@ -18,6 +18,9 @@ final fileRepositoryProvider = Provider<FileRepository>((ref) {
   return FileRepositoryImpl(ref.read(fileStationApiProvider));
 });
 
+/// 当前文件浏览路径（跨 tab 保留）
+final currentFilePathProvider = StateProvider<String>((ref) => '/');
+
 /// 文件列表查询参数。
 ///
 /// 路径和排序都属于页面局部状态，因此由页面传入 provider family。

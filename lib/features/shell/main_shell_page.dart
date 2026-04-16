@@ -6,6 +6,7 @@ import '../dashboard/presentation/providers/dashboard_realtime_global.dart';
 import '../dashboard/presentation/providers/global_home_provider.dart';
 import '../transfers/presentation/pages/transfers_page.dart';
 import '../files/presentation/pages/files_page.dart';
+import '../files/presentation/providers/file_providers.dart';
 import '../settings/presentation/pages/settings_page.dart';
 import '../transfers/presentation/providers/transfer_providers.dart';
 import '../../../domain/entities/transfer_task.dart';
@@ -26,6 +27,15 @@ class _MainShellPageState extends ConsumerState<MainShellPage> {
     TransfersPage(),
     SettingsPage(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    // 登录后进入 main_shell，重置文件浏览路径到根目录
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(currentFilePathProvider.notifier).state = '/';
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
