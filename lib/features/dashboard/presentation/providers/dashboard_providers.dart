@@ -6,6 +6,7 @@ import '../../../../domain/entities/system_status.dart';
 import '../../../../domain/repositories/system_repository.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import 'dashboard_realtime_global.dart';
+import 'global_home_provider.dart';
 
 final systemApiProvider = Provider<SystemApi>((ref) {
   final server = connectionStore.server;
@@ -45,14 +46,17 @@ final dashboardOverviewSafeProvider = Provider<AsyncValue<SystemStatus?>>((ref) 
   final baseOverview = ref.watch(dashboardBaseOverviewProvider);
   final realtimeOverview = ref.watch(globalRealtimeOverviewProvider);
 
+  final homeData = ref.watch(globalHomeProvider).valueOrNull;
+
   if (realtimeOverview.hasValue) {
     final realtime = realtimeOverview.value!;
     final base = baseOverview.valueOrNull;
+    final homeOverview = homeData?.overview;
 
     return AsyncValue.data(
       SystemStatus(
-        serverName: base?.serverName ?? realtime.serverName,
-        dsmVersion: base?.dsmVersion ?? realtime.dsmVersion,
+        serverName: base?.serverName ?? homeOverview?.serverName ?? realtime.serverName,
+        dsmVersion: base?.dsmVersion ?? homeOverview?.dsmVersion ?? realtime.dsmVersion,
         cpuUsage: realtime.cpuUsage,
         cpuUserUsage: realtime.cpuUserUsage,
         cpuSystemUsage: realtime.cpuSystemUsage,
