@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:re_editor/re_editor.dart';
@@ -37,6 +38,10 @@ class _TextEditorPageState extends ConsumerState<TextEditorPage> {
     _controller = CodeLineEditingController.fromTextAsync(null);
     _findController = CodeFindController(_controller);
     _controller.addListener(_onTextChanged);
+    // 等第一帧渲染完再显示搜索面板，避免 PreferredSize 在 layout 前为 0
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _findController.value = CodeFindValue.empty();
+    });
   }
 
   @override
