@@ -59,10 +59,7 @@ class _PackagesPageState extends ConsumerState<PackagesPage> with SingleTickerPr
   }
 
   void _refreshPackages() {
-    ref.invalidate(packagesProvider(PackageSource.store));
-    ref.invalidate(packagesProvider(PackageSource.thirdParty));
-    ref.invalidate(packagesProvider(PackageSource.installed));
-    ref.invalidate(mergedPackagesProvider);
+    ref.invalidate(packageProvider);
   }
 
   @override
@@ -70,7 +67,7 @@ class _PackagesPageState extends ConsumerState<PackagesPage> with SingleTickerPr
     final connection = ref.watch(currentConnectionProvider);
     final server = connection.server;
     final session = connection.session;
-    final packagesAsync = ref.watch(mergedPackagesProvider);
+    final packagesAsync = ref.watch(packageProvider);
     final installState = ref.watch(packageInstallStateProvider);
     final installStatus = installState.statusText;
 
@@ -134,14 +131,14 @@ class _PackagesPageState extends ConsumerState<PackagesPage> with SingleTickerPr
             ),
           Expanded(
             child: packagesAsync.when(
-              data: (items) => TabBarView(
+              data: (data) => TabBarView(
                 controller: _tabController,
                 children: [
-                  _PackageListView(items: _filterItems(items, 0)),
-                  _PackageListView(items: _filterItems(items, 1)),
-                  _PackageListView(items: _filterItems(items, 2)),
-                  _PackageListView(items: _filterItems(items, 3)),
-                  _PackageListView(items: _filterItems(items, 4)),
+                  _PackageListView(items: _filterItems(data.packages, 0)),
+                  _PackageListView(items: _filterItems(data.packages, 1)),
+                  _PackageListView(items: _filterItems(data.packages, 2)),
+                  _PackageListView(items: _filterItems(data.packages, 3)),
+                  _PackageListView(items: _filterItems(data.packages, 4)),
                 ],
               ),
               loading: () => const Center(child: CircularProgressIndicator()),

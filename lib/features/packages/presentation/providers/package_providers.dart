@@ -7,57 +7,27 @@ import '../../../../domain/entities/package_volume.dart';
 import '../../../../domain/repositories/package_repository.dart';
 import '../state/package_install_state.dart';
 
-// ─── 内部 API / Repository（外部不需要直接访问） ────────────────────────────────
+// ─── 底层 ────────────────────────────────────────────────────────────────────
 
-/// 套件 API 实例
-final _packageApiProvider = Provider<PackageApi>((ref) {
-  return DsmPackageApi();
-});
+PackageApi _buildApi() => DsmPackageApi();
+PackageRepository _buildRepo() => PackageRepositoryImpl(_buildApi());
 
-/// 套件数据仓库
-final _packageRepositoryProvider = Provider<PackageRepository>((ref) {
-  return PackageRepositoryImpl(ref.read(_packageApiProvider));
-});
+// ─── 数据层（只读）────────────────────────────────────────────────────────────
 
-// ─── 状态 ────────────────────────────────────────────────────────────────────
-
-/// 套件安装进度共享状态
-final packageInstallStateProvider = StateProvider<PackageInstallState>((ref) {
-  return const PackageInstallState();
-});
-
-// ─── 数据 ────────────────────────────────────────────────────────────────────
-
-/// 套件来源枚举
-enum PackageSource { store, thirdParty, installed }
-
-/// 按来源获取套件列表
-final packagesProvider = FutureProvider.family<List<PackageItem>, PackageSource>((ref, source) async {
-  final repo = ref.read(_packageRepositoryProvider);
-  switch (source) {
-    case PackageSource.store:
-      return repo.fetchStorePackages();
-    case PackageSource.thirdParty:
-      return repo.fetchStorePackages(others: true);
-    case PackageSource.installed:
-      return repo.fetchInstalledPackages();
-  }
-});
-
-/// 合并后的套件列表（官方 + 第三方 + 已安装），带安装状态和更新检测
-final mergedPackagesProvider = FutureProvider<List<PackageItem>>((ref) async {
-  final repo = ref.read(_packageRepositoryProvider);
+/// 套件数据：合并列表 + 存储卷 + 安装状态
+final packageProvider = FutureProvider<PackageData>((ref) async {
+  final repo = _buildRepo();
 
   final store = await repo.fetchStorePackages();
   final thirdParty = await repo.fetchStorePackages(others: true);
   final installed = await repo.fetchInstalledPackages();
+  final volumes = await repo.fetchVolumes();
 
   final installedMap = {for (final item in installed) item.id: item};
 
   PackageItem merge(PackageItem item) {
     final installedItem = installedMap[item.id];
     if (installedItem == null) return item;
-
     final canUpdate = _compareVersions(installedItem.version, item.version) < 0;
     return PackageItem(
       id: item.id,
@@ -87,46 +57,45 @@ final mergedPackagesProvider = FutureProvider<List<PackageItem>>((ref) async {
 
   final merged = [...store.map(merge), ...thirdParty.map(merge)];
   final mergedIds = merged.map((e) => e.id).toSet();
-
-  // 补充仅本地安装、不在商店的套件
   for (final item in installed) {
-    if (!mergedIds.contains(item.id)) {
-      merged.add(item);
-    }
+    if (!mergedIds.contains(item.id)) merged.add(item);
   }
 
-  return merged;
+  return PackageData(
+    packages: merged,
+    volumes: volumes,
+  );
 });
 
-// ─── 操作 ────────────────────────────────────────────────────────────────────
+// ─── 操作层（写操作）──────────────────────────────────────────────────────────
 
-/// 套件操作入口，替代 start/stop/uninstall/prepareInstall/install 五个分散 provider
+final packageActionsProvider = Provider<PackageActions>((ref) {
+  return PackageActions(ref);
+});
+
 class PackageActions {
   final Ref _ref;
 
   PackageActions(this._ref);
 
-  PackageRepository get _repo => _ref.read(_packageRepositoryProvider);
-
-  /// 获取存储卷列表
-  Future<List<PackageVolume>> fetchVolumes() => _repo.fetchVolumes();
+  PackageRepository get _repo => _buildRepo();
 
   /// 启动套件
   Future<void> start(PackageItem item) async {
     await _repo.startPackage(packageId: item.id, dsmAppName: item.dsmAppName);
-    _ref.invalidate(mergedPackagesProvider);
+    _ref.invalidate(packageProvider);
   }
 
   /// 停止套件
   Future<void> stop(PackageItem item) async {
     await _repo.stopPackage(packageId: item.id);
-    _ref.invalidate(mergedPackagesProvider);
+    _ref.invalidate(packageProvider);
   }
 
   /// 卸载套件
   Future<void> uninstall(PackageItem item) async {
     await _repo.uninstallPackage(packageId: item.id);
-    _ref.invalidate(mergedPackagesProvider);
+    _ref.invalidate(packageProvider);
   }
 
   /// 检查安装队列
@@ -136,13 +105,10 @@ class PackageActions {
       version: item.version,
       beta: item.isBeta,
     );
-    final currentState = _ref.read(packageInstallStateProvider);
-    _ref.read(packageInstallStateProvider.notifier).state =
-        currentState.copyWith(pendingQueueImpact: queue);
     return queue;
   }
 
-  /// 安装套件
+  /// 安装套件（实时进度通过 ref.read(packageInstallStateProvider) 监听）
   Future<void> install(PackageItem item, String volumePath) async {
     _ref.read(packageInstallStateProvider.notifier).state =
         _ref.read(packageInstallStateProvider).copyWith(
@@ -177,9 +143,7 @@ class PackageActions {
         await Future<void>.delayed(const Duration(seconds: 2));
       }
 
-      _ref.invalidate(mergedPackagesProvider);
-      _ref.read(packageInstallStateProvider.notifier).state =
-          _ref.read(packageInstallStateProvider).copyWith(clearPendingQueueImpact: true);
+      _ref.invalidate(packageProvider);
     } finally {
       _ref.read(packageInstallStateProvider.notifier).state =
           _ref.read(packageInstallStateProvider).copyWith(clearInstallingId: true);
@@ -187,9 +151,21 @@ class PackageActions {
   }
 }
 
-final packageActionsProvider = Provider<PackageActions>((ref) {
-  return PackageActions(ref);
+// ─── 安装状态（独立 Provider，供 install 过程中 UI 监听进度）─────────────────────
+
+final packageInstallStateProvider = StateProvider<PackageInstallState>((ref) {
+  return const PackageInstallState();
 });
+
+// ─── 数据结构 ────────────────────────────────────────────────────────────────
+
+/// packageProvider 的返回值
+class PackageData {
+  final List<PackageItem> packages;
+  final List<PackageVolume> volumes;
+
+  const PackageData({required this.packages, required this.volumes});
+}
 
 // ─── 工具函数 ────────────────────────────────────────────────────────────────
 

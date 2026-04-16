@@ -169,7 +169,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with WidgetsBindi
   }
 
   List<DashboardAppEntry> _buildVisibleApps() {
-    final installed = ref.watch(packagesProvider(PackageSource.installed)).valueOrNull;
+    final installed = ref.watch(packageProvider).valueOrNull?.packages.where((p) => p.isInstalled).toList();
     return dashboardHomeApps.where((app) {
       if (app.route == '/container-management') {
         return installed != null && isPackageInstalled(installed, dsmAppName: 'SYNO.SDS.Docker.Application', name: 'docker');
