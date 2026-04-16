@@ -41,6 +41,12 @@ abstract class FileStationApi {
     required String content,
   });
 
+  /// 使用 SYNO.Core.File 保存文本文件（正确 API）
+  Future<void> saveTextFile({
+    required String path,
+    required String content,
+  });
+
   Future<void> createFolder({
     required String parentPath,
     required String name,
@@ -108,16 +114,51 @@ class DsmFileStationApi implements FileStationApi {
     required String path,
     required String content,
   }) async {
-    final normalizedPath = _normalizeFolderPath(path);
-    final slash = normalizedPath.lastIndexOf('/');
-    final parentPath = slash <= 0 ? '/' : normalizedPath.substring(0, slash);
-    final fileName = slash < 0 ? normalizedPath : normalizedPath.substring(slash + 1);
+    // 使用 SYNO.Core.File save API（正确方式）
+    await saveTextFile(path: path, content: content);
+  }
 
-    await uploadFile(
-      parentPath: parentPath,
-      fileName: fileName,
-      bytes: Uint8List.fromList(utf8.encode(content)),
+  @override
+  Future<void> saveTextFile({
+    required String path,
+    required String content,
+  }) async {
+    DsmLogger.request(
+      module: 'FileStation',
+      action: 'saveTextFile',
+      method: 'POST',
+      path: path,
     );
+
+    // base64 编码内容
+    final encodedContent = base64Encode(utf8.encode(content));
+
+    final response = await _dio.post(
+      '/webapi/entry.cgi',
+      data: {
+        'api': 'SYNO.Core.File',
+        'method': 'save',
+        'version': 1,
+        'file_path': '"$path"',
+        'file_content': '"$encodedContent"',
+        'codepage': '"GB18030"',
+      },
+      options: Options(contentType: Headers.formUrlEncodedContentType),
+    );
+
+    DsmLogger.response(
+      module: 'FileStation',
+      action: 'saveTextFile',
+      response: response.data,
+    );
+
+    if (response.data is Map && response.data['success'] != true) {
+      throw DioException(
+        requestOptions: response.requestOptions,
+        error: 'saveTextFile failed: \${response.data}',
+        response: response,
+      );
+    }
   }
 
   @override
