@@ -172,10 +172,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with WidgetsBindi
     final installed = ref.watch(packageProvider).valueOrNull?.packages.where((p) => p.isInstalled).toList();
     return dashboardHomeApps.where((app) {
       if (app.route == '/container-management') {
-        return installed != null && isPackageInstalled(installed, dsmAppName: 'SYNO.SDS.Docker.Application', name: 'docker');
+        return installed != null && installed.any((p) => p.id == 'ContainerManager');
       }
       if (app.route == '/downloads') {
-        return installed != null && isPackageInstalled(installed, name: 'download station');
+        return installed != null && installed.any((p) => p.id == 'DownloadStation');
       }
       return true;
     }).toList();
