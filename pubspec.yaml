@@ -1,7 +1,7 @@
 name: syno_keeper
 description: 群晖管家 - Synology DSM 7+ mobile app scaffold
 publish_to: 'none'
-version: 1.0.0+1
+version: 2.0.0+1
 
 environment:
   sdk: ">=3.3.0 <4.0.0"
