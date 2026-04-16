@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/widgets/app_error_state.dart';
 import '../../../../core/widgets/sliding_tab_bar.dart';
 import '../../../dashboard/presentation/providers/dashboard_providers.dart';
+import '../../../dashboard/presentation/providers/global_home_provider.dart';
 import '../providers/information_center_providers.dart';
 import '../tabs/network_tab.dart';
 import '../tabs/overview_tab.dart';
@@ -46,7 +47,7 @@ class _InformationCenterPageState extends ConsumerState<InformationCenterPage> w
 
   void _refresh() {
     ref.invalidate(informationCenterProvider);
-    ref.invalidate(dashboardBaseOverviewProvider);
+    ref.invalidate(globalHomeProvider);
   }
 
   @override

@@ -31,32 +31,25 @@ Future<void> _handleSessionExpired(Ref ref) async {
   await ref.read(recoverSessionProvider)();
 }
 
-final dashboardBaseOverviewProvider = FutureProvider<SystemStatus>((ref) async {
-  try {
-    return await ref.read(systemRepositoryProvider).fetchOverview();
-  } catch (error) {
-    if (_isSessionExpiredError(error)) {
-      await _handleSessionExpired(ref);
-    }
-    rethrow;
-  }
-});
-
 final dashboardOverviewSafeProvider = Provider<AsyncValue<SystemStatus?>>((ref) {
-  final baseOverview = ref.watch(dashboardBaseOverviewProvider);
   final realtimeOverview = ref.watch(globalRealtimeOverviewProvider);
-
   final homeData = ref.watch(globalHomeProvider).valueOrNull;
+
+  if (homeData == null) {
+    if (ref.watch(globalHomeProvider).isLoading) {
+      return const AsyncValue.loading();
+    }
+    return const AsyncValue.data(null);
+  }
+
+  final homeOverview = homeData.overview;
 
   if (realtimeOverview.hasValue) {
     final realtime = realtimeOverview.value!;
-    final base = baseOverview.valueOrNull;
-    final homeOverview = homeData?.overview;
-
     return AsyncValue.data(
       SystemStatus(
-        serverName: base?.serverName ?? homeOverview?.serverName ?? realtime.serverName,
-        dsmVersion: base?.dsmVersion ?? homeOverview?.dsmVersion ?? realtime.dsmVersion,
+        serverName: homeOverview.serverName ?? realtime.serverName,
+        dsmVersion: homeOverview.dsmVersion ?? realtime.dsmVersion,
         cpuUsage: realtime.cpuUsage,
         cpuUserUsage: realtime.cpuUserUsage,
         cpuSystemUsage: realtime.cpuSystemUsage,
@@ -70,7 +63,7 @@ final dashboardOverviewSafeProvider = Provider<AsyncValue<SystemStatus?>>((ref) 
         memoryBufferBytes: realtime.memoryBufferBytes,
         memoryCachedBytes: realtime.memoryCachedBytes,
         memoryAvailableBytes: realtime.memoryAvailableBytes,
-        storageUsage: realtime.storageUsage > 0 ? realtime.storageUsage : (base?.storageUsage ?? 0),
+        storageUsage: realtime.storageUsage > 0 ? realtime.storageUsage : homeOverview.storageUsage,
         networkUploadBytesPerSecond: realtime.networkUploadBytesPerSecond,
         networkDownloadBytesPerSecond: realtime.networkDownloadBytesPerSecond,
         diskReadBytesPerSecond: realtime.diskReadBytesPerSecond,
@@ -78,21 +71,13 @@ final dashboardOverviewSafeProvider = Provider<AsyncValue<SystemStatus?>>((ref) 
         networkInterfaces: realtime.networkInterfaces,
         disks: realtime.disks,
         volumePerformances: realtime.volumePerformances,
-        volumes: base?.volumes ?? const [],
-        modelName: base?.modelName ?? realtime.modelName,
-        serialNumber: base?.serialNumber ?? realtime.serialNumber,
-        uptimeText: base?.uptimeText ?? realtime.uptimeText,
+        volumes: homeOverview.volumes,
+        modelName: homeOverview.modelName ?? realtime.modelName,
+        serialNumber: homeOverview.serialNumber ?? realtime.serialNumber,
+        uptimeText: homeOverview.uptimeText ?? realtime.uptimeText,
       ),
     );
   }
 
-  if (baseOverview.hasValue) {
-    return AsyncValue.data(baseOverview.value);
-  }
-
-  if (baseOverview.isLoading) {
-    return const AsyncValue.loading();
-  }
-
-  return const AsyncValue.data(null);
+  return AsyncValue.data(homeOverview);
 });

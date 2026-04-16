@@ -60,7 +60,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with WidgetsBindi
 
     // ignore: avoid_print
     print('[Dashboard][Lifecycle] app resumed, refresh base overview + reconnect realtime');
-    ref.invalidate(dashboardBaseOverviewProvider);
+    ref.invalidate(globalHomeProvider);
     final reconnect = RealtimeReconnectBridge.callback;
     if (reconnect != null) {
       unawaited(reconnect());

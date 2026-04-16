@@ -21,7 +21,7 @@ import '../../../../data/repositories/auth_repository_impl.dart';
 import '../../../../domain/entities/nas_server.dart';
 import '../../../../domain/entities/nas_session.dart';
 import '../../../../domain/repositories/auth_repository.dart';
-import '../../../dashboard/presentation/providers/dashboard_providers.dart';
+import '../../../dashboard/presentation/providers/global_home_provider.dart';
 import '../../../dashboard/presentation/providers/dashboard_realtime_global.dart';
 import '../../../information_center/presentation/providers/information_center_providers.dart';
 import '../../../packages/presentation/providers/package_providers.dart';
@@ -44,7 +44,7 @@ final savedServerLastUsedProvider = StateProvider<Map<String, int>>((ref) => {})
 /// 所有需要跟随会话刷新的 providers，登录或切换服务器时统一 invalidate
 // ignore: invalid_use_of_protected_member
 final sessionRelatedProviders = <ProviderBase>[
-  dashboardBaseOverviewProvider,
+  globalHomeProvider,
   globalRealtimeOverviewProvider,
   informationCenterProvider,
   packageProvider,
