@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../dashboard/presentation/pages/dashboard_page.dart';
+import '../dashboard/presentation/providers/dashboard_realtime_global.dart';
+import '../dashboard/presentation/providers/global_home_provider.dart';
 import '../transfers/presentation/pages/transfers_page.dart';
 import '../files/presentation/pages/files_page.dart';
 import '../settings/presentation/pages/settings_page.dart';
@@ -27,6 +29,10 @@ class _MainShellPageState extends ConsumerState<MainShellPage> {
 
   @override
   Widget build(BuildContext context) {
+    // 触发 HTTP 请求 A+B，连接 WS（登录后生效）
+    ref.watch(globalHomeProvider);
+    ref.watch(globalRealtimeOverviewProvider);
+
     final activeTransferCount = ref.watch(transferProvider).where((t) => t.status == TransferTaskStatus.queued || t.status == TransferTaskStatus.running).length;
 
     return Scaffold(

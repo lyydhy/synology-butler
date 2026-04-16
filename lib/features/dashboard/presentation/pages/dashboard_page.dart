@@ -12,7 +12,7 @@ import '../../../../domain/entities/system_status.dart';
 import '../../../../core/utils/l10n.dart';
 import '../../../../core/utils/format_utils.dart';
 import '../../../auth/presentation/providers/current_connection_readers.dart';
-import '../../../packages/presentation/providers/package_providers.dart';
+import '../providers/global_home_provider.dart';
 
 import '../../data/dashboard_apps.dart';
 import '../providers/dashboard_providers.dart';
@@ -169,7 +169,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with WidgetsBindi
   }
 
   List<DashboardAppEntry> _buildVisibleApps() {
-    final installed = ref.watch(packageProvider).valueOrNull?.packages.where((p) => p.isInstalled).toList();
+    final installed = ref.watch(globalHomeProvider).valueOrNull?.installedPackages;
     return dashboardHomeApps.where((app) {
       if (app.route == '/container-management') {
         return installed != null && installed.any((p) => p.id == 'ContainerManager');

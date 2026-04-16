@@ -9,12 +9,10 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import '../domain/entities/transfer_task.dart';
 import '../core/utils/local_app_logger.dart';
 import '../features/auth/presentation/providers/auth_providers.dart';
-import '../features/dashboard/presentation/providers/dashboard_realtime_global.dart';
 import '../features/external_share/models/shared_incoming_file.dart';
 import '../features/external_share/services/external_share_pending_store.dart';
 import '../features/external_share/services/external_share_service.dart';
 import '../features/preferences/providers/preferences_providers.dart';
-import '../features/transfers/presentation/providers/transfer_providers.dart';
 import '../features/transfers/presentation/providers/transfer_providers.dart';
 import '../l10n/app_localizations.dart';
 import 'router.dart';
@@ -83,7 +81,6 @@ class _QunhuiManagerAppState extends ConsumerState<QunhuiManagerApp> {
     final themeColor = ref.watch(themeColorProvider).valueOrNull ?? AppThemeColorOption.blue;
     final localeOption = ref.watch(localeProvider).valueOrNull ?? AppLocaleOption.system;
     final _ = ref.watch(recoverSessionProvider);
-    ref.watch(globalRealtimeOverviewProvider);
     final seedColor = seedColorFor(themeColor);
 
     // 全局监听下载任务状态变化
