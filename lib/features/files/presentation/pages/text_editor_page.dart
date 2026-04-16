@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:re_editor/re_editor.dart';
@@ -9,6 +8,7 @@ import '../../../../core/utils/l10n.dart';
 import '../../../../core/utils/toast.dart';
 import '../providers/text_editor_providers.dart';
 import '../providers/code_language.dart';
+import '../widgets/copy_toolbar.dart';
 
 class TextEditorPage extends ConsumerStatefulWidget {
   const TextEditorPage({
@@ -28,21 +28,17 @@ class _TextEditorPageState extends ConsumerState<TextEditorPage> {
   late final CodeLineEditingController _controller;
   bool _dirty = false;
   String _lastPath = '';
-  bool _hasSelection = false;
-  String _cachedSelectedText = '';
 
   @override
   void initState() {
     super.initState();
     _controller = CodeLineEditingController.fromTextAsync(null);
     _controller.addListener(_onTextChanged);
-    _controller.addListener(_onSelectionChanged);
   }
 
   @override
   void dispose() {
     _controller.removeListener(_onTextChanged);
-    _controller.removeListener(_onSelectionChanged);
     _controller.dispose();
     super.dispose();
   }
@@ -53,7 +49,6 @@ class _TextEditorPageState extends ConsumerState<TextEditorPage> {
     if (oldWidget.path != widget.path) {
       _lastPath = widget.path;
       _dirty = false;
-      _hasSelection = false;
       _controller.codeLines = CodeLines.fromText('');
     }
   }
@@ -64,37 +59,10 @@ class _TextEditorPageState extends ConsumerState<TextEditorPage> {
     }
   }
 
-  void _onSelectionChanged() {
-    final text = _controller.selectedText;
-    final hasSelection = text.isNotEmpty;
-    if (hasSelection != _hasSelection) {
-      setState(() {
-        _hasSelection = hasSelection;
-        _cachedSelectedText = hasSelection ? text : '';
-      });
-    } else if (hasSelection) {
-      _cachedSelectedText = text;
-    }
-  }
-
-  void _copySelectedText() {
-    if (_cachedSelectedText.isNotEmpty) {
-      Clipboard.setData(ClipboardData(text: _cachedSelectedText));
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('已复制'),
-          duration: Duration(seconds: 1),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final fileAsync = ref.watch(textFileProvider(widget.path));
 
-    // 注入内容到 controller（每次 build 都检查）
     fileAsync.whenData((value) {
       if (_lastPath != widget.path) {
         _controller.codeLines = CodeLines.fromText(value);
@@ -188,55 +156,15 @@ class _TextEditorPageState extends ConsumerState<TextEditorPage> {
               ),
             ),
             Expanded(
-              child: Stack(
-                children: [
-                  fileAsync.when(
-                    data: (_) => CodeEditor(
-                      controller: _controller,
-                      style: CodeEditorStyle(fontSize: 14, codeTheme: codeEditorTheme),
-                      scrollController: CodeScrollController(),
-                    ),
-                    loading: () => const Center(child: CircularProgressIndicator()),
-                    error: (error, _) => Center(child: Text(ErrorMapper.map(error).message)),
-                  ),
-                  if (_hasSelection)
-                    Positioned(
-                      top: 8,
-                      right: 16,
-                      child: SafeArea(
-                        child: Material(
-                          elevation: 4,
-                          borderRadius: BorderRadius.circular(8),
-                          color: Theme.of(context).colorScheme.primaryContainer,
-                          child: InkWell(
-                            onTap: _copySelectedText,
-                            borderRadius: BorderRadius.circular(8),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.copy,
-                                    size: 16,
-                                    color: Theme.of(context).colorScheme.onPrimaryContainer,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    '复制',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      color: Theme.of(context).colorScheme.onPrimaryContainer,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
+              child: fileAsync.when(
+                data: (_) => CodeEditor(
+                  controller: _controller,
+                  style: CodeEditorStyle(fontSize: 14, codeTheme: codeEditorTheme),
+                  scrollController: CodeScrollController(),
+                  toolbarController: const EditorToolbarController(),
+                ),
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (error, _) => Center(child: Text(ErrorMapper.map(error).message)),
               ),
             ),
           ],
