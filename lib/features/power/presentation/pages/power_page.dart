@@ -7,14 +7,12 @@ import '../../../../domain/entities/power_schedule_task.dart';
 import '../../../../domain/entities/power_status.dart';
 import '../../../dashboard/presentation/providers/dashboard_providers.dart';
 
-/// 电源状态 Provider
-final powerStatusProvider = FutureProvider<PowerStatus>((ref) async {
-  return ref.read(systemRepositoryProvider).fetchPowerStatus();
-});
-
-/// 开关机计划 Provider
-final powerScheduleProvider = FutureProvider<List<PowerScheduleTask>>((ref) async {
-  return ref.read(systemRepositoryProvider).fetchPowerSchedule();
+/// 电源状态和开关机计划合并 provider
+final powerDataProvider = FutureProvider<(PowerStatus, List<PowerScheduleTask>)>((ref) async {
+  final repo = ref.read(systemRepositoryProvider);
+  final status = await repo.fetchPowerStatus();
+  final schedule = await repo.fetchPowerSchedule();
+  return (status, schedule);
 });
 
 class PowerPage extends ConsumerStatefulWidget {
@@ -48,7 +46,7 @@ class _PowerPageState extends ConsumerState<PowerPage> with SingleTickerProvider
   }
 
   void _loadSettings() {
-    final status = ref.read(powerStatusProvider).valueOrNull;
+    final (status, _) = ref.read(powerDataProvider).valueOrNull ?? (null, []);
     if (status != null) {
       _ledBrightness = status.ledBrightness?.brightness ?? 3;
       _fanSpeedMode = status.fanSpeed?.fanSpeedMode ?? 'auto';
@@ -70,7 +68,7 @@ class _PowerPageState extends ConsumerState<PowerPage> with SingleTickerProvider
             poweroffBeep: _poweroffBeep,
           );
 
-      ref.invalidate(powerStatusProvider);
+      ref.invalidate(powerDataProvider);
       setState(() {
         _hasChanges = false;
         _saving = false;
@@ -171,7 +169,8 @@ class _SettingsTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final statusAsync = ref.watch(powerStatusProvider);
+    final powerAsync = ref.watch(powerDataProvider);
+    final statusAsync = powerAsync.whenData((d, _) => d);
 
     // 首次加载时同步状态
     statusAsync.whenData((_) => WidgetsBinding.instance.addPostFrameCallback((_) => onLoad()));
@@ -185,7 +184,7 @@ class _SettingsTab extends ConsumerWidget {
             Text('加载失败: $error'),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: () => ref.invalidate(powerStatusProvider),
+              onPressed: () => ref.invalidate(powerDataProvider),
               child: const Text('重试'),
             ),
           ],
@@ -223,7 +222,8 @@ class _ScheduleTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final scheduleAsync = ref.watch(powerScheduleProvider);
+    final powerAsync = ref.watch(powerDataProvider);
+    final scheduleAsync = powerAsync.whenData((_, s) => s);
 
     return scheduleAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -234,7 +234,7 @@ class _ScheduleTab extends ConsumerWidget {
             Text('加载失败: $error'),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: () => ref.invalidate(powerScheduleProvider),
+              onPressed: () => ref.invalidate(powerDataProvider),
               child: const Text('重试'),
             ),
           ],
