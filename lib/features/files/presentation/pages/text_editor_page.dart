@@ -26,7 +26,7 @@ class TextEditorPage extends ConsumerStatefulWidget {
 class _TextEditorPageState extends ConsumerState<TextEditorPage> {
   late final CodeLineEditingController _controller;
   bool _dirty = false;
-  bool _initialized = false;
+  String _lastPath = '';
 
   @override
   void initState() {
@@ -42,8 +42,18 @@ class _TextEditorPageState extends ConsumerState<TextEditorPage> {
     super.dispose();
   }
 
+  @override
+  void didUpdateWidget(covariant TextEditorPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.path != widget.path) {
+      _lastPath = widget.path;
+      _dirty = false;
+      _controller.codeLines = CodeLines.fromText('');
+    }
+  }
+
   void _onTextChanged() {
-    if (_initialized && !_dirty) {
+    if (_lastPath == widget.path && !_dirty) {
       setState(() => _dirty = true);
     }
   }
@@ -54,13 +64,12 @@ class _TextEditorPageState extends ConsumerState<TextEditorPage> {
     final langName = getModeByFilename(widget.name).name ?? 'plaintext';
     final editorTheme = buildSingleLanguageTheme(langName);
 
-    ref.listen(textFileProvider(widget.path), (previous, next) {
-      next.whenData((value) {
-        if (!_initialized) {
-          _controller.codeLines = CodeLines.fromText(value);
-          _initialized = true;
-        }
-      });
+    // 注入内容到 controller（每次 build 都检查）
+    fileAsync.whenData((value) {
+      if (_lastPath != widget.path) {
+        _controller.codeLines = CodeLines.fromText(value);
+        _lastPath = widget.path;
+      }
     });
 
     final navigator = Navigator.of(context);

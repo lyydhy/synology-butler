@@ -25,12 +25,13 @@ class TextPreviewPage extends ConsumerStatefulWidget {
 
 class _TextPreviewPageState extends ConsumerState<TextPreviewPage> {
   late final CodeLineEditingController _controller;
-  bool _initialized = false;
+  String _lastPath = '';
 
   @override
   void initState() {
     super.initState();
-    _controller = CodeLineEditingController.fromTextAsync(null);
+    _controller = CodeLineEditingController();
+    _lastPath = widget.path;
   }
 
   @override
@@ -40,19 +41,27 @@ class _TextPreviewPageState extends ConsumerState<TextPreviewPage> {
   }
 
   @override
+  void didUpdateWidget(covariant TextPreviewPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // 文件路径变化时，重置控制器
+    if (oldWidget.path != widget.path) {
+      _lastPath = widget.path;
+      _controller.codeLines = CodeLines.fromText('');
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final fileAsync = ref.watch(textFileProvider(widget.path));
-    final langName = getModeByFilename(widget.name).name ?? 'plaintext';
-    final editorTheme = buildSingleLanguageTheme(langName);
     final canEdit = FileTypeHelper.isTextEditableName(widget.name) && !FileTypeHelper.isNfoName(widget.name);
+    final langName = getModeByFilename(widget.name).name ?? 'plaintext';
 
-    ref.listen(textFileProvider(widget.path), (previous, next) {
-      next.whenData((value) {
-        if (!_initialized) {
-          _controller.codeLines = CodeLines.fromText(value);
-          _initialized = true;
-        }
-      });
+    // 注入内容到 controller（每次 build 都检查，支持第二次打开同一文件）
+    fileAsync.whenData((value) {
+      if (_lastPath != widget.path || _controller.codeLines.toString() != value) {
+        _controller.codeLines = CodeLines.fromText(value);
+        _lastPath = widget.path;
+      }
     });
 
     return Scaffold(
@@ -87,7 +96,10 @@ class _TextPreviewPageState extends ConsumerState<TextPreviewPage> {
             child: fileAsync.when(
               data: (_) => CodeEditor(
                 controller: _controller,
-                style: CodeEditorStyle(fontSize: 14, codeTheme: editorTheme),
+                style: CodeEditorStyle(
+                  fontSize: 14,
+                  codeTheme: codeEditorTheme,
+                ),
                 scrollController: CodeScrollController(),
                 readOnly: true,
               ),
