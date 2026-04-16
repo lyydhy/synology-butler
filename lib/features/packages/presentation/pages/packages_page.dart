@@ -181,7 +181,7 @@ class _PackageCard extends ConsumerWidget {
   final PackageItem item;
 
   Future<String?> _pickVolume(BuildContext context, WidgetRef ref) async {
-    final volumes = await ref.read(packageActionsProvider).fetchVolumes();
+    final volumes = (await ref.read(packageProvider).valueOrNull)?.volumes ?? [];
     if (volumes.isEmpty || !context.mounted) return null;
 
     return showModalBottomSheet<String>(

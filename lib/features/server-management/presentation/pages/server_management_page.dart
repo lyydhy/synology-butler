@@ -111,7 +111,7 @@ class _ServerManagementPageState extends ConsumerState<ServerManagementPage>
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final themeColorOption = ref.watch(themeColorProvider);
+    final themeColorOption = ref.watch(themeColorProvider).valueOrNull ?? AppThemeColorOption.blue;
     final primaryColor = seedColorFor(themeColorOption);
     final servers = ref.watch(savedServersProvider);
     final currentServer = ref.watch(currentConnectionProvider).server;

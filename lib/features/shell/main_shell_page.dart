@@ -6,6 +6,7 @@ import '../transfers/presentation/pages/transfers_page.dart';
 import '../files/presentation/pages/files_page.dart';
 import '../settings/presentation/pages/settings_page.dart';
 import '../transfers/presentation/providers/transfer_providers.dart';
+import '../../../domain/entities/transfer_task.dart';
 
 class MainShellPage extends ConsumerStatefulWidget {
   const MainShellPage({super.key});

@@ -59,6 +59,10 @@ class UnreachableRedirectInterceptor extends Interceptor {
         event: 'unreachable_trigger',
         message: 'Redirecting to /login (host=$host)',
       ));
+
+      // 清空 session 和 server，避免重开 app 自动回到首页
+      connectionStore.clearAll();
+
       Toast.warning('网络不可达，正在返回登录页...');
       appNavigatorKey.currentContext?.go('/login');
     }

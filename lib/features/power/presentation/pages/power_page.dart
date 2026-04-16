@@ -170,7 +170,7 @@ class _SettingsTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final powerAsync = ref.watch(powerDataProvider);
-    final statusAsync = powerAsync.whenData((d, _) => d);
+    final statusAsync = powerAsync.whenData((r) => r.$1);
 
     // 首次加载时同步状态
     statusAsync.whenData((_) => WidgetsBinding.instance.addPostFrameCallback((_) => onLoad()));
@@ -223,7 +223,7 @@ class _ScheduleTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final powerAsync = ref.watch(powerDataProvider);
-    final scheduleAsync = powerAsync.whenData((_, s) => s);
+    final scheduleAsync = powerAsync.whenData((r) => r.$2);
 
     return scheduleAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
