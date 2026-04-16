@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_code_editor/flutter_code_editor.dart';
 import 'package:go_router/go_router.dart';
@@ -23,11 +26,14 @@ class TextEditorPage extends ConsumerStatefulWidget {
   ConsumerState<TextEditorPage> createState() => _TextEditorPageState();
 }
 
-class _TextEditorPageState extends ConsumerState<TextEditorPage> {
+class _TextEditorPageState extends ConsumerState<TextEditorPage>
+    with WidgetsBindingObserver {
   late final CodeController _controller;
   bool _dirty = false;
   bool _saving = false;
   String _lastPath = '';
+  bool _keyboardRepositioning = false;
+  double _lastKeyboardHeight = 0;
 
   @override
   void initState() {
@@ -36,6 +42,7 @@ class _TextEditorPageState extends ConsumerState<TextEditorPage> {
       language: getModeByFilename(widget.name),
     );
     _controller.addListener(_onTextChanged);
+    WidgetsBinding.instance.addObserver(this);
   }
 
   @override
@@ -47,6 +54,36 @@ class _TextEditorPageState extends ConsumerState<TextEditorPage> {
       _saving = false;
       _controller.language = getModeByFilename(widget.name);
       _controller.text = '';
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _controller.removeListener(_onTextChanged);
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didChangeMetrics() {
+    final keyboardHeight = WidgetsBinding.instance.window.viewInsets.bottom;
+    if (_controller.searchController.shouldShow &&
+        _lastKeyboardHeight != keyboardHeight &&
+        !_keyboardRepositioning) {
+      _lastKeyboardHeight = keyboardHeight;
+      _repositionSearchOverlay();
+    }
+  }
+
+  void _repositionSearchOverlay() async {
+    if (!_controller.searchController.shouldShow) return;
+    _keyboardRepositioning = true;
+    _controller.searchController.hideSearch(returnFocusToCodeField: false);
+    await Future.delayed(const Duration(milliseconds: 16));
+    if (mounted) {
+      _controller.showSearch();
+      _keyboardRepositioning = false;
     }
   }
 
@@ -65,13 +102,6 @@ class _TextEditorPageState extends ConsumerState<TextEditorPage> {
   }
 
   @override
-  void dispose() {
-    _controller.removeListener(_onTextChanged);
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final fileAsync = ref.watch(textFileProvider(widget.path));
 
@@ -82,8 +112,6 @@ class _TextEditorPageState extends ConsumerState<TextEditorPage> {
         _lastPath = widget.path;
       }
     });
-
-    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
     return PopScope(
       canPop: !_dirty,
@@ -193,16 +221,12 @@ class _TextEditorPageState extends ConsumerState<TextEditorPage> {
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ),
-            // 搜索打开时，用 bottom padding 把内容往上推，让搜索面板在键盘上方可见
             Expanded(
               child: fileAsync.when(
                 data: (_) => CodeTheme(
                   data: codeEditorTheme,
-                  child: Padding(
-                    padding: EdgeInsets.only(bottom: bottomInset),
-                    child: CodeField(
-                      controller: _controller,
-                    ),
+                  child: CodeField(
+                    controller: _controller,
                   ),
                 ),
                 loading: () => const Center(child: CircularProgressIndicator()),

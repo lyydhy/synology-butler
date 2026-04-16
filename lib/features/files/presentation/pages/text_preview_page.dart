@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_code_editor/flutter_code_editor.dart';
 import 'package:go_router/go_router.dart';
@@ -22,10 +24,13 @@ class TextPreviewPage extends ConsumerStatefulWidget {
   ConsumerState<TextPreviewPage> createState() => _TextPreviewPageState();
 }
 
-class _TextPreviewPageState extends ConsumerState<TextPreviewPage> {
+class _TextPreviewPageState extends ConsumerState<TextPreviewPage>
+    with WidgetsBindingObserver {
   late final CodeController _controller;
   String _lastPath = '';
   String _lastContent = '';
+  bool _keyboardRepositioning = false;
+  double _lastKeyboardHeight = 0;
 
   @override
   void initState() {
@@ -34,6 +39,7 @@ class _TextPreviewPageState extends ConsumerState<TextPreviewPage> {
       language: getModeByFilename(widget.name),
     );
     _lastPath = widget.path;
+    WidgetsBinding.instance.addObserver(this);
   }
 
   @override
@@ -47,6 +53,35 @@ class _TextPreviewPageState extends ConsumerState<TextPreviewPage> {
     }
   }
 
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didChangeMetrics() {
+    final keyboardHeight = WidgetsBinding.instance.window.viewInsets.bottom;
+    if (_controller.searchController.shouldShow &&
+        _lastKeyboardHeight != keyboardHeight &&
+        !_keyboardRepositioning) {
+      _lastKeyboardHeight = keyboardHeight;
+      _repositionSearchOverlay();
+    }
+  }
+
+  void _repositionSearchOverlay() async {
+    if (!_controller.searchController.shouldShow) return;
+    _keyboardRepositioning = true;
+    _controller.searchController.hideSearch(returnFocusToCodeField: false);
+    await Future.delayed(const Duration(milliseconds: 16));
+    if (mounted) {
+      _controller.showSearch();
+      _keyboardRepositioning = false;
+    }
+  }
+
   void _toggleSearch() {
     if (_controller.searchController.shouldShow) {
       _controller.searchController.hideSearch(returnFocusToCodeField: true);
@@ -56,16 +91,9 @@ class _TextPreviewPageState extends ConsumerState<TextPreviewPage> {
   }
 
   @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final fileAsync = ref.watch(textFileProvider(widget.path));
     final canEdit = FileTypeHelper.isTextEditableName(widget.name) && !FileTypeHelper.isNfoName(widget.name);
-    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
     // 注入内容到 controller（支持同一文件第二次打开）
     fileAsync.whenData((value) {
@@ -119,12 +147,9 @@ class _TextPreviewPageState extends ConsumerState<TextPreviewPage> {
             child: fileAsync.when(
               data: (_) => CodeTheme(
                 data: codeEditorTheme,
-                child: Padding(
-                  padding: EdgeInsets.only(bottom: bottomInset),
-                  child: CodeField(
-                    controller: _controller,
-                    readOnly: true,
-                  ),
+                child: CodeField(
+                  controller: _controller,
+                  readOnly: true,
                 ),
               ),
               loading: () => const Center(child: CircularProgressIndicator()),
