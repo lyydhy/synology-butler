@@ -9,8 +9,15 @@ import '../../../../core/utils/local_app_logger.dart';
 import '../../../external_share/services/external_share_pending_store.dart';
 import '../providers/auth_providers.dart';
 
-class SplashPage extends ConsumerWidget {
+class SplashPage extends ConsumerStatefulWidget {
   const SplashPage({super.key});
+
+  @override
+  ConsumerState<SplashPage> createState() => _SplashPageState();
+}
+
+class _SplashPageState extends ConsumerState<SplashPage> {
+  bool _navigated = false;
 
   Future<String> _resolveTarget(bool restored) async {
     const pendingStore = ExternalSharePendingStore();
@@ -21,10 +28,75 @@ class SplashPage extends ConsumerWidget {
     return restored ? '/home' : '/login';
   }
 
+  Future<void> _handleRestored(BuildContext context, bool restored) async {
+    if (_navigated) return;
+    _navigated = true;
+
+    final target = await _resolveTarget(restored);
+    await LocalAppLogger.log(
+      level: 'info',
+      module: 'splash',
+      event: 'restore_completed',
+      extra: {'restored': restored, 'target': target},
+    );
+    await Future<void>.delayed(const Duration(milliseconds: 1600));
+    if (!context.mounted) return;
+    final router = GoRouter.of(context);
+
+    if (target == '/external-upload') {
+      final pending = await const ExternalSharePendingStore().load();
+      if (!context.mounted) return;
+      if (pending != null) {
+        await const ExternalSharePendingStore().clear();
+        if (!context.mounted) return;
+        router.push('/external-upload', extra: pending);
+        return;
+      }
+    }
+
+    unawaited(LocalAppLogger.log(
+      level: 'info',
+      module: 'splash',
+      event: 'navigate',
+      extra: {'target': target},
+    ));
+    router.go(target);
+  }
+
+  Future<void> _handleError(BuildContext context) async {
+    if (_navigated) return;
+    _navigated = true;
+
+    await LocalAppLogger.log(
+      level: 'error',
+      module: 'splash',
+      event: 'restore_failed',
+    );
+    await Future<void>.delayed(const Duration(milliseconds: 1600));
+    if (!context.mounted) return;
+    unawaited(LocalAppLogger.log(
+      level: 'info',
+      module: 'splash',
+      event: 'navigate',
+      extra: {'target': '/login'},
+    ));
+    context.go('/login');
+  }
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final restoreAsync = ref.watch(restoreSessionProvider);
+
+    // provider 数据首次变为 data 时触发导航（同一值不会重复触发 when 的 data 回调）
+    ref.listen(restoreSessionProvider, (prev, next) {
+      if (_navigated) return;
+      next.whenData((restored) {
+        WidgetsBinding.instance.addPostFrameCallback(
+          (_) => _handleRestored(context, restored),
+        );
+      });
+    });
 
     return Scaffold(
       body: Container(
@@ -41,37 +113,7 @@ class SplashPage extends ConsumerWidget {
         ),
         child: restoreAsync.when(
           data: (restored) {
-            WidgetsBinding.instance.addPostFrameCallback((_) async {
-              final target = await _resolveTarget(restored);
-              await LocalAppLogger.log(
-                level: 'info',
-                module: 'splash',
-                event: 'restore_completed',
-                extra: {'restored': restored, 'target': target},
-              );
-              await Future<void>.delayed(const Duration(milliseconds: 1600));
-              if (!context.mounted) return;
-              final router = GoRouter.of(context);
-
-              if (target == '/external-upload') {
-                final pending = await const ExternalSharePendingStore().load();
-                if (!context.mounted) return;
-                if (pending != null) {
-                  await const ExternalSharePendingStore().clear();
-                  if (!context.mounted) return;
-                  router.push('/external-upload', extra: pending);
-                  return;
-                }
-              }
-
-              unawaited(LocalAppLogger.log(
-                level: 'info',
-                module: 'splash',
-                event: 'navigate',
-                extra: {'target': target},
-              ));
-              router.go(target);
-            });
+            // 首次 data 时已经在 listen 里处理了，这里只负责展示 UI
             return const _SplashContent(
               title: null,
               subtitle: null,
@@ -80,23 +122,9 @@ class SplashPage extends ConsumerWidget {
             );
           },
           error: (_, __) {
-            WidgetsBinding.instance.addPostFrameCallback((_) async {
-              await LocalAppLogger.log(
-                level: 'error',
-                module: 'splash',
-                event: 'restore_failed',
-              );
-              await Future<void>.delayed(const Duration(milliseconds: 1600));
-              if (context.mounted) {
-                unawaited(LocalAppLogger.log(
-                  level: 'info',
-                  module: 'splash',
-                  event: 'navigate',
-                  extra: {'target': '/login'},
-                ));
-                context.go('/login');
-              }
-            });
+            WidgetsBinding.instance.addPostFrameCallback(
+              (_) => _handleError(context),
+            );
             return const _SplashContent(
               title: null,
               subtitle: null,
