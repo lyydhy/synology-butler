@@ -79,9 +79,9 @@ class _QunhuiManagerAppState extends ConsumerState<QunhuiManagerApp> {
   @override
   Widget build(BuildContext context) {
     ref.watch(restorePreferencesProvider);
-    final themeMode = ref.watch(themeModeProvider);
-    final themeColor = ref.watch(themeColorProvider);
-    final localeOption = ref.watch(localeProvider);
+    final themeMode = ref.watch(themeModeProvider).valueOrNull ?? AppThemeModeOption.system;
+    final themeColor = ref.watch(themeColorProvider).valueOrNull ?? AppThemeColorOption.blue;
+    final localeOption = ref.watch(localeProvider).valueOrNull ?? AppLocaleOption.system;
     final _ = ref.watch(recoverSessionProvider);
     ref.watch(globalRealtimeOverviewProvider);
     final seedColor = seedColorFor(themeColor);

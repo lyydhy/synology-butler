@@ -613,7 +613,7 @@ class _LoginPageState extends ConsumerState<LoginPage>
   // ─── Build ────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
-    final themeColorOption = ref.watch(themeColorProvider);
+    final themeColorOption = ref.watch(themeColorProvider).valueOrNull ?? AppThemeColorOption.blue;
     final primaryColor = seedColorFor(themeColorOption);
     final savedServers = ref.watch(savedServersProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;

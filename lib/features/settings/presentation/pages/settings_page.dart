@@ -99,7 +99,7 @@ class SettingsPage extends ConsumerWidget {
       ),
     );
     if (result != null) {
-      ref.read(saveThemeModeProvider)(result);
+      ref.read(themeModeProvider.notifier).save(result);
     }
   }
 
@@ -163,7 +163,7 @@ class SettingsPage extends ConsumerWidget {
       ),
     );
     if (result != null) {
-      ref.read(saveThemeColorProvider)(result);
+      ref.read(themeColorProvider.notifier).save(result);
     }
   }
 
@@ -216,7 +216,7 @@ class SettingsPage extends ConsumerWidget {
       ),
     );
     if (result != null) {
-      ref.read(saveLocaleProvider)(result);
+      ref.read(localeProvider.notifier).save(result);
     }
   }
 
@@ -225,10 +225,10 @@ class SettingsPage extends ConsumerWidget {
     
     final server = ref.watch(currentConnectionProvider).server;
     final theme = Theme.of(context);
-    final themeMode = ref.watch(themeModeProvider);
-    final themeColor = ref.watch(themeColorProvider);
-    final locale = ref.watch(localeProvider);
-    final downloadDirectory = ref.watch(downloadDirectoryProvider);
+    final themeMode = ref.watch(themeModeProvider).valueOrNull ?? AppThemeModeOption.system;
+    final themeColor = ref.watch(themeColorProvider).valueOrNull ?? AppThemeColorOption.blue;
+    final locale = ref.watch(localeProvider).valueOrNull ?? AppLocaleOption.system;
+    final downloadDirectory = ref.watch(downloadDirectoryProvider).valueOrNull;
     final packageInfo = ref.watch(_packageInfoProvider);
 
     return Scaffold(
@@ -247,7 +247,7 @@ class SettingsPage extends ConsumerWidget {
                 onTap: () async {
                   final selected = await FilePicker.platform.getDirectoryPath();
                   if (selected == null || selected.isEmpty) return;
-                  await ref.read(saveDownloadDirectoryProvider)(selected);
+                  await ref.read(downloadDirectoryProvider.notifier).save(selected);
                   if (context.mounted) {
                     Toast.success(l10n.settingsDownloadDirUpdated);
                   }

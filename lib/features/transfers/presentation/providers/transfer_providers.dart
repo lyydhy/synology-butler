@@ -498,7 +498,7 @@ class TransferController extends StateNotifier<List<TransferTask>> {
 
 
   Future<Directory> _resolveDownloadDirectory() async {
-    final savedPath = _ref.read(downloadDirectoryProvider);
+    final savedPath = _ref.read(downloadDirectoryProvider).valueOrNull;
     if (savedPath != null && savedPath.isNotEmpty) {
       final dir = Directory(savedPath);
       if (!await dir.exists()) {

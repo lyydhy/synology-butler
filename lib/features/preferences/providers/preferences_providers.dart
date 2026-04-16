@@ -12,50 +12,22 @@ enum AppLocaleOption { system, zh, en }
 
 enum ContainerDataSourceOption { synology, dpanel }
 
-final themeModeProvider = StateProvider<AppThemeModeOption>((ref) => AppThemeModeOption.system);
-final themeColorProvider = StateProvider<AppThemeColorOption>((ref) => AppThemeColorOption.blue);
-final localeProvider = StateProvider<AppLocaleOption>((ref) => AppLocaleOption.system);
-final downloadDirectoryProvider = StateProvider<String?>((ref) => null);
-final containerDataSourceProvider = StateProvider<ContainerDataSourceOption>((ref) => ContainerDataSourceOption.synology);
+// ─── Theme Mode ─────────────────────────────────────────────────────────────
 
-final restorePreferencesProvider = FutureProvider<void>((ref) async {
-  final storage = ref.read(localStorageProvider);
+class ThemeModeNotifier extends AsyncNotifier<AppThemeModeOption> {
+  @override
+  Future<AppThemeModeOption> build() async {
+    final storage = ref.read(localStorageProvider);
+    final value = await storage.readString(AppConstants.themeModeKey);
+    return switch (value) {
+      'light' => AppThemeModeOption.light,
+      'dark' => AppThemeModeOption.dark,
+      _ => AppThemeModeOption.system,
+    };
+  }
 
-  final themeMode = await storage.readString(AppConstants.themeModeKey);
-  final themeColor = await storage.readString(AppConstants.themeColorKey);
-  final locale = await storage.readString(AppConstants.localeKey);
-  final downloadDirectory = await storage.readString(AppConstants.downloadDirectoryKey);
-  final containerDataSource = await storage.readString(AppConstants.containerDataSourceKey);
-
-  ref.read(themeModeProvider.notifier).state = switch (themeMode) {
-    'light' => AppThemeModeOption.light,
-    'dark' => AppThemeModeOption.dark,
-    _ => AppThemeModeOption.system,
-  };
-
-  ref.read(themeColorProvider.notifier).state = switch (themeColor) {
-    'green' => AppThemeColorOption.green,
-    'orange' => AppThemeColorOption.orange,
-    'purple' => AppThemeColorOption.purple,
-    _ => AppThemeColorOption.blue,
-  };
-
-  ref.read(localeProvider.notifier).state = switch (locale) {
-    'zh' => AppLocaleOption.zh,
-    'en' => AppLocaleOption.en,
-    _ => AppLocaleOption.system,
-  };
-
-  ref.read(downloadDirectoryProvider.notifier).state = downloadDirectory;
-  ref.read(containerDataSourceProvider.notifier).state = switch (containerDataSource) {
-    'dpanel' => ContainerDataSourceOption.dpanel,
-    _ => ContainerDataSourceOption.synology,
-  };
-});
-
-final saveThemeModeProvider = Provider<Future<void> Function(AppThemeModeOption)>((ref) {
-  return (mode) async {
-    ref.read(themeModeProvider.notifier).state = mode;
+  Future<void> save(AppThemeModeOption mode) async {
+    state = AsyncData(mode);
     final storage = ref.read(localStorageProvider);
     await storage.writeString(
       AppConstants.themeModeKey,
@@ -65,12 +37,30 @@ final saveThemeModeProvider = Provider<Future<void> Function(AppThemeModeOption)
         AppThemeModeOption.system => 'system',
       },
     );
-  };
-});
+  }
+}
 
-final saveThemeColorProvider = Provider<Future<void> Function(AppThemeColorOption)>((ref) {
-  return (color) async {
-    ref.read(themeColorProvider.notifier).state = color;
+final themeModeProvider = AsyncNotifierProvider<ThemeModeNotifier, AppThemeModeOption>(
+  ThemeModeNotifier.new,
+);
+
+// ─── Theme Color ─────────────────────────────────────────────────────────────
+
+class ThemeColorNotifier extends AsyncNotifier<AppThemeColorOption> {
+  @override
+  Future<AppThemeColorOption> build() async {
+    final storage = ref.read(localStorageProvider);
+    final value = await storage.readString(AppConstants.themeColorKey);
+    return switch (value) {
+      'green' => AppThemeColorOption.green,
+      'orange' => AppThemeColorOption.orange,
+      'purple' => AppThemeColorOption.purple,
+      _ => AppThemeColorOption.blue,
+    };
+  }
+
+  Future<void> save(AppThemeColorOption color) async {
+    state = AsyncData(color);
     final storage = ref.read(localStorageProvider);
     await storage.writeString(
       AppConstants.themeColorKey,
@@ -81,12 +71,29 @@ final saveThemeColorProvider = Provider<Future<void> Function(AppThemeColorOptio
         AppThemeColorOption.blue => 'blue',
       },
     );
-  };
-});
+  }
+}
 
-final saveLocaleProvider = Provider<Future<void> Function(AppLocaleOption)>((ref) {
-  return (locale) async {
-    ref.read(localeProvider.notifier).state = locale;
+final themeColorProvider = AsyncNotifierProvider<ThemeColorNotifier, AppThemeColorOption>(
+  ThemeColorNotifier.new,
+);
+
+// ─── Locale ──────────────────────────────────────────────────────────────────
+
+class LocaleNotifier extends AsyncNotifier<AppLocaleOption> {
+  @override
+  Future<AppLocaleOption> build() async {
+    final storage = ref.read(localStorageProvider);
+    final value = await storage.readString(AppConstants.localeKey);
+    return switch (value) {
+      'zh' => AppLocaleOption.zh,
+      'en' => AppLocaleOption.en,
+      _ => AppLocaleOption.system,
+    };
+  }
+
+  Future<void> save(AppLocaleOption locale) async {
+    state = AsyncData(locale);
     final storage = ref.read(localStorageProvider);
     await storage.writeString(
       AppConstants.localeKey,
@@ -96,24 +103,52 @@ final saveLocaleProvider = Provider<Future<void> Function(AppLocaleOption)>((ref
         AppLocaleOption.system => 'system',
       },
     );
-  };
-});
+  }
+}
 
-final saveDownloadDirectoryProvider = Provider<Future<void> Function(String?)>((ref) {
-  return (path) async {
-    ref.read(downloadDirectoryProvider.notifier).state = path;
+final localeProvider = AsyncNotifierProvider<LocaleNotifier, AppLocaleOption>(
+  LocaleNotifier.new,
+);
+
+// ─── Download Directory ───────────────────────────────────────────────────────
+
+class DownloadDirectoryNotifier extends AsyncNotifier<String?> {
+  @override
+  Future<String?> build() async {
+    final storage = ref.read(localStorageProvider);
+    return storage.readString(AppConstants.downloadDirectoryKey);
+  }
+
+  Future<void> save(String? path) async {
+    state = AsyncData(path);
     final storage = ref.read(localStorageProvider);
     if (path == null || path.isEmpty) {
       await storage.remove(AppConstants.downloadDirectoryKey);
     } else {
       await storage.writeString(AppConstants.downloadDirectoryKey, path);
     }
-  };
-});
+  }
+}
 
-final saveContainerDataSourceProvider = Provider<Future<void> Function(ContainerDataSourceOption)>((ref) {
-  return (source) async {
-    ref.read(containerDataSourceProvider.notifier).state = source;
+final downloadDirectoryProvider = AsyncNotifierProvider<DownloadDirectoryNotifier, String?>(
+  DownloadDirectoryNotifier.new,
+);
+
+// ─── Container Data Source ────────────────────────────────────────────────────
+
+class ContainerDataSourceNotifier extends AsyncNotifier<ContainerDataSourceOption> {
+  @override
+  Future<ContainerDataSourceOption> build() async {
+    final storage = ref.read(localStorageProvider);
+    final value = await storage.readString(AppConstants.containerDataSourceKey);
+    return switch (value) {
+      'dpanel' => ContainerDataSourceOption.dpanel,
+      _ => ContainerDataSourceOption.synology,
+    };
+  }
+
+  Future<void> save(ContainerDataSourceOption source) async {
+    state = AsyncData(source);
     final storage = ref.read(localStorageProvider);
     await storage.writeString(
       AppConstants.containerDataSourceKey,
@@ -122,8 +157,21 @@ final saveContainerDataSourceProvider = Provider<Future<void> Function(Container
         ContainerDataSourceOption.dpanel => 'dpanel',
       },
     );
-  };
+  }
+}
+
+final containerDataSourceProvider = AsyncNotifierProvider<ContainerDataSourceNotifier, ContainerDataSourceOption>(
+  ContainerDataSourceNotifier.new,
+);
+
+// ─── Legacy restore provider (kept for compatibility, now a no-op since AsyncNotifier builds on read) ──
+
+final restorePreferencesProvider = FutureProvider<void>((ref) async {
+  // Preferences are now restored automatically when each provider is first read.
+  // This provider is kept so existing code that watches it still works.
 });
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 Color seedColorFor(AppThemeColorOption option) {
   switch (option) {

@@ -11,8 +11,8 @@ class ContainerManagementSettingsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final currentSource = ref.watch(containerDataSourceProvider);
-    final saveSource = ref.read(saveContainerDataSourceProvider);
+    final currentSource = ref.watch(containerDataSourceProvider).valueOrNull ?? ContainerDataSourceOption.synology;
+    final saveSource = (ContainerDataSourceOption value) => ref.read(containerDataSourceProvider.notifier).save(value);
 
     return Scaffold(
       appBar: AppBar(title: const Text('容器管理设置')),

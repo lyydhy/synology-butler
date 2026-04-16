@@ -107,7 +107,7 @@ class _ContainerManagementPageState extends ConsumerState<ContainerManagementPag
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final dataSource = ref.watch(containerDataSourceProvider);
+    final dataSource = ref.watch(containerDataSourceProvider).valueOrNull ?? ContainerDataSourceOption.synology;
     final isDpanel = dataSource == ContainerDataSourceOption.dpanel;
 
     return Scaffold(

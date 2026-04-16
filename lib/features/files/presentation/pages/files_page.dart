@@ -271,7 +271,7 @@ class _FilesPageState extends ConsumerState<FilesPage> {
 
   /// 确保本地下载目录已配置。
   Future<bool> _ensureDownloadDirectorySelected(BuildContext context, WidgetRef ref) async {
-    final current = ref.read(downloadDirectoryProvider);
+    final current = ref.read(downloadDirectoryProvider).valueOrNull;
     if (current != null && current.isNotEmpty) return true;
 
     final selected = await FilePicker.platform.getDirectoryPath();
@@ -279,7 +279,7 @@ class _FilesPageState extends ConsumerState<FilesPage> {
       return false;
     }
 
-    await ref.read(saveDownloadDirectoryProvider)(selected);
+    await ref.read(downloadDirectoryProvider.notifier).save(selected);
     if (context.mounted) {
       Toast.show(l10n.downloadDirSetTo(selected));
     }
