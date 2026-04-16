@@ -61,8 +61,6 @@ class _TextEditorPageState extends ConsumerState<TextEditorPage> {
   @override
   Widget build(BuildContext context) {
     final fileAsync = ref.watch(textFileProvider(widget.path));
-    final langName = getModeByFilename(widget.name).name ?? 'plaintext';
-    final editorTheme = buildSingleLanguageTheme(langName);
 
     // 注入内容到 controller（每次 build 都检查）
     fileAsync.whenData((value) {
@@ -137,7 +135,7 @@ class _TextEditorPageState extends ConsumerState<TextEditorPage> {
               child: fileAsync.when(
                 data: (_) => CodeEditor(
                   controller: _controller,
-                  style: CodeEditorStyle(fontSize: 14, codeTheme: editorTheme),
+                  style: CodeEditorStyle(fontSize: 14, codeTheme: codeEditorTheme),
                   scrollController: CodeScrollController(),
                 ),
                 loading: () => const Center(child: CircularProgressIndicator()),

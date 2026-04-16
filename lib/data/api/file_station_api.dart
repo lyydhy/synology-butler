@@ -903,7 +903,7 @@ class DsmFileStationApi implements FileStationApi {
     );
 
     final formData = FormData.fromMap({
-      'overwrite': 'false',
+      'overwrite': 'true',
       'path': normalizedParentPath,
       'mtime': DateTime.now().millisecondsSinceEpoch.toString(),
       'size': bytes.length.toString(),
