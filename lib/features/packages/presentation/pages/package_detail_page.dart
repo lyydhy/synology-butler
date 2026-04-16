@@ -213,7 +213,7 @@ class PackageDetailPage extends ConsumerWidget {
               if (item.isInstalled && !item.isRunning)
                 OutlinedButton.icon(
                   onPressed: () async {
-                    await ref.read(packageStartProvider)(item);
+                    await ref.read(packageActionsProvider).start(item);
                     if (context.mounted) {
                       Toast.success('已发送启动请求：${item.displayName}');
                     }
@@ -224,7 +224,7 @@ class PackageDetailPage extends ConsumerWidget {
               if (item.isInstalled && item.isRunning)
                 OutlinedButton.icon(
                   onPressed: () async {
-                    await ref.read(packageStopProvider)(item);
+                    await ref.read(packageActionsProvider).stop(item);
                     if (context.mounted) {
                       Toast.success('已发送停止请求：${item.displayName}');
                     }
@@ -255,7 +255,7 @@ class PackageDetailPage extends ConsumerWidget {
                         false;
                     if (!confirmed) return;
 
-                    await ref.read(packageUninstallProvider)(item);
+                    await ref.read(packageActionsProvider).uninstall(item);
                     if (context.mounted) Navigator.of(context).pop();
                   },
                   icon: const Icon(Icons.delete_outline),
@@ -268,14 +268,14 @@ class PackageDetailPage extends ConsumerWidget {
                         final volumePath = await _pickVolume(context, ref);
                         if (volumePath == null || volumePath.isEmpty) return;
 
-                        await ref.read(packagePrepareInstallProvider)(item);
+                        await ref.read(packageActionsProvider).prepareInstall(item);
                         if (!context.mounted) return;
 
                         final confirmed = await _confirmQueueImpact(context, ref);
                         if (!confirmed) return;
 
                         try {
-                          await ref.read(packageInstallProvider)(item, volumePath);
+                          await ref.read(packageActionsProvider).install(item, volumePath);
                           if (context.mounted) {
                             Toast.success('${item.displayName} 安装/更新任务已完成或已提交');
                           }

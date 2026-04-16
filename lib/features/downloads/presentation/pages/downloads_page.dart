@@ -179,9 +179,9 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
         return;
       }
       if (action == 'pause') {
-        await ref.read(downloadPauseProvider)(task.id);
+        await ref.read(downloadActionsProvider).pause(task.id);
       } else if (action == 'resume') {
-        await ref.read(downloadResumeProvider)(task.id);
+        await ref.read(downloadActionsProvider).resume(task.id);
       } else if (action == 'delete') {
         final confirmed = await showDialog<bool>(
               context: context,
@@ -202,7 +202,7 @@ class _DownloadsPageState extends ConsumerState<DownloadsPage> {
             ) ??
             false;
         if (!confirmed) return;
-        await ref.read(downloadDeleteProvider)(task.id);
+        await ref.read(downloadActionsProvider).delete(task.id);
       }
       if (context.mounted) {
         Toast.success(l10n.operationSuccess);

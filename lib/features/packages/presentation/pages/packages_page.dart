@@ -59,9 +59,9 @@ class _PackagesPageState extends ConsumerState<PackagesPage> with SingleTickerPr
   }
 
   void _refreshPackages() {
-    ref.invalidate(storePackagesProvider);
-    ref.invalidate(thirdPartyPackagesProvider);
-    ref.invalidate(installedPackagesProvider);
+    ref.invalidate(packagesProvider(PackageSource.store));
+    ref.invalidate(packagesProvider(PackageSource.thirdParty));
+    ref.invalidate(packagesProvider(PackageSource.installed));
     ref.invalidate(mergedPackagesProvider);
   }
 
@@ -304,7 +304,7 @@ class _PackageCard extends ConsumerWidget {
               if (item.isInstalled && !item.isRunning)
                 OutlinedButton.icon(
                   onPressed: () async {
-                    await ref.read(packageStartProvider)(item);
+                    await ref.read(packageActionsProvider).start(item);
                     if (context.mounted) {
                       Toast.show(l10n.startRequestSent(item.displayName));
                     }
@@ -315,7 +315,7 @@ class _PackageCard extends ConsumerWidget {
               if (item.isInstalled && item.isRunning)
                 OutlinedButton.icon(
                   onPressed: () async {
-                    await ref.read(packageStopProvider)(item);
+                    await ref.read(packageActionsProvider).stop(item);
                     if (context.mounted) {
                       Toast.show(l10n.stopRequestSent(item.displayName));
                     }
@@ -341,7 +341,7 @@ class _PackageCard extends ConsumerWidget {
                         false;
                     if (!confirmed) return;
 
-                    await ref.read(packageUninstallProvider)(item);
+                    await ref.read(packageActionsProvider).uninstall(item);
                     if (context.mounted) {
                       Toast.show(l10n.uninstallRequestSent(item.displayName));
                     }
@@ -357,7 +357,7 @@ class _PackageCard extends ConsumerWidget {
                         final volumePath = await _pickVolume(context, ref);
                         if (volumePath == null || volumePath.isEmpty) return;
 
-                        await ref.read(packagePrepareInstallProvider)(item);
+                        await ref.read(packageActionsProvider).prepareInstall(item);
                         if (!context.mounted) return;
 
                         final impact = ref.read(packageInstallStateProvider).pendingQueueImpact;
@@ -380,7 +380,7 @@ class _PackageCard extends ConsumerWidget {
                         }
 
                         try {
-                          await ref.read(packageInstallProvider)(item, volumePath);
+                          await ref.read(packageActionsProvider).install(item, volumePath);
                           if (context.mounted) {
                             Toast.success(l10n.packageTaskComplete(item.displayName));
                           }

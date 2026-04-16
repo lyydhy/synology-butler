@@ -55,39 +55,44 @@ final downloadStationAvailableProvider = FutureProvider<bool>((ref) async {
   return ref.read(downloadStationApiProvider).isAvailable();
 });
 
-final downloadActionProvider = Provider<Future<void> Function(String)>((ref) {
-  return (rawInput) async {
+/// 统一下载操作类，替代 pause/resume/delete/add 四个 provider
+class DownloadActions {
+  final Ref _ref;
+
+  DownloadActions(this._ref);
+
+  DownloadRepository get _repo => _ref.read(downloadRepositoryProvider);
+
+  Future<void> add(String rawInput) async {
     final urls = rawInput
         .split(RegExp(r'[\n,]'))
         .map((s) => s.trim())
         .where((s) => s.isNotEmpty)
         .toList();
     if (urls.isEmpty) return;
-    await ref.read(downloadRepositoryProvider).createTask(
+    await _repo.createTask(
       urls: urls,
       destination: AppConstants.downloadDefaultDestination,
     );
-    ref.read(downloadListProvider.notifier).refresh();
-  };
-});
+    _ref.read(downloadListProvider.notifier).refresh();
+  }
 
-final downloadPauseProvider = Provider<Future<void> Function(String)>((ref) {
-  return (id) async {
-    await ref.read(downloadRepositoryProvider).pauseTask(id: id);
-    ref.read(downloadListProvider.notifier).refresh();
-  };
-});
+  Future<void> pause(String id) async {
+    await _repo.pauseTask(id: id);
+    _ref.read(downloadListProvider.notifier).refresh();
+  }
 
-final downloadResumeProvider = Provider<Future<void> Function(String)>((ref) {
-  return (id) async {
-    await ref.read(downloadRepositoryProvider).resumeTask(id: id);
-    ref.read(downloadListProvider.notifier).refresh();
-  };
-});
+  Future<void> resume(String id) async {
+    await _repo.resumeTask(id: id);
+    _ref.read(downloadListProvider.notifier).refresh();
+  }
 
-final downloadDeleteProvider = Provider<Future<void> Function(String)>((ref) {
-  return (id) async {
-    await ref.read(downloadRepositoryProvider).deleteTask(id: id);
-    ref.read(downloadListProvider.notifier).refresh();
-  };
+  Future<void> delete(String id) async {
+    await _repo.deleteTask(id: id);
+    _ref.read(downloadListProvider.notifier).refresh();
+  }
+}
+
+final downloadActionsProvider = Provider<DownloadActions>((ref) {
+  return DownloadActions(ref);
 });

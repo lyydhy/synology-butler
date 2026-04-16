@@ -20,17 +20,34 @@ final packageInstallStateProvider = StateProvider<PackageInstallState>((ref) {
   return const PackageInstallState();
 });
 
+enum PackageSource { store, thirdParty, installed }
+
+/// 统一套件数据源 provider，按来源过滤
+final packagesProvider = FutureProvider.family<List<PackageItem>, PackageSource>((ref, source) async {
+  final repo = ref.read(packageRepositoryProvider);
+  switch (source) {
+    case PackageSource.store:
+      return repo.fetchStorePackages();
+    case PackageSource.thirdParty:
+      return repo.fetchStorePackages(others: true);
+    case PackageSource.installed:
+      return repo.fetchInstalledPackages();
+  }
+});
+
+/// 兼容性别名
 final storePackagesProvider = FutureProvider<List<PackageItem>>((ref) async {
-  return ref.read(packageRepositoryProvider).fetchStorePackages();
+  return ref.watch(packagesProvider(PackageSource.store).future);
 });
 
-/// 社群/第三方套件
+/// 兼容性别名
 final thirdPartyPackagesProvider = FutureProvider<List<PackageItem>>((ref) async {
-  return ref.read(packageRepositoryProvider).fetchStorePackages(others: true);
+  return ref.watch(packagesProvider(PackageSource.thirdParty).future);
 });
 
+/// 兼容性别名
 final installedPackagesProvider = FutureProvider<List<PackageItem>>((ref) async {
-  return ref.read(packageRepositoryProvider).fetchInstalledPackages();
+  return ref.watch(packagesProvider(PackageSource.installed).future);
 });
 
 final packageVolumesProvider = FutureProvider<List<PackageVolume>>((ref) async {
@@ -54,9 +71,9 @@ bool isPackageInstalled(List<PackageItem> installed, {String? dsmAppName, String
 }
 
 final mergedPackagesProvider = FutureProvider<List<PackageItem>>((ref) async {
-  final store = await ref.watch(storePackagesProvider.future);
-  final thirdParty = await ref.watch(thirdPartyPackagesProvider.future);
-  final installed = await ref.watch(installedPackagesProvider.future);
+  final store = await ref.watch(packagesProvider(PackageSource.store).future);
+  final thirdParty = await ref.watch(packagesProvider(PackageSource.thirdParty).future);
+  final installed = await ref.watch(packagesProvider(PackageSource.installed).future);
 
   final installedMap = {for (final item in installed) item.id: item};
 
@@ -105,58 +122,56 @@ final mergedPackagesProvider = FutureProvider<List<PackageItem>>((ref) async {
   return merged;
 });
 
-final packageStartProvider = Provider<Future<void> Function(PackageItem)>((ref) {
-  return (item) async {
-    await ref.read(packageRepositoryProvider).startPackage(packageId: item.id, dsmAppName: item.dsmAppName);
-    ref.invalidate(installedPackagesProvider);
-    ref.invalidate(mergedPackagesProvider);
-  };
-});
+/// 统一套件操作类，替代 start/stop/uninstall/prepareInstall/install 五个 provider
+class PackageActions {
+  final Ref _ref;
 
-final packageStopProvider = Provider<Future<void> Function(PackageItem)>((ref) {
-  return (item) async {
-    await ref.read(packageRepositoryProvider).stopPackage(packageId: item.id);
-    ref.invalidate(installedPackagesProvider);
-    ref.invalidate(mergedPackagesProvider);
-  };
-});
+  PackageActions(this._ref);
 
-final packageUninstallProvider = Provider<Future<void> Function(PackageItem)>((ref) {
-  return (item) async {
-    await ref.read(packageRepositoryProvider).uninstallPackage(packageId: item.id);
-    ref.invalidate(storePackagesProvider);
-    ref.invalidate(thirdPartyPackagesProvider);
-    ref.invalidate(installedPackagesProvider);
-    ref.invalidate(mergedPackagesProvider);
-  };
-});
+  PackageRepository get _repo => _ref.read(packageRepositoryProvider);
 
-final packagePrepareInstallProvider = Provider<Future<PackageQueueCheckResult> Function(PackageItem)>((ref) {
-  return (item) async {
-    final queue = await ref.read(packageRepositoryProvider).checkInstallQueue(
-          packageId: item.id,
-          version: item.version,
-          beta: item.isBeta,
-        );
+  Future<void> start(PackageItem item) async {
+    await _repo.startPackage(packageId: item.id, dsmAppName: item.dsmAppName);
+    _ref.invalidate(packagesProvider(PackageSource.installed));
+    _ref.invalidate(mergedPackagesProvider);
+  }
 
-    final currentState = ref.read(packageInstallStateProvider);
-    ref.read(packageInstallStateProvider.notifier).state = currentState.copyWith(
+  Future<void> stop(PackageItem item) async {
+    await _repo.stopPackage(packageId: item.id);
+    _ref.invalidate(packagesProvider(PackageSource.installed));
+    _ref.invalidate(mergedPackagesProvider);
+  }
+
+  Future<void> uninstall(PackageItem item) async {
+    await _repo.uninstallPackage(packageId: item.id);
+    _ref.invalidate(packagesProvider(PackageSource.store));
+    _ref.invalidate(packagesProvider(PackageSource.thirdParty));
+    _ref.invalidate(packagesProvider(PackageSource.installed));
+    _ref.invalidate(mergedPackagesProvider);
+  }
+
+  Future<PackageQueueCheckResult> prepareInstall(PackageItem item) async {
+    final queue = await _repo.checkInstallQueue(
+      packageId: item.id,
+      version: item.version,
+      beta: item.isBeta,
+    );
+    final currentState = _ref.read(packageInstallStateProvider);
+    _ref.read(packageInstallStateProvider.notifier).state = currentState.copyWith(
       pendingQueueImpact: queue,
     );
     return queue;
-  };
-});
+  }
 
-final packageInstallProvider = Provider<Future<void> Function(PackageItem, String)>((ref) {
-  return (item, volumePath) async {
-    ref.read(packageInstallStateProvider.notifier).state =
-        ref.read(packageInstallStateProvider).copyWith(
+  Future<void> install(PackageItem item, String volumePath) async {
+    _ref.read(packageInstallStateProvider.notifier).state =
+        _ref.read(packageInstallStateProvider).copyWith(
               installingId: item.id,
               statusText: '准备安装...',
             );
 
     try {
-      final taskId = await ref.read(packageRepositoryProvider).installPackage(
+      final taskId = await _repo.installPackage(
             packageId: item.id,
             volumePath: volumePath,
           );
@@ -166,36 +181,40 @@ final packageInstallProvider = Provider<Future<void> Function(PackageItem, Strin
       }
 
       for (var i = 0; i < 90; i++) {
-        final status = await ref.read(packageRepositoryProvider).getInstallStatus(taskId: taskId);
+        final status = await _repo.getInstallStatus(taskId: taskId);
 
         final progressText = status.progress != null
             ? '${status.progress!.toStringAsFixed(1)}%'
             : (status.status ?? '安装中...');
 
-        ref.read(packageInstallStateProvider.notifier).state =
-            ref.read(packageInstallStateProvider).copyWith(statusText: progressText);
+        _ref.read(packageInstallStateProvider.notifier).state =
+            _ref.read(packageInstallStateProvider).copyWith(statusText: progressText);
 
         if (status.finished) {
-          ref.read(packageInstallStateProvider.notifier).state =
-              ref.read(packageInstallStateProvider).copyWith(statusText: '安装完成');
+          _ref.read(packageInstallStateProvider.notifier).state =
+              _ref.read(packageInstallStateProvider).copyWith(statusText: '安装完成');
           break;
         }
 
         await Future<void>.delayed(const Duration(seconds: 2));
       }
 
-      ref.invalidate(storePackagesProvider);
-    ref.invalidate(thirdPartyPackagesProvider);
-      ref.invalidate(installedPackagesProvider);
-      ref.invalidate(mergedPackagesProvider);
-      ref.invalidate(packageVolumesProvider);
-      ref.read(packageInstallStateProvider.notifier).state =
-          ref.read(packageInstallStateProvider).copyWith(clearPendingQueueImpact: true);
+      _ref.invalidate(packagesProvider(PackageSource.store));
+      _ref.invalidate(packagesProvider(PackageSource.thirdParty));
+      _ref.invalidate(packagesProvider(PackageSource.installed));
+      _ref.invalidate(mergedPackagesProvider);
+      _ref.invalidate(packageVolumesProvider);
+      _ref.read(packageInstallStateProvider.notifier).state =
+          _ref.read(packageInstallStateProvider).copyWith(clearPendingQueueImpact: true);
     } finally {
-      ref.read(packageInstallStateProvider.notifier).state =
-          ref.read(packageInstallStateProvider).copyWith(clearInstallingId: true);
+      _ref.read(packageInstallStateProvider.notifier).state =
+          _ref.read(packageInstallStateProvider).copyWith(clearInstallingId: true);
     }
-  };
+  }
+}
+
+final packageActionsProvider = Provider<PackageActions>((ref) {
+  return PackageActions(ref);
 });
 
 int _compareVersions(String a, String b) {
