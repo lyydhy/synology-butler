@@ -94,17 +94,49 @@ class _TransfersPageState extends ConsumerState<TransfersPage> with SingleTicker
   }
 }
 
-class _TaskList extends StatelessWidget {
+class _TaskList extends StatefulWidget {
   const _TaskList({required this.tasks, required this.controller});
 
   final List<TransferTask> tasks;
   final TransferController controller;
 
   @override
+  State<_TaskList> createState() => _TaskListState();
+}
+
+class _TaskListState extends State<_TaskList> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: Duration(milliseconds: 400 + widget.tasks.length * 50),
+      vsync: this,
+    );
+    _controller.forward();
+  }
+
+  @override
+  void didUpdateWidget(_TaskList oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.tasks.length != widget.tasks.length) {
+      _controller.duration = Duration(milliseconds: 400 + widget.tasks.length * 50);
+      _controller.forward(from: 0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
 
-    if (tasks.isEmpty) {
+    if (widget.tasks.isEmpty) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 32),
@@ -132,11 +164,31 @@ class _TaskList extends StatelessWidget {
 
     return ListView.builder(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 28),
-      itemCount: tasks.length,
-      itemBuilder: (context, index) => Padding(
-        padding: const EdgeInsets.only(bottom: 10),
-        child: _TransferTaskCard(task: tasks[index]),
-      ),
+      itemCount: widget.tasks.length,
+      itemBuilder: (context, index) {
+        final start = (index * 0.08).clamp(0.0, 0.6);
+        final end = (start + 0.35).clamp(0.0, 1.0);
+        final animation = CurvedAnimation(
+          parent: _controller,
+          curve: Interval(start, end, curve: Curves.easeOutCubic),
+        );
+        return AnimatedBuilder(
+          animation: animation,
+          builder: (context, child) {
+            return Opacity(
+              opacity: animation.value,
+              child: Transform.translate(
+                offset: Offset(0, 12 * (1 - animation.value)),
+                child: child,
+              ),
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: _TransferTaskCard(task: widget.tasks[index]),
+          ),
+        );
+      },
     );
   }
 }

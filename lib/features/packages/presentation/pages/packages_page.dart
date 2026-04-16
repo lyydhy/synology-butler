@@ -155,22 +155,76 @@ class _PackagesPageState extends ConsumerState<PackagesPage> with SingleTickerPr
   }
 }
 
-class _PackageListView extends StatelessWidget {
+class _PackageListView extends StatefulWidget {
   const _PackageListView({required this.items});
 
   final List<PackageItem> items;
 
   @override
+  State<_PackageListView> createState() => _PackageListViewState();
+}
+
+class _PackageListViewState extends State<_PackageListView> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    // 交错动画：每 item 间隔 50ms，全部在 800ms 内完成
+    _controller = AnimationController(
+      duration: Duration(milliseconds: 400 + widget.items.length * 50),
+      vsync: this,
+    );
+    _controller.forward();
+  }
+
+  @override
+  void didUpdateWidget(_PackageListView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.items.length != widget.items.length) {
+      _controller.duration = Duration(milliseconds: 400 + widget.items.length * 50);
+      _controller.forward(from: 0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    if (items.isEmpty) {
+    if (widget.items.isEmpty) {
       return const AppEmptyState(message: '暂无套件数据');
     }
 
     return ListView.separated(
       padding: const EdgeInsets.all(16),
-      itemBuilder: (context, index) => _PackageCard(item: items[index]),
+      itemBuilder: (context, index) {
+        // 每个 item 的动画区间：[0, 1] 内交错，每 item 偏移 0.08，最大用到 0.6
+        final start = (index * 0.08).clamp(0.0, 0.6);
+        final end = (start + 0.35).clamp(0.0, 1.0);
+        final animation = CurvedAnimation(
+          parent: _controller,
+          curve: Interval(start, end, curve: Curves.easeOutCubic),
+        );
+        return AnimatedBuilder(
+          animation: animation,
+          builder: (context, child) {
+            return Opacity(
+              opacity: animation.value,
+              child: Transform.translate(
+                offset: Offset(0, 12 * (1 - animation.value)),
+                child: child,
+              ),
+            );
+          },
+          child: _PackageCard(item: widget.items[index]),
+        );
+      },
       separatorBuilder: (_, __) => const SizedBox(height: 12),
-      itemCount: items.length,
+      itemCount: widget.items.length,
     );
   }
 }
