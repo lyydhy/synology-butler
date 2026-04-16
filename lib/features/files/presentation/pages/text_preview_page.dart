@@ -22,10 +22,11 @@ class TextPreviewPage extends ConsumerStatefulWidget {
   ConsumerState<TextPreviewPage> createState() => _TextPreviewPageState();
 }
 
-class _TextPreviewPageState extends ConsumerState<TextPreviewPage> {
+class _TextPreviewPageState extends ConsumerState<TextPreviewPage>
+    with WidgetsBindingObserver {
   late final CodeController _controller;
   String _lastPath = '';
-  String _lastContent = '';
+  bool _initialized = false;
 
   @override
   void initState() {
@@ -33,7 +34,7 @@ class _TextPreviewPageState extends ConsumerState<TextPreviewPage> {
     _controller = CodeController(
       language: getModeByFilename(widget.name),
     );
-    _lastPath = widget.path;
+    WidgetsBinding.instance.addObserver(this);
   }
 
   @override
@@ -41,14 +42,24 @@ class _TextPreviewPageState extends ConsumerState<TextPreviewPage> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.path != widget.path) {
       _lastPath = widget.path;
-      _lastContent = '';
+      _initialized = false;
       _controller.language = getModeByFilename(widget.name);
       _controller.text = '';
     }
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // 从编辑页保存后返回预览，provider 被 invalidate 了但 widget 没变化，
+    // 通过 app lifecycle 重新进入时主动刷新内容
+    if (state == AppLifecycleState.resumed && _lastPath == widget.path && _initialized) {
+      ref.invalidate(textFileProvider(widget.path));
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _controller.dispose();
     super.dispose();
   }
@@ -58,12 +69,11 @@ class _TextPreviewPageState extends ConsumerState<TextPreviewPage> {
     final fileAsync = ref.watch(textFileProvider(widget.path));
     final canEdit = FileTypeHelper.isTextEditableName(widget.name) && !FileTypeHelper.isNfoName(widget.name);
 
+    // 监听 provider 数据变化，自动同步到 controller
     fileAsync.whenData((value) {
-      if (_lastPath != widget.path || _lastContent != value) {
-        _controller.text = value;
-        _lastContent = value;
-        _lastPath = widget.path;
-      }
+      _controller.text = value;
+      _lastPath = widget.path;
+      _initialized = true;
     });
 
     return Scaffold(
