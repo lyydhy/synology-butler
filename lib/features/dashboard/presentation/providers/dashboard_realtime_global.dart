@@ -5,20 +5,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/network/app_dio.dart';
 import '../../../../core/network/realtime_reconnect_bridge.dart';
-import '../../../../data/api/system_api.dart';
-import '../../../../data/repositories/system_repository_impl.dart';
 import '../../../../domain/entities/system_status.dart';
-import '../../../../domain/repositories/system_repository.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
+import 'dashboard_providers.dart';
 
-final globalSystemApiProvider = Provider<SystemApi>((ref) {
-  final server = connectionStore.server;
-  return DsmSystemApi(ignoreBadCertificate: server?.ignoreBadCertificate ?? false);
-});
 
-final globalSystemRepositoryProvider = Provider<SystemRepository>((ref) {
-  return SystemRepositoryImpl(ref.read(globalSystemApiProvider));
-});
 
 bool looksLikeRealtimeAuthFailure(Object error) {
   final text = error.toString().toLowerCase();
@@ -87,7 +78,7 @@ final globalRealtimeOverviewProvider = StreamProvider<SystemStatus>((ref) {
     }
 
     try {
-      final source = ref.read(globalSystemRepositoryProvider).watchOverview();
+      final source = ref.read(systemRepositoryProvider).watchOverview();
 
       await subscription?.cancel();
       subscription = source.listen(
