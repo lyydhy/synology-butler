@@ -32,8 +32,3 @@ final fileBytesProvider = FutureProvider.family<Uint8List, String>((ref, path) a
 });
 
 /// 清空文件字节缓存。
-final clearFileBytesCacheProvider = Provider<Function>((ref) {
-  return () {
-    _fileBytesCache.clear();
-  };
-});

@@ -662,10 +662,3 @@ final activeTransferCountProvider = Provider<int>((ref) {
   return ref.watch(transferControllerProvider).where((t) => t.status == TransferTaskStatus.queued || t.status == TransferTaskStatus.running).length;
 });
 
-final latestFinishedDownloadProvider = Provider<TransferTask?>((ref) {
-  final tasks = ref.watch(transferControllerProvider);
-  final downloads = tasks.where((t) => t.type == TransferTaskType.download && t.status == TransferTaskStatus.success).toList();
-  if (downloads.isEmpty) return null;
-  downloads.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-  return downloads.first;
-});
