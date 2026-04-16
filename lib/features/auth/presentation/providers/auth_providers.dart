@@ -48,7 +48,6 @@ final sessionRelatedProviders = <ProviderBase>[
   globalRealtimeOverviewProvider,
   informationCenterProvider,
   installedPackagesProvider,
-  dockerFeatureInstalledProvider,
 ];
 
 Future<void> _persistServers(Ref ref, List<NasServer> servers) async {
