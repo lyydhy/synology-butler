@@ -47,6 +47,14 @@ class _TextPreviewPageState extends ConsumerState<TextPreviewPage> {
     }
   }
 
+  void _toggleSearch() {
+    if (_controller.searchController.shouldShow) {
+      _controller.searchController.hideSearch(returnFocusToCodeField: true);
+    } else {
+      _controller.showSearch();
+    }
+  }
+
   @override
   void dispose() {
     _controller.dispose();
@@ -57,6 +65,7 @@ class _TextPreviewPageState extends ConsumerState<TextPreviewPage> {
   Widget build(BuildContext context) {
     final fileAsync = ref.watch(textFileProvider(widget.path));
     final canEdit = FileTypeHelper.isTextEditableName(widget.name) && !FileTypeHelper.isNfoName(widget.name);
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
     // 注入内容到 controller（支持同一文件第二次打开）
     fileAsync.whenData((value) {
@@ -71,10 +80,16 @@ class _TextPreviewPageState extends ConsumerState<TextPreviewPage> {
       appBar: AppBar(
         title: Text(widget.name),
         actions: [
-          IconButton(
-            tooltip: '搜索',
-            onPressed: () => _controller.showSearch(),
-            icon: const Icon(Icons.search),
+          ListenableBuilder(
+            listenable: _controller.searchController,
+            builder: (context, _) {
+              final isSearchOpen = _controller.searchController.shouldShow;
+              return IconButton(
+                tooltip: isSearchOpen ? '关闭搜索' : '搜索',
+                onPressed: _toggleSearch,
+                icon: Icon(isSearchOpen ? Icons.close : Icons.search),
+              );
+            },
           ),
           if (canEdit)
             IconButton(
@@ -104,9 +119,12 @@ class _TextPreviewPageState extends ConsumerState<TextPreviewPage> {
             child: fileAsync.when(
               data: (_) => CodeTheme(
                 data: codeEditorTheme,
-                child: CodeField(
-                  controller: _controller,
-                  readOnly: true,
+                child: Padding(
+                  padding: EdgeInsets.only(bottom: bottomInset),
+                  child: CodeField(
+                    controller: _controller,
+                    readOnly: true,
+                  ),
                 ),
               ),
               loading: () => const Center(child: CircularProgressIndicator()),

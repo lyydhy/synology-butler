@@ -26,6 +26,7 @@ class TextEditorPage extends ConsumerStatefulWidget {
 class _TextEditorPageState extends ConsumerState<TextEditorPage> {
   late final CodeController _controller;
   bool _dirty = false;
+  bool _saving = false;
   String _lastPath = '';
 
   @override
@@ -43,6 +44,7 @@ class _TextEditorPageState extends ConsumerState<TextEditorPage> {
     if (oldWidget.path != widget.path) {
       _lastPath = widget.path;
       _dirty = false;
+      _saving = false;
       _controller.language = getModeByFilename(widget.name);
       _controller.text = '';
     }
@@ -51,6 +53,14 @@ class _TextEditorPageState extends ConsumerState<TextEditorPage> {
   void _onTextChanged() {
     if (_lastPath == widget.path && !_dirty) {
       setState(() => _dirty = true);
+    }
+  }
+
+  void _toggleSearch() {
+    if (_controller.searchController.shouldShow) {
+      _controller.searchController.hideSearch(returnFocusToCodeField: true);
+    } else {
+      _controller.showSearch();
     }
   }
 
@@ -72,6 +82,8 @@ class _TextEditorPageState extends ConsumerState<TextEditorPage> {
         _lastPath = widget.path;
       }
     });
+
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
     return PopScope(
       canPop: !_dirty,
@@ -119,10 +131,16 @@ class _TextEditorPageState extends ConsumerState<TextEditorPage> {
             icon: const Icon(Icons.arrow_back),
           ),
           actions: [
-            IconButton(
-              tooltip: '搜索',
-              onPressed: () => _controller.showSearch(),
-              icon: const Icon(Icons.search),
+            ListenableBuilder(
+              listenable: _controller.searchController,
+              builder: (context, _) {
+                final isSearchOpen = _controller.searchController.shouldShow;
+                return IconButton(
+                  tooltip: isSearchOpen ? '关闭搜索' : '搜索',
+                  onPressed: _toggleSearch,
+                  icon: Icon(isSearchOpen ? Icons.close : Icons.search),
+                );
+              },
             ),
             IconButton(
               tooltip: '预览',
@@ -135,19 +153,32 @@ class _TextEditorPageState extends ConsumerState<TextEditorPage> {
               icon: const Icon(Icons.visibility_outlined),
             ),
             TextButton(
-              onPressed: () async {
-                try {
-                  await ref.read(saveTextFileProvider)(widget.path, _controller.text);
-                  if (!mounted) return;
-                  setState(() => _dirty = false);
-                  Toast.success(l10n.saveSuccess);
-                  ref.invalidate(textFileProvider(widget.path));
-                } catch (e) {
-                  if (!mounted) return;
-                  Toast.error(ErrorMapper.map(e).message);
-                }
-              },
-              child: Text(l10n.save),
+              onPressed: _saving
+                  ? null
+                  : () async {
+                      setState(() => _saving = true);
+                      try {
+                        await ref.read(saveTextFileProvider)(widget.path, _controller.text);
+                        if (!mounted) return;
+                        setState(() {
+                          _saving = false;
+                          _dirty = false;
+                        });
+                        Toast.success(l10n.saveSuccess);
+                        ref.invalidate(textFileProvider(widget.path));
+                      } catch (e) {
+                        if (!mounted) return;
+                        setState(() => _saving = false);
+                        Toast.error(ErrorMapper.map(e).message);
+                      }
+                    },
+              child: _saving
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Text(l10n.save),
             ),
           ],
         ),
@@ -162,12 +193,16 @@ class _TextEditorPageState extends ConsumerState<TextEditorPage> {
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ),
+            // 搜索打开时，用 bottom padding 把内容往上推，让搜索面板在键盘上方可见
             Expanded(
               child: fileAsync.when(
                 data: (_) => CodeTheme(
                   data: codeEditorTheme,
-                  child: CodeField(
-                    controller: _controller,
+                  child: Padding(
+                    padding: EdgeInsets.only(bottom: bottomInset),
+                    child: CodeField(
+                      controller: _controller,
+                    ),
                   ),
                 ),
                 loading: () => const Center(child: CircularProgressIndicator()),
