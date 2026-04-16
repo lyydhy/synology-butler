@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:re_editor/re_editor.dart';
 
 import '../../../../core/error/error_mapper.dart';
 import '../../../../core/utils/l10n.dart';
 import '../../../../core/utils/toast.dart';
 import '../providers/text_editor_providers.dart';
+import '../providers/code_language.dart';
 
 class TextEditorPage extends ConsumerStatefulWidget {
   const TextEditorPage({
@@ -22,24 +24,40 @@ class TextEditorPage extends ConsumerStatefulWidget {
 }
 
 class _TextEditorPageState extends ConsumerState<TextEditorPage> {
-  final TextEditingController _controller = TextEditingController();
+  late final CodeLineEditingController _controller;
   bool _dirty = false;
   bool _initialized = false;
 
   @override
+  void initState() {
+    super.initState();
+    _controller = CodeLineEditingController.fromTextAsync(null);
+    _controller.addListener(_onTextChanged);
+  }
+
+  @override
   void dispose() {
+    _controller.removeListener(_onTextChanged);
     _controller.dispose();
     super.dispose();
+  }
+
+  void _onTextChanged() {
+    if (_initialized && !_dirty) {
+      setState(() => _dirty = true);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final fileAsync = ref.watch(textFileProvider(widget.path));
+    final langName = getModeByFilename(widget.name).name ?? 'plaintext';
+    final editorTheme = buildSingleLanguageTheme(langName);
 
     ref.listen(textFileProvider(widget.path), (previous, next) {
       next.whenData((value) {
         if (!_initialized) {
-          _controller.text = value;
+          _controller.codeLines = CodeLines.fromText(value);
           _initialized = true;
         }
       });
@@ -83,7 +101,8 @@ class _TextEditorPageState extends ConsumerState<TextEditorPage> {
             TextButton(
               onPressed: () async {
                 try {
-                  await ref.read(saveTextFileProvider)(widget.path, _controller.text);
+                  final content = _controller.codeLines.asString(TextLineBreak.lf);
+                  await ref.read(saveTextFileProvider)(widget.path, content);
                   if (!mounted) return;
                   setState(() => _dirty = false);
                   Toast.success(l10n.saveSuccess);
@@ -107,18 +126,10 @@ class _TextEditorPageState extends ConsumerState<TextEditorPage> {
             ),
             Expanded(
               child: fileAsync.when(
-                data: (_) => TextField(
+                data: (_) => CodeEditor(
                   controller: _controller,
-                  onChanged: (_) => setState(() => _dirty = true),
-                  expands: true,
-                  maxLines: null,
-                  minLines: null,
-                  textAlignVertical: TextAlignVertical.top,
-                  style: const TextStyle(fontFamily: 'monospace', fontSize: 14),
-                  decoration: const InputDecoration(
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.all(16),
-                  ),
+                  style: CodeEditorStyle(fontSize: 14, codeTheme: editorTheme),
+                  scrollController: CodeScrollController(),
                 ),
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (error, _) => Center(child: Text(ErrorMapper.map(error).message)),
