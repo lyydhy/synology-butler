@@ -71,7 +71,7 @@ class _TextPreviewPageState extends ConsumerState<TextPreviewPage> {
         actions: [
           IconButton(
             tooltip: '搜索',
-            onPressed: () => _findController.show(),
+            onPressed: () => _findController.value = CodeFindValue.empty(),
             icon: const Icon(Icons.search),
           ),
           if (canEdit)
