@@ -654,11 +654,30 @@ class TransferController extends StateNotifier<List<TransferTask>> {
   }
 }
 
-final transferControllerProvider = StateNotifierProvider<TransferController, List<TransferTask>>((ref) {
+
+// ─── 下载完成事件 ─────────────────────────────────────────────────────────────
+
+/// 下载完成事件（一次性，不缓存）
+class DownloadCompletedEvent {
+  final String taskId;
+  final String fileName;
+  final String filePath;
+  final DateTime completedAt;
+
+  const DownloadCompletedEvent({
+    required this.taskId,
+    required this.fileName,
+    required this.filePath,
+    required this.completedAt,
+  });
+}
+
+/// 全局下载完成事件流
+final downloadCompletedProvider = StateProvider<DownloadCompletedEvent?>((ref) => null);
+
+// ─── TransferProvider ──────────────────────────────────────────────────────────
+final transferProvider = StateNotifierProvider<TransferController, List<TransferTask>>((ref) {
   return TransferController(ref);
 });
 
-final activeTransferCountProvider = Provider<int>((ref) {
-  return ref.watch(transferControllerProvider).where((t) => t.status == TransferTaskStatus.queued || t.status == TransferTaskStatus.running).length;
-});
 

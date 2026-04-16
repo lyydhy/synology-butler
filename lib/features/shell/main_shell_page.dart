@@ -26,7 +26,7 @@ class _MainShellPageState extends ConsumerState<MainShellPage> {
 
   @override
   Widget build(BuildContext context) {
-    final activeTransferCount = ref.watch(activeTransferCountProvider);
+    final activeTransferCount = ref.watch(transferProvider).where((t) => t.status == TransferTaskStatus.queued || t.status == TransferTaskStatus.running).length;
 
     return Scaffold(
       body: pages[currentIndex],

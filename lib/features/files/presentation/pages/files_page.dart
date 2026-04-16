@@ -346,7 +346,7 @@ class _FilesPageState extends ConsumerState<FilesPage> {
                 if (context.mounted) {
                   Toast.show(l10n.startDownloadingName(item.name));
                 }
-                await ref.read(transferControllerProvider.notifier).enqueueDownload(
+                await ref.read(transferProvider.notifier).enqueueDownload(
                       remotePath: item.path,
                       displayName: item.name,
                     );
@@ -363,7 +363,7 @@ class _FilesPageState extends ConsumerState<FilesPage> {
                   if (context.mounted) {
                     Toast.show(l10n.downloadCompleteOpen(item.name));
                   }
-                  await ref.read(transferControllerProvider.notifier).enqueueDownload(
+                  await ref.read(transferProvider.notifier).enqueueDownload(
                         remotePath: item.path,
                         displayName: item.name,
                       );

@@ -56,7 +56,7 @@ class _ExternalFileUploadPageState extends ConsumerState<ExternalFileUploadPage>
 
       /// 外部分享得到的文件路径不一定始终有效，上传前先重新读取并校验。
       final bytes = await localFile.readAsBytes();
-      await ref.read(transferControllerProvider.notifier).enqueueUpload(
+      await ref.read(transferProvider.notifier).enqueueUpload(
             parentPath: _selectedRemotePath!,
             fileName: widget.file.name,
             bytes: Uint8List.fromList(bytes),

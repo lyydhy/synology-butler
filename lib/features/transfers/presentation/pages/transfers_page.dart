@@ -38,8 +38,8 @@ class _TransfersPageState extends ConsumerState<TransfersPage> with SingleTicker
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final tasks = ref.watch(transferControllerProvider);
-    final controller = ref.read(transferControllerProvider.notifier);
+    final tasks = ref.watch(transferProvider);
+    final controller = ref.read(transferProvider.notifier);
 
     final activeTasks = tasks
         .where((t) => t.status == TransferTaskStatus.running || t.status == TransferTaskStatus.queued)
@@ -158,7 +158,7 @@ class _TransferTaskCardState extends ConsumerState<_TransferTaskCard> {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
     final task = widget.task;
-    final controller = ref.read(transferControllerProvider.notifier);
+    final controller = ref.read(transferProvider.notifier);
     final isUpload = task.type == TransferTaskType.upload;
     final statusColor = _statusColor(task.status);
     final progressText = _progressText(task, l10n);

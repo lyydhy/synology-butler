@@ -14,7 +14,7 @@ import '../features/external_share/models/shared_incoming_file.dart';
 import '../features/external_share/services/external_share_pending_store.dart';
 import '../features/external_share/services/external_share_service.dart';
 import '../features/preferences/providers/preferences_providers.dart';
-import '../features/transfers/presentation/providers/download_event_provider.dart';
+import '../features/transfers/presentation/providers/transfer_providers.dart';
 import '../features/transfers/presentation/providers/transfer_providers.dart';
 import '../l10n/app_localizations.dart';
 import 'router.dart';
@@ -87,7 +87,7 @@ class _QunhuiManagerAppState extends ConsumerState<QunhuiManagerApp> {
     final seedColor = seedColorFor(themeColor);
 
     // 全局监听下载任务状态变化
-    ref.listenManual<List<TransferTask>>(transferControllerProvider, (previous, next) {
+    ref.listenManual<List<TransferTask>>(transferProvider, (previous, next) {
       if (previous == null) {
         // 首次加载，记录当前状态但不触发事件
         _lastDownloadStatuses = {
@@ -118,7 +118,7 @@ class _QunhuiManagerAppState extends ConsumerState<QunhuiManagerApp> {
       // 触发第一个完成事件
       if (newCompleted.isNotEmpty) {
         final task = newCompleted.first;
-        ref.read(downloadCompletedEventProvider.notifier).state = DownloadCompletedEvent(
+        ref.read(downloadCompletedProvider.notifier).state = DownloadCompletedEvent(
           taskId: task.id,
           fileName: task.title,
           filePath: task.targetPath,
@@ -128,12 +128,12 @@ class _QunhuiManagerAppState extends ConsumerState<QunhuiManagerApp> {
     });
 
     // 监听下载完成事件，弹出 SnackBar
-    ref.listenManual<DownloadCompletedEvent?>(downloadCompletedEventProvider, (previous, next) {
+    ref.listenManual<DownloadCompletedEvent?>(downloadCompletedProvider, (previous, next) {
       if (next != null) {
         _handleDownloadCompleted(next);
         // 清除事件，避免重复消费
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          ref.read(downloadCompletedEventProvider.notifier).state = null;
+          ref.read(downloadCompletedProvider.notifier).state = null;
         });
       }
     });

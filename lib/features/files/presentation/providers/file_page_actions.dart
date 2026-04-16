@@ -57,7 +57,7 @@ class FilePageActions {
       return;
     }
 
-    await ref.read(transferControllerProvider.notifier).enqueueBatchDownload([
+    await ref.read(transferProvider.notifier).enqueueBatchDownload([
       for (final item in selectedItems) (item.path, item.name),
     ]);
 
@@ -225,7 +225,7 @@ class FilePageActions {
                         if (context.mounted) {
                           Toast.show(l10n.uploadTaskAdded);
                         }
-                        await ref.read(transferControllerProvider.notifier).enqueueUpload(
+                        await ref.read(transferProvider.notifier).enqueueUpload(
                               parentPath: currentPath,
                               fileName: fileName!,
                               bytes: fileBytes!,
