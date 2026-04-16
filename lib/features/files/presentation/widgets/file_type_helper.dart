@@ -93,7 +93,10 @@ class FileTypeHelper {
 
   static bool isTextEditableName(String name) {
     const editable = {
-      'txt', 'md', 'json', 'yaml', 'yml', 'toml', 'ini', 'conf', 'env', 'xml', 'log'
+      'txt', 'md', 'json', 'yaml', 'yml', 'toml', 'ini', 'conf', 'env', 'xml', 'log',
+      'js', 'mjs', 'ts', 'tsx', 'jsx', 'py', 'pyw', 'sh', 'bash', 'zsh', 'css', 'scss', 'less',
+      'html', 'htm', 'sql', 'go', 'rs', 'php', 'rb', 'pl', 'pm', 'swift', 'kt', 'scala',
+      'r', 'lua', 'ps1', 'm', 'c', 'cpp', 'h', 'hpp', 'gradle', 'properties', 'vim',
     };
     return editable.contains(extensionOf(name));
   }
@@ -101,7 +104,10 @@ class FileTypeHelper {
   static bool isTextPreviewable(FileItem item) {
     if (item.isDirectory) return false;
     const previewable = {
-      'txt', 'md', 'json', 'yaml', 'yml', 'toml', 'ini', 'conf', 'env', 'xml', 'log', 'nfo'
+      'txt', 'md', 'json', 'yaml', 'yml', 'toml', 'ini', 'conf', 'env', 'xml', 'log', 'nfo',
+      'js', 'mjs', 'ts', 'tsx', 'jsx', 'py', 'pyw', 'sh', 'bash', 'zsh', 'css', 'scss', 'less',
+      'html', 'htm', 'sql', 'go', 'rs', 'php', 'rb', 'pl', 'pm', 'swift', 'kt', 'scala',
+      'r', 'lua', 'ps1', 'm', 'c', 'cpp', 'h', 'hpp', 'gradle', 'properties', 'vim',
     };
     return previewable.contains(extensionOf(item.name));
   }
