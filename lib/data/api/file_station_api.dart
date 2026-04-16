@@ -146,19 +146,25 @@ class DsmFileStationApi implements FileStationApi {
       options: Options(contentType: Headers.formUrlEncodedContentType),
     );
 
-    DsmLogger.response(
-      module: 'FileStation',
-      action: 'saveTextFile',
-      response: response.data,
-    );
-
     if (response.data is Map && response.data['success'] != true) {
+      DsmLogger.failure(
+        module: 'FileStation',
+        action: 'saveTextFile',
+        path: path,
+        response: response.data,
+      );
       throw DioException(
         requestOptions: response.requestOptions,
         error: 'saveTextFile failed: \${response.data}',
         response: response,
       );
     }
+
+    DsmLogger.success(
+      module: 'FileStation',
+      action: 'saveTextFile',
+      path: path,
+    );
   }
 
   @override
