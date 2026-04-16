@@ -9,6 +9,7 @@ import '../providers/text_editor_providers.dart';
 import '../providers/code_language.dart';
 import '../widgets/file_type_helper.dart';
 import '../widgets/copy_toolbar.dart';
+import '../widgets/find_panel.dart';
 
 class TextPreviewPage extends ConsumerStatefulWidget {
   const TextPreviewPage({
@@ -26,12 +27,14 @@ class TextPreviewPage extends ConsumerStatefulWidget {
 
 class _TextPreviewPageState extends ConsumerState<TextPreviewPage> {
   late final CodeLineEditingController _controller;
+  late final CodeFindController _findController;
   String _lastPath = '';
 
   @override
   void initState() {
     super.initState();
     _controller = CodeLineEditingController();
+    _findController = CodeFindController(_controller);
     _lastPath = widget.path;
   }
 
@@ -66,6 +69,11 @@ class _TextPreviewPageState extends ConsumerState<TextPreviewPage> {
       appBar: AppBar(
         title: Text(widget.name),
         actions: [
+          IconButton(
+            tooltip: '搜索',
+            onPressed: () => _findController.show(),
+            icon: const Icon(Icons.search),
+          ),
           if (canEdit)
             IconButton(
               tooltip: '编辑',
@@ -81,6 +89,10 @@ class _TextPreviewPageState extends ConsumerState<TextPreviewPage> {
       ),
       body: Column(
         children: [
+          CodeFindPanelView(
+            controller: _findController,
+            readOnly: true,
+          ),
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -94,6 +106,7 @@ class _TextPreviewPageState extends ConsumerState<TextPreviewPage> {
             child: fileAsync.when(
               data: (_) => CodeEditor(
                 controller: _controller,
+                findController: _findController,
                 style: CodeEditorStyle(
                   fontSize: 14,
                   codeTheme: codeEditorTheme,

@@ -9,6 +9,7 @@ import '../../../../core/utils/toast.dart';
 import '../providers/text_editor_providers.dart';
 import '../providers/code_language.dart';
 import '../widgets/copy_toolbar.dart';
+import '../widgets/find_panel.dart';
 
 class TextEditorPage extends ConsumerStatefulWidget {
   const TextEditorPage({
@@ -26,6 +27,7 @@ class TextEditorPage extends ConsumerStatefulWidget {
 
 class _TextEditorPageState extends ConsumerState<TextEditorPage> {
   late final CodeLineEditingController _controller;
+  late final CodeFindController _findController;
   bool _dirty = false;
   String _lastPath = '';
 
@@ -33,6 +35,7 @@ class _TextEditorPageState extends ConsumerState<TextEditorPage> {
   void initState() {
     super.initState();
     _controller = CodeLineEditingController.fromTextAsync(null);
+    _findController = CodeFindController(_controller);
     _controller.addListener(_onTextChanged);
   }
 
@@ -117,6 +120,11 @@ class _TextEditorPageState extends ConsumerState<TextEditorPage> {
           ),
           actions: [
             IconButton(
+              tooltip: '搜索',
+              onPressed: () => _findController.show(),
+              icon: const Icon(Icons.search),
+            ),
+            IconButton(
               tooltip: '预览',
               onPressed: () {
                 context.push('/text-preview', extra: {
@@ -146,6 +154,10 @@ class _TextEditorPageState extends ConsumerState<TextEditorPage> {
         ),
         body: Column(
           children: [
+            CodeFindPanelView(
+              controller: _findController,
+              readOnly: false,
+            ),
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -159,6 +171,7 @@ class _TextEditorPageState extends ConsumerState<TextEditorPage> {
               child: fileAsync.when(
                 data: (_) => CodeEditor(
                   controller: _controller,
+                  findController: _findController,
                   style: CodeEditorStyle(fontSize: 14, codeTheme: codeEditorTheme),
                   scrollController: CodeScrollController(),
                   toolbarController: const EditorToolbarController(),
