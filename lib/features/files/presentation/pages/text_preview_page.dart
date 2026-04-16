@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:re_editor/re_editor.dart';
@@ -26,27 +27,51 @@ class TextPreviewPage extends ConsumerStatefulWidget {
 class _TextPreviewPageState extends ConsumerState<TextPreviewPage> {
   late final CodeLineEditingController _controller;
   String _lastPath = '';
+  bool _hasSelection = false;
 
   @override
   void initState() {
     super.initState();
     _controller = CodeLineEditingController();
     _lastPath = widget.path;
+    _controller.addListener(_onSelectionChanged);
   }
 
   @override
   void dispose() {
+    _controller.removeListener(_onSelectionChanged);
     _controller.dispose();
     super.dispose();
+  }
+
+  void _onSelectionChanged() {
+    final hasSelection = _controller.selectedText.isNotEmpty;
+    if (hasSelection != _hasSelection) {
+      setState(() => _hasSelection = hasSelection);
+    }
   }
 
   @override
   void didUpdateWidget(covariant TextPreviewPage oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // 文件路径变化时，重置控制器
     if (oldWidget.path != widget.path) {
       _lastPath = widget.path;
+      _hasSelection = false;
       _controller.codeLines = CodeLines.fromText('');
+    }
+  }
+
+  void _copySelectedText() {
+    final selectedText = _controller.selectedText;
+    if (selectedText.isNotEmpty) {
+      Clipboard.setData(ClipboardData(text: selectedText));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('已复制'),
+          duration: Duration(seconds: 1),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     }
   }
 
@@ -54,7 +79,6 @@ class _TextPreviewPageState extends ConsumerState<TextPreviewPage> {
   Widget build(BuildContext context) {
     final fileAsync = ref.watch(textFileProvider(widget.path));
     final canEdit = FileTypeHelper.isTextEditableName(widget.name) && !FileTypeHelper.isNfoName(widget.name);
-    final langName = getModeByFilename(widget.name).name ?? 'plaintext';
 
     // 注入内容到 controller（每次 build 都检查，支持第二次打开同一文件）
     fileAsync.whenData((value) {
@@ -93,18 +117,59 @@ class _TextPreviewPageState extends ConsumerState<TextPreviewPage> {
             ),
           ),
           Expanded(
-            child: fileAsync.when(
-              data: (_) => CodeEditor(
-                controller: _controller,
-                style: CodeEditorStyle(
-                  fontSize: 14,
-                  codeTheme: codeEditorTheme,
+            child: Stack(
+              children: [
+                fileAsync.when(
+                  data: (_) => CodeEditor(
+                    controller: _controller,
+                    style: CodeEditorStyle(
+                      fontSize: 14,
+                      codeTheme: codeEditorTheme,
+                    ),
+                    scrollController: CodeScrollController(),
+                    readOnly: true,
+                  ),
+                  loading: () => const Center(child: CircularProgressIndicator()),
+                  error: (error, _) => Center(child: Text(ErrorMapper.map(error).message)),
                 ),
-                scrollController: CodeScrollController(),
-                readOnly: true,
-              ),
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, _) => Center(child: Text(ErrorMapper.map(error).message)),
+                if (_hasSelection)
+                  Positioned(
+                    top: 8,
+                    right: 16,
+                    child: SafeArea(
+                      child: Material(
+                        elevation: 4,
+                        borderRadius: BorderRadius.circular(8),
+                        color: Theme.of(context).colorScheme.primaryContainer,
+                        child: InkWell(
+                          onTap: _copySelectedText,
+                          borderRadius: BorderRadius.circular(8),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.copy,
+                                  size: 16,
+                                  color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '复制',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
         ],

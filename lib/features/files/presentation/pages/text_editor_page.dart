@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:re_editor/re_editor.dart';
@@ -27,17 +28,20 @@ class _TextEditorPageState extends ConsumerState<TextEditorPage> {
   late final CodeLineEditingController _controller;
   bool _dirty = false;
   String _lastPath = '';
+  bool _hasSelection = false;
 
   @override
   void initState() {
     super.initState();
     _controller = CodeLineEditingController.fromTextAsync(null);
     _controller.addListener(_onTextChanged);
+    _controller.addListener(_onSelectionChanged);
   }
 
   @override
   void dispose() {
     _controller.removeListener(_onTextChanged);
+    _controller.removeListener(_onSelectionChanged);
     _controller.dispose();
     super.dispose();
   }
@@ -48,6 +52,7 @@ class _TextEditorPageState extends ConsumerState<TextEditorPage> {
     if (oldWidget.path != widget.path) {
       _lastPath = widget.path;
       _dirty = false;
+      _hasSelection = false;
       _controller.codeLines = CodeLines.fromText('');
     }
   }
@@ -55,6 +60,27 @@ class _TextEditorPageState extends ConsumerState<TextEditorPage> {
   void _onTextChanged() {
     if (_lastPath == widget.path && !_dirty) {
       setState(() => _dirty = true);
+    }
+  }
+
+  void _onSelectionChanged() {
+    final hasSelection = _controller.selectedText.isNotEmpty;
+    if (hasSelection != _hasSelection) {
+      setState(() => _hasSelection = hasSelection);
+    }
+  }
+
+  void _copySelectedText() {
+    final selectedText = _controller.selectedText;
+    if (selectedText.isNotEmpty) {
+      Clipboard.setData(ClipboardData(text: selectedText));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('已复制'),
+          duration: Duration(seconds: 1),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     }
   }
 
@@ -69,8 +95,6 @@ class _TextEditorPageState extends ConsumerState<TextEditorPage> {
         _lastPath = widget.path;
       }
     });
-
-    final navigator = Navigator.of(context);
 
     return PopScope(
       canPop: !_dirty,
@@ -88,12 +112,35 @@ class _TextEditorPageState extends ConsumerState<TextEditorPage> {
               ),
             ) ??
             false;
-        if (!mounted || !leave) return;
-        navigator.pop();
+        if (leave && context.mounted) {
+          context.pop();
+        }
       },
       child: Scaffold(
         appBar: AppBar(
           title: Text(widget.name),
+          leading: IconButton(
+            tooltip: '返回',
+            onPressed: () async {
+              if (_dirty) {
+                final leave = await showDialog<bool>(
+                      context: context,
+                      builder: (dialogContext) => AlertDialog(
+                        title: Text(l10n.discardChanges),
+                        content: Text(l10n.discardChangesHint),
+                        actions: [
+                          TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: Text(l10n.cancel)),
+                          FilledButton(onPressed: () => Navigator.of(dialogContext).pop(true), child: Text(l10n.discard)),
+                        ],
+                      ),
+                    ) ??
+                    false;
+                if (!leave) return;
+              }
+              if (context.mounted) context.pop();
+            },
+            icon: const Icon(Icons.arrow_back),
+          ),
           actions: [
             IconButton(
               tooltip: '预览',
@@ -129,17 +176,61 @@ class _TextEditorPageState extends ConsumerState<TextEditorPage> {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               color: Theme.of(context).colorScheme.surfaceContainerHighest,
-              child: Text(widget.path, maxLines: 1, overflow: TextOverflow.ellipsis),
+              child: Text(
+                _dirty ? '有未保存的更改' : '编辑模式',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
             ),
             Expanded(
-              child: fileAsync.when(
-                data: (_) => CodeEditor(
-                  controller: _controller,
-                  style: CodeEditorStyle(fontSize: 14, codeTheme: codeEditorTheme),
-                  scrollController: CodeScrollController(),
-                ),
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (error, _) => Center(child: Text(ErrorMapper.map(error).message)),
+              child: Stack(
+                children: [
+                  fileAsync.when(
+                    data: (_) => CodeEditor(
+                      controller: _controller,
+                      style: CodeEditorStyle(fontSize: 14, codeTheme: codeEditorTheme),
+                      scrollController: CodeScrollController(),
+                    ),
+                    loading: () => const Center(child: CircularProgressIndicator()),
+                    error: (error, _) => Center(child: Text(ErrorMapper.map(error).message)),
+                  ),
+                  if (_hasSelection)
+                    Positioned(
+                      top: 8,
+                      right: 16,
+                      child: SafeArea(
+                        child: Material(
+                          elevation: 4,
+                          borderRadius: BorderRadius.circular(8),
+                          color: Theme.of(context).colorScheme.primaryContainer,
+                          child: InkWell(
+                            onTap: _copySelectedText,
+                            borderRadius: BorderRadius.circular(8),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.copy,
+                                    size: 16,
+                                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '复制',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
           ],
