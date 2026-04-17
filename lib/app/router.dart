@@ -35,6 +35,7 @@ import '../features/index_service/presentation/pages/index_service_page.dart';
 import '../features/information_center/presentation/pages/information_center_page.dart';
 import '../features/apps/presentation/pages/apps_page.dart';
 import '../features/photos/presentation/pages/photos_tab_page.dart';
+import '../features/photos/presentation/pages/photo_detail_page.dart';
 import '../features/packages/presentation/pages/package_detail_page.dart';
 import '../features/packages/presentation/pages/packages_page.dart';
 import '../features/packages/presentation/pages/package_search_page.dart';
@@ -85,6 +86,18 @@ GoRouter createAppRouter({required String initialLocation}) {
     }),
     GoRoute(path: '/apps', builder: (context, state) => const AppsPage()),
     GoRoute(path: '/photos', builder: (context, state) => const PhotosTabPage()),
+    GoRoute(
+      path: '/photos/detail',
+      builder: (context, state) {
+        final extra = state.extra as Map<String, dynamic>? ?? const {};
+        final photoId = extra['photoId']?.toString() ?? '';
+        final allIds = (extra['allPhotoIds'] as List?)?.cast<String>() ?? [];
+        if (photoId.isEmpty) {
+          return const Scaffold(body: Center(child: Text('photoId missing')));
+        }
+        return PhotoDetailPage(photoId: photoId, allPhotoIds: allIds.isEmpty ? [photoId] : allIds);
+      },
+    ),
     GoRoute(path: '/performance', builder: (context, state) => const PerformancePage()),
     GoRoute(path: '/container-management', builder: (context, state) => const ContainerManagementPage()),
     GoRoute(path: '/control-panel', builder: (context, state) => const ControlPanelPage()),

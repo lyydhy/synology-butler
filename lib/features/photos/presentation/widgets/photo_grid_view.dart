@@ -31,7 +31,10 @@ class PhotoGridView extends ConsumerWidget {
           itemCount: response.items.length,
           itemBuilder: (context, index) {
             final item = response.items[index];
-            return _PhotoTile(item: item);
+            return _PhotoTile(
+              item: item,
+              allItems: response.items,
+            );
           },
         );
       },
@@ -41,19 +44,25 @@ class PhotoGridView extends ConsumerWidget {
 
 class _PhotoTile extends ConsumerWidget {
   final FotoItem item;
+  final List<FotoItem> allItems;
 
-  const _PhotoTile({required this.item});
+  const _PhotoTile({required this.item, required this.allItems});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final thumbnailAsync = ref.watch(photoThumbnailProvider(item.id));
 
     return GestureDetector(
-      onTap: () => context.push('/photos/detail/${item.id}'),
+      onTap: () {
+        final allIds = allItems.map((e) => e.id).toList();
+        context.push('/photos/detail', extra: {
+          'photoId': item.id,
+          'allPhotoIds': allIds,
+        });
+      },
       child: Stack(
         fit: StackFit.expand,
         children: [
-          // 缩略图
           thumbnailAsync.when(
             loading: () => Container(color: Colors.grey[200]),
             error: (_, __) => Container(color: Colors.grey[200]),
@@ -63,8 +72,6 @@ class _PhotoTile extends ConsumerWidget {
               errorBuilder: (_, __, ___) => Container(color: Colors.grey[200]),
             ),
           ),
-
-          // 视频标识
           if (item.isVideo)
             Positioned(
               right: 4,

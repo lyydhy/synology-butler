@@ -2000,6 +2000,12 @@ abstract class AppLocalizations {
   /// **'套件中心'**
   String get packageCenter;
 
+  /// No description provided for @synologyPhotos.
+  ///
+  /// In zh, this message translates to:
+  /// **'群晖照片'**
+  String get synologyPhotos;
+
   /// No description provided for @packageCenterDesc.
   ///
   /// In zh, this message translates to:
