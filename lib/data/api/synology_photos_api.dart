@@ -116,7 +116,8 @@ class FotoItem {
   final String? resolution;
   final String? latitude;
   final String? longitude;
-  final String? additionalInfo;
+  final String? unitId;
+  final String? cacheKey;
 
   FotoItem({
     required this.id,
@@ -134,7 +135,8 @@ class FotoItem {
     this.resolution,
     this.latitude,
     this.longitude,
-    this.additionalInfo,
+    this.unitId,
+    this.cacheKey,
   });
 
   factory FotoItem.fromJson(Map<String, dynamic> json) {
@@ -154,7 +156,8 @@ class FotoItem {
       resolution: json['resolution']?.toString(),
       latitude: json['latitude']?.toString(),
       longitude: json['longitude']?.toString(),
-      additionalInfo: json['additional']?.toString(),
+      unitId: (json['additional']?['thumbnail']?['unit_id'])?.toString(),
+      cacheKey: (json['additional']?['thumbnail']?['cache_key'])?.toString(),
     );
   }
 
@@ -249,6 +252,7 @@ class DsmSynologyPhotosApi implements SynologyPhotosApi {
         'limit': limit,
         'sort_by': sortBy ?? 'created_time',
         'sort_direction': sortDirection ?? 'desc',
+        'additional': '["thumbnail","resolution","orientation","video_convert","video_meta","address"]',
       },
     );
 
@@ -389,17 +393,25 @@ class DsmSynologyPhotosApi implements SynologyPhotosApi {
   Future<Uint8List> getThumbnail({
     required String id,
     int? size,
+    String? unitId,
+    String? cacheKey,
     CancelToken? cancelToken,
     void Function(int, int)? onReceiveProgress,
   }) async {
-    final params = {
+    final params = <String, dynamic>{
       'api': 'SYNO.Foto.Thumbnail',
       'method': 'get',
       'version': 1,
-      'id': id,
-      'type': 'blur',
-      'size': size ?? 'large',
+      'type': 'unit',
+      'size': size ?? 'sm',
     };
+    // 优先用 unit_id + cache_key（来自 additional.thumbnail）
+    if (unitId != null && cacheKey != null) {
+      params['id'] = unitId;
+      params['cache_key'] = '""$cacheKey""';
+    } else {
+      params['id'] = id;
+    }
 
     DsmLogger.request(
       module: 'SynologyPhotos',
@@ -552,6 +564,7 @@ class DsmSynologyFotoTeamApi implements SynologyFotoTeamApi {
         'limit': limit,
         'sort_by': sortBy ?? 'created_time',
         'sort_direction': sortDirection ?? 'desc',
+        'additional': '["thumbnail","resolution","orientation","video_convert","video_meta","address"]',
       },
     );
 
@@ -675,19 +688,27 @@ class DsmSynologyFotoTeamApi implements SynologyFotoTeamApi {
   Future<Uint8List> getThumbnail({
     required String id,
     int? size,
+    String? unitId,
+    String? cacheKey,
     CancelToken? cancelToken,
     void Function(int, int)? onReceiveProgress,
   }) async {
+    final params = <String, dynamic>{
+      'api': 'SYNO.FotoTeam.Thumbnail',
+      'method': 'get',
+      'version': 1,
+      'type': 'unit',
+      'size': size ?? 'sm',
+    };
+    if (unitId != null && cacheKey != null) {
+      params['id'] = unitId;
+      params['cache_key'] = '""$cacheKey""';
+    } else {
+      params['id'] = id;
+    }
     final response = await _dio.get(
       '/webapi/entry.cgi',
-      queryParameters: {
-        'api': 'SYNO.FotoTeam.Thumbnail',
-        'method': 'get',
-        'version': 1,
-        'id': id,
-        'type': 'blur',
-        'size': size ?? 'large',
-      },
+      queryParameters: params,
       options: Options(responseType: ResponseType.bytes),
       cancelToken: cancelToken,
       onReceiveProgress: onReceiveProgress,
