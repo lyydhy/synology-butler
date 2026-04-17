@@ -257,13 +257,17 @@ class DsmSynologyPhotosApi implements SynologyPhotosApi {
     );
 
     final data = response.data;
-    final items = (data['data']['items'] as List? ?? [])
+    final dataSection = data['data'] as Map<String, dynamic>?;
+    if (dataSection == null) {
+      return FotoTimelineResponse(items: [], total: 0, offset: offset, limit: limit);
+    }
+    final items = (dataSection['items'] as List? ?? [])
         .map((e) => FotoItem.fromJson(e as Map<String, dynamic>))
         .toList();
 
     return FotoTimelineResponse(
       items: items,
-      total: data['data']['total'] as int? ?? items.length,
+      total: dataSection['total'] as int? ?? items.length,
       offset: offset,
       limit: limit,
     );
@@ -305,13 +309,17 @@ class DsmSynologyPhotosApi implements SynologyPhotosApi {
     );
 
     final data = response.data;
-    final albums = (data['data']['albums'] as List? ?? [])
+    final dataSection = data['data'] as Map<String, dynamic>?;
+    if (dataSection == null) {
+      return FotoAlbumListResponse(albums: [], total: 0, offset: offset, limit: limit);
+    }
+    final albums = (dataSection['albums'] as List? ?? [])
         .map((e) => FotoAlbum.fromJson(e as Map<String, dynamic>))
         .toList();
 
     return FotoAlbumListResponse(
       albums: albums,
-      total: data['data']['total'] as int? ?? albums.length,
+      total: dataSection['total'] as int? ?? albums.length,
       offset: offset,
       limit: limit,
     );
@@ -362,13 +370,17 @@ class DsmSynologyPhotosApi implements SynologyPhotosApi {
     final response = await _dio.get('/webapi/entry.cgi', queryParameters: params);
 
     final data = response.data;
-    final items = (data['data']['items'] as List? ?? [])
+    final dataSection = data['data'] as Map<String, dynamic>?;
+    if (dataSection == null) {
+      return FotoItemListResponse(items: [], total: 0, offset: offset, limit: limit);
+    }
+    final items = (dataSection['items'] as List? ?? [])
         .map((e) => FotoItem.fromJson(e as Map<String, dynamic>))
         .toList();
 
     return FotoItemListResponse(
       items: items,
-      total: data['data']['total'] as int? ?? items.length,
+      total: dataSection['total'] as int? ?? items.length,
       offset: offset,
       limit: limit,
     );
@@ -569,13 +581,17 @@ class DsmSynologyFotoTeamApi implements SynologyFotoTeamApi {
     );
 
     final data = response.data;
-    final items = (data['data']['items'] as List? ?? [])
+    final dataSection = data['data'] as Map<String, dynamic>?;
+    if (dataSection == null) {
+      return FotoTimelineResponse(items: [], total: 0, offset: offset, limit: limit);
+    }
+    final items = (dataSection['items'] as List? ?? [])
         .map((e) => FotoItem.fromJson(e as Map<String, dynamic>))
         .toList();
 
     return FotoTimelineResponse(
       items: items,
-      total: data['data']['total'] as int? ?? items.length,
+      total: dataSection['total'] as int? ?? items.length,
       offset: offset,
       limit: limit,
     );
@@ -611,12 +627,16 @@ class DsmSynologyFotoTeamApi implements SynologyFotoTeamApi {
     );
 
     final data = response.data;
-    final folders = data['data']['items'] as List? ?? [];
+    final dataSection = data['data'] as Map<String, dynamic>?;
+    if (dataSection == null) {
+      return FotoAlbumListResponse(albums: [], total: 0, offset: offset, limit: limit);
+    }
+    final folders = (dataSection['items'] as List? ?? []);
     final albums = folders.map((e) => FotoAlbum.fromJson(e as Map<String, dynamic>)).toList();
 
     return FotoAlbumListResponse(
       albums: albums,
-      total: data['data']['total'] as int? ?? albums.length,
+      total: dataSection['total'] as int? ?? albums.length,
       offset: offset,
       limit: limit,
     );
@@ -657,13 +677,17 @@ class DsmSynologyFotoTeamApi implements SynologyFotoTeamApi {
 
     final response = await _dio.get('/webapi/entry.cgi', queryParameters: params);
     final data = response.data;
-    final items = (data['data']['items'] as List? ?? [])
+    final dataSection = data['data'] as Map<String, dynamic>?;
+    if (dataSection == null) {
+      return FotoItemListResponse(items: [], total: 0, offset: offset, limit: limit);
+    }
+    final items = (dataSection['items'] as List? ?? [])
         .map((e) => FotoItem.fromJson(e as Map<String, dynamic>))
         .toList();
 
     return FotoItemListResponse(
       items: items,
-      total: data['data']['total'] as int? ?? items.length,
+      total: dataSection['total'] as int? ?? items.length,
       offset: offset,
       limit: limit,
     );
