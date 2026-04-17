@@ -1047,7 +1047,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get packageCenter => 'Package Center';
 
   @override
-  String get synologyPhotos => 'Synology Photos';
+  String get synologyPhotos => 'Photos';
 
   @override
   String get packageCenterDesc => 'Browse and install packages';

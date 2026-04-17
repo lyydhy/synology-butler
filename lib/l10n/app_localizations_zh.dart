@@ -1024,7 +1024,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get packageCenter => '套件中心';
 
   @override
-  String get synologyPhotos => '群晖照片';
+  String get synologyPhotos => '相册';
 
   @override
   String get packageCenterDesc => '浏览和安装套件';

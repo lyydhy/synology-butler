@@ -38,7 +38,7 @@ const List<DashboardAppEntry> dashboardHomeApps = [
   ),
   DashboardAppEntry(
     icon: Icons.photo_library_rounded,
-    label: '群晖照片',
+    label: '相册',
     color: const Color(0xFF7B1FA2), // deepPurple
     route: '/photos',
   ),

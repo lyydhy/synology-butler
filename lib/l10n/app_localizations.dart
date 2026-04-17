@@ -2003,7 +2003,7 @@ abstract class AppLocalizations {
   /// No description provided for @synologyPhotos.
   ///
   /// In zh, this message translates to:
-  /// **'群晖照片'**
+  /// **'相册'**
   String get synologyPhotos;
 
   /// No description provided for @packageCenterDesc.

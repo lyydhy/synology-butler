@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../../../core/widgets/sliding_tab_bar.dart';
 import '../providers/photos_providers.dart';
 import '../widgets/photo_grid_view.dart';
 import '../widgets/album_grid_view.dart';
@@ -16,53 +17,173 @@ class PhotosTabPage extends ConsumerStatefulWidget {
 }
 
 class _PhotosTabPageState extends ConsumerState<PhotosTabPage> {
-  int _currentTab = 0; // 0=照片, 1=图集
-  double _lastScrollY = 0;
-  bool _tabVisible = true;
+  late PageController _spacePageController;
+  int _currentSpace = 0; // 0=个人空间, 1=共享空间
 
-  void _switchSpace(PhotoSpace space) {
+  // 每个 Space 内的 Tab 状态
+  final List<int> _currentTab = [0, 0];
+  final List<bool> _tabVisible = [true, true];
+  final List<PageController> _tabPageControllers = [PageController(), PageController()];
+
+  @override
+  void initState() {
+    super.initState();
+    _spacePageController = PageController();
+  }
+
+  @override
+  void dispose() {
+    _spacePageController.dispose();
+    for (final c in _tabPageControllers) c.dispose();
+    super.dispose();
+  }
+
+  void _switchSpace(int index) {
+    _spacePageController.animateToPage(
+      index,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
+  void _switchTab(int spaceIndex, int tabIndex) {
+    _tabPageControllers[spaceIndex].animateToPage(
+      tabIndex,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
+  void _onSpacePageChanged(int index) {
+    setState(() => _currentSpace = index);
     ref.invalidate(photoTimelineAllProvider);
     ref.invalidate(photoAlbumsAllProvider);
-    ref.read(photoSpaceProvider.notifier).state = space;
+  }
+
+  void _updateTabVisible(int spaceIndex, double y, double lastY) {
+    if (y > lastY && y > 80 && _tabVisible[spaceIndex]) {
+      setState(() => _tabVisible[spaceIndex] = false);
+    } else if (y < lastY && !_tabVisible[spaceIndex]) {
+      setState(() => _tabVisible[spaceIndex] = true);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final space = ref.watch(photoSpaceProvider);
     final selected = ref.watch(photoMultiSelectProvider);
-    final allIds = _currentTab == 0
+    final allIds = _currentTab[_currentSpace] == 0
         ? (ref.watch(photoTimelineAllProvider).valueOrNull?.map((e) => e.id).toList() ?? [])
         : (ref.watch(photoAlbumsAllProvider).valueOrNull?.map((e) => e.id).toList() ?? []);
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).primaryColor,
-        foregroundColor: Colors.white,
-        title: selected.isNotEmpty
-            ? Text('已选择 ${selected.length} 项')
-            : Text(space == PhotoSpace.personal ? '群晖照片' : '共享空间'),
-        leading: selected.isNotEmpty
-            ? IconButton(
-                icon: const Icon(Icons.close),
-                onPressed: () => ref.read(photoMultiSelectProvider.notifier).clear(),
-              )
-            : null,
-        actions: [
+      body: Column(
+        children: [
+          // 顶部 AppBar
+          _PhotosAppBar(
+            selected: selected,
+            allIds: allIds,
+            currentSpace: _currentSpace,
+          ),
+
+          // Space 切换（SlidingTabBar）
+          if (selected.isEmpty)
+            SlidingTabBar(
+              pageController: _spacePageController,
+              tabs: const [
+                SlidingTabItem(icon: Icons.person, label: '个人空间'),
+                SlidingTabItem(icon: Icons.group, label: '共享空间'),
+              ],
+              onTabSelected: (index) => _switchSpace(index),
+              height: 48,
+              indicatorBorderRadius: 14,
+            ),
+
+          if (selected.isEmpty) const Divider(height: 1),
+
+          // Space 内容 PageView
+          Expanded(
+            child: PageView(
+              controller: _spacePageController,
+              onPageChanged: _onSpacePageChanged,
+              children: [
+                _SpaceContent(
+                  tabController: _tabPageControllers[0],
+                  currentTab: _currentTab[0],
+                  tabVisible: _tabVisible[0],
+                  onTabChanged: (t) => setState(() => _currentTab[0] = t),
+                  onTabSwitch: (t) => _switchTab(0, t),
+                ),
+                _SpaceContent(
+                  tabController: _tabPageControllers[1],
+                  currentTab: _currentTab[1],
+                  tabVisible: _tabVisible[1],
+                  onTabChanged: (t) => setState(() => _currentTab[1] = t),
+                  onTabSwitch: (t) => _switchTab(1, t),
+                ),
+              ],
+            ),
+          ),
+
+          // 多选底部栏
+          if (selected.isNotEmpty)
+            _MultiSelectBar(selected: selected, allIds: allIds),
+        ],
+      ),
+    );
+  }
+}
+
+/// AppBar
+class _PhotosAppBar extends ConsumerWidget {
+  final Set<String> selected;
+  final List<String> allIds;
+  final int currentSpace;
+
+  const _PhotosAppBar({required this.selected, required this.allIds, required this.currentSpace});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Container(
+      color: Theme.of(context).primaryColor,
+      padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
+      child: Row(
+        children: [
+          if (selected.isEmpty)
+            IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              onPressed: () => context.pop(),
+            )
+          else
+            IconButton(
+              icon: const Icon(Icons.close, color: Colors.white),
+              onPressed: () => ref.read(photoMultiSelectProvider.notifier).clear(),
+            ),
+          Expanded(
+            child: Text(
+              selected.isNotEmpty
+                  ? '已选择 ${selected.length} 项'
+                  : currentSpace == 0 ? '相册' : '共享空间',
+              style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
+            ),
+          ),
           if (selected.isEmpty) ...[
             IconButton(
-              icon: const Icon(Icons.search),
+              icon: const Icon(Icons.search, color: Colors.white),
               onPressed: () => context.push('/photos/search'),
             ),
             IconButton(
-              icon: const Icon(Icons.more_vert),
+              icon: const Icon(Icons.more_vert, color: Colors.white),
               onPressed: () {},
             ),
           ] else ...[
             IconButton(
-              icon: Icon(allIds.isNotEmpty && selected.length == allIds.length
-                  ? Icons.deselect
-                  : Icons.select_all),
+              icon: Icon(
+                allIds.isNotEmpty && selected.length == allIds.length
+                    ? Icons.deselect
+                    : Icons.select_all,
+                color: Colors.white,
+              ),
               tooltip: allIds.isNotEmpty && selected.length == allIds.length ? '取消全选' : '全选',
               onPressed: allIds.isEmpty
                   ? null
@@ -77,123 +198,52 @@ class _PhotosTabPageState extends ConsumerState<PhotosTabPage> {
           ],
         ],
       ),
-      body: Column(
-        children: [
-          // Space Switcher（多选时不显示）
-          if (selected.isEmpty)
-            Container(
-              color: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: _SpaceTab(
-                        label: '个人空间',
-                        isActive: space == PhotoSpace.personal,
-                        onTap: () => _switchSpace(PhotoSpace.personal),
-                      ),
-                    ),
-                    Expanded(
-                      child: _SpaceTab(
-                        label: '共享空间',
-                        isActive: space == PhotoSpace.shared,
-                        onTap: () => _switchSpace(PhotoSpace.shared),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-
-          // Content
-          Expanded(
-            child: NotificationListener<ScrollNotification>(
-              onNotification: (notification) {
-                if (notification is ScrollUpdateNotification) {
-                  final y = notification.metrics.pixels;
-                  if (y > _lastScrollY && y > 80 && _tabVisible) {
-                    setState(() => _tabVisible = false);
-                  } else if (y < _lastScrollY && !_tabVisible) {
-                    setState(() => _tabVisible = true);
-                  }
-                  _lastScrollY = y;
-                }
-                return false;
-              },
-              child: Stack(
-                children: [
-                  IndexedStack(
-                    index: _currentTab,
-                    children: const [
-                      PhotoGridView(),
-                      AlbumGridView(),
-                    ],
-                  ),
-                  if (_tabVisible && selected.isEmpty)
-                    Positioned(
-                      left: 16,
-                      right: 16,
-                      bottom: 24,
-                      child: _FloatingTabBar(
-                        currentIndex: _currentTab,
-                        onTap: (index) => setState(() => _currentTab = index),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
-
-          // 多选底部栏
-          if (selected.isNotEmpty)
-            _MultiSelectBar(selected: selected, allIds: allIds),
-        ],
-      ),
     );
   }
 }
 
-class _SpaceTab extends StatelessWidget {
-  final String label;
-  final bool isActive;
-  final VoidCallback onTap;
+/// 单个 Space 的内容（Tab + PageView）
+class _SpaceContent extends StatelessWidget {
+  final PageController tabController;
+  final int currentTab;
+  final bool tabVisible;
+  final ValueChanged<int> onTabChanged;
+  final ValueChanged<int> onTabSwitch;
 
-  const _SpaceTab({required this.label, required this.isActive, required this.onTap});
+  const _SpaceContent({
+    required this.tabController,
+    required this.currentTab,
+    required this.tabVisible,
+    required this.onTabChanged,
+    required this.onTabSwitch,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        decoration: BoxDecoration(
-          color: isActive ? Colors.white : Colors.transparent,
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: isActive
-              ? [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 4)]
-              : null,
+    return Stack(
+      children: [
+        PageView(
+          controller: tabController,
+          onPageChanged: onTabChanged,
+          children: const [
+            PhotoGridView(),
+            AlbumGridView(),
+          ],
         ),
-        child: Text(
-          label,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
-            color: isActive ? Theme.of(context).primaryColor : Colors.grey[600],
+        if (tabVisible)
+          Positioned(
+            left: 16,
+            right: 16,
+            bottom: 24,
+            child: _FloatingTabBar(
+              currentIndex: currentTab,
+              onTap: onTabSwitch,
+            ),
           ),
-        ),
-      ),
+      ],
     );
   }
 }
-
 
 class _FloatingTabBar extends StatelessWidget {
   final int currentIndex;
@@ -415,27 +465,18 @@ class _ActionBtn extends StatelessWidget {
   final Color? color;
   final VoidCallback? onTap;
 
-  const _ActionBtn({
-    required this.icon,
-    required this.label,
-    this.color,
-    this.onTap,
-  });
+  const _ActionBtn({required this.icon, required this.label, this.color, this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    final effectiveOnTap = onTap;
     return GestureDetector(
-      onTap: effectiveOnTap,
+      onTap: onTap,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, color: color ?? Colors.grey[700], size: 24),
           const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(fontSize: 12, color: color ?? Colors.grey[600]),
-          ),
+          Text(label, style: TextStyle(fontSize: 12, color: color ?? Colors.grey[600])),
         ],
       ),
     );

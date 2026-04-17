@@ -37,25 +37,34 @@ List<_DateGroup> _groupByDate(List<FotoItem> items) {
 
 /// 照片时间线 Grid（分页加载 + 多选）
 class PhotoGridView extends ConsumerStatefulWidget {
-  const PhotoGridView({super.key});
+  final ScrollController? scrollController;
+
+  const PhotoGridView({super.key, this.scrollController});
 
   @override
   ConsumerState<PhotoGridView> createState() => _PhotoGridViewState();
 }
 
 class _PhotoGridViewState extends ConsumerState<PhotoGridView> {
-  final _scrollController = ScrollController();
+  late ScrollController _scrollController;
+  bool _ownsController = false;
 
   @override
   void initState() {
     super.initState();
+    if (widget.scrollController != null) {
+      _scrollController = widget.scrollController!;
+    } else {
+      _scrollController = ScrollController();
+      _ownsController = true;
+    }
     _scrollController.addListener(_onScroll);
   }
 
   @override
   void dispose() {
     _scrollController.removeListener(_onScroll);
-    _scrollController.dispose();
+    if (_ownsController) _scrollController.dispose();
     super.dispose();
   }
 

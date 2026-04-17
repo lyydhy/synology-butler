@@ -7,25 +7,34 @@ import '../../../../data/api/synology_photos_api.dart';
 
 /// 相册 Grid（分页加载）
 class AlbumGridView extends ConsumerStatefulWidget {
-  const AlbumGridView({super.key});
+  final ScrollController? scrollController;
+
+  const AlbumGridView({super.key, this.scrollController});
 
   @override
   ConsumerState<AlbumGridView> createState() => _AlbumGridViewState();
 }
 
 class _AlbumGridViewState extends ConsumerState<AlbumGridView> {
-  final _scrollController = ScrollController();
+  late ScrollController _scrollController;
+  bool _ownsController = false;
 
   @override
   void initState() {
     super.initState();
+    if (widget.scrollController != null) {
+      _scrollController = widget.scrollController!;
+    } else {
+      _scrollController = ScrollController();
+      _ownsController = true;
+    }
     _scrollController.addListener(_onScroll);
   }
 
   @override
   void dispose() {
     _scrollController.removeListener(_onScroll);
-    _scrollController.dispose();
+    if (_ownsController) _scrollController.dispose();
     super.dispose();
   }
 
