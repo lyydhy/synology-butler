@@ -243,7 +243,7 @@ class DsmSynologyPhotosApi implements SynologyPhotosApi {
       '/webapi/entry.cgi',
       queryParameters: {
         'api': 'SYNO.Foto.Browse.Item',
-        'method': 'list_basic_timeline_info',
+        'method': 'list',
         'version': 1,
         'offset': offset,
         'limit': limit,
