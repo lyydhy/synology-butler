@@ -36,6 +36,8 @@ import '../features/information_center/presentation/pages/information_center_pag
 import '../features/apps/presentation/pages/apps_page.dart';
 import '../features/photos/presentation/pages/photos_tab_page.dart';
 import '../features/photos/presentation/pages/photo_detail_page.dart';
+import '../features/photos/presentation/pages/album_detail_page.dart';
+import '../features/photos/presentation/pages/photos_search_page.dart';
 import '../features/packages/presentation/pages/package_detail_page.dart';
 import '../features/packages/presentation/pages/packages_page.dart';
 import '../features/packages/presentation/pages/package_search_page.dart';
@@ -98,6 +100,14 @@ GoRouter createAppRouter({required String initialLocation}) {
         return PhotoDetailPage(photoId: photoId, allPhotoIds: allIds.isEmpty ? [photoId] : allIds);
       },
     ),
+    GoRoute(
+      path: '/photos/album/:id',
+      builder: (context, state) {
+        final albumId = state.pathParameters['id'] ?? '';
+        return AlbumDetailPage(albumId: albumId);
+      },
+    ),
+    GoRoute(path: '/photos/search', builder: (context, state) => const PhotosSearchPage()),
     GoRoute(path: '/performance', builder: (context, state) => const PerformancePage()),
     GoRoute(path: '/container-management', builder: (context, state) => const ContainerManagementPage()),
     GoRoute(path: '/control-panel', builder: (context, state) => const ControlPanelPage()),

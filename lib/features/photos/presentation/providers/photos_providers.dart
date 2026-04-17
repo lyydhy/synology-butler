@@ -37,6 +37,13 @@ final photoItemProvider =
   return api.getItem(itemId: id);
 });
 
+/// 相册详情
+final albumDetailProvider =
+    FutureProvider.autoDispose.family<FotoAlbum, String>((ref, id) async {
+  final api = ref.watch(synologyPhotosApiProvider);
+  return api.getAlbum(albumId: int.tryParse(id) ?? 0);
+});
+
 /// 缩略图缓存
 final photoThumbnailProvider = FutureProvider.autoDispose
     .family<Uint8List, String>((ref, id) async {
@@ -54,6 +61,21 @@ final photoToggleFavoriteProvider =
     ref.invalidate(photoItemProvider(params.id));
   },
 );
+
+/// 照片搜索
+final photoSearchResultsProvider =
+    FutureProvider.autoDispose.family<List<FotoItem>, String>((ref, query) async {
+  if (query.isEmpty) return [];
+  final api = ref.watch(synologyPhotosApiProvider);
+  // 使用 listItem 简单过滤，真实搜索用 SYNO.Foto.Search.Search.list_item
+  final response = await api.listItem(limit: 50, sortBy: 'created_time', sortDirection: 'desc');
+  // 客户端过滤
+  final q = query.toLowerCase();
+  return response.items.where((item) {
+    return item.name.toLowerCase().contains(q) ||
+        (item.filePath?.toLowerCase().contains(q) ?? false);
+  }).toList();
+});
 
 /// 当前选中的照片（用于详情页滑动）
 final selectedPhotoIndexProvider = StateProvider.family<int, List<String>>(

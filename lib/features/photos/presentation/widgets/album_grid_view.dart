@@ -52,7 +52,7 @@ class _AlbumCard extends ConsumerWidget {
         : null;
 
     return GestureDetector(
-      onTap: () => context.push('/photos/album/${album.id}'),
+      onTap: () => context.push('/photos/album/${album.id}?name=${Uri.encodeComponent(album.name)}'),
       child: Container(
         decoration: BoxDecoration(
           color: Colors.grey[100],

@@ -93,29 +93,43 @@ class _PhotosTabPageState extends ConsumerState<PhotosTabPage> {
 
           // Content
           Expanded(
-            child: Stack(
-              children: [
-                // Tab content
-                IndexedStack(
-                  index: _currentTab,
-                  children: const [
-                    PhotoGridView(),
-                    AlbumGridView(),
-                  ],
-                ),
-
-                // Floating Bottom Tab
-                if (_tabVisible)
-                  Positioned(
-                    left: 16,
-                    right: 16,
-                    bottom: 24,
-                    child: _FloatingTabBar(
-                      currentIndex: _currentTab,
-                      onTap: (index) => setState(() => _currentTab = index),
-                    ),
+            child: NotificationListener<ScrollNotification>(
+              onNotification: (notification) {
+                if (notification is ScrollUpdateNotification) {
+                  final y = notification.metrics.pixels;
+                  if (y > _lastScrollY && y > 80 && _tabVisible) {
+                    setState(() => _tabVisible = false);
+                  } else if (y < _lastScrollY && !_tabVisible) {
+                    setState(() => _tabVisible = true);
+                  }
+                  _lastScrollY = y;
+                }
+                return false;
+              },
+              child: Stack(
+                children: [
+                  // Tab content
+                  IndexedStack(
+                    index: _currentTab,
+                    children: const [
+                      PhotoGridView(),
+                      AlbumGridView(),
+                    ],
                   ),
-              ],
+
+                  // Floating Bottom Tab
+                  if (_tabVisible)
+                    Positioned(
+                      left: 16,
+                      right: 16,
+                      bottom: 24,
+                      child: _FloatingTabBar(
+                        currentIndex: _currentTab,
+                        onTap: (index) => setState(() => _currentTab = index),
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
         ],
