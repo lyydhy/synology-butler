@@ -29,9 +29,9 @@ final photoTimelineProvider = FutureProvider.autoDispose
     .family<FotoTimelineResponse, int>((ref, page) async {
   final space = ref.watch(photoSpaceProvider);
   if (space == PhotoSpace.personal) {
-    return ref.read(_personalApiProvider).listTimelineItem(offset: page * 30, limit: 30);
+    return ref.read(_personalApiProvider).listTimeline(offset: page * 30, limit: 30);
   } else {
-    return ref.read(_sharedApiProvider).listTimelineItem(offset: page * 30, limit: 30);
+    return ref.read(_sharedApiProvider).listTimeline(offset: page * 30, limit: 30);
   }
 });
 
@@ -56,8 +56,8 @@ class PhotoTimelineNotifier extends StateNotifier<AsyncValue<List<FotoItem>>> {
     final space = _ref.read(photoSpaceProvider);
     try {
       final items = space == PhotoSpace.personal
-          ? await _ref.read(_personalApiProvider).listTimelineItem(offset: _nextPage * 30, limit: 30)
-          : await _ref.read(_sharedApiProvider).listTimelineItem(offset: _nextPage * 30, limit: 30);
+          ? await _ref.read(_personalApiProvider).listTimeline(offset: _nextPage * 30, limit: 30)
+          : await _ref.read(_sharedApiProvider).listTimeline(offset: _nextPage * 30, limit: 30);
 
       state = AsyncValue.data(items.items);
       _hasMore = items.items.length >= 30;
@@ -76,8 +76,8 @@ class PhotoTimelineNotifier extends StateNotifier<AsyncValue<List<FotoItem>>> {
     final space = _ref.read(photoSpaceProvider);
     try {
       final items = space == PhotoSpace.personal
-          ? await _ref.read(_personalApiProvider).listTimelineItem(offset: _nextPage * 30, limit: 30)
-          : await _ref.read(_sharedApiProvider).listTimelineItem(offset: _nextPage * 30, limit: 30);
+          ? await _ref.read(_personalApiProvider).listTimeline(offset: _nextPage * 30, limit: 30)
+          : await _ref.read(_sharedApiProvider).listTimeline(offset: _nextPage * 30, limit: 30);
 
       state = AsyncValue.data([...currentItems, ...items.items]);
       _hasMore = items.items.length >= 30;

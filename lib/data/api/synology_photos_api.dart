@@ -16,6 +16,12 @@ abstract class SynologyPhotosApi {
     String? sortDirection,
   });
 
+  /// 时间线视图（按天分组，DSM 7 专用）
+  Future<FotoTimelineResponse> listTimeline({
+    int offset = 0,
+    int limit = 30,
+  });
+
   /// 统计时间线项目数量
   Future<int> countTimelineItem();
 
@@ -283,7 +289,62 @@ class DsmSynologyPhotosApi implements SynologyPhotosApi {
         'version': 1,
       },
     );
-    return response.data['data']['count'] as int? ?? 0;
+    return response.data['data']?['count'] as int? ?? 0;
+  }
+
+  @override
+  Future<FotoTimelineResponse> listTimeline({
+    int offset = 0,
+    int limit = 30,
+  }) async {
+    DsmLogger.request(
+      module: 'SynologyPhotos',
+      action: 'listTimeline',
+      method: 'GET',
+    );
+
+    final response = await _dio.get(
+      '/webapi/entry.cgi',
+      queryParameters: {
+        'api': 'SYNO.Foto.Browse.Timeline',
+        'method': 'get',
+        'version': 2,
+        'offset': offset,
+        'limit': limit,
+      },
+    );
+
+    final data = response.data;
+    final dataSection = data['data'] as Map<String, dynamic>?;
+    if (dataSection == null) {
+      return FotoTimelineResponse(items: [], total: 0, offset: offset, limit: limit);
+    }
+
+    // DSM 7: data.section[].list 扁平化
+    final sections = dataSection['section'] as List? ?? [];
+    final List<FotoItem> allItems = [];
+    for (final section in sections) {
+      final list = section['list'] as List? ?? [];
+      for (final item in list) {
+        allItems.add(FotoItem(
+          id: item['id']?.toString() ?? '',
+          name: item['name']?.toString() ?? '',
+          size: item['size'] as int?,
+          mimeType: item['mime_type']?.toString(),
+          thumbnailUrl: item['thumbnail_url']?.toString(),
+          createdTime: item['created_time'] as int?,
+          unitId: (item['additional']?['thumbnail']?['unit_id'])?.toString(),
+          cacheKey: (item['additional']?['thumbnail']?['cache_key'])?.toString(),
+        ));
+      }
+    }
+
+    return FotoTimelineResponse(
+      items: allItems,
+      total: dataSection['total'] as int? ?? allItems.length,
+      offset: offset,
+      limit: limit,
+    );
   }
 
   @override
@@ -510,6 +571,11 @@ abstract class SynologyFotoTeamApi {
     String? sortDirection,
   });
 
+  Future<FotoTimelineResponse> listTimeline({
+    int offset = 0,
+    int limit = 30,
+  });
+
   Future<int> countTimelineItem();
 
   Future<FotoAlbumListResponse> listAlbum({
@@ -607,7 +673,55 @@ class DsmSynologyFotoTeamApi implements SynologyFotoTeamApi {
         'version': 1,
       },
     );
-    return response.data['data']['count'] as int? ?? 0;
+    return response.data['data']?['count'] as int? ?? 0;
+  }
+
+  @override
+  Future<FotoTimelineResponse> listTimeline({
+    int offset = 0,
+    int limit = 30,
+  }) async {
+    final response = await _dio.get(
+      '/webapi/entry.cgi',
+      queryParameters: {
+        'api': 'SYNO.FotoTeam.Browse.Timeline',
+        'method': 'get',
+        'version': 3,
+        'offset': offset,
+        'limit': limit,
+      },
+    );
+
+    final data = response.data;
+    final dataSection = data['data'] as Map<String, dynamic>?;
+    if (dataSection == null) {
+      return FotoTimelineResponse(items: [], total: 0, offset: offset, limit: limit);
+    }
+
+    final sections = dataSection['section'] as List? ?? [];
+    final List<FotoItem> allItems = [];
+    for (final section in sections) {
+      final list = section['list'] as List? ?? [];
+      for (final item in list) {
+        allItems.add(FotoItem(
+          id: item['id']?.toString() ?? '',
+          name: item['name']?.toString() ?? '',
+          size: item['size'] as int?,
+          mimeType: item['mime_type']?.toString(),
+          thumbnailUrl: item['thumbnail_url']?.toString(),
+          createdTime: item['created_time'] as int?,
+          unitId: (item['additional']?['thumbnail']?['unit_id'])?.toString(),
+          cacheKey: (item['additional']?['thumbnail']?['cache_key'])?.toString(),
+        ));
+      }
+    }
+
+    return FotoTimelineResponse(
+      items: allItems,
+      total: dataSection['total'] as int? ?? allItems.length,
+      offset: offset,
+      limit: limit,
+    );
   }
 
   @override
