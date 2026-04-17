@@ -110,23 +110,6 @@ class _PhotosTabPageState extends ConsumerState<PhotosTabPage> {
               ),
             ),
 
-          // Quick Access（多选时不显示）
-          if (selected.isEmpty)
-            Container(
-              color: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                children: [
-                  _QuickAccessChip(icon: '⭐', label: '收藏'),
-                  const SizedBox(width: 8),
-                  _QuickAccessChip(icon: '🕐', label: '最近添加'),
-                  const SizedBox(width: 8),
-                  _QuickAccessChip(icon: '📁', label: '文件夹'),
-                ],
-              ),
-            ),
-
-          if (selected.isEmpty) const Divider(height: 1),
 
           // Content
           Expanded(
@@ -211,31 +194,6 @@ class _SpaceTab extends StatelessWidget {
   }
 }
 
-class _QuickAccessChip extends StatelessWidget {
-  final String icon;
-  final String label;
-
-  const _QuickAccessChip({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.grey[100],
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(icon, style: const TextStyle(fontSize: 12)),
-          const SizedBox(width: 4),
-          Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[700])),
-        ],
-      ),
-    );
-  }
-}
 
 class _FloatingTabBar extends StatelessWidget {
   final int currentIndex;

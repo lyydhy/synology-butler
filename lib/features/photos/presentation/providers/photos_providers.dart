@@ -179,6 +179,27 @@ final albumDetailProvider =
   }
 });
 
+/// 相册内照片列表
+final albumItemsProvider =
+    FutureProvider.autoDispose.family<List<FotoItem>, String>((ref, albumId) async {
+  final space = ref.watch(photoSpaceProvider);
+  if (space == PhotoSpace.personal) {
+    final res = await ref.read(_personalApiProvider).listItem(
+      offset: 0,
+      limit: 100,
+      folderId: albumId,
+    );
+    return res.items;
+  } else {
+    final res = await ref.read(_sharedApiProvider).listItem(
+      offset: 0,
+      limit: 100,
+      folderId: albumId,
+    );
+    return res.items;
+  }
+});
+
 // ============================================================
 // 缩略图
 // ============================================================

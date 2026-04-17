@@ -35,7 +35,7 @@ class AlbumDetailPage extends ConsumerWidget {
       body: albumAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('加载失败: $e')),
-        data: (album) => _AlbumContent(album: album),
+        data: (album) => _AlbumContent(album: album, albumId: albumId),
       ),
     );
   }
@@ -44,8 +44,9 @@ class AlbumDetailPage extends ConsumerWidget {
 /// 相册内容（封面照片 Grid + 描述）
 class _AlbumContent extends ConsumerStatefulWidget {
   final FotoAlbum album;
+  final String albumId;
 
-  const _AlbumContent({required this.album});
+  const _AlbumContent({required this.album, required this.albumId});
 
   @override
   ConsumerState<_AlbumContent> createState() => _AlbumContentState();
@@ -81,48 +82,58 @@ class _AlbumContentState extends ConsumerState<_AlbumContent> {
 
   @override
   Widget build(BuildContext context) {
-    // TODO: 加载相册内照片列表
+    final itemsAsync = ref.watch(albumItemsProvider(widget.albumId));
+
     return Stack(
       children: [
-        CustomScrollView(
-          controller: _scrollController,
-          slivers: [
-            // 相册描述
-            if (widget.album.description != null && widget.album.description!.isNotEmpty)
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Text(
-                    widget.album.description!,
-                    style: TextStyle(color: Colors.grey[600], fontSize: 14),
+        itemsAsync.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, _) => Center(child: Text('加载失败: $e')),
+          data: (items) => CustomScrollView(
+            controller: _scrollController,
+            slivers: [
+              // 相册描述
+              if (widget.album.description != null && widget.album.description!.isNotEmpty)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Text(
+                      widget.album.description!,
+                      style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                    ),
                   ),
                 ),
-              ),
 
-            // 照片 Grid
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 2),
-              sliver: SliverGrid(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  mainAxisSpacing: 2,
-                  crossAxisSpacing: 2,
+              // 照片 Grid
+              if (items.isEmpty)
+                const SliverFillRemaining(
+                  child: Center(child: Text('相册为空')),
+                )
+              else
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 2),
+                  sliver: SliverGrid(
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 3,
+                      mainAxisSpacing: 2,
+                      crossAxisSpacing: 2,
+                    ),
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        final item = items[index];
+                        return _AlbumPhotoItem(item: item);
+                      },
+                      childCount: items.length,
+                    ),
+                  ),
                 ),
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    // Placeholder — 真实数据需要 album 内照片列表 API
-                    return Container(color: Colors.grey[200]);
-                  },
-                  childCount: widget.album.photoCount ?? 0,
-                ),
-              ),
-            ),
 
-            // 底部 padding
-            SliverToBoxAdapter(
-              child: SizedBox(height: _tabVisible ? 120 : 40),
-            ),
-          ],
+              // 底部 padding
+              SliverToBoxAdapter(
+                child: SizedBox(height: _tabVisible ? 120 : 40),
+              ),
+            ],
+          ),
         ),
 
         // 悬浮操作栏
@@ -155,6 +166,37 @@ class _AlbumContentState extends ConsumerState<_AlbumContent> {
             ),
           ),
       ],
+    );
+  }
+}
+
+/// 相册内单张照片
+class _AlbumPhotoItem extends ConsumerWidget {
+  final FotoItem item;
+
+  const _AlbumPhotoItem({required this.item});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final thumbAsync = ref.watch(photoThumbnailProvider(item.id));
+
+    return GestureDetector(
+      onTap: () {
+        // TODO: navigate to photo detail
+      },
+      child: thumbAsync.when(
+        loading: () => Container(color: Colors.grey[200]),
+        error: (_, __) => Container(
+          color: Colors.grey[200],
+          child: const Icon(Icons.broken_image, size: 24),
+        ),
+        data: (bytes) => Image.memory(
+          bytes,
+          fit: BoxFit.cover,
+          width: double.infinity,
+          height: double.infinity,
+        ),
+      ),
     );
   }
 }
