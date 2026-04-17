@@ -264,3 +264,29 @@ class PhotoMultiSelectNotifier extends StateNotifier<Set<String>> {
 
   bool isSelected(String id) => state.contains(id);
 }
+
+// ============================================================
+// 批量删除
+// ============================================================
+final photoBatchDeleteProvider = FutureProvider.autoDispose
+    .family<void, List<String>>((ref, ids) async {
+  if (ids.isEmpty) return;
+  final space = ref.watch(photoSpaceProvider);
+  if (space == PhotoSpace.personal) {
+    await ref.read(_personalApiProvider).deleteItem(itemIds: ids);
+  } else {
+    await ref.read(_sharedApiProvider).deleteItem(itemIds: ids);
+  }
+  ref.invalidate(photoTimelineAllProvider);
+});
+
+/// 选中的照片原图URL
+final photoDownloadUrlProvider = FutureProvider.autoDispose
+    .family<String, String>((ref, id) async {
+  final space = ref.watch(photoSpaceProvider);
+  if (space == PhotoSpace.personal) {
+    return ref.read(_personalApiProvider).getDownloadUrl(id: id);
+  } else {
+    return ref.read(_sharedApiProvider).getDownloadUrl(id: id);
+  }
+});

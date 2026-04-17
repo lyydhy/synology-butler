@@ -477,6 +477,8 @@ class DsmSynologyPhotosApi implements SynologyPhotosApi {
 // SYNO.FotoTeam API（共享空间）
 // ============================================================
 abstract class SynologyFotoTeamApi {
+  Future<String> getDownloadUrl({required String id});
+
   Future<FotoTimelineResponse> listTimelineItem({
     int offset = 0,
     int limit = 30,
@@ -517,6 +519,21 @@ abstract class SynologyFotoTeamApi {
 
 class DsmSynologyFotoTeamApi implements SynologyFotoTeamApi {
   Dio get _dio => businessDio();
+
+  @override
+  Future<String> getDownloadUrl({required String id}) async {
+    final response = await _dio.get(
+      '/webapi/entry.cgi',
+      queryParameters: {
+        'api': 'SYNO.FotoTeam.Browse.Item',
+        'method': 'get',
+        'version': 1,
+        'id': id,
+        'additional': '["download_url"]',
+      },
+    );
+    return response.data['data']['download_url']?.toString() ?? '';
+  }
 
   @override
   Future<FotoTimelineResponse> listTimelineItem({

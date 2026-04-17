@@ -1,6 +1,8 @@
+import 'package:background_downloader/background_downloader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../providers/photos_providers.dart';
 import '../widgets/photo_grid_view.dart';
@@ -28,6 +30,9 @@ class _PhotosTabPageState extends ConsumerState<PhotosTabPage> {
   Widget build(BuildContext context) {
     final space = ref.watch(photoSpaceProvider);
     final selected = ref.watch(photoMultiSelectProvider);
+    final allIds = _currentTab == 0
+        ? (ref.watch(photoTimelineAllProvider).valueOrNull?.map((e) => e.id).toList() ?? [])
+        : (ref.watch(photoAlbumsAllProvider).valueOrNull?.map((e) => e.id).toList() ?? []);
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -55,11 +60,19 @@ class _PhotosTabPageState extends ConsumerState<PhotosTabPage> {
             ),
           ] else ...[
             IconButton(
-              icon: const Icon(Icons.select_all),
-              tooltip: '全选',
-              onPressed: () {
-                // TODO: select all
-              },
+              icon: Icon(allIds.isNotEmpty && selected.length == allIds.length
+                  ? Icons.deselect
+                  : Icons.select_all),
+              tooltip: allIds.isNotEmpty && selected.length == allIds.length ? '取消全选' : '全选',
+              onPressed: allIds.isEmpty
+                  ? null
+                  : () {
+                      if (selected.length == allIds.length) {
+                        ref.read(photoMultiSelectProvider.notifier).clear();
+                      } else {
+                        ref.read(photoMultiSelectProvider.notifier).selectAll(allIds);
+                      }
+                    },
             ),
           ],
         ],
@@ -156,7 +169,7 @@ class _PhotosTabPageState extends ConsumerState<PhotosTabPage> {
 
           // 多选底部栏
           if (selected.isNotEmpty)
-            _MultiSelectBar(selected: selected),
+            _MultiSelectBar(selected: selected, allIds: allIds),
         ],
       ),
     );
@@ -310,8 +323,9 @@ class _TabButton extends StatelessWidget {
 
 class _MultiSelectBar extends ConsumerWidget {
   final Set<String> selected;
+  final List<String> allIds;
 
-  const _MultiSelectBar({required this.selected});
+  const _MultiSelectBar({required this.selected, required this.allIds});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -338,44 +352,102 @@ class _MultiSelectBar extends ConsumerWidget {
           _ActionBtn(
             icon: Icons.share,
             label: '分享',
-            onTap: () {},
+            onTap: selected.isEmpty
+                ? null
+                : () => _sharePhotos(ref, selected.toList(), context),
           ),
           _ActionBtn(
             icon: Icons.download,
             label: '下载',
-            onTap: () {},
+            onTap: selected.isEmpty
+                ? null
+                : () => _downloadPhotos(ref, selected.toList(), context),
           ),
           _ActionBtn(
             icon: Icons.delete_outline,
             label: '删除',
             color: Colors.red,
-            onTap: () async {
-              final confirmed = await showDialog<bool>(
-                context: context,
-                builder: (ctx) => AlertDialog(
-                  title: const Text('确认删除'),
-                  content: Text('确定要删除选中的 ${selected.length} 项吗？'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(ctx, false),
-                      child: const Text('取消'),
-                    ),
-                    TextButton(
-                      onPressed: () => Navigator.pop(ctx, true),
-                      child: const Text('删除', style: TextStyle(color: Colors.red)),
-                    ),
-                  ],
-                ),
-              );
-              if (confirmed == true) {
-                // TODO: batch delete
-                ref.read(photoMultiSelectProvider.notifier).clear();
-              }
-            },
+            onTap: selected.isEmpty
+                ? null
+                : () => _deletePhotos(ref, selected.toList(), context),
           ),
         ],
       ),
     );
+  }
+
+  Future<void> _sharePhotos(WidgetRef ref, List<String> ids, BuildContext ctx) async {
+    for (final id in ids) {
+      try {
+        final url = await ref.read(photoDownloadUrlProvider(id).future);
+        await Share.shareUri(Uri.parse(url));
+      } catch (e) {
+        ScaffoldMessenger.of(ctx).showSnackBar(
+          SnackBar(content: Text('分享失败: $e')),
+        );
+        break;
+      }
+    }
+  }
+
+  Future<void> _downloadPhotos(WidgetRef ref, List<String> ids, BuildContext ctx) async {
+    int count = 0;
+    for (final id in ids) {
+      try {
+        final url = await ref.read(photoDownloadUrlProvider(id).future);
+        final bdTask = DownloadTask(
+          taskId: 'photo_$id',
+          url: url,
+          filename: '$id.jpg',
+        );
+        await FileDownloader().enqueue(bdTask);
+        count++;
+      } catch (e) {
+        // skip failed
+      }
+    }
+    if (ctx.mounted) {
+      ScaffoldMessenger.of(ctx).showSnackBar(
+        SnackBar(content: Text('已添加 $count 个下载任务')),
+      );
+    }
+  }
+
+  Future<void> _deletePhotos(WidgetRef ref, List<String> ids, BuildContext ctx) async {
+    final confirmed = await showDialog<bool>(
+      context: ctx,
+      builder: (dialogCtx) => AlertDialog(
+        title: const Text('确认删除'),
+        content: Text('确定要删除选中的 ${ids.length} 项吗？'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx, false),
+            child: const Text('取消'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx, true),
+            child: const Text('删除', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      try {
+        await ref.read(photoBatchDeleteProvider(ids).future);
+        if (ctx.mounted) {
+          ScaffoldMessenger.of(ctx).showSnackBar(
+            SnackBar(content: Text('已删除 ${ids.length} 项')),
+          );
+        }
+      } catch (e) {
+        if (ctx.mounted) {
+          ScaffoldMessenger.of(ctx).showSnackBar(
+            SnackBar(content: Text('删除失败: $e')),
+          );
+        }
+      }
+      ref.read(photoMultiSelectProvider.notifier).clear();
+    }
   }
 }
 
@@ -383,19 +455,20 @@ class _ActionBtn extends StatelessWidget {
   final IconData icon;
   final String label;
   final Color? color;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   const _ActionBtn({
     required this.icon,
     required this.label,
     this.color,
-    required this.onTap,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final effectiveOnTap = onTap;
     return GestureDetector(
-      onTap: onTap,
+      onTap: effectiveOnTap,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
