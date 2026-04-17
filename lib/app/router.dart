@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../domain/entities/nas_server.dart';
+import '../domain/entities/package_item.dart';
 import '../features/auth/presentation/pages/login_page.dart';
 import '../features/auth/presentation/pages/splash_page.dart';
 import '../features/container_management/presentation/pages/compose_project_build_logs_page.dart';
@@ -35,6 +36,7 @@ import '../features/information_center/presentation/pages/information_center_pag
 import '../features/apps/presentation/pages/apps_page.dart';
 import '../features/packages/presentation/pages/package_detail_page.dart';
 import '../features/packages/presentation/pages/packages_page.dart';
+import '../features/packages/presentation/pages/package_search_page.dart';
 import '../features/performance/presentation/pages/performance_page.dart';
 import '../features/power/presentation/pages/power_page.dart';
 import '../features/server-management/presentation/pages/server_management_page.dart';
@@ -75,6 +77,11 @@ GoRouter createAppRouter({required String initialLocation}) {
     GoRoute(path: '/power', builder: (context, state) => const PowerPage()),
     GoRoute(path: '/upgrade', builder: (context, state) => const UpgradePage()),
     GoRoute(path: '/packages', builder: (context, state) => const PackagesPage()),
+    GoRoute(path: '/packages/search', builder: (context, state) {
+      final extra = state.extra as Map<String, dynamic>? ?? const {};
+      final packages = (extra['packages'] as List?)?.cast<PackageItem>() ?? [];
+      return PackageSearchPage(packages: packages);
+    }),
     GoRoute(path: '/apps', builder: (context, state) => const AppsPage()),
     GoRoute(path: '/performance', builder: (context, state) => const PerformancePage()),
     GoRoute(path: '/container-management', builder: (context, state) => const ContainerManagementPage()),
