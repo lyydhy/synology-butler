@@ -74,36 +74,46 @@ class _PhotosSearchPageState extends ConsumerState<PhotosSearchPage> {
       ),
       body: _query.isEmpty
           ? _buildEmptyState()
-          : results.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text('搜索失败: $e')),
-              data: (items) {
-                if (items.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.search_off, size: 48, color: Colors.grey[400]),
-                        const SizedBox(height: 12),
-                        Text('未找到"$_query"相关照片', style: TextStyle(color: Colors.grey[600])),
-                      ],
-                    ),
-                  );
-                }
-                return GridView.builder(
-                  padding: const EdgeInsets.all(2),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                    mainAxisSpacing: 2,
-                    crossAxisSpacing: 2,
+          : Column(
+              children: [
+                // 过滤器 Chips
+                _SearchFilters(),
+                const Divider(height: 1),
+                // 搜索结果
+                Expanded(
+                  child: results.when(
+                    loading: () => const Center(child: CircularProgressIndicator()),
+                    error: (e, _) => Center(child: Text('搜索失败: $e')),
+                    data: (items) {
+                      if (items.isEmpty) {
+                        return Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.search_off, size: 48, color: Colors.grey[400]),
+                              const SizedBox(height: 12),
+                              Text('未找到"$_query"相关照片', style: TextStyle(color: Colors.grey[600])),
+                            ],
+                          ),
+                        );
+                      }
+                      return GridView.builder(
+                        padding: const EdgeInsets.all(2),
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3,
+                          mainAxisSpacing: 2,
+                          crossAxisSpacing: 2,
+                        ),
+                        itemCount: items.length,
+                        itemBuilder: (context, index) {
+                          final item = items[index];
+                          return _SearchResultTile(item: item);
+                        },
+                      );
+                    },
                   ),
-                  itemCount: items.length,
-                  itemBuilder: (context, index) {
-                    final item = items[index];
-                    return _SearchResultTile(item: item);
-                  },
-                );
-              },
+                ),
+              ],
             ),
     );
   }
@@ -117,6 +127,98 @@ class _PhotosSearchPageState extends ConsumerState<PhotosSearchPage> {
           const SizedBox(height: 12),
           Text('输入关键词搜索照片', style: TextStyle(color: Colors.grey[600])),
         ],
+      ),
+    );
+  }
+}
+
+class _SearchFilters extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final typeFilter = ref.watch(photoSearchTypeProvider);
+    final timeFilter = ref.watch(photoSearchTimeProvider);
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: Row(
+        children: [
+          // 类型过滤
+          _FilterChip(
+            label: '全部',
+            isSelected: typeFilter == PhotoSearchType.all,
+            onTap: () => ref.read(photoSearchTypeProvider.notifier).state = PhotoSearchType.all,
+          ),
+          const SizedBox(width: 6),
+          _FilterChip(
+            label: '照片',
+            isSelected: typeFilter == PhotoSearchType.photo,
+            onTap: () => ref.read(photoSearchTypeProvider.notifier).state = PhotoSearchType.photo,
+          ),
+          const SizedBox(width: 6),
+          _FilterChip(
+            label: '视频',
+            isSelected: typeFilter == PhotoSearchType.video,
+            onTap: () => ref.read(photoSearchTypeProvider.notifier).state = PhotoSearchType.video,
+          ),
+          const SizedBox(width: 12),
+          Container(width: 1, height: 20, color: Colors.grey[300]),
+          const SizedBox(width: 12),
+          // 时间过滤
+          _FilterChip(
+            label: '全部时间',
+            isSelected: timeFilter == PhotoSearchTime.all,
+            onTap: () => ref.read(photoSearchTimeProvider.notifier).state = PhotoSearchTime.all,
+          ),
+          const SizedBox(width: 6),
+          _FilterChip(
+            label: '今天',
+            isSelected: timeFilter == PhotoSearchTime.today,
+            onTap: () => ref.read(photoSearchTimeProvider.notifier).state = PhotoSearchTime.today,
+          ),
+          const SizedBox(width: 6),
+          _FilterChip(
+            label: '本周',
+            isSelected: timeFilter == PhotoSearchTime.thisWeek,
+            onTap: () => ref.read(photoSearchTimeProvider.notifier).state = PhotoSearchTime.thisWeek,
+          ),
+          const SizedBox(width: 6),
+          _FilterChip(
+            label: '本月',
+            isSelected: timeFilter == PhotoSearchTime.thisMonth,
+            onTap: () => ref.read(photoSearchTimeProvider.notifier).state = PhotoSearchTime.thisMonth,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FilterChip extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _FilterChip({required this.label, required this.isSelected, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? Theme.of(context).primaryColor : Colors.grey[100],
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            color: isSelected ? Colors.white : Colors.grey[700],
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+          ),
+        ),
       ),
     );
   }

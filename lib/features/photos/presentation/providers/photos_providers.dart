@@ -232,27 +232,64 @@ final photoToggleFavoriteProvider =
 // ============================================================
 // 搜索
 // ============================================================
+// ============================================================
+// 搜索过滤器
+// ============================================================
+enum PhotoSearchType { all, photo, video }
+enum PhotoSearchTime { all, today, thisWeek, thisMonth }
+
+final photoSearchTypeProvider = StateProvider<PhotoSearchType>((ref) => PhotoSearchType.all);
+final photoSearchTimeProvider = StateProvider<PhotoSearchTime>((ref) => PhotoSearchTime.all);
+
 final photoSearchResultsProvider =
     FutureProvider.autoDispose.family<List<FotoItem>, String>((ref, query) async {
   if (query.isEmpty) return [];
   final space = ref.watch(photoSpaceProvider);
+  final typeFilter = ref.watch(photoSearchTypeProvider);
+  final timeFilter = ref.watch(photoSearchTimeProvider);
+
+  List<FotoItem> response;
   if (space == PhotoSpace.personal) {
-    final response = await ref.read(_personalApiProvider).listItem(
-        limit: 50, sortBy: 'created_time', sortDirection: 'desc');
-    final q = query.toLowerCase();
-    return response.items.where((item) {
-      return item.name.toLowerCase().contains(q) ||
-          (item.filePath?.toLowerCase().contains(q) ?? false);
-    }).toList();
+    final res = await ref.read(_personalApiProvider).listItem(
+        limit: 100, sortBy: 'created_time', sortDirection: 'desc');
+    response = res.items;
   } else {
-    final response = await ref.read(_sharedApiProvider).listItem(
-        limit: 50, sortBy: 'created_time', sortDirection: 'desc');
-    final q = query.toLowerCase();
-    return response.items.where((item) {
-      return item.name.toLowerCase().contains(q) ||
-          (item.filePath?.toLowerCase().contains(q) ?? false);
-    }).toList();
+    final res = await ref.read(_sharedApiProvider).listItem(
+        limit: 100, sortBy: 'created_time', sortDirection: 'desc');
+    response = res.items;
   }
+
+  final q = query.toLowerCase();
+  final now = DateTime.now();
+  final todayStart = DateTime(now.year, now.month, now.day);
+  final weekStart = todayStart.subtract(Duration(days: todayStart.weekday - 1));
+  final monthStart = DateTime(now.year, now.month, 1);
+
+  return response.where((item) {
+    // 关键词过滤
+    if (q.isNotEmpty &&
+        !item.name.toLowerCase().contains(q) &&
+        !(item.filePath?.toLowerCase().contains(q) ?? false)) {
+      return false;
+    }
+    // 类型过滤
+    if (typeFilter == PhotoSearchType.photo && item.isVideo) return false;
+    if (typeFilter == PhotoSearchType.video && !item.isVideo) return false;
+    // 时间过滤
+    if (item.createdTime != null) {
+      final itemDate = DateTime.fromMillisecondsSinceEpoch(item.createdTime! * 1000);
+      if (timeFilter == PhotoSearchTime.today) {
+        if (itemDate.isBefore(todayStart)) return false;
+      } else if (timeFilter == PhotoSearchTime.thisWeek) {
+        if (itemDate.isBefore(weekStart)) return false;
+      } else if (timeFilter == PhotoSearchTime.thisMonth) {
+        if (itemDate.isBefore(monthStart)) return false;
+      }
+    } else if (timeFilter != PhotoSearchTime.all) {
+      return false;
+    }
+    return true;
+  }).toList();
 });
 
 // ============================================================
