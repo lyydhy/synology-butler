@@ -37,6 +37,12 @@ const List<DashboardAppEntry> dashboardHomeApps = [
     route: '/downloads',
   ),
   DashboardAppEntry(
+    icon: Icons.photo_library_rounded,
+    label: '群晖照片',
+    color: const Color(0xFF7B1FA2), // deepPurple
+    route: '/photos',
+  ),
+  DashboardAppEntry(
     icon: Icons.tune_rounded,
     label: '控制面板',
     color: Colors.deepPurple,

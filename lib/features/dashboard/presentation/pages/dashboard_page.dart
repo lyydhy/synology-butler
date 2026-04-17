@@ -177,6 +177,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage> with WidgetsBindi
       if (app.route == '/downloads') {
         return installed != null && installed.any((p) => p.id == 'DownloadStation');
       }
+      if (app.route == '/photos') {
+        return installed != null && installed.any((p) => p.id == 'SynologyPhotos');
+      }
       return true;
     }).toList();
   }
