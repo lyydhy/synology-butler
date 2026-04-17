@@ -12,7 +12,7 @@ enum PhotoSpace { personal, shared }
 final photoSpaceProvider = StateProvider<PhotoSpace>((ref) => PhotoSpace.personal);
 
 // ============================================================
-// API providers（按 Space 分开）
+// API providers
 // ============================================================
 final _personalApiProvider = Provider<SynologyPhotosApi>((ref) {
   return DsmSynologyPhotosApi();
@@ -22,19 +22,9 @@ final _sharedApiProvider = Provider<SynologyFotoTeamApi>((ref) {
   return DsmSynologyFotoTeamApi();
 });
 
-/// 当前 Space 对应的照片 API
-final _currentApiProvider = Provider<Object>((ref) {
-  final space = ref.watch(photoSpaceProvider);
-  return space == PhotoSpace.personal
-      ? ref.watch(_personalApiProvider)
-      : ref.watch(_sharedApiProvider);
-});
-
 // ============================================================
-// 数据 providers
+// 照片时间线（分页）
 // ============================================================
-
-/// 照片时间线
 final photoTimelineProvider = FutureProvider.autoDispose
     .family<FotoTimelineResponse, int>((ref, page) async {
   final space = ref.watch(photoSpaceProvider);
@@ -45,18 +35,127 @@ final photoTimelineProvider = FutureProvider.autoDispose
   }
 });
 
-/// 相册列表
-final photoAlbumsProvider = FutureProvider.autoDispose
-    .family<FotoAlbumListResponse, int>((ref, page) async {
-  final space = ref.watch(photoSpaceProvider);
-  if (space == PhotoSpace.personal) {
-    return ref.read(_personalApiProvider).listAlbum(offset: page * 30, limit: 30);
-  } else {
-    return ref.read(_sharedApiProvider).listAlbum(offset: page * 30, limit: 30);
-  }
+/// 累积的时间线数据（合并多页）
+final photoTimelineAllProvider = StateNotifierProvider.autoDispose<
+    PhotoTimelineNotifier, AsyncValue<List<FotoItem>>>((ref) {
+  return PhotoTimelineNotifier(ref);
 });
 
-/// 照片详情
+class PhotoTimelineNotifier extends StateNotifier<AsyncValue<List<FotoItem>>> {
+  final Ref _ref;
+  int _nextPage = 0;
+  bool _hasMore = true;
+
+  PhotoTimelineNotifier(this._ref) : super(const AsyncValue.loading()) {
+    _load();
+  }
+
+  bool get hasMore => _hasMore;
+
+  Future<void> _load() async {
+    final space = _ref.read(photoSpaceProvider);
+    try {
+      final items = space == PhotoSpace.personal
+          ? await _ref.read(_personalApiProvider).listTimelineItem(offset: _nextPage * 30, limit: 30)
+          : await _ref.read(_sharedApiProvider).listTimelineItem(offset: _nextPage * 30, limit: 30);
+
+      state = AsyncValue.data(items.items);
+      _hasMore = items.items.length >= 30;
+      _nextPage++;
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
+  }
+
+  Future<void> loadMore() async {
+    if (!_hasMore || state.isLoading) return;
+
+    final currentItems = state.valueOrNull ?? [];
+    state = AsyncValue.data([...currentItems]); // prevent duplicate load
+
+    final space = _ref.read(photoSpaceProvider);
+    try {
+      final items = space == PhotoSpace.personal
+          ? await _ref.read(_personalApiProvider).listTimelineItem(offset: _nextPage * 30, limit: 30)
+          : await _ref.read(_sharedApiProvider).listTimelineItem(offset: _nextPage * 30, limit: 30);
+
+      state = AsyncValue.data([...currentItems, ...items.items]);
+      _hasMore = items.items.length >= 30;
+      _nextPage++;
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
+  }
+
+  Future<void> refresh() async {
+    _nextPage = 0;
+    _hasMore = true;
+    await _load();
+  }
+}
+
+// ============================================================
+// 相册列表（分页）
+// ============================================================
+final photoAlbumsAllProvider = StateNotifierProvider.autoDispose<
+    PhotoAlbumsNotifier, AsyncValue<List<FotoAlbum>>>((ref) {
+  return PhotoAlbumsNotifier(ref);
+});
+
+class PhotoAlbumsNotifier extends StateNotifier<AsyncValue<List<FotoAlbum>>> {
+  final Ref _ref;
+  int _nextPage = 0;
+  bool _hasMore = true;
+
+  PhotoAlbumsNotifier(this._ref) : super(const AsyncValue.loading()) {
+    _load();
+  }
+
+  bool get hasMore => _hasMore;
+
+  Future<void> _load() async {
+    final space = _ref.read(photoSpaceProvider);
+    try {
+      final items = space == PhotoSpace.personal
+          ? await _ref.read(_personalApiProvider).listAlbum(offset: _nextPage * 30, limit: 30)
+          : await _ref.read(_sharedApiProvider).listAlbum(offset: _nextPage * 30, limit: 30);
+
+      state = AsyncValue.data(items.albums);
+      _hasMore = items.albums.length >= 30;
+      _nextPage++;
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
+  }
+
+  Future<void> loadMore() async {
+    if (!_hasMore || state.isLoading) return;
+
+    final current = state.valueOrNull ?? [];
+    final space = _ref.read(photoSpaceProvider);
+    try {
+      final items = space == PhotoSpace.personal
+          ? await _ref.read(_personalApiProvider).listAlbum(offset: _nextPage * 30, limit: 30)
+          : await _ref.read(_sharedApiProvider).listAlbum(offset: _nextPage * 30, limit: 30);
+
+      state = AsyncValue.data([...current, ...items.albums]);
+      _hasMore = items.albums.length >= 30;
+      _nextPage++;
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
+  }
+
+  Future<void> refresh() async {
+    _nextPage = 0;
+    _hasMore = true;
+    await _load();
+  }
+}
+
+// ============================================================
+// 照片详情
+// ============================================================
 final photoItemProvider =
     FutureProvider.autoDispose.family<FotoItem, String>((ref, id) async {
   final space = ref.watch(photoSpaceProvider);
@@ -67,7 +166,9 @@ final photoItemProvider =
   }
 });
 
-/// 相册详情
+// ============================================================
+// 相册详情
+// ============================================================
 final albumDetailProvider =
     FutureProvider.autoDispose.family<FotoAlbum, String>((ref, id) async {
   final space = ref.watch(photoSpaceProvider);
@@ -78,7 +179,9 @@ final albumDetailProvider =
   }
 });
 
-/// 缩略图
+// ============================================================
+// 缩略图
+// ============================================================
 final photoThumbnailProvider = FutureProvider.autoDispose
     .family<Uint8List, String>((ref, id) async {
   final space = ref.watch(photoSpaceProvider);
@@ -89,7 +192,9 @@ final photoThumbnailProvider = FutureProvider.autoDispose
   }
 });
 
-/// 收藏操作
+// ============================================================
+// 收藏操作
+// ============================================================
 final photoToggleFavoriteProvider =
     FutureProvider.autoDispose.family<void, ({String id, bool fav})>(
   (ref, params) async {
@@ -103,7 +208,9 @@ final photoToggleFavoriteProvider =
   },
 );
 
-/// 照片搜索
+// ============================================================
+// 搜索
+// ============================================================
 final photoSearchResultsProvider =
     FutureProvider.autoDispose.family<List<FotoItem>, String>((ref, query) async {
   if (query.isEmpty) return [];
@@ -127,7 +234,33 @@ final photoSearchResultsProvider =
   }
 });
 
-/// 当前选中的照片（用于详情页滑动）
-final selectedPhotoIndexProvider = StateProvider.family<int, List<String>>(
-  (ref, ids) => 0,
-);
+// ============================================================
+// 多选模式
+// ============================================================
+/// 多选模式
+final photoMultiSelectProvider =
+    StateNotifierProvider.autoDispose<PhotoMultiSelectNotifier, Set<String>>((ref) {
+  return PhotoMultiSelectNotifier();
+});
+
+class PhotoMultiSelectNotifier extends StateNotifier<Set<String>> {
+  PhotoMultiSelectNotifier() : super({});
+
+  void toggle(String id) {
+    if (state.contains(id)) {
+      state = {...state}..remove(id);
+    } else {
+      state = {...state, id};
+    }
+  }
+
+  void selectAll(List<String> ids) {
+    state = {...ids};
+  }
+
+  void clear() {
+    state = {};
+  }
+
+  bool isSelected(String id) => state.contains(id);
+}

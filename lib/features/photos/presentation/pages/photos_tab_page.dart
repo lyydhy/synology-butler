@@ -19,80 +19,101 @@ class _PhotosTabPageState extends ConsumerState<PhotosTabPage> {
   bool _tabVisible = true;
 
   void _switchSpace(PhotoSpace space) {
-    ref.invalidate(photoTimelineProvider(0));
-    ref.invalidate(photoAlbumsProvider(0));
+    ref.invalidate(photoTimelineAllProvider);
+    ref.invalidate(photoAlbumsAllProvider);
     ref.read(photoSpaceProvider.notifier).state = space;
   }
 
   @override
   Widget build(BuildContext context) {
     final space = ref.watch(photoSpaceProvider);
+    final selected = ref.watch(photoMultiSelectProvider);
 
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Theme.of(context).primaryColor,
         foregroundColor: Colors.white,
-        title: Text(space == PhotoSpace.personal ? '群晖照片' : '共享空间'),
+        title: selected.isNotEmpty
+            ? Text('已选择 ${selected.length} 项')
+            : Text(space == PhotoSpace.personal ? '群晖照片' : '共享空间'),
+        leading: selected.isNotEmpty
+            ? IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => ref.read(photoMultiSelectProvider.notifier).clear(),
+              )
+            : null,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () => context.push('/photos/search'),
-          ),
-          IconButton(
-            icon: const Icon(Icons.more_vert),
-            onPressed: () {},
-          ),
+          if (selected.isEmpty) ...[
+            IconButton(
+              icon: const Icon(Icons.search),
+              onPressed: () => context.push('/photos/search'),
+            ),
+            IconButton(
+              icon: const Icon(Icons.more_vert),
+              onPressed: () {},
+            ),
+          ] else ...[
+            IconButton(
+              icon: const Icon(Icons.select_all),
+              tooltip: '全选',
+              onPressed: () {
+                // TODO: select all
+              },
+            ),
+          ],
         ],
       ),
       body: Column(
         children: [
-          // Space Switcher
-          Container(
-            color: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(24),
+          // Space Switcher（多选时不显示）
+          if (selected.isEmpty)
+            Container(
+              color: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _SpaceTab(
+                        label: '个人空间',
+                        isActive: space == PhotoSpace.personal,
+                        onTap: () => _switchSpace(PhotoSpace.personal),
+                      ),
+                    ),
+                    Expanded(
+                      child: _SpaceTab(
+                        label: '共享空间',
+                        isActive: space == PhotoSpace.shared,
+                        onTap: () => _switchSpace(PhotoSpace.shared),
+                      ),
+                    ),
+                  ],
+                ),
               ),
+            ),
+
+          // Quick Access（多选时不显示）
+          if (selected.isEmpty)
+            Container(
+              color: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
                 children: [
-                  Expanded(
-                    child: _SpaceTab(
-                      label: '个人空间',
-                      isActive: space == PhotoSpace.personal,
-                      onTap: () => _switchSpace(PhotoSpace.personal),
-                    ),
-                  ),
-                  Expanded(
-                    child: _SpaceTab(
-                      label: '共享空间',
-                      isActive: space == PhotoSpace.shared,
-                      onTap: () => _switchSpace(PhotoSpace.shared),
-                    ),
-                  ),
+                  _QuickAccessChip(icon: '⭐', label: '收藏'),
+                  const SizedBox(width: 8),
+                  _QuickAccessChip(icon: '🕐', label: '最近添加'),
+                  const SizedBox(width: 8),
+                  _QuickAccessChip(icon: '📁', label: '文件夹'),
                 ],
               ),
             ),
-          ),
 
-          // Quick Access
-          Container(
-            color: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              children: [
-                _QuickAccessChip(icon: '⭐', label: '收藏'),
-                const SizedBox(width: 8),
-                _QuickAccessChip(icon: '🕐', label: '最近添加'),
-                const SizedBox(width: 8),
-                _QuickAccessChip(icon: '📁', label: '文件夹'),
-              ],
-            ),
-          ),
-
-          const Divider(height: 1),
+          if (selected.isEmpty) const Divider(height: 1),
 
           // Content
           Expanded(
@@ -118,7 +139,7 @@ class _PhotosTabPageState extends ConsumerState<PhotosTabPage> {
                       AlbumGridView(),
                     ],
                   ),
-                  if (_tabVisible)
+                  if (_tabVisible && selected.isEmpty)
                     Positioned(
                       left: 16,
                       right: 16,
@@ -132,18 +153,13 @@ class _PhotosTabPageState extends ConsumerState<PhotosTabPage> {
               ),
             ),
           ),
+
+          // 多选底部栏
+          if (selected.isNotEmpty)
+            _MultiSelectBar(selected: selected),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _toggleMultiSelect,
-        backgroundColor: Theme.of(context).primaryColor,
-        child: const Icon(Icons.checklist, color: Colors.white),
-      ),
     );
-  }
-
-  void _toggleMultiSelect() {
-    // TODO: multi-select mode
   }
 }
 
@@ -287,6 +303,109 @@ class _TabButton extends StatelessWidget {
             color: isActive ? Colors.white : Colors.grey[600],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _MultiSelectBar extends ConsumerWidget {
+  final Set<String> selected;
+
+  const _MultiSelectBar({required this.selected});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Container(
+      padding: EdgeInsets.only(
+        left: 16,
+        right: 16,
+        top: 12,
+        bottom: MediaQuery.of(context).padding.bottom + 12,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 8,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _ActionBtn(
+            icon: Icons.share,
+            label: '分享',
+            onTap: () {},
+          ),
+          _ActionBtn(
+            icon: Icons.download,
+            label: '下载',
+            onTap: () {},
+          ),
+          _ActionBtn(
+            icon: Icons.delete_outline,
+            label: '删除',
+            color: Colors.red,
+            onTap: () async {
+              final confirmed = await showDialog<bool>(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text('确认删除'),
+                  content: Text('确定要删除选中的 ${selected.length} 项吗？'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx, false),
+                      child: const Text('取消'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx, true),
+                      child: const Text('删除', style: TextStyle(color: Colors.red)),
+                    ),
+                  ],
+                ),
+              );
+              if (confirmed == true) {
+                // TODO: batch delete
+                ref.read(photoMultiSelectProvider.notifier).clear();
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ActionBtn extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color? color;
+  final VoidCallback onTap;
+
+  const _ActionBtn({
+    required this.icon,
+    required this.label,
+    this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color ?? Colors.grey[700], size: 24),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(fontSize: 12, color: color ?? Colors.grey[600]),
+          ),
+        ],
       ),
     );
   }

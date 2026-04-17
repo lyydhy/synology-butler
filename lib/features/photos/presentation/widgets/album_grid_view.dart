@@ -5,35 +5,78 @@ import 'package:go_router/go_router.dart';
 import '../providers/photos_providers.dart';
 import '../../../../data/api/synology_photos_api.dart';
 
-/// 相册（Album）Grid View
-class AlbumGridView extends ConsumerWidget {
+/// 相册 Grid（分页加载）
+class AlbumGridView extends ConsumerStatefulWidget {
   const AlbumGridView({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final albumsAsync = ref.watch(photoAlbumsProvider(0));
+  ConsumerState<AlbumGridView> createState() => _AlbumGridViewState();
+}
+
+class _AlbumGridViewState extends ConsumerState<AlbumGridView> {
+  final _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      ref.read(photoAlbumsAllProvider.notifier).loadMore();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final albumsAsync = ref.watch(photoAlbumsAllProvider);
 
     return albumsAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, st) => Center(child: Text('加载失败: $e')),
-      data: (response) {
-        if (response.albums.isEmpty) {
+      error: (e, st) => Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('加载失败: $e'),
+            const SizedBox(height: 8),
+            TextButton(
+              onPressed: () => ref.read(photoAlbumsAllProvider.notifier).refresh(),
+              child: const Text('重试'),
+            ),
+          ],
+        ),
+      ),
+      data: (albums) {
+        if (albums.isEmpty) {
           return const Center(child: Text('暂无相册'));
         }
 
-        return GridView.builder(
-          padding: const EdgeInsets.all(12),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            mainAxisSpacing: 12,
-            crossAxisSpacing: 12,
-            childAspectRatio: 1,
+        return RefreshIndicator(
+          onRefresh: () => ref.read(photoAlbumsAllProvider.notifier).refresh(),
+          child: GridView.builder(
+            controller: _scrollController,
+            padding: const EdgeInsets.all(12),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              mainAxisSpacing: 12,
+              crossAxisSpacing: 12,
+              childAspectRatio: 1,
+            ),
+            itemCount: albums.length,
+            itemBuilder: (context, index) {
+              final album = albums[index];
+              return _AlbumCard(album: album);
+            },
           ),
-          itemCount: response.albums.length,
-          itemBuilder: (context, index) {
-            final album = response.albums[index];
-            return _AlbumCard(album: album);
-          },
         );
       },
     );
@@ -89,20 +132,14 @@ class _AlbumCard extends ConsumerWidget {
                 children: [
                   Text(
                     album.name,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 2),
                   Text(
                     '${album.photoCount ?? 0} 张照片',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[500],
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.grey[500]),
                   ),
                 ],
               ),
