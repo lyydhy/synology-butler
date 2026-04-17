@@ -472,3 +472,236 @@ class DsmSynologyPhotosApi implements SynologyPhotosApi {
     );
   }
 }
+
+// ============================================================
+// SYNO.FotoTeam API（共享空间）
+// ============================================================
+abstract class SynologyFotoTeamApi {
+  Future<FotoTimelineResponse> listTimelineItem({
+    int offset = 0,
+    int limit = 30,
+    String? sortBy,
+    String? sortDirection,
+  });
+
+  Future<int> countTimelineItem();
+
+  Future<FotoAlbumListResponse> listAlbum({
+    int offset = 0,
+    int limit = 30,
+  });
+
+  Future<FotoAlbum> getAlbum({required int albumId});
+
+  Future<FotoItemListResponse> listItem({
+    int offset = 0,
+    int limit = 30,
+    String? folderId,
+    String? sortBy,
+    String? sortDirection,
+  });
+
+  Future<FotoItem> getItem({required String itemId});
+
+  Future<Uint8List> getThumbnail({
+    required String id,
+    int? size,
+    CancelToken? cancelToken,
+    void Function(int, int)? onReceiveProgress,
+  });
+
+  Future<void> setFavorite({required String itemId, required bool favorite});
+
+  Future<void> deleteItem({required List<String> itemIds});
+}
+
+class DsmSynologyFotoTeamApi implements SynologyFotoTeamApi {
+  Dio get _dio => businessDio();
+
+  @override
+  Future<FotoTimelineResponse> listTimelineItem({
+    int offset = 0,
+    int limit = 30,
+    String? sortBy,
+    String? sortDirection,
+  }) async {
+    final response = await _dio.get(
+      '/webapi/entry.cgi',
+      queryParameters: {
+        'api': 'SYNO.FotoTeam.Browse.Item',
+        'method': 'list_basic_timeline_info',
+        'version': 1,
+        'offset': offset,
+        'limit': limit,
+        'sort_by': sortBy ?? 'created_time',
+        'sort_direction': sortDirection ?? 'desc',
+      },
+    );
+
+    final data = response.data;
+    final items = (data['data']['items'] as List? ?? [])
+        .map((e) => FotoItem.fromJson(e as Map<String, dynamic>))
+        .toList();
+
+    return FotoTimelineResponse(
+      items: items,
+      total: data['data']['total'] as int? ?? items.length,
+      offset: offset,
+      limit: limit,
+    );
+  }
+
+  @override
+  Future<int> countTimelineItem() async {
+    final response = await _dio.get(
+      '/webapi/entry.cgi',
+      queryParameters: {
+        'api': 'SYNO.FotoTeam.Browse.Item',
+        'method': 'count',
+        'version': 1,
+      },
+    );
+    return response.data['data']['count'] as int? ?? 0;
+  }
+
+  @override
+  Future<FotoAlbumListResponse> listAlbum({
+    int offset = 0,
+    int limit = 30,
+  }) async {
+    final response = await _dio.get(
+      '/webapi/entry.cgi',
+      queryParameters: {
+        'api': 'SYNO.FotoTeam.Browse.Folder',
+        'method': 'list',
+        'version': 1,
+        'offset': offset,
+        'limit': limit,
+      },
+    );
+
+    final data = response.data;
+    final folders = data['data']['items'] as List? ?? [];
+    final albums = folders.map((e) => FotoAlbum.fromJson(e as Map<String, dynamic>)).toList();
+
+    return FotoAlbumListResponse(
+      albums: albums,
+      total: data['data']['total'] as int? ?? albums.length,
+      offset: offset,
+      limit: limit,
+    );
+  }
+
+  @override
+  Future<FotoAlbum> getAlbum({required int albumId}) async {
+    final response = await _dio.get(
+      '/webapi/entry.cgi',
+      queryParameters: {
+        'api': 'SYNO.FotoTeam.Browse.Folder',
+        'method': 'get',
+        'version': 1,
+        'id': albumId,
+      },
+    );
+    return FotoAlbum.fromJson(response.data['data']);
+  }
+
+  @override
+  Future<FotoItemListResponse> listItem({
+    int offset = 0,
+    int limit = 30,
+    String? folderId,
+    String? sortBy,
+    String? sortDirection,
+  }) async {
+    final params = {
+      'api': 'SYNO.FotoTeam.Browse.Item',
+      'method': 'list',
+      'version': 1,
+      'offset': offset,
+      'limit': limit,
+      'sort_by': sortBy ?? 'created_time',
+      'sort_direction': sortDirection ?? 'desc',
+    };
+    if (folderId != null) params['folder_id'] = folderId;
+
+    final response = await _dio.get('/webapi/entry.cgi', queryParameters: params);
+    final data = response.data;
+    final items = (data['data']['items'] as List? ?? [])
+        .map((e) => FotoItem.fromJson(e as Map<String, dynamic>))
+        .toList();
+
+    return FotoItemListResponse(
+      items: items,
+      total: data['data']['total'] as int? ?? items.length,
+      offset: offset,
+      limit: limit,
+    );
+  }
+
+  @override
+  Future<FotoItem> getItem({required String itemId}) async {
+    final response = await _dio.get(
+      '/webapi/entry.cgi',
+      queryParameters: {
+        'api': 'SYNO.FotoTeam.Browse.Item',
+        'method': 'get',
+        'version': 1,
+        'id': itemId,
+        'additional': '["thumbnail_url","download_url","exif","resolution"]',
+      },
+    );
+    return FotoItem.fromJson(response.data['data']);
+  }
+
+  @override
+  Future<Uint8List> getThumbnail({
+    required String id,
+    int? size,
+    CancelToken? cancelToken,
+    void Function(int, int)? onReceiveProgress,
+  }) async {
+    final response = await _dio.get(
+      '/webapi/entry.cgi',
+      queryParameters: {
+        'api': 'SYNO.FotoTeam.Thumbnail',
+        'method': 'get',
+        'version': 1,
+        'id': id,
+        'type': 'blur',
+        'size': size ?? 'large',
+      },
+      options: Options(responseType: ResponseType.bytes),
+      cancelToken: cancelToken,
+      onReceiveProgress: onReceiveProgress,
+    );
+    return Uint8List.fromList(response.data);
+  }
+
+  @override
+  Future<void> setFavorite({required String itemId, required bool favorite}) async {
+    await _dio.post(
+      '/webapi/entry.cgi',
+      data: {
+        'api': 'SYNO.FotoTeam.Browse.Item',
+        'method': 'set',
+        'version': 1,
+        'id': itemId,
+        'is_favorite': favorite,
+      },
+    );
+  }
+
+  @override
+  Future<void> deleteItem({required List<String> itemIds}) async {
+    await _dio.post(
+      '/webapi/entry.cgi',
+      data: {
+        'api': 'SYNO.FotoTeam.Browse.Item',
+        'method': 'delete',
+        'version': 1,
+        'id': itemIds.join(','),
+      },
+    );
+  }
+}

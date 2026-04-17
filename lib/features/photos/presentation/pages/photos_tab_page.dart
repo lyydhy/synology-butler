@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/utils/l10n.dart';
 import '../providers/photos_providers.dart';
 import '../widgets/photo_grid_view.dart';
 import '../widgets/album_grid_view.dart';
@@ -19,6 +18,12 @@ class _PhotosTabPageState extends ConsumerState<PhotosTabPage> {
   double _lastScrollY = 0;
   bool _tabVisible = true;
 
+  void _switchSpace(PhotoSpace space) {
+    ref.invalidate(photoTimelineProvider(0));
+    ref.invalidate(photoAlbumsProvider(0));
+    ref.read(photoSpaceProvider.notifier).state = space;
+  }
+
   @override
   Widget build(BuildContext context) {
     final space = ref.watch(photoSpaceProvider);
@@ -28,7 +33,7 @@ class _PhotosTabPageState extends ConsumerState<PhotosTabPage> {
       appBar: AppBar(
         backgroundColor: Theme.of(context).primaryColor,
         foregroundColor: Colors.white,
-        title: Text(l10n.synologyPhotos),
+        title: Text(space == PhotoSpace.personal ? '群晖照片' : '共享空间'),
         actions: [
           IconButton(
             icon: const Icon(Icons.search),
@@ -57,16 +62,14 @@ class _PhotosTabPageState extends ConsumerState<PhotosTabPage> {
                     child: _SpaceTab(
                       label: '个人空间',
                       isActive: space == PhotoSpace.personal,
-                      onTap: () =>
-                          ref.read(photoSpaceProvider.notifier).state = PhotoSpace.personal,
+                      onTap: () => _switchSpace(PhotoSpace.personal),
                     ),
                   ),
                   Expanded(
                     child: _SpaceTab(
                       label: '共享空间',
                       isActive: space == PhotoSpace.shared,
-                      onTap: () =>
-                          ref.read(photoSpaceProvider.notifier).state = PhotoSpace.shared,
+                      onTap: () => _switchSpace(PhotoSpace.shared),
                     ),
                   ),
                 ],
@@ -108,7 +111,6 @@ class _PhotosTabPageState extends ConsumerState<PhotosTabPage> {
               },
               child: Stack(
                 children: [
-                  // Tab content
                   IndexedStack(
                     index: _currentTab,
                     children: const [
@@ -116,8 +118,6 @@ class _PhotosTabPageState extends ConsumerState<PhotosTabPage> {
                       AlbumGridView(),
                     ],
                   ),
-
-                  // Floating Bottom Tab
                   if (_tabVisible)
                     Positioned(
                       left: 16,
@@ -135,7 +135,7 @@ class _PhotosTabPageState extends ConsumerState<PhotosTabPage> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _toggleMultiSelect(),
+        onPressed: _toggleMultiSelect,
         backgroundColor: Theme.of(context).primaryColor,
         child: const Icon(Icons.checklist, color: Colors.white),
       ),
@@ -152,11 +152,7 @@ class _SpaceTab extends StatelessWidget {
   final bool isActive;
   final VoidCallback onTap;
 
-  const _SpaceTab({
-    required this.label,
-    required this.isActive,
-    required this.onTap,
-  });
+  const _SpaceTab({required this.label, required this.isActive, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -205,10 +201,7 @@ class _QuickAccessChip extends StatelessWidget {
         children: [
           Text(icon, style: const TextStyle(fontSize: 12)),
           const SizedBox(width: 4),
-          Text(
-            label,
-            style: TextStyle(fontSize: 12, color: Colors.grey[700]),
-          ),
+          Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[700])),
         ],
       ),
     );
@@ -219,10 +212,7 @@ class _FloatingTabBar extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
 
-  const _FloatingTabBar({
-    required this.currentIndex,
-    required this.onTap,
-  });
+  const _FloatingTabBar({required this.currentIndex, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
