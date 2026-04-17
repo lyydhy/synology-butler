@@ -1,6 +1,6 @@
 import 'dart:typed_data';
-
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../core/network/app_dio.dart';
 import '../../core/utils/dsm_logger.dart';
@@ -303,20 +303,23 @@ class DsmSynologyPhotosApi implements SynologyPhotosApi {
       method: 'GET',
     );
 
-    final response = await _dio.get(
+    final response = await _dio.post(
       '/webapi/entry.cgi',
-      queryParameters: {
+      data: {
         'api': 'SYNO.Foto.Browse.Timeline',
         'method': 'get',
         'version': 2,
         'offset': offset,
         'limit': limit,
+        'timeline_group_unit': 'day',
       },
     );
 
     final data = response.data;
+    debugPrint('SYNO.Foto.Browse.Timeline response: $data');
     final dataSection = data['data'] as Map<String, dynamic>?;
     if (dataSection == null) {
+      debugPrint('SYNO.Foto.Browse.Timeline data[data] is null');
       return FotoTimelineResponse(items: [], total: 0, offset: offset, limit: limit);
     }
 
@@ -681,14 +684,15 @@ class DsmSynologyFotoTeamApi implements SynologyFotoTeamApi {
     int offset = 0,
     int limit = 30,
   }) async {
-    final response = await _dio.get(
+    final response = await _dio.post(
       '/webapi/entry.cgi',
-      queryParameters: {
+      data: {
         'api': 'SYNO.FotoTeam.Browse.Timeline',
         'method': 'get',
         'version': 3,
         'offset': offset,
         'limit': limit,
+        'timeline_group_unit': 'day',
       },
     );
 
