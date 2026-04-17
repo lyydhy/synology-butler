@@ -28,8 +28,10 @@ String _formatDateLabel(int timestamp) {
 List<_DateGroup> _groupByDate(List<FotoItem> items) {
   final Map<String, List<FotoItem>> map = {};
   for (final item in items) {
-    if (item.createdTime == null) continue;
-    final label = _formatDateLabel(item.createdTime!);
+    // 优先用 createdTime，否则用 modifiedTime 替代
+    final time = item.createdTime ?? item.modifiedTime;
+    if (time == null) continue;
+    final label = _formatDateLabel(time);
     map.putIfAbsent(label, () => []).add(item);
   }
   return map.entries.map((e) => _DateGroup(label: e.key, items: e.value)).toList();
