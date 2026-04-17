@@ -5,6 +5,36 @@ import 'package:go_router/go_router.dart';
 import '../providers/photos_providers.dart';
 import '../../../../data/api/synology_photos_api.dart';
 
+/// 按日期分组数据
+class _DateGroup {
+  final String label; // "今天"、"昨天"、"6月15日"
+  final List<FotoItem> items;
+
+  _DateGroup({required this.label, required this.items});
+}
+
+String _formatDateLabel(int timestamp) {
+  final now = DateTime.now();
+  final date = DateTime.fromMillisecondsSinceEpoch(timestamp * 1000);
+  final today = DateTime(now.year, now.month, now.day);
+  final target = DateTime(date.year, date.month, date.day);
+  final diff = today.difference(target).inDays;
+  if (diff == 0) return '今天';
+  if (diff == 1) return '昨天';
+  if (diff < 7) return '${diff}天前';
+  return '${date.month}月${date.day}日';
+}
+
+List<_DateGroup> _groupByDate(List<FotoItem> items) {
+  final Map<String, List<FotoItem>> map = {};
+  for (final item in items) {
+    if (item.createdTime == null) continue;
+    final label = _formatDateLabel(item.createdTime!);
+    map.putIfAbsent(label, () => []).add(item);
+  }
+  return map.entries.map((e) => _DateGroup(label: e.key, items: e.value)).toList();
+}
+
 /// 照片时间线 Grid（分页加载 + 多选）
 class PhotoGridView extends ConsumerStatefulWidget {
   const PhotoGridView({super.key});
@@ -61,41 +91,73 @@ class _PhotoGridViewState extends ConsumerState<PhotoGridView> {
           return const Center(child: Text('暂无照片'));
         }
 
+        final groups = _groupByDate(items);
+        // Collect all item IDs for detail navigation
+        final allIds = items.map((e) => e.id).toList();
+
         return RefreshIndicator(
           onRefresh: () => ref.read(photoTimelineAllProvider.notifier).refresh(),
-          child: GridView.builder(
+          child: CustomScrollView(
             controller: _scrollController,
-            padding: const EdgeInsets.all(2),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              mainAxisSpacing: 2,
-              crossAxisSpacing: 2,
-            ),
-            itemCount: items.length,
-            itemBuilder: (context, index) {
-              final item = items[index];
-              final isSelected = selected.contains(item.id);
+            slivers: [
+              for (final group in groups) ...[
+                // 日期标题
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 12, 12, 6),
+                    child: Text(
+                      group.label,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ),
+                ),
+                // 日期内照片 Grid
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 2),
+                  sliver: SliverGrid(
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 3,
+                      mainAxisSpacing: 2,
+                      crossAxisSpacing: 2,
+                    ),
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        final item = group.items[index];
+                        final isSelected = selected.contains(item.id);
 
-              return _PhotoTile(
-                item: item,
-                isMultiSelect: selected.isNotEmpty,
-                isSelected: isSelected,
-                onTap: () {
-                  if (selected.isNotEmpty) {
-                    ref.read(photoMultiSelectProvider.notifier).toggle(item.id);
-                  } else {
-                    final allIds = items.map((e) => e.id).toList();
-                    context.push('/photos/detail', extra: {
-                      'photoId': item.id,
-                      'allPhotoIds': allIds,
-                    });
-                  }
-                },
-                onLongPress: () {
-                  ref.read(photoMultiSelectProvider.notifier).toggle(item.id);
-                },
-              );
-            },
+                        return _PhotoTile(
+                          item: item,
+                          isMultiSelect: selected.isNotEmpty,
+                          isSelected: isSelected,
+                          onTap: () {
+                            if (selected.isNotEmpty) {
+                              ref.read(photoMultiSelectProvider.notifier).toggle(item.id);
+                            } else {
+                              context.push('/photos/detail', extra: {
+                                'photoId': item.id,
+                                'allPhotoIds': allIds,
+                              });
+                            }
+                          },
+                          onLongPress: () {
+                            ref.read(photoMultiSelectProvider.notifier).toggle(item.id);
+                          },
+                        );
+                      },
+                      childCount: group.items.length,
+                    ),
+                  ),
+                ),
+              ],
+              // 底部空白（给悬浮Tab留空间）
+              const SliverToBoxAdapter(
+                child: SizedBox(height: 100),
+              ),
+            ],
           ),
         );
       },
