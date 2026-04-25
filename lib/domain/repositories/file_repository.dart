@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 
+import '../entities/file_background_task.dart';
 import '../entities/file_item.dart';
 import '../entities/share_link.dart';
 
@@ -20,8 +21,22 @@ abstract class FileRepository {
     required String newName,
   });
 
+
   Future<void> delete({
     required String path,
+  });
+
+
+  /// 复制文件/文件夹到目标路径
+  Future<FileBackgroundTask> copy({
+    required List<String> paths,
+    required String destinationPath,
+  });
+
+  /// 移动文件/文件夹到目标路径
+  Future<FileBackgroundTask> move({
+    required List<String> paths,
+    required String destinationPath,
   });
 
   Future<ShareLinkResult> createShareLink({
@@ -29,6 +44,7 @@ abstract class FileRepository {
     String? dateExpired,
     int expireTimes = 0,
   });
+
 
   Future<void> uploadFile({
     required String parentPath,

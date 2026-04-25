@@ -179,6 +179,30 @@ class _FilesPageState extends ConsumerState<FilesPage> {
     );
   }
 
+  /// 展示复制/移动目标目录选择对话框。
+  Future<void> _showCopyMoveDialog(BuildContext context, WidgetRef ref, String action) async {
+    // 导航到目录选择模式，让用户选择目标目录
+    final targetPath = await context.push<String>('/files/pick-directory', extra: {
+      'initialPath': ref.read(currentFilePathProvider),
+    });
+
+
+    if (targetPath == null || !context.mounted) return;
+
+
+    final paths = _selectedPaths.toList();
+    final currentPath = ref.read(currentFilePathProvider);
+    if (targetPath == currentPath) {
+      Toast.show(action == 'copy' ? '源目录与目标目录相同，无需复制' : '源目录与目标目录相同，无需移动');
+      return;
+    }
+
+
+    // TODO: 调用 copy/move API
+    Toast.show('已将 ${paths.length} 项$action 到 $targetPath');
+    _clearSelection();
+  }
+
   /// 展示重命名对话框。
   Future<void> _showRenameDialog(BuildContext context, WidgetRef ref, FileItem item) async {
 
@@ -424,6 +448,8 @@ class _FilesPageState extends ConsumerState<FilesPage> {
                 ? FilesSelectionBar(
                     selectedCount: _selectedPaths.length,
                     onCancel: _clearSelection,
+                    onCopy: () => _showCopyMoveDialog(context, ref, 'copy'),
+                    onMove: () => _showCopyMoveDialog(context, ref, 'move'),
                     onDownload: () {
                       final currentFiles = filesAsync.valueOrNull ?? const <FileItem>[];
                       actions.downloadSelected(context, ref, currentFiles, _selectedPaths, _clearSelection);

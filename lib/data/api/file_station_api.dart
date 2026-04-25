@@ -96,6 +96,18 @@ abstract class FileStationApi {
   Future<FileBackgroundTask?> getBackgroundTaskStatus({
     required FileBackgroundTask task,
   });
+
+  /// 复制文件/文件夹到目标路径
+  Future<FileBackgroundTask> copy({
+    required List<String> paths,
+    required String destinationPath,
+  });
+
+  /// 移动文件/文件夹到目标路径
+  Future<FileBackgroundTask> move({
+    required List<String> paths,
+    required String destinationPath,
+  });
 }
 
 class DsmFileStationApi implements FileStationApi {
@@ -592,6 +604,121 @@ class DsmFileStationApi implements FileStationApi {
     throw DioException(
       requestOptions: response.requestOptions,
       error: _extractError(action: 'delete', data: response.data),
+      response: response,
+    );
+  }
+
+  @override
+  Future<FileBackgroundTask> copy({
+    required List<String> paths,
+    required String destinationPath,
+  }) async {
+    DsmLogger.request(
+      module: 'FileStation',
+      action: 'copy',
+      method: 'POST',
+      path: paths.toString(),
+    );
+
+    final response = await _dio.post(
+      '/webapi/entry.cgi',
+      data: {
+        'api': 'SYNO.FileStation.CopyMove',
+        'version': '3',
+        'method': 'copy',
+        'path': jsonEncode(paths),
+        'dest_folder_path': destinationPath,
+        'remove_src': false,
+      },
+      options: Options(contentType: Headers.formUrlEncodedContentType),
+    );
+
+    if (response.data is Map && response.data['success'] == true) {
+      final data = response.data['data'] as Map? ?? const {};
+      final taskId = (data['taskid'] ?? '').toString();
+      DsmLogger.success(
+        module: 'FileStation',
+        action: 'copy',
+        path: paths.toString(),
+        extra: {'taskid': taskId},
+      );
+      return FileBackgroundTask(
+        taskId: taskId,
+        type: 'copy',
+        path: destinationPath,
+        finished: false,
+        raw: Map<String, dynamic>.from(data),
+      );
+    }
+
+    DsmLogger.failure(
+      module: 'FileStation',
+      action: 'copy',
+      path: paths.toString(),
+      response: response.data,
+    );
+
+    throw DioException(
+      requestOptions: response.requestOptions,
+      error: _extractError(action: 'copy', data: response.data),
+      response: response,
+    );
+  }
+
+  @override
+  Future<FileBackgroundTask> move({
+    required List<String> paths,
+    required String destinationPath,
+  }) async {
+    DsmLogger.request(
+      module: 'FileStation',
+      action: 'move',
+      method: 'POST',
+      path: paths.toString(),
+    );
+
+    final response = await _dio.post(
+      '/webapi/entry.cgi',
+      data: {
+        'api': 'SYNO.FileStation.CopyMove',
+        'version': '3',
+        'method': 'copy',
+        'path': jsonEncode(paths),
+        'dest_folder_path': destinationPath,
+        'remove_src': true,
+      },
+      options: Options(contentType: Headers.formUrlEncodedContentType),
+    );
+
+    if (response.data is Map && response.data['success'] == true) {
+      final data = response.data['data'] as Map? ?? const {};
+      final taskId = (data['taskid'] ?? '').toString();
+      DsmLogger.success(
+        module: 'FileStation',
+        action: 'move',
+        path: paths.toString(),
+        extra: {'taskid': taskId},
+      );
+      return FileBackgroundTask(
+        taskId: taskId,
+        type: 'move',
+        path: destinationPath,
+        finished: false,
+        raw: Map<String, dynamic>.from(data),
+      );
+    }
+
+    DsmLogger.failure(
+      module: 'FileStation',
+      action: 'move',
+      path: paths.toString(),
+      response: response.data,
+    );
+
+
+    throw DioException(
+      requestOptions: response.requestOptions,
+      error: _extractError(action: 'move', data: response.data),
       response: response,
     );
   }

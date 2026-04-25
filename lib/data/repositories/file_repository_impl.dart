@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 
+import '../../domain/entities/file_background_task.dart';
 import '../../domain/entities/file_item.dart';
 import '../../domain/entities/share_link.dart';
 import '../../domain/repositories/file_repository.dart';
@@ -58,6 +59,22 @@ class FileRepositoryImpl implements FileRepository {
     required String path,
   }) {
     return _api.delete(path: path);
+  }
+
+  @override
+  Future<FileBackgroundTask> copy({
+    required List<String> paths,
+    required String destinationPath,
+  }) {
+    return _api.copy(paths: paths, destinationPath: destinationPath);
+  }
+
+  @override
+  Future<FileBackgroundTask> move({
+    required List<String> paths,
+    required String destinationPath,
+  }) {
+    return _api.move(paths: paths, destinationPath: destinationPath);
   }
 
   @override
