@@ -108,6 +108,20 @@ abstract class FileStationApi {
     required List<String> paths,
     required String destinationPath,
   });
+
+  /// 使用 method=start 启动复制/移动任务
+  Future<FileBackgroundTask> startCopyMove({
+    required List<String> paths,
+    required String destinationPath,
+    required bool removeSrc,
+    bool overwrite = false,
+    bool accurateProgress = true,
+  });
+
+  /// 使用 method=status 查询复制/移动任务状态
+  Future<FileBackgroundTask?> getCopyMoveStatus({
+    required FileBackgroundTask task,
+  });
 }
 
 class DsmFileStationApi implements FileStationApi {
@@ -724,6 +738,124 @@ class DsmFileStationApi implements FileStationApi {
   }
 
   @override
+  Future<FileBackgroundTask> startCopyMove({
+    required List<String> paths,
+    required String destinationPath,
+    required bool removeSrc,
+    bool overwrite = false,
+    bool accurateProgress = true,
+  }) async {
+    final action = removeSrc ? 'move' : 'copy';
+    DsmLogger.request(
+      module: 'FileStation',
+      action: action,
+      method: 'POST',
+      path: paths.toString(),
+      extra: const {
+        'api': 'SYNO.FileStation.CopyMove',
+        'method': 'start',
+        'version': '3',
+      },
+    );
+
+    final response = await _dio.post(
+      '/webapi/entry.cgi',
+      data: {
+        'api': 'SYNO.FileStation.CopyMove',
+        'version': '3',
+        'method': 'start',
+        'path': jsonEncode(paths),
+        'dest_folder_path': destinationPath,
+        'remove_src': removeSrc,
+        'overwrite': overwrite,
+        'accurate_progress': accurateProgress,
+      },
+      options: Options(contentType: Headers.formUrlEncodedContentType),
+    );
+
+    if (response.data is Map && response.data['success'] == true) {
+      final data = response.data['data'] as Map? ?? const {};
+      final taskId = (data['taskid'] ?? '').toString();
+      DsmLogger.success(
+        module: 'FileStation',
+        action: action,
+        path: paths.toString(),
+        extra: {'taskid': taskId},
+      );
+      return FileBackgroundTask(
+        taskId: taskId,
+        type: action,
+        path: destinationPath,
+        finished: false,
+        raw: Map<String, dynamic>.from(data),
+      );
+    }
+
+    DsmLogger.failure(
+      module: 'FileStation',
+      action: action,
+      path: paths.toString(),
+      response: response.data,
+    );
+
+    throw DioException(
+      requestOptions: response.requestOptions,
+      error: _extractError(action: action, data: response.data),
+      response: response,
+    );
+  }
+
+  @override
+  Future<FileBackgroundTask?> getCopyMoveStatus({
+    required FileBackgroundTask task,
+  }) async {
+    if (task.taskId.isEmpty) return null;
+
+    DsmLogger.request(
+      module: 'FileStation',
+      action: task.type,
+      method: 'POST',
+      path: task.path,
+      extra: const {
+        'api': 'SYNO.FileStation.CopyMove',
+        'method': 'status',
+        'version': '3',
+      },
+    );
+
+    final response = await _dio.post(
+      '/webapi/entry.cgi',
+      data: {
+        'api': 'SYNO.FileStation.CopyMove',
+        'version': '3',
+        'method': 'status',
+        'taskid': task.taskId,
+      },
+      options: Options(contentType: Headers.formUrlEncodedContentType),
+    );
+
+    if (response.data is Map && response.data['success'] == true) {
+      final data = response.data['data'] as Map? ?? const {};
+      DsmLogger.success(
+        module: 'FileStation',
+        action: task.type,
+        path: task.path,
+        extra: {'taskid': task.taskId},
+      );
+      return _mergeTaskStatus(task: task, data: Map<String, dynamic>.from(data));
+    }
+
+    DsmLogger.failure(
+      module: 'FileStation',
+      action: task.type,
+      path: task.path,
+      response: response.data,
+    );
+
+    return null;
+  }
+
+  @override
   /// 创建分享链接
   /// [path] 文件或文件夹路径
   /// [dateExpired] 过期时间（ISO8601 格式，如 2025-12-31T23:59:59），null 表示不过期
@@ -965,6 +1097,9 @@ class DsmFileStationApi implements FileStationApi {
         'api': 'SYNO.FileStation.BackgroundTask',
         'method': 'list',
         'version': '3',
+        'is_list_sharemove': true,
+        'is_vfs': true,
+        'bkg_info': true,
       },
     );
 
@@ -974,6 +1109,9 @@ class DsmFileStationApi implements FileStationApi {
         'api': 'SYNO.FileStation.BackgroundTask',
         'version': '3',
         'method': 'list',
+        'is_list_sharemove': true,
+        'is_vfs': true,
+        'bkg_info': true,
       },
     );
 

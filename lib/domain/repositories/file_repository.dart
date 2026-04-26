@@ -39,6 +39,20 @@ abstract class FileRepository {
     required String destinationPath,
   });
 
+  /// 使用 method=start 启动复制/移动任务
+  Future<FileBackgroundTask> startCopyMove({
+    required List<String> paths,
+    required String destinationPath,
+    required bool removeSrc,
+    bool overwrite = false,
+    bool accurateProgress = true,
+  });
+
+  /// 使用 method=status 查询复制/移动任务状态
+  Future<FileBackgroundTask?> getCopyMoveStatus({
+    required FileBackgroundTask task,
+  });
+
   Future<ShareLinkResult> createShareLink({
     required String path,
     String? dateExpired,

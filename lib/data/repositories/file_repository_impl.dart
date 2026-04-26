@@ -78,6 +78,30 @@ class FileRepositoryImpl implements FileRepository {
   }
 
   @override
+  Future<FileBackgroundTask> startCopyMove({
+    required List<String> paths,
+    required String destinationPath,
+    required bool removeSrc,
+    bool overwrite = false,
+    bool accurateProgress = true,
+  }) {
+    return _api.startCopyMove(
+      paths: paths,
+      destinationPath: destinationPath,
+      removeSrc: removeSrc,
+      overwrite: overwrite,
+      accurateProgress: accurateProgress,
+    );
+  }
+
+  @override
+  Future<FileBackgroundTask?> getCopyMoveStatus({
+    required FileBackgroundTask task,
+  }) {
+    return _api.getCopyMoveStatus(task: task);
+  }
+
+  @override
   Future<ShareLinkResult> createShareLink({
     required String path,
     String? dateExpired,
