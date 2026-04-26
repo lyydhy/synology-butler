@@ -106,6 +106,54 @@ class FilePageActions {
     }
   }
 
+  /// 复制选中的文件/文件夹到目标目录。
+  Future<void> copySelected(
+    BuildContext context,
+    WidgetRef ref,
+    Set<String> selectedPaths,
+    String destinationPath,
+    VoidCallback onSelectionCleared,
+  ) async {
+    final paths = selectedPaths.toList();
+    if (paths.isEmpty) return;
+
+    try {
+      await ref.read(fileBatchCopyProvider)(paths, destinationPath);
+      onSelectionCleared();
+      if (context.mounted) {
+        Toast.show('已将 ${paths.length} 项复制到 $destinationPath');
+      }
+    } catch (e) {
+      if (context.mounted) {
+        Toast.error(ErrorMapper.map(e).message);
+      }
+    }
+  }
+
+  /// 移动选中的文件/文件夹到目标目录。
+  Future<void> moveSelected(
+    BuildContext context,
+    WidgetRef ref,
+    Set<String> selectedPaths,
+    String destinationPath,
+    VoidCallback onSelectionCleared,
+  ) async {
+    final paths = selectedPaths.toList();
+    if (paths.isEmpty) return;
+
+    try {
+      await ref.read(fileBatchMoveProvider)(paths, destinationPath);
+      onSelectionCleared();
+      if (context.mounted) {
+        Toast.show('已将 ${paths.length} 项移动到 $destinationPath');
+      }
+    } catch (e) {
+      if (context.mounted) {
+        Toast.error(ErrorMapper.map(e).message);
+      }
+    }
+  }
+
   /// 展示新建文件夹对话框。
   Future<void> showCreateFolderDialog(BuildContext context, WidgetRef ref, String currentPath) async {
     

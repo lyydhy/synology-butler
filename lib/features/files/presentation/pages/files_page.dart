@@ -186,21 +186,20 @@ class _FilesPageState extends ConsumerState<FilesPage> {
       'initialPath': ref.read(currentFilePathProvider),
     });
 
-
     if (targetPath == null || !context.mounted) return;
 
-
-    final paths = _selectedPaths.toList();
     final currentPath = ref.read(currentFilePathProvider);
     if (targetPath == currentPath) {
       Toast.show(action == 'copy' ? '源目录与目标目录相同，无需复制' : '源目录与目标目录相同，无需移动');
       return;
     }
 
-
-    // TODO: 调用 copy/move API
-    Toast.show('已将 ${paths.length} 项$action 到 $targetPath');
-    _clearSelection();
+    final actions = ref.read(filePageActionsProvider);
+    if (action == 'copy') {
+      await actions.copySelected(context, ref, _selectedPaths, targetPath, _clearSelection);
+    } else {
+      await actions.moveSelected(context, ref, _selectedPaths, targetPath, _clearSelection);
+    }
   }
 
   /// 展示重命名对话框。
@@ -434,10 +433,12 @@ class _FilesPageState extends ConsumerState<FilesPage> {
     final isDirectoryPickerMode = widget.directoryPickerMode;
 
     return PopScope(
-      canPop: !canGoUp,
+      canPop: !_selectionMode && !canGoUp,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
-        if (canGoUp) {
+        if (_selectionMode) {
+          _clearSelection();
+        } else if (canGoUp) {
           _setCurrentPath(actions.parentPathOf(ref.read(currentFilePathProvider)));
         }
       },
