@@ -4,7 +4,6 @@ import '../../../../data/api/system_api.dart';
 import '../../../../data/repositories/system_repository_impl.dart';
 import '../../../../domain/entities/system_status.dart';
 import '../../../../domain/repositories/system_repository.dart';
-import '../../../auth/presentation/providers/auth_providers.dart';
 import 'dashboard_realtime_global.dart';
 import 'global_home_provider.dart';
 
@@ -16,20 +15,6 @@ final systemApiProvider = Provider<SystemApi>((ref) {
 final systemRepositoryProvider = Provider<SystemRepository>((ref) {
   return SystemRepositoryImpl(ref.read(systemApiProvider));
 });
-
-bool _isSessionExpiredError(Object error) {
-  final text = error.toString().toLowerCase();
-  return text.contains('session expired') ||
-      text.contains('login required') ||
-      text.contains('unauthorized') ||
-      text.contains('invalid sid') ||
-      text.contains('expired') ||
-      text.contains('119');
-}
-
-Future<void> _handleSessionExpired(Ref ref) async {
-  await ref.read(recoverSessionProvider)();
-}
 
 final dashboardOverviewSafeProvider = Provider<AsyncValue<SystemStatus?>>((ref) {
   final realtimeOverview = ref.watch(globalRealtimeOverviewProvider);
@@ -48,8 +33,8 @@ final dashboardOverviewSafeProvider = Provider<AsyncValue<SystemStatus?>>((ref) 
     final realtime = realtimeOverview.value!;
     return AsyncValue.data(
       SystemStatus(
-        serverName: homeOverview.serverName ?? realtime.serverName,
-        dsmVersion: homeOverview.dsmVersion ?? realtime.dsmVersion,
+        serverName: homeOverview.serverName,
+        dsmVersion: homeOverview.dsmVersion,
         cpuUsage: realtime.cpuUsage,
         cpuUserUsage: realtime.cpuUserUsage,
         cpuSystemUsage: realtime.cpuSystemUsage,

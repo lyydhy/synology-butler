@@ -7,7 +7,6 @@ import '../../../../core/error/error_mapper.dart';
 import '../../../../core/utils/l10n.dart';
 import '../../../../core/utils/toast.dart';
 import '../providers/text_editor_providers.dart';
-import '../providers/code_language.dart';
 
 class TextEditorPage extends ConsumerStatefulWidget {
   const TextEditorPage({

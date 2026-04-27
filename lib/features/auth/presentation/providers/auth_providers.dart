@@ -22,9 +22,7 @@ import '../../../../domain/entities/nas_server.dart';
 import '../../../../domain/entities/nas_session.dart';
 import '../../../../domain/repositories/auth_repository.dart';
 import '../../../dashboard/presentation/providers/global_home_provider.dart';
-import '../../../dashboard/presentation/providers/dashboard_realtime_global.dart';
 import '../../../information_center/presentation/providers/information_center_providers.dart';
-import '../../../packages/presentation/providers/package_providers.dart';
 
 final authApiProvider = Provider((ref) => DsmAuthApi());
 final localStorageProvider = Provider((ref) => LocalStorageService());
