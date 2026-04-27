@@ -156,23 +156,25 @@ final fileBackgroundTasksProvider = StreamProvider.autoDispose<List<FileBackgrou
 });
 
 /// 批量复制文件/文件夹到目标路径
-final fileBatchCopyProvider = Provider<Future<FileBackgroundTask> Function(List<String>, String)>((ref) {
-  return (paths, destinationPath) async {
+final fileBatchCopyProvider = Provider<Future<FileBackgroundTask> Function(List<String>, String, {bool overwrite})>((ref) {
+  return (paths, destinationPath, {overwrite = false}) async {
     return ref.read(fileRepositoryProvider).startCopyMove(
       paths: paths,
       destinationPath: destinationPath,
       removeSrc: false,
+      overwrite: overwrite,
     );
   };
 });
 
 /// 批量移动文件/文件夹到目标路径
-final fileBatchMoveProvider = Provider<Future<FileBackgroundTask> Function(List<String>, String)>((ref) {
-  return (paths, destinationPath) async {
+final fileBatchMoveProvider = Provider<Future<FileBackgroundTask> Function(List<String>, String, {bool overwrite})>((ref) {
+  return (paths, destinationPath, {overwrite = false}) async {
     return ref.read(fileRepositoryProvider).startCopyMove(
       paths: paths,
       destinationPath: destinationPath,
       removeSrc: true,
+      overwrite: overwrite,
     );
   };
 });

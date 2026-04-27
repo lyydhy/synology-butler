@@ -138,6 +138,7 @@ GoRouter createAppRouter({required String initialLocation}) {
         return FilesPage(
           directoryPickerMode: true,
           initialPath: extra['initialPath']?.toString() ?? '/',
+          directoryPickerPurpose: extra['purpose']?.toString(),
         );
       },
     ),

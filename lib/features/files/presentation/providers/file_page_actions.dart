@@ -73,6 +73,7 @@ class FilePageActions {
     WidgetRef ref,
     Set<String> selectedPaths,
     VoidCallback onSelectionCleared,
+    FileListQuery query,
   ) async {
     
     final paths = selectedPaths.toList();
@@ -95,6 +96,8 @@ class FilePageActions {
 
     try {
       await ref.read(fileBatchDeleteProvider)(paths);
+      // 删除成功后刷新文件列表
+      ref.invalidate(fileListProvider(query));
       onSelectionCleared();
       if (context.mounted) {
         Toast.success(l10n.deletedCount(paths.length));
@@ -112,17 +115,20 @@ class FilePageActions {
     WidgetRef ref,
     Set<String> selectedPaths,
     String destinationPath,
-    VoidCallback onSelectionCleared,
-  ) async {
+    VoidCallback onSelectionCleared, {
+    bool overwrite = false,
+  }) async {
     final paths = selectedPaths.toList();
     if (paths.isEmpty) return;
 
     try {
-      await ref.read(fileBatchCopyProvider)(paths, destinationPath);
+      // 通过 TransferController 显示到传输中心
+      await ref.read(transferProvider.notifier).enqueueCopy(
+        sourcePaths: paths,
+        destinationPath: destinationPath,
+        overwrite: overwrite,
+      );
       onSelectionCleared();
-      if (context.mounted) {
-        Toast.show('已将 ${paths.length} 项复制到 $destinationPath');
-      }
     } catch (e) {
       if (context.mounted) {
         Toast.error(ErrorMapper.map(e).message);
@@ -136,17 +142,20 @@ class FilePageActions {
     WidgetRef ref,
     Set<String> selectedPaths,
     String destinationPath,
-    VoidCallback onSelectionCleared,
-  ) async {
+    VoidCallback onSelectionCleared, {
+    bool overwrite = false,
+  }) async {
     final paths = selectedPaths.toList();
     if (paths.isEmpty) return;
 
     try {
-      await ref.read(fileBatchMoveProvider)(paths, destinationPath);
+      // 通过 TransferController 显示到传输中心
+      await ref.read(transferProvider.notifier).enqueueMove(
+        sourcePaths: paths,
+        destinationPath: destinationPath,
+        overwrite: overwrite,
+      );
       onSelectionCleared();
-      if (context.mounted) {
-        Toast.show('已将 ${paths.length} 项移动到 $destinationPath');
-      }
     } catch (e) {
       if (context.mounted) {
         Toast.error(ErrorMapper.map(e).message);

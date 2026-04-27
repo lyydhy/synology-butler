@@ -37,7 +37,7 @@ class FilesSelectionBar extends StatelessWidget implements PreferredSizeWidget {
         ),
         IconButton(
           onPressed: selectedCount == 0 ? null : onMove,
-          icon: const Icon(Icons.drive_file_rename_outline_rounded),
+          icon: const Icon(Icons.drive_file_move_outlined),
           tooltip: '移动到',
         ),
         IconButton(

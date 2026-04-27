@@ -18,6 +18,7 @@ import '../../../transfers/presentation/providers/transfer_providers.dart';
 import '../providers/file_page_actions.dart';
 import '../providers/file_providers.dart';
 import '../widgets/file_detail_sheet.dart';
+import '../widgets/directory_picker_sheet.dart';
 import '../widgets/file_list_item.dart';
 import '../widgets/file_type_helper.dart';
 import '../widgets/files_header.dart';
@@ -32,6 +33,7 @@ class FilesPage extends ConsumerStatefulWidget {
     super.key,
     this.directoryPickerMode = false,
     this.initialPath = _FilesPageState._rootPath,
+    this.directoryPickerPurpose,
   });
 
   /// 目录选择模式下只允许浏览和确认目录,不展示普通文件管理操作。
@@ -39,6 +41,9 @@ class FilesPage extends ConsumerStatefulWidget {
 
   /// 进入页面时默认展示的目录。
   final String initialPath;
+
+  /// 目录选择目的: 'upload' | 'copy' | 'move'，影响标题显示。
+  final String? directoryPickerPurpose;
 
   @override
   ConsumerState<FilesPage> createState() => _FilesPageState();
@@ -49,8 +54,6 @@ class _FilesPageState extends ConsumerState<FilesPage> {
   static const String _defaultSort = 'type';
 
   Timer? _pollTimer;
-  ProviderSubscription<AsyncValue<List<FileBackgroundTask>>>? _backgroundTaskListener;
-  Set<String> _lastBackgroundTaskIds = <String>{};
 
   /// 当前页面文件排序方式。
   String _sort = _defaultSort;
@@ -73,41 +76,11 @@ class _FilesPageState extends ConsumerState<FilesPage> {
       if (!connection.hasSession || _selectionMode) return;
       ref.invalidate(fileListProvider(_fileQuery));
     });
-
-    _backgroundTaskListener = ref.listenManual(fileBackgroundTasksProvider, (previous, next) {
-      if (!mounted) return;
-
-      final tasks = next.valueOrNull ?? const <FileBackgroundTask>[];
-      final currentIds = tasks.map((task) => task.taskId).toSet();
-      final finishedIds = _lastBackgroundTaskIds.difference(currentIds);
-      if (finishedIds.isEmpty) {
-        _lastBackgroundTaskIds = currentIds;
-        return;
-      }
-
-      final previousTasks = previous?.valueOrNull ?? const <FileBackgroundTask>[];
-      final finishedTasks = previousTasks.where((task) => finishedIds.contains(task.taskId)).toList();
-      final shouldRefresh = finishedTasks.any(_taskAffectsCurrentPath);
-      final notifyTasks = finishedTasks.where((task) => !_isDownloadBackgroundTask(task)).toList();
-
-      _lastBackgroundTaskIds = currentIds;
-
-      if (shouldRefresh) {
-        _refreshCurrentPath();
-      }
-
-      if (notifyTasks.isNotEmpty) {
-        final first = notifyTasks.first;
-        final count = notifyTasks.length;
-        Toast.show(count > 1 ? l10n.taskCompleteMultiple(first.displayName, count) : l10n.taskComplete(first.displayName));
-      }
-    });
   }
 
   @override
   void dispose() {
     _pollTimer?.cancel();
-    _backgroundTaskListener?.close();
     super.dispose();
   }
 
@@ -180,25 +153,87 @@ class _FilesPageState extends ConsumerState<FilesPage> {
   }
 
   /// 展示复制/移动目标目录选择对话框。
+  ///
+  /// 先弹出 AlertDialog 让用户选择目标目录（打开 DirectoryPickerSheet），
+  /// 同时提供「覆盖同名文件」开关，确认后再执行复制/移动。
   Future<void> _showCopyMoveDialog(BuildContext context, WidgetRef ref, String action) async {
-    // 导航到目录选择模式，让用户选择目标目录
-    final targetPath = await context.push<String>('/files/pick-directory', extra: {
-      'initialPath': ref.read(currentFilePathProvider),
-    });
+    final sourcePath = ref.read(currentFilePathProvider);
+    String? selectedPath;
+    bool overwrite = false;
 
-    if (targetPath == null || !context.mounted) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: Text(action == 'copy' ? l10n.copy : l10n.move),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 目录选择区
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.folder_rounded),
+                title: Text(
+                  selectedPath ?? l10n.selectTargetDir,
+                  style: TextStyle(
+                    color: selectedPath != null
+                        ? Theme.of(context).textTheme.bodyLarge?.color
+                        : Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () async {
+                  final result = await showModalBottomSheet<String>(
+                    context: context,
+                    isScrollControlled: true,
+                    builder: (_) => DirectoryPickerSheet(
+                      initialPath: sourcePath,
+                      purpose: action,
+                    ),
+                  );
+                  if (result != null) {
+                    setState(() => selectedPath = result);
+                  }
+                },
+              ),
+              // 覆盖开关
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(l10n.overwriteExisting),
+                value: overwrite,
+                onChanged: (v) => setState(() => overwrite = v),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(l10n.cancel),
+            ),
+            FilledButton(
+              onPressed: selectedPath == null
+                  ? null
+                  : () => Navigator.of(context).pop(true),
+              child: Text(l10n.confirm),
+            ),
+          ],
+        ),
+      ),
+    );
 
-    final currentPath = ref.read(currentFilePathProvider);
-    if (targetPath == currentPath) {
+    if (confirmed != true || selectedPath == null || !context.mounted) return;
+
+    if (selectedPath == sourcePath) {
       Toast.show(action == 'copy' ? '源目录与目标目录相同，无需复制' : '源目录与目标目录相同，无需移动');
       return;
     }
 
     final actions = ref.read(filePageActionsProvider);
     if (action == 'copy') {
-      await actions.copySelected(context, ref, _selectedPaths, targetPath, _clearSelection);
+      await actions.copySelected(context, ref, _selectedPaths, selectedPath!, _clearSelection, overwrite: overwrite);
     } else {
-      await actions.moveSelected(context, ref, _selectedPaths, targetPath, _clearSelection);
+      await actions.moveSelected(context, ref, _selectedPaths, selectedPath!, _clearSelection, overwrite: overwrite);
     }
   }
 
@@ -431,6 +466,11 @@ class _FilesPageState extends ConsumerState<FilesPage> {
     final backgroundTasksAsync = ref.watch(fileBackgroundTasksProvider);
     final backgroundTasks = backgroundTasksAsync.valueOrNull ?? const <FileBackgroundTask>[];
     final isDirectoryPickerMode = widget.directoryPickerMode;
+    final directoryPickerTitle = isDirectoryPickerMode
+        ? (widget.directoryPickerPurpose == 'upload'
+            ? l10n.selectUploadDir
+            : l10n.selectTargetDir)
+        : l10n.filesTitle;
 
     return PopScope(
       canPop: !_selectionMode && !canGoUp,
@@ -444,7 +484,7 @@ class _FilesPageState extends ConsumerState<FilesPage> {
       },
       child: Scaffold(
         appBar: isDirectoryPickerMode
-            ? AppBar(title: Text(l10n.selectUploadDir))
+            ? AppBar(title: Text(directoryPickerTitle))
             : _selectionMode
                 ? FilesSelectionBar(
                     selectedCount: _selectedPaths.length,
@@ -455,7 +495,7 @@ class _FilesPageState extends ConsumerState<FilesPage> {
                       final currentFiles = filesAsync.valueOrNull ?? const <FileItem>[];
                       actions.downloadSelected(context, ref, currentFiles, _selectedPaths, _clearSelection);
                     },
-                    onDelete: () => actions.deleteSelected(context, ref, _selectedPaths, _clearSelection),
+                    onDelete: () => actions.deleteSelected(context, ref, _selectedPaths, _clearSelection, _fileQuery),
                   )
                 : AppBar(
                     title: Text(l10n.filesTitle),
@@ -463,16 +503,6 @@ class _FilesPageState extends ConsumerState<FilesPage> {
                   ),
         body: Column(
           children: [
-            if (!isDirectoryPickerMode && backgroundTasks.isNotEmpty)
-              _BackgroundTaskBanner(
-                tasks: backgroundTasks,
-                onRefresh: () {
-                  final matched = backgroundTasks.any(_taskAffectsCurrentPath);
-                  if (matched) {
-                    _refreshCurrentPath();
-                  }
-                },
-              ),
             FilesHeader(
               path: ref.read(currentFilePathProvider),
               sort: _sort,
@@ -482,7 +512,7 @@ class _FilesPageState extends ConsumerState<FilesPage> {
               onTapSegment: _setCurrentPath,
               onGoUp: () => _setCurrentPath(actions.parentPathOf(ref.read(currentFilePathProvider))),
               onCreateFolder: () => actions.showCreateFolderDialog(context, ref, ref.read(currentFilePathProvider)),
-              title: isDirectoryPickerMode ? l10n.selectUploadDir : l10n.filesTitle,
+              title: directoryPickerTitle,
               showActionMenu: !isDirectoryPickerMode,
             ),
             Expanded(

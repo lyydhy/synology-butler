@@ -5,6 +5,7 @@ class FileBackgroundTask {
     required this.path,
     required this.finished,
     this.progress,
+    this.errors,
     this.raw = const {},
   });
 
@@ -13,6 +14,7 @@ class FileBackgroundTask {
   final String path;
   final bool finished;
   final double? progress;
+  final List<dynamic>? errors;
   final Map<String, dynamic> raw;
 
   String get displayName {

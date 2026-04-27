@@ -1,4 +1,4 @@
-enum TransferTaskType { upload, download }
+enum TransferTaskType { upload, download, copy, move }
 
 enum TransferTaskStatus { queued, running, paused, success, failed }
 
@@ -16,6 +16,10 @@ class TransferTask {
   final DateTime createdAt;
   /// 下载任务已下载的字节数（暂停/断点续传用）
   final int downloadedBytes;
+  /// 关联的 DSM 后台任务 ID（用于 copy/move 任务轮询进度）
+  final String? backgroundTaskId;
+  /// 任务实际开始时间（用于超时检测）
+  final DateTime? startedAt;
 
   const TransferTask({
     required this.id,
@@ -30,6 +34,8 @@ class TransferTask {
     this.totalBytes = 0,
     this.errorMessage,
     this.downloadedBytes = 0,
+    this.backgroundTaskId,
+    this.startedAt,
   });
 
   factory TransferTask.fromJson(Map<String, dynamic> json) {
@@ -55,6 +61,8 @@ class TransferTask {
       errorMessage: json['errorMessage']?.toString(),
       createdAt: DateTime.tryParse(json['createdAt']?.toString() ?? '') ?? DateTime.now(),
       downloadedBytes: (json['downloadedBytes'] as num?)?.toInt() ?? 0,
+      backgroundTaskId: json['backgroundTaskId']?.toString(),
+      startedAt: json['startedAt'] != null ? DateTime.tryParse(json['startedAt'].toString()) : null,
     );
   }
 
@@ -72,6 +80,8 @@ class TransferTask {
       'errorMessage': errorMessage,
       'createdAt': createdAt.toIso8601String(),
       'downloadedBytes': downloadedBytes,
+      'backgroundTaskId': backgroundTaskId,
+      'startedAt': startedAt?.toIso8601String(),
     };
   }
 
@@ -86,6 +96,8 @@ class TransferTask {
     int? totalBytes,
     String? errorMessage,
     int? downloadedBytes,
+    String? backgroundTaskId,
+    DateTime? startedAt,
   }) {
     return TransferTask(
       id: id,
@@ -100,6 +112,8 @@ class TransferTask {
       createdAt: createdAt,
       errorMessage: errorMessage ?? this.errorMessage,
       downloadedBytes: downloadedBytes ?? this.downloadedBytes,
+      backgroundTaskId: backgroundTaskId ?? this.backgroundTaskId,
+      startedAt: startedAt,
     );
   }
 }

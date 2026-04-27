@@ -168,6 +168,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cancel => '取消';
 
   @override
+  String get goUp => '返回上级';
+
+  @override
   String get confirm => '确定';
 
   @override
@@ -550,6 +553,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get copy => '复制';
 
   @override
+  String get move => '移动';
+
+  @override
+  String get overwriteExisting => '覆盖同名文件';
+
+  @override
   String get switchedToHttp => '已切换为 HTTP，请仅在可信局域网中使用';
 
   @override
@@ -729,6 +738,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get selectUploadDir => '选择上传目录';
+
+  @override
+  String get selectTargetDir => '选择目标目录';
 
   @override
   String loadFilesFailed(Object error) {

@@ -1075,6 +1075,7 @@ class DsmFileStationApi implements FileStationApi {
     final finished = data['finished'] == true;
     final progress = _readProgress(data);
     final path = (data['path'] ?? task.path).toString();
+    final errors = (data['errors'] as List<dynamic>?)?.isNotEmpty == true ? data['errors'] : null;
 
     return FileBackgroundTask(
       taskId: task.taskId,
@@ -1082,6 +1083,7 @@ class DsmFileStationApi implements FileStationApi {
       path: path,
       finished: finished,
       progress: progress,
+      errors: errors,
       raw: data,
     );
   }

@@ -52,6 +52,7 @@
   "createFolder": "Create folder",
   "folderName": "Folder name",
   "cancel": "Cancel",
+  "goUp": "Go up",
   "confirm": "Confirm",
   "uploadFile": "Upload file",
   "targetFolder": "Target folder",
@@ -196,6 +197,8 @@
   },
   "connectionTestFailed": "Connection test failed",
   "copy": "Copy",
+  "move": "Move",
+  "overwriteExisting": "Overwrite existing files",
   "switchedToHttp": "Switched to HTTP. Only use in trusted local networks.",
   "selectFromHistory": "Select from history",
   "historyDevices": "History devices",
@@ -299,6 +302,7 @@
     }
   },
   "selectUploadDir": "Select Upload Directory",
+  "selectTargetDir": "Select Target Directory",
   "loadFilesFailed": "Failed to load files: {error}",
   "@loadFilesFailed": {
     "placeholders": {
