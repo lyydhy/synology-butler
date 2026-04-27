@@ -67,7 +67,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: build/app/outputs/flutter-apk/*.apk
-          body: "🎉 群晖管家 v1.0.0 正式发布\n\nAPK 安装包，可直接安装使用。\n\n构建产物，签名已混淆。"
+          body: "🎉 群晖管家 v1.0.2 正式发布\n\n**新功能**\n\n- 文件多选复制/移动（完整功能：UI + API 接入）\n- 套件中心搜索重构：AppBar 搜索图标 → 独立搜索结果页 → 实时过滤\n- 传输 Tab 重命名为「传输」\n\n**优化**\n\n- CopyMove start/status API 接入，状态检查逻辑优化\n- Dio 超时调整：connect 3s、send 10s、receive 15s\n- 目录选择模式返回键行为修复\n\n**修复**\n\n- 删除废弃 api.json\n- flutter analyze 全部警告/错误清理（13 个文件、109 行无用代码）\n\n**CI/CD**\n\n- 修复 Gradle 构建静默失败问题\n- 移除 ABI splits，构建更稳定\n\n⚠️ 因原签名文件丢失，需卸载旧版本后重新安装"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
