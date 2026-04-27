@@ -111,10 +111,10 @@ class AboutPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Wrap(
+                const Wrap(
                   spacing: 8,
                   runSpacing: 8,
-                  children: const [
+                  children: [
                     _TechChip(label: 'Flutter'),
                     _TechChip(label: 'Riverpod'),
                     _TechChip(label: 'GoRouter'),

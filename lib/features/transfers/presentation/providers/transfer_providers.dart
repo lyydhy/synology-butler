@@ -13,7 +13,6 @@ import '../../../../core/utils/server_url_helper.dart';
 import '../../../../core/storage/platform_downloads_directory.dart';
 import '../../../../domain/entities/transfer_task.dart';
 import '../../../../domain/entities/file_background_task.dart';
-import '../../../../data/api/file_station_api.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../auth/presentation/providers/current_connection_readers.dart';
 import '../../../files/presentation/providers/file_providers.dart';

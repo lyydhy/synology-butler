@@ -10,7 +10,6 @@ import '../../../../core/error/error_mapper.dart';
 import '../../../../core/utils/l10n.dart';
 import '../../../../core/utils/server_url_helper.dart';
 import '../../../../core/utils/toast.dart';
-import '../../../../domain/entities/file_background_task.dart';
 import '../../../../domain/entities/file_item.dart';
 import '../../../auth/presentation/providers/current_connection_readers.dart';
 import '../../../preferences/providers/preferences_providers.dart';
@@ -87,18 +86,6 @@ class _FilesPageState extends ConsumerState<FilesPage> {
   /// 刷新当前目录文件列表。
   void _refreshCurrentPath() {
     ref.invalidate(fileListProvider(_fileQuery));
-  }
-
-  bool _taskAffectsCurrentPath(FileBackgroundTask task) {
-    final currentPath = ref.read(currentFilePathProvider);
-    final taskPath = task.path.trim();
-    if (taskPath.isEmpty) return true;
-    if (currentPath == _rootPath) return true;
-    return taskPath == currentPath || taskPath.startsWith('$currentPath/');
-  }
-
-  bool _isDownloadBackgroundTask(FileBackgroundTask task) {
-    return task.type.toLowerCase() == 'download';
   }
 
   /// 进入指定目录并清空多选状态。
@@ -463,8 +450,6 @@ class _FilesPageState extends ConsumerState<FilesPage> {
     final actions = ref.read(filePageActionsProvider);
     final filesAsync = ref.watch(fileListProvider(_fileQuery));
     final canGoUp = ref.read(currentFilePathProvider) != _rootPath;
-    final backgroundTasksAsync = ref.watch(fileBackgroundTasksProvider);
-    final backgroundTasks = backgroundTasksAsync.valueOrNull ?? const <FileBackgroundTask>[];
     final isDirectoryPickerMode = widget.directoryPickerMode;
     final directoryPickerTitle = isDirectoryPickerMode
         ? (widget.directoryPickerPurpose == 'upload'
@@ -625,68 +610,6 @@ class _FilesPageState extends ConsumerState<FilesPage> {
                   ),
                 ],
               ),
-      ),
-    );
-  }
-}
-
-class _BackgroundTaskBanner extends StatelessWidget {
-  const _BackgroundTaskBanner({
-    required this.tasks,
-    required this.onRefresh,
-  });
-
-  final List<FileBackgroundTask> tasks;
-  final VoidCallback onRefresh;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final first = tasks.first;
-    final extraCount = tasks.length - 1;
-
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.primaryContainer.withValues(alpha: 0.55),
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surface.withValues(alpha: 0.9),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(Icons.sync_rounded, color: theme.colorScheme.primary),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  extraCount > 0 ? l10n.backgroundTaskRunningCount(tasks.length) : l10n.backgroundTaskRunning,
-                  style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${first.displayName} · ${first.path.isEmpty ? l10n.processingLabel : first.path}${first.progress == null ? '' : ' · ${first.progress!.toStringAsFixed(0)}%'}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-                ),
-              ],
-            ),
-          ),
-          TextButton(
-            onPressed: onRefresh,
-            child: Text(l10n.refresh),
-          ),
-        ],
       ),
     );
   }

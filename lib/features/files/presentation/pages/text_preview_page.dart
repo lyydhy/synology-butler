@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/error/error_mapper.dart';
 import '../providers/text_editor_providers.dart';
-import '../providers/code_language.dart';
 import '../widgets/file_type_helper.dart';
 
 class TextPreviewPage extends ConsumerStatefulWidget {

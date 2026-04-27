@@ -20,7 +20,7 @@ class PackageDetailPage extends ConsumerWidget {
 
   /// 选择套件安装所在的存储卷。
   Future<String?> _pickVolume(BuildContext context, WidgetRef ref) async {
-    final volumes = (await ref.read(packageProvider).valueOrNull)?.volumes ?? [];
+    final volumes = ref.read(packageProvider).valueOrNull?.volumes ?? [];
     if (volumes.isEmpty || !context.mounted) return null;
 
     return showModalBottomSheet<String>(

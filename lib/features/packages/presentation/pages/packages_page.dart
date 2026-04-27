@@ -184,12 +184,12 @@ class _PackageListView extends StatelessWidget {
 }
 
 class PackageCard extends ConsumerWidget {
-  const PackageCard({required this.item});
+  const PackageCard({super.key, required this.item});
 
   final PackageItem item;
 
   Future<String?> _pickVolume(BuildContext context, WidgetRef ref) async {
-    final volumes = (await ref.read(packageProvider).valueOrNull)?.volumes ?? [];
+    final volumes = ref.read(packageProvider).valueOrNull?.volumes ?? [];
     if (volumes.isEmpty || !context.mounted) return null;
 
     return showModalBottomSheet<String>(
