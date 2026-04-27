@@ -12,6 +12,8 @@ import '../../../../core/services/transfer_notification_service.dart';
 import '../../../../core/utils/server_url_helper.dart';
 import '../../../../core/storage/platform_downloads_directory.dart';
 import '../../../../domain/entities/transfer_task.dart';
+import '../../../../domain/entities/file_background_task.dart';
+import '../../../../data/api/file_station_api.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../auth/presentation/providers/current_connection_readers.dart';
 import '../../../files/presentation/providers/file_providers.dart';
@@ -39,6 +41,12 @@ class TransferController extends StateNotifier<List<TransferTask>> {
 
   /// FileDownloader.start() 是否已完成
   bool _bdReady = false;
+
+  /// copy/move 后台轮询定时器
+  Timer? _copyMovePollTimer;
+
+  /// copy/move 后台任务轮询间隔（秒）
+  static const int _copyMovePollIntervalSec = 3;
 
   /// 初始化 background_downloader：注册回调并启动
   Future<void> _initBgrDownloader() async {
@@ -90,7 +98,7 @@ class TransferController extends StateNotifier<List<TransferTask>> {
         final length = exists ? await file.length() : 0;
         
         if (exists && length > 0) {
-          _update(ourId, status: TransferTaskStatus.success, progress: 1, forcePersist: true);
+          _update(ourId, status: TransferTaskStatus.success, progress: 1, receivedBytes: length, totalBytes: length, forcePersist: true);
         } else {
           // 文件不存在或为空，视为下载失败，可重试
           _update(ourId, status: TransferTaskStatus.failed, progress: 1, errorMessage: '下载失败（文件为空），请重试', forcePersist: true);
@@ -132,6 +140,7 @@ class TransferController extends StateNotifier<List<TransferTask>> {
   @override
   void dispose() {
     _bdUpdatesSubscription?.cancel();
+    _copyMovePollTimer?.cancel();
     super.dispose();
   }
 
@@ -140,7 +149,20 @@ class TransferController extends StateNotifier<List<TransferTask>> {
   Future<void> _restore() async {
     final storage = _ref.read(localStorageProvider);
     final raw = await storage.readStringList(AppConstants.transferHistoryKey);
-    if (raw.isEmpty) {
+
+    // 从 NAS 查询当前仍在进行的后台任务（copy/move）
+    Set<String> activeNasTaskIds = {};
+    try {
+      final nasTasks = await _ref.read(fileStationApiProvider).listBackgroundTasks();
+      activeNasTaskIds = nasTasks
+          .where((t) => !t.finished && (t.type == 'copy' || t.type == 'move'))
+          .map((t) => t.taskId)
+          .toSet();
+    } catch (_) {
+      // NAS 不可达时跳过，不阻塞本地恢复
+    }
+
+    if (raw.isEmpty && activeNasTaskIds.isEmpty) {
       return;
     }
 
@@ -151,8 +173,30 @@ class TransferController extends StateNotifier<List<TransferTask>> {
         if (decoded is! Map) continue;
         final task = TransferTask.fromJson(decoded.cast<String, dynamic>());
         if (task.id.isEmpty) continue;
-        restored.add(_normalizeRestoredTask(task));
+
+        // 如果本地记录有 backgroundTaskId 且 NAS 仍在运行，保持 running
+        if (task.backgroundTaskId != null && activeNasTaskIds.contains(task.backgroundTaskId)) {
+          restored.add(task);
+          activeNasTaskIds.remove(task.backgroundTaskId);
+        } else {
+          restored.add(_normalizeRestoredTask(task));
+        }
       } catch (_) {}
+    }
+
+    // 将 NAS 上有但本地没有的进行中任务也加进来
+    for (final taskId in activeNasTaskIds) {
+      restored.add(TransferTask(
+        id: taskId,
+        type: TransferTaskType.copy, // 类型暂时用 copy，后续轮询会修正
+        status: TransferTaskStatus.running,
+        title: '传输任务',
+        sourcePath: '',
+        targetPath: '',
+        progress: 0,
+        createdAt: DateTime.now(),
+        backgroundTaskId: taskId,
+      ));
     }
 
     if (restored.isEmpty) {
@@ -163,6 +207,11 @@ class TransferController extends StateNotifier<List<TransferTask>> {
     restored.sort((a, b) => b.createdAt.compareTo(a.createdAt));
     state = restored.take(100).toList();
     await _persist();
+
+    // 如果有任何进行中的任务，启动轮询
+    if (state.any((t) => t.status == TransferTaskStatus.running)) {
+      _startCopyMovePolling();
+    }
   }
 
   TransferTask _normalizeRestoredTask(TransferTask task) {
@@ -322,6 +371,202 @@ class TransferController extends StateNotifier<List<TransferTask>> {
     for (final item in items) {
       await enqueueDownload(remotePath: item.$1, displayName: item.$2);
     }
+  }
+
+  /// copy/move 超时时长（毫秒），默认 30 分钟
+  static const int _copyMoveTimeoutMs = 30 * 60 * 1000;
+
+  /// 发起复制任务（显示到传输中心）
+  Future<void> enqueueCopy({
+    required List<String> sourcePaths,
+    required String destinationPath,
+    bool overwrite = false,
+  }) async {
+    final id = _id();
+    final name = sourcePaths.length == 1
+        ? sourcePaths.single.split('/').last
+        : '${sourcePaths.length} 个文件';
+
+    final task = TransferTask(
+      id: id,
+      type: TransferTaskType.copy,
+      status: TransferTaskStatus.running,
+      title: '复制: $name',
+      sourcePath: sourcePaths.join(', '),
+      targetPath: destinationPath,
+      progress: 0,
+      createdAt: DateTime.now(),
+    );
+    state = [task, ...state];
+    await _persist();
+    _startCopyMovePolling();
+
+    try {
+      final batchCopy = _ref.read(fileBatchCopyProvider);
+      final result = await batchCopy(sourcePaths, destinationPath, overwrite: overwrite);
+
+      // 立即检查状态：如果是忽略覆盖模式，finished 可能已经是 true
+      try {
+        final status = await _ref.read(fileStationApiProvider).getCopyMoveStatus(task: result);
+        if (status != null && status.finished) {
+          _update(id, status: TransferTaskStatus.success, progress: 1, forcePersist: true);
+          _stopCopyMovePollingIfIdle();
+          return;
+        }
+      } catch (_) {
+        // 查状态失败，继续正常轮询
+      }
+
+      // 防止重复：如果已有相同 backgroundTaskId 的任务，忽略本次更新
+      final exists = state.any((t) => t.backgroundTaskId == result.taskId && t.id != id);
+      if (exists) {
+        state = state.where((t) => t.id != id).toList();
+        await _persist();
+        return;
+      }
+
+      state = [
+        for (final t in state)
+          if (t.id == id) t.copyWith(backgroundTaskId: result.taskId, startedAt: DateTime.now()) else t,
+      ];
+      await _persist();
+    } catch (e) {
+      _update(id, status: TransferTaskStatus.failed, errorMessage: e.toString(), forcePersist: true);
+      _stopCopyMovePollingIfIdle();
+    }
+  }
+
+  /// 发起移动任务（显示到传输中心）
+  Future<void> enqueueMove({
+    required List<String> sourcePaths,
+    required String destinationPath,
+    bool overwrite = false,
+  }) async {
+    final id = _id();
+    final name = sourcePaths.length == 1
+        ? sourcePaths.single.split('/').last
+        : '${sourcePaths.length} 个文件';
+
+    final task = TransferTask(
+      id: id,
+      type: TransferTaskType.move,
+      status: TransferTaskStatus.running,
+      title: '移动: $name',
+      sourcePath: sourcePaths.join(', '),
+      targetPath: destinationPath,
+      progress: 0,
+      createdAt: DateTime.now(),
+    );
+    state = [task, ...state];
+    await _persist();
+    _startCopyMovePolling();
+
+    try {
+      final batchMove = _ref.read(fileBatchMoveProvider);
+      final result = await batchMove(sourcePaths, destinationPath, overwrite: overwrite);
+
+      // 立即检查状态：如果是忽略覆盖模式，finished 可能已经是 true
+      try {
+        final status = await _ref.read(fileStationApiProvider).getCopyMoveStatus(task: result);
+        if (status != null && status.finished) {
+          _update(id, status: TransferTaskStatus.success, progress: 1, forcePersist: true);
+          _stopCopyMovePollingIfIdle();
+          return;
+        }
+      } catch (_) {
+        // 查状态失败，继续正常轮询
+      }
+
+      // 防止重复：如果已有相同 backgroundTaskId 的任务，忽略本次更新
+      final exists = state.any((t) => t.backgroundTaskId == result.taskId && t.id != id);
+      if (exists) {
+        state = state.where((t) => t.id != id).toList();
+        await _persist();
+        return;
+      }
+
+      state = [
+        for (final t in state)
+          if (t.id == id) t.copyWith(backgroundTaskId: result.taskId, startedAt: DateTime.now()) else t,
+      ];
+      await _persist();
+    } catch (e) {
+      _update(id, status: TransferTaskStatus.failed, errorMessage: e.toString(), forcePersist: true);
+      _stopCopyMovePollingIfIdle();
+    }
+  }
+
+  void _startCopyMovePolling() {
+    if (_copyMovePollTimer != null) return;
+    _copyMovePollTimer = Timer.periodic(
+      const Duration(seconds: _copyMovePollIntervalSec),
+      (_) => _pollCopyMoveTasks(),
+    );
+  }
+
+  void _stopCopyMovePollingIfIdle() {
+    final hasActiveCopyMove = state.any(
+      (t) => (t.type == TransferTaskType.copy || t.type == TransferTaskType.move) &&
+          t.status == TransferTaskStatus.running,
+    );
+    if (!hasActiveCopyMove) {
+      _copyMovePollTimer?.cancel();
+      _copyMovePollTimer = null;
+    }
+  }
+
+  Future<void> _pollCopyMoveTasks() async {
+    final activeCopyMove = state.where(
+      (t) => (t.type == TransferTaskType.copy || t.type == TransferTaskType.move) &&
+          t.status == TransferTaskStatus.running &&
+          t.backgroundTaskId != null,
+    ).toList();
+
+    if (activeCopyMove.isEmpty) {
+      _stopCopyMovePollingIfIdle();
+      return;
+    }
+
+    for (final task in activeCopyMove) {
+      try {
+        final api = _ref.read(fileStationApiProvider);
+        final bgTask = await api.getBackgroundTaskStatus(
+          task: FileBackgroundTask(
+            taskId: task.backgroundTaskId!,
+            type: task.type == TransferTaskType.copy ? 'copy' : 'move',
+            path: task.targetPath,
+            finished: false,
+          ),
+        );
+
+        if (bgTask == null) continue;
+
+        // 超时检测
+        final startedAt = task.startedAt;
+        if (startedAt != null && DateTime.now().difference(startedAt).inMilliseconds > _copyMoveTimeoutMs) {
+          _update(task.id, status: TransferTaskStatus.failed, progress: 1, errorMessage: '任务超时（30分钟）', forcePersist: true);
+          continue;
+        }
+
+        if (bgTask.finished) {
+          if (bgTask.errors != null && bgTask.errors!.isNotEmpty) {
+            final errorText = bgTask.errors!.map((e) => e.toString()).join('; ');
+            _update(task.id, status: TransferTaskStatus.failed, progress: 1, errorMessage: errorText, forcePersist: true);
+          } else {
+            _update(task.id, status: TransferTaskStatus.success, progress: 1, forcePersist: true);
+          }
+        } else {
+          _update(
+            task.id,
+            progress: bgTask.progress ?? 0,
+          );
+        }
+      } catch (_) {
+        // 忽略轮询错误，避免刷屏
+      }
+    }
+
+    _stopCopyMovePollingIfIdle();
   }
 
   Future<void> retryTask(TransferTask task) async {

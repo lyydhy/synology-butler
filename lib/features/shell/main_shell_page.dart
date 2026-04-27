@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/utils/l10n.dart';
+
 import '../dashboard/presentation/pages/dashboard_page.dart';
 import '../dashboard/presentation/providers/dashboard_realtime_global.dart';
 import '../dashboard/presentation/providers/global_home_provider.dart';
@@ -61,7 +63,7 @@ class _MainShellPageState extends ConsumerState<MainShellPage> {
           ),
           NavigationDestination(
             icon: _buildDownloadIcon(activeTransferCount),
-            label: '下载',
+            label: l10n.transfer,
           ),
           const NavigationDestination(
             icon: Icon(Icons.settings_outlined),

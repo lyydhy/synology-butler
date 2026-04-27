@@ -160,9 +160,11 @@ class _TransferTaskCardState extends ConsumerState<_TransferTaskCard> {
     final task = widget.task;
     final controller = ref.read(transferProvider.notifier);
     final isUpload = task.type == TransferTaskType.upload;
+    final isCopy = task.type == TransferTaskType.copy;
+    final isMove = task.type == TransferTaskType.move;
     final statusColor = _statusColor(task.status);
     final progressText = _progressText(task, l10n);
-    final pathText = task.type == TransferTaskType.download ? task.targetPath : task.sourcePath;
+    final pathText = isCopy || isMove ? task.targetPath : (isUpload ? task.sourcePath : task.targetPath);
 
     return Container(
       decoration: BoxDecoration(
@@ -189,12 +191,12 @@ class _TransferTaskCardState extends ConsumerState<_TransferTaskCard> {
                   width: 46,
                   height: 46,
                   decoration: BoxDecoration(
-                    color: (isUpload ? Colors.blue : Colors.green).withValues(alpha: 0.12),
+                    color: (isCopy ? Colors.orange : (isMove ? Colors.purple : (isUpload ? Colors.blue : Colors.green))).withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Icon(
-                    isUpload ? Icons.north_rounded : Icons.south_rounded,
-                    color: isUpload ? Colors.blue : Colors.green,
+                    isCopy ? Icons.copy_rounded : (isMove ? Icons.drive_file_move_outlined : (isUpload ? Icons.north_rounded : Icons.south_rounded)),
+                    color: isCopy ? Colors.orange : (isMove ? Colors.purple : (isUpload ? Colors.blue : Colors.green)),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -315,9 +317,9 @@ class _TransferTaskCardState extends ConsumerState<_TransferTaskCard> {
                 ),
                 const SizedBox(width: 8),
                 _InfoBadge(
-                  icon: isUpload ? Icons.upload_rounded : Icons.download_rounded,
-                  label: isUpload ? l10n.upload : l10n.download,
-                  color: isUpload ? Colors.blue : Colors.green,
+                  icon: isCopy ? Icons.copy_rounded : (isMove ? Icons.drive_file_move_outlined : (isUpload ? Icons.upload_rounded : Icons.download_rounded)),
+                  label: isCopy ? l10n.copy : (isMove ? l10n.move : (isUpload ? l10n.upload : l10n.download)),
+                  color: isCopy ? Colors.orange : (isMove ? Colors.purple : (isUpload ? Colors.blue : Colors.green)),
                 ),
                 const Spacer(),
                 Text(

@@ -73,6 +73,7 @@ class FilePageActions {
     WidgetRef ref,
     Set<String> selectedPaths,
     VoidCallback onSelectionCleared,
+    FileListQuery query,
   ) async {
     
     final paths = selectedPaths.toList();
@@ -95,10 +96,66 @@ class FilePageActions {
 
     try {
       await ref.read(fileBatchDeleteProvider)(paths);
+      // 删除成功后刷新文件列表
+      ref.invalidate(fileListProvider(query));
       onSelectionCleared();
       if (context.mounted) {
         Toast.success(l10n.deletedCount(paths.length));
       }
+    } catch (e) {
+      if (context.mounted) {
+        Toast.error(ErrorMapper.map(e).message);
+      }
+    }
+  }
+
+  /// 复制选中的文件/文件夹到目标目录。
+  Future<void> copySelected(
+    BuildContext context,
+    WidgetRef ref,
+    Set<String> selectedPaths,
+    String destinationPath,
+    VoidCallback onSelectionCleared, {
+    bool overwrite = false,
+  }) async {
+    final paths = selectedPaths.toList();
+    if (paths.isEmpty) return;
+
+    try {
+      // 通过 TransferController 显示到传输中心
+      await ref.read(transferProvider.notifier).enqueueCopy(
+        sourcePaths: paths,
+        destinationPath: destinationPath,
+        overwrite: overwrite,
+      );
+      onSelectionCleared();
+    } catch (e) {
+      if (context.mounted) {
+        Toast.error(ErrorMapper.map(e).message);
+      }
+    }
+  }
+
+  /// 移动选中的文件/文件夹到目标目录。
+  Future<void> moveSelected(
+    BuildContext context,
+    WidgetRef ref,
+    Set<String> selectedPaths,
+    String destinationPath,
+    VoidCallback onSelectionCleared, {
+    bool overwrite = false,
+  }) async {
+    final paths = selectedPaths.toList();
+    if (paths.isEmpty) return;
+
+    try {
+      // 通过 TransferController 显示到传输中心
+      await ref.read(transferProvider.notifier).enqueueMove(
+        sourcePaths: paths,
+        destinationPath: destinationPath,
+        overwrite: overwrite,
+      );
+      onSelectionCleared();
     } catch (e) {
       if (context.mounted) {
         Toast.error(ErrorMapper.map(e).message);

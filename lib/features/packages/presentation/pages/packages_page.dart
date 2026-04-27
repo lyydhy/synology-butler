@@ -83,6 +83,14 @@ class _PackagesPageState extends ConsumerState<PackagesPage> with SingleTickerPr
         title: Text(l10n.packageCenter),
         actions: [
           IconButton(
+            tooltip: '搜索',
+            onPressed: () {
+              final packages = packagesAsync.valueOrNull?.packages ?? [];
+              context.push('/packages/search', extra: {'packages': packages});
+            },
+            icon: const Icon(Icons.search),
+          ),
+          IconButton(
             tooltip: l10n.refresh,
             onPressed: _refreshPackages,
             icon: const Icon(Icons.refresh),
@@ -168,15 +176,15 @@ class _PackageListView extends StatelessWidget {
 
     return ListView.separated(
       padding: const EdgeInsets.all(16),
-      itemBuilder: (context, index) => _PackageCard(item: items[index]),
+      itemBuilder: (context, index) => PackageCard(item: items[index]),
       separatorBuilder: (_, __) => const SizedBox(height: 12),
       itemCount: items.length,
     );
   }
 }
 
-class _PackageCard extends ConsumerWidget {
-  const _PackageCard({required this.item});
+class PackageCard extends ConsumerWidget {
+  const PackageCard({required this.item});
 
   final PackageItem item;
 

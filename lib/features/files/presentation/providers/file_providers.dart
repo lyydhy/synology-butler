@@ -154,3 +154,27 @@ final fileBackgroundTasksProvider = StreamProvider.autoDispose<List<FileBackgrou
     await Future<void>.delayed(const Duration(seconds: 5));
   }
 });
+
+/// 批量复制文件/文件夹到目标路径
+final fileBatchCopyProvider = Provider<Future<FileBackgroundTask> Function(List<String>, String, {bool overwrite})>((ref) {
+  return (paths, destinationPath, {overwrite = false}) async {
+    return ref.read(fileRepositoryProvider).startCopyMove(
+      paths: paths,
+      destinationPath: destinationPath,
+      removeSrc: false,
+      overwrite: overwrite,
+    );
+  };
+});
+
+/// 批量移动文件/文件夹到目标路径
+final fileBatchMoveProvider = Provider<Future<FileBackgroundTask> Function(List<String>, String, {bool overwrite})>((ref) {
+  return (paths, destinationPath, {overwrite = false}) async {
+    return ref.read(fileRepositoryProvider).startCopyMove(
+      paths: paths,
+      destinationPath: destinationPath,
+      removeSrc: true,
+      overwrite: overwrite,
+    );
+  };
+});

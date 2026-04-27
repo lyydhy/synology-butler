@@ -55,6 +55,7 @@
   "createFolder": "新建文件夹",
   "folderName": "文件夹名称",
   "cancel": "取消",
+  "goUp": "返回上级",
   "confirm": "确定",
   "uploadFile": "上传文件",
   "targetFolder": "目标目录",
@@ -199,6 +200,8 @@
   },
   "connectionTestFailed": "测试连接失败",
   "copy": "复制",
+  "move": "移动",
+  "overwriteExisting": "覆盖同名文件",
   "switchedToHttp": "已切换为 HTTP，请仅在可信局域网中使用",
   "selectFromHistory": "从历史登录设备中选择",
   "historyDevices": "历史登录设备",
@@ -302,6 +305,7 @@
     }
   },
   "selectUploadDir": "选择上传目录",
+  "selectTargetDir": "选择目标目录",
   "loadFilesFailed": "加载文件失败：{error}",
   "@loadFilesFailed": {
     "placeholders": {

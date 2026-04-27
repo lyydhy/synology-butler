@@ -416,6 +416,12 @@ abstract class AppLocalizations {
   /// **'取消'**
   String get cancel;
 
+  /// No description provided for @goUp.
+  ///
+  /// In zh, this message translates to:
+  /// **'返回上级'**
+  String get goUp;
+
   /// No description provided for @confirm.
   ///
   /// In zh, this message translates to:
@@ -1160,6 +1166,18 @@ abstract class AppLocalizations {
   /// **'复制'**
   String get copy;
 
+  /// No description provided for @move.
+  ///
+  /// In zh, this message translates to:
+  /// **'移动'**
+  String get move;
+
+  /// No description provided for @overwriteExisting.
+  ///
+  /// In zh, this message translates to:
+  /// **'覆盖同名文件'**
+  String get overwriteExisting;
+
   /// No description provided for @switchedToHttp.
   ///
   /// In zh, this message translates to:
@@ -1477,6 +1495,12 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'选择上传目录'**
   String get selectUploadDir;
+
+  /// No description provided for @selectTargetDir.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择目标目录'**
+  String get selectTargetDir;
 
   /// No description provided for @loadFilesFailed.
   ///

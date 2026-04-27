@@ -170,6 +170,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cancel => 'Cancel';
 
   @override
+  String get goUp => 'Go up';
+
+  @override
   String get confirm => 'Confirm';
 
   @override
@@ -555,6 +558,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get copy => 'Copy';
 
   @override
+  String get move => 'Move';
+
+  @override
+  String get overwriteExisting => 'Overwrite existing files';
+
+  @override
   String get switchedToHttp =>
       'Switched to HTTP. Only use in trusted local networks.';
 
@@ -741,6 +750,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get selectUploadDir => 'Select Upload Directory';
+
+  @override
+  String get selectTargetDir => 'Select Target Directory';
 
   @override
   String loadFilesFailed(Object error) {

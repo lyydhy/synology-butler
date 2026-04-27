@@ -1,5 +1,8 @@
 import java.io.FileInputStream
 import java.util.Properties
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 plugins {
     id("com.android.application")
@@ -67,12 +70,32 @@ android {
         }
     }
 
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("arm64-v8a")
+            isUniversalApk = false
+        }
+    }
+
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
             excludes += "META-INF/LICENSE*"
             excludes += "META-INF/NOTICE*"
             excludes += "META-INF/*.kotlin_module"
+        }
+    }
+
+    applicationVariants.all {
+        val variant = this
+        variant.outputs.all {
+            val output = this as com.android.build.gradle.internal.api.BaseVariantOutputImpl
+            val dateFormat = SimpleDateFormat("yyyyMMddHHmm", Locale.CHINA)
+            val timeStamp = dateFormat.format(Date())
+            val abiName = try { output.getFilter("ABI") } catch (e: Exception) { "universal" }
+            output.outputFileName = "synology-butler_v${defaultConfig.versionName}_${variant.buildType.name}_${abiName}_${timeStamp}.apk"
         }
     }
 }
