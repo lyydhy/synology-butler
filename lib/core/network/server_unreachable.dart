@@ -33,7 +33,7 @@ class UnreachableRedirectInterceptor extends Interceptor {
     }
 
     final isInternal = _isInternalServerAddress(host);
-    final isLanError = _isLanAccessError(err);
+    final isLanError = _isLanAccessError(err, host);
 
     unawaited(LocalAppLogger.log(
       level: 'warn',
@@ -70,12 +70,12 @@ class UnreachableRedirectInterceptor extends Interceptor {
     handler.next(err);
   }
 
-  bool _isLanAccessError(DioException err) {
-    if (err.type == DioExceptionType.connectionError) return true;
-    if (err.type == DioExceptionType.connectionTimeout) return true;
-    // unknown type + internal server in connectionStore → likely proxy/networking issue
-    // to internal NAS while on WAN (e.g. proxy unreachable from device's network)
-    if (err.type == DioExceptionType.unknown && _isInternalServerAddress('')) return true;
+  bool _isLanAccessError(DioException err, String host) {
+    if (err.type == DioExceptionType.connectionError ||
+        err.type == DioExceptionType.connectionTimeout) {
+      // 只有目标是内网地址时才重定向，外网超时不应触发
+      return _isInternalServerAddress(host);
+    }
     return false;
   }
 
